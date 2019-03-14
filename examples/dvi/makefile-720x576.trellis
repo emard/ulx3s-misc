@@ -1,0 +1,59 @@
+# ******* project, board and chip name *******
+PROJECT = dvi
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 12
+
+# ******* if programming with OpenOCD *******
+# using local latest openocd until in linux distribution
+OPENOCD=openocd_ft232r
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+# ulx3s-jtag-passthru
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
+# ulx2s
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft232r.ocd
+# external jtag
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
+
+
+# ******* design files *******
+CONSTRAINTS = ../../constraints/ulx3s_v20_segpdi.lpf
+TOP_MODULE = top_vgatest_720x576
+TOP_MODULE_FILE = hdl/$(TOP_MODULE).v
+
+CLK0_NAME = clk_25_shift_pixel
+CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
+CLK0_OPTIONS_OLD = \
+  --input=25 \
+  --output=135 \
+  --s1=27
+# for new ecppll: to override above, rename CLK0_OPTIONS_NEW -> CLK0_OPTIONS
+CLK0_OPTIONS = \
+  --module=$(CLK0_NAME) \
+  --clkin_name=clki \
+  --clkin=25 \
+  --clkout0_name=clko \
+  --clkout0=135 \
+  --clkout1_name=clks1 \
+  --clkout1=27
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+  $(CLK0_FILE_NAME) \
+  hdl/fake_differential.v
+
+# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
+VHDL_FILES = \
+  hdl/blink.vhd \
+  hdl/vga.vhd \
+  hdl/vga2dvid.vhd \
+  hdl/tmds_encoder.vhd
+
+# synthesis options
+#YOSYS_OPTIONS = -noccu2
+
+SCRIPTS = ../../scripts
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
