@@ -32,7 +32,7 @@ module oled_init
   reg [5:0] y;
   wire [7:0] color;
 
-  assign color = 8'hFF;
+  assign color = x[3] ^ y[3] ? 8'h80 : 8'h91; // checkered pattern
 
   reg [1:0] reset_cnt;
   reg [22:0] counter;
