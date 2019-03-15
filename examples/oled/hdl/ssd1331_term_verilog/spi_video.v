@@ -74,14 +74,14 @@ module spi_video (
             reset_cnt <= reset_cnt+1;
             init_cnt <= 10'd0;
             data <= 8'd0;
-            dc <= 0;
+            dc <= 1'b0;
             x <= 95;
             y <= 0;            
         end
         else if (init_cnt[9:4] != INIT_SIZE)
         begin
             init_cnt <= init_cnt + 1;
-            if (init_cnt[3:0] == 4'b0000)
+            if (init_cnt[3:0] == 4'h0)
             begin
                 if (dc == 1'b0)
                     data <= init_block[init_cnt[9:4]];
@@ -105,9 +105,6 @@ module spi_video (
         else if (init_cnt[9:4] == INIT_SIZE)
         begin
             init_cnt[9:4] <= INIT_SIZE - 1;
-        end
-
-        if (init_cnt[9:4] == INIT_SIZE) begin
             dc <= 1'b1;
         end
     end
