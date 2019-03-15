@@ -65,6 +65,7 @@ module top_audio
     wire [23:0] pcm_24s;
     assign pcm_24s[23] = pcm[11];
     assign pcm_24s[22:11] = pcm;
+    assign pcm_24s[10:0] = 11'b0;
     spdif_tx
     #(
       .C_clk_freq(25000000),
@@ -76,6 +77,8 @@ module top_audio
       .data_in(pcm_24s),
       .spdif_out(spdif)
     );
+    assign audio_v[3:2] = 2'b00;
     assign audio_v[1] = spdif; // 0.4V at SPDIF (standard: 0.6V MAX)
+    assign audio_v[0] = 1'b0;
 
 endmodule
