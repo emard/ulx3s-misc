@@ -3,11 +3,29 @@
 Enumerates as USB1.1 serial port seen as /dev/ttyACM0 on linux.
 Connect to serial port with some teriminal emulator like
 
+connecting with "cu":
+
     cu -l ttyACM0
 
-or
+exit:
+
+    <Enter> ~ .
+
+or (on some keyboard)
+
+    <Enter> AltGr-1 .
+
+connecting with "screen":
 
     screen /dev/ttyACM0
+
+exit:
+
+    ctrl-a \
+
+or (on some keyboard)
+
+    ctrl-a AltGr q
 
 Type anything and press RETURN or ENTER.
 The core should respond with everything you typed
