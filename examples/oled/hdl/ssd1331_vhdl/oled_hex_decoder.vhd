@@ -1,8 +1,8 @@
--- SPI OLED SSD1331 display core
+-- SPI OLED SSD1331 display HEX decoder core
 -- AUTHOR=EMARD
 -- LICENSE=BSD
 
--- Push BTN1 to show OLED screen
+-- keep en=1 to show OLED screen
 
 library IEEE;
 use IEEE.std_logic_1164.ALL;
@@ -12,7 +12,7 @@ use IEEE.std_logic_unsigned.ALL;
 use work.oled_init_pack.all;
 use work.oled_font_pack.all;
 
-entity oled is
+entity oled_hex_decoder is
 generic
 (
   C_debounce: boolean := false;
@@ -31,7 +31,7 @@ port
 );
 end;
 
-architecture rtl of oled is
+architecture rtl of oled_hex_decoder is
   signal R_data: std_logic_vector(data'range);
   -- constant init_seq: T_oled_init_seq := C_oled_init_seq;
   signal R_reset_cnt: std_logic_vector(1 downto 0) := (others => '0'); -- 20 downto 0

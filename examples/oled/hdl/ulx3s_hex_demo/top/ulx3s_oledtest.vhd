@@ -112,7 +112,7 @@ begin
           & R_counter;
   -- S_data <= btn;
 
-  oled_inst: entity oled
+  oled_inst: entity oled_hex_decoder
   generic map
   (
     C_data_len => S_data'length

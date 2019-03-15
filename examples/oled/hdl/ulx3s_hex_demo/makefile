@@ -23,20 +23,20 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../constraints/ulx3s_v20_segpdi.lpf
+CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
 TOP_MODULE = ulx3s_oledtest
-TOP_MODULE_FILE = hdl/ulx3s/$(TOP_MODULE).vhd
+TOP_MODULE_FILE = top/$(TOP_MODULE).vhd
 
 VERILOG_FILES =
 
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  hdl/ulx3s/clk_25M_100M_7M5_12M_60M.vhd \
-  hdl/oled/oled.vhd \
-  hdl/oled/oled_init_pack.vhd \
-  hdl/oled/oled_font_pack.vhd
+  clock/clk_25M_100M_7M5_12M_60M.vhd \
+  ../ssd1331_vhdl/oled_hex_decoder.vhd \
+  ../ssd1331_vhdl/oled_init_pack.vhd \
+  ../ssd1331_vhdl/oled_font_pack.vhd
 
-SCRIPTS = ../../scripts
+SCRIPTS = ../../../../scripts
 include $(SCRIPTS)/trellis_path.mk
 include $(SCRIPTS)/diamond_path.mk
 include $(SCRIPTS)/diamond_main.mk
