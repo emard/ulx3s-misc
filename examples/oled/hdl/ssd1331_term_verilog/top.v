@@ -111,12 +111,13 @@ module top (
         end
     end
 
-    wire [7:0] data_out;
+    wire [8:0] data_out;
+    assign data_out[8] = 1'b0;
 
     font_rom vga_font(
         .clk(clk),
         .addr({ mem[(y >> 4) * 12 + (x>>3)], y[3:0] }),
-        .data_out(data_out)
+        .data_out(data_out[7:0])
     );
 
     assign color = data_out[7-x[2:0]+1] ? 8'hff : 8'h00; // +1 for sync

@@ -64,12 +64,12 @@ module spi_video (
     reg [1:0] reset_cnt;
     reg [22:0] counter;
     reg [9:0] init_cnt;
-    reg [7:0]  data;
+    reg [7:0] data;
     reg dc;
     
     always @(posedge clk) begin
         counter <= counter + 1;
-        if (reset_cnt!=2'b10) 
+        if (reset_cnt != 2'b10)
         begin
             reset_cnt <= reset_cnt+1;
             init_cnt <= 10'd0;
@@ -78,21 +78,23 @@ module spi_video (
             x <= 95;
             y <= 0;            
         end
-        else if (init_cnt[9:4]!=INIT_SIZE) 
+        else if (init_cnt[9:4] != INIT_SIZE)
         begin
-            init_cnt <= init_cnt+1;
-            if (init_cnt[3:0]==4'b0000) 
+            init_cnt <= init_cnt + 1;
+            if (init_cnt[3:0] == 4'b0000)
             begin
-                if (dc== 0)
+                if (dc == 1'b0)
                     data <= init_block[init_cnt[9:4]];
                 else
                 begin
                     data <= color;
-                    if (x==0) begin
+                    if (x == 0)
+                    begin
                         x <= 95; 
                         y <= y + 1;
                     end
-                    else  x <= x - 1; 
+                    else
+                        x <= x - 1;
                 end
             end
             else if (init_cnt[0] == 1'b0) 
@@ -100,12 +102,13 @@ module spi_video (
                 data[7:0] <= { data[6:0], 1'b0 };
             end
         end
-
-        if (init_cnt[9:4]==INIT_SIZE) begin
-            dc <= 1'b1;
-        end
-        if (init_cnt[9:4]==INIT_SIZE) begin
+        else if (init_cnt[9:4] == INIT_SIZE)
+        begin
             init_cnt[9:4] <= INIT_SIZE - 1;
+        end
+
+        if (init_cnt[9:4] == INIT_SIZE) begin
+            dc <= 1'b1;
         end
     end
 
