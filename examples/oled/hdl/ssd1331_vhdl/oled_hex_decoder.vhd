@@ -36,7 +36,7 @@ architecture rtl of oled_hex_decoder is
   -- constant init_seq: T_oled_init_seq := C_oled_init_seq;
   signal R_reset_cnt: std_logic_vector(1 downto 0) := (others => '0'); -- 20 downto 0
   -- initialization sequence replay counter
-  signal R_init_cnt:std_logic_vector(15 downto 0) := (others => '0'); -- 4 bits more to indicate stop
+  signal R_init_cnt: std_logic_vector(15 downto 0) := (others => '0'); -- 4 bits more to indicate stop
   signal R_spi_data: std_logic_vector(7 downto 0) := x"00"; -- one bit more
   -- (15 downto 4) -- byte address of the config sequence
   -- (3 downto 1) -- bit address 8 bits of each byte
