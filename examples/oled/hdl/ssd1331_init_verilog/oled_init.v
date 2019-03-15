@@ -32,8 +32,7 @@ module oled_init
   reg [5:0] y;
   wire [7:0] color;
 
-  // assign color = x[2] ? 8'h1F : 8'h00;
-  assign color = 8'h1E;
+  assign color = 8'hFF;
 
   reg [1:0] reset_cnt;
   reg [22:0] counter;
@@ -54,12 +53,12 @@ module oled_init
         end
         else if (init_cnt[9:4] != INIT_SIZE) 
         begin
-            debug <= oled_init[1];
             init_cnt <= init_cnt + 1;
-            if (init_cnt[3:0] == 4'b0000) 
+            if (init_cnt[3:0] == 4'h0)
             begin
                 if (dc == 1'b0)
                 begin
+                    debug <= oled_init[init_cnt[9:4]];
                     data <= oled_init[init_cnt[9:4]];
                 end
                 else
@@ -78,11 +77,9 @@ module oled_init
                 data[7:0] <= { data[6:0], 1'b0 };
             end
         end
-        else if (init_cnt[9:4] != INIT_SIZE) 
-            init_cnt[9:4] <= INIT_SIZE - 1;
-
-        if (init_cnt[9:4] == INIT_SIZE)
+        else if (init_cnt[9:4] == INIT_SIZE) 
         begin
+            init_cnt[9:4] <= INIT_SIZE - 1;
             dc <= 1'b1;
         end
   end
