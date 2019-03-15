@@ -24,14 +24,14 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
 TOP_MODULE = top
-TOP_MODULE_FILE = ../../hdl/ssd1331_verilog/$(TOP_MODULE).v
+TOP_MODULE_FILE = ../../hdl/ssd1331_term_verilog/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../hdl/ssd1331_verilog/pll.v \
-  ../../hdl/ssd1331_verilog/spi_video.v \
-  ../../hdl/ssd1331_verilog/font_rom.v \
-  ../../hdl/ssd1331_verilog/uart_rx.v
+  ../../hdl/ssd1331_term_verilog/pll.v \
+  ../../hdl/ssd1331_term_verilog/spi_video.v \
+  ../../hdl/ssd1331_term_verilog/font_rom.v \
+  ../../hdl/ssd1331_term_verilog/uart_rx.v
 
 VHDL_FILES = 
 

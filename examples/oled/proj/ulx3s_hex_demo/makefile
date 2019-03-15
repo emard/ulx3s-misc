@@ -32,9 +32,9 @@ VERILOG_FILES =
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
   clock/clk_25M_100M_7M5_12M_60M.vhd \
-  ../../hdl/ssd1331_vhdl/oled_hex_decoder.vhd \
-  ../../hdl/ssd1331_vhdl/oled_init_pack.vhd \
-  ../../hdl/ssd1331_vhdl/oled_font_pack.vhd
+  ../../hdl/ssd1331_hex_vhdl/oled_hex_decoder.vhd \
+  ../../hdl/ssd1331_hex_vhdl/oled_init_pack.vhd \
+  ../../hdl/ssd1331_hex_vhdl/oled_font_pack.vhd
 
 SCRIPTS = ../../../../scripts
 include $(SCRIPTS)/trellis_path.mk
