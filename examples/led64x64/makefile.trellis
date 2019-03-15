@@ -1,0 +1,34 @@
+# ******* project, board and chip name *******
+PROJECT = led64x64
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 12
+
+# ******* if programming with OpenOCD *******
+# using local latest openocd until in linux distribution
+OPENOCD=openocd_ft232r
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+# ulx3s-jtag-passthru
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
+# ulx2s
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft232r.ocd
+# external jtag
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
+
+# ******* design files *******
+CONSTRAINTS = ../../constraints/ulx3s_v20_segpdi.lpf
+TOP_MODULE = top
+TOP_MODULE_FILE = emard/top.v
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE)
+VHDL_FILES = \
+  emard/ledscan.vhd
+
+# synthesis options
+#YOSYS_OPTIONS = -noccu2
+
+SCRIPTS = ../../scripts
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
