@@ -2,7 +2,7 @@
 PROJECT = dvi
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 12
+FPGA_SIZE = 85
 
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
@@ -32,9 +32,9 @@ VERILOG_FILES =
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
   clock/clk_25M_100M_7M5_12M_60M.vhd \
-  ../ssd1331_vhdl/oled_hex_decoder.vhd \
-  ../ssd1331_vhdl/oled_init_pack.vhd \
-  ../ssd1331_vhdl/oled_font_pack.vhd
+  ../../hdl/ssd1331_vhdl/oled_hex_decoder.vhd \
+  ../../hdl/ssd1331_vhdl/oled_init_pack.vhd \
+  ../../hdl/ssd1331_vhdl/oled_font_pack.vhd
 
 SCRIPTS = ../../../../scripts
 include $(SCRIPTS)/trellis_path.mk
