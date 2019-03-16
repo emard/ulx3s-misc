@@ -18,6 +18,7 @@ module oled_video
   
   output reg  [C_x_bits-1:0] x,
   output reg  [C_y_bits-1:0] y,
+  output reg  next, // 1 when x/y changes
   input  wire [7:0] color, // color = f(x,y) {3'bRRR, 3'bGGG, 2'bBB }
 
   output wire oled_csn,
@@ -27,39 +28,39 @@ module oled_video
   output wire oled_resn
 );
 
-  reg [7:0] oled_init[0:C_init_size-1];
+  wire [7:0] C_oled_init[0:C_init_size-1];
   initial
   begin
-    $readmemh(C_init_file, oled_init);
+    $readmemh(C_init_file, C_oled_init);
   end
 
   reg [1:0] reset_cnt;
-  reg [22:0] counter;
   reg [9:0] init_cnt;
   reg [7:0] data;
   reg dc;
 
   always @(posedge clk) begin
-        counter <= counter + 1;
         if (reset_cnt != 2'b10) 
         begin
             reset_cnt <= reset_cnt+1;
             init_cnt <= 10'd0;
-            data <= 8'd0;
+            data <= C_oled_init[0];
             dc <= 1'b0;
             x <= 0;
             y <= 0;
         end
-        else if (init_cnt[9:4] != C_init_size) 
+        else 
+        if (init_cnt[9:4] != C_init_size) 
         begin
             init_cnt <= init_cnt + 1;
             if (init_cnt[3:0] == 4'h0)
             begin
                 if (dc == 1'b0)
-                    data <= oled_init[init_cnt[9:4]];
+                    data <= C_oled_init[init_cnt[9:4]];
                 else
                 begin
                     data <= color;
+                    next <= 1'b1;
                     if (x == C_x_size-1)
                     begin
                         x <= 0;
@@ -69,13 +70,17 @@ module oled_video
                         x <= x + 1;
                 end
             end
-            else if (init_cnt[0] == 1'b0) 
+            else
+            begin
+              next <= 1'b0;
+              if (init_cnt[0] == 1'b0) 
                 data[7:0] <= { data[6:0], 1'b0 };
+            end
         end
-        else if (init_cnt[9:4] == C_init_size) 
+        else // if (init_cnt[9:4] == C_init_size) 
         begin
-            init_cnt[9:4] <= C_init_size - 1;
             dc <= 1'b1;
+            init_cnt[9:4] <= C_init_size - 1;
         end
   end
 
