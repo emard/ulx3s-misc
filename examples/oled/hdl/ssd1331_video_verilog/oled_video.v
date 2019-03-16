@@ -2,7 +2,7 @@
 // AUTHORS=EMARD,MMICKO
 // LICENSE=BSD
 
-module oled_init
+module oled_video
 #(
   // file name is relative to directory path in which verilog compiler is running
   // screen can be also XY flipped and/or rotated from this init file

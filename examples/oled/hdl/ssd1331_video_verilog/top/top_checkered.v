@@ -26,11 +26,11 @@ module top_checkered
     //                 checkered      red     green   blue      red     green   blue
     wire [7:0] color = x[3] ^ y[3] ? {x[6:4], x[6:4], 2'b00} : {y[5:3], 3'b000, 2'b00};
 
-    oled_init
+    oled_video
     #(
         .C_init_file("oled_init.mem")
     )
-    oled_init_inst
+    oled_video_inst
     (
         .clk(clk),
         .x(x),
