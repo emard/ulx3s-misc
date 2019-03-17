@@ -1,3 +1,5 @@
+// push BTN1 to play triangle wave instead of default sine wave
+
 module top_audio
 (
   input clk_25mhz,
@@ -6,18 +8,12 @@ module top_audio
   output [3:0] audio_l, audio_r, audio_v,
   output wifi_gpio0
 );
-    parameter C_sinewave = 1; // 1-sinewave 0-trianglewave
-
     // wifi_gpio0=1 keeps board from rebooting
     // hold btn0 to let ESP32 take control over the board
     assign wifi_gpio0 = btn[0];
 
-    wire [11:0] pcm;
-
-    generate
-    if(C_sinewave == 0)
-    begin
-    // triangle wave generator
+    wire [11:0] pcm_trianglewave;
+    // triangle wave generator /\/\/
     trianglewave
     #(
       .C_delay(6) // smaller value -> higher freq
@@ -25,15 +21,11 @@ module top_audio
     trianglewave_instance
     (
       .clk(clk_25mhz),
-      .pcm(pcm)
+      .pcm(pcm_trianglewave)
     );
-    end
-    endgenerate
 
-    generate
-    if(C_sinewave == 1)
-    begin
-    // sine wave generator
+    wire [11:0] pcm_sinewave;
+    // sine wave generator ~~~~
     sinewave
     #(
       .C_delay(10) // smaller value -> higher freq
@@ -41,11 +33,11 @@ module top_audio
     sinewave_instance
     (
       .clk(clk_25mhz),
-      .pcm(pcm)
+      .pcm(pcm_sinewave)
     );
-    end
-    endgenerate
-    
+
+    wire [11:0] pcm = btn[1] ? pcm_trianglewave : pcm_sinewave;
+
     assign led = pcm[11:4];
 
     // analog output to classic headphones
@@ -77,8 +69,8 @@ module top_audio
       .data_in(pcm_24s),
       .spdif_out(spdif)
     );
+
     assign audio_v[3:2] = 2'b00;
     assign audio_v[1] = spdif; // 0.4V at SPDIF (standard: 0.6V MAX)
     assign audio_v[0] = 1'b0;
-
 endmodule
