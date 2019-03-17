@@ -21,7 +21,8 @@ end;
 architecture behavioral of spdif_tx is
  -- math to digitaly divide input clock into 128x Fsample (6.144MHz for 48K samplerate)
  constant C_phase_accu_bits: integer := 24; --clock divider phase accumulator
- constant C_phase_increment: integer := C_sample_freq * 2**(C_phase_accu_bits+7) / C_clk_freq;
+ -- constant C_phase_increment: integer := C_sample_freq * 2**(C_phase_accu_bits+7) / C_clk_freq; -- exact expression but it overflows with trellis
+ constant C_phase_increment: integer := (C_sample_freq/100) * 2**(C_phase_accu_bits-3) / (C_clk_freq/100) * 2**10; -- works with trellis up to C_clk_freq = 100 MHz
  signal R_phase_accu: std_logic_vector(C_phase_accu_bits-1 downto 0);
  signal R_clkdiv_shift: std_logic_vector(1 downto 0);
 
