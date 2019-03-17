@@ -21,24 +21,37 @@ module top_hex_demo
         .locked(locked)
     );
 
+    reg [127:0] R_display; // something to display
+    always @(posedge clk)
+    begin
+      R_display[0] <= btn[0];
+      R_display[4] <= btn[1];
+      R_display[8] <= btn[2];
+      R_display[12] <= btn[3];
+      R_display[16] <= btn[4];
+      R_display[20] <= btn[5];
+      R_display[24] <= btn[6];
+      R_display[127:64] <= R_display[127:64] + 1; // shown in next OLED row
+    end
+
     wire [6:0] x;
     wire [5:0] y;
-    wire next;
+    wire next_pixel;
     wire [7:0] color;
     
     hex_decoder
     #(
-        .C_data_len(8),
+        .C_data_len(128),
         .C_font_file("oled_font.mem")
     )
     hex_decoder_inst
     (
         .clk(clk),
         .en(1'b1),
-        .data(8'hA5),
+        .data(R_display),
         .x(x),
         .y(y),
-        .next(next),
+        .next_pixel(next_pixel),
         .color(color)
     );
 
@@ -51,7 +64,7 @@ module top_hex_demo
         .clk(clk),
         .x(x),
         .y(y),
-        .next(next),
+        .next_pixel(next_pixel),
         .color(color),
         .oled_csn(oled_csn),
         .oled_clk(oled_clk),

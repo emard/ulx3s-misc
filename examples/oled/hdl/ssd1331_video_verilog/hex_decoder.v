@@ -23,7 +23,7 @@ module hex_decoder
   input  wire [C_data_len-1:0] data,
   input  wire [C_x_bits-1:0] x,
   input  wire [C_y_bits-1:0] y,
-  input  wire next,
+  input  wire next_pixel,
   output wire [7:0] color
 );
 
@@ -145,7 +145,7 @@ module hex_decoder
   reg [10:0] R_counter;
   always @(posedge clk)
   begin
-          if(next) // next pixel appears every 16th clock cycle 
+          if(next_pixel) // next pixel appears every 16th clock cycle 
           begin
             // pixel data
             R_pixel <= S_pixel;

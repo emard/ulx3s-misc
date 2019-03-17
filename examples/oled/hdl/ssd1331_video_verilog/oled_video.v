@@ -18,7 +18,7 @@ module oled_video
   
   output reg  [C_x_bits-1:0] x,
   output reg  [C_y_bits-1:0] y,
-  output reg  next, // 1 when x/y changes
+  output reg  next_pixel, // 1 when x/y changes
   input  wire [7:0] color, // color = f(x,y) {3'bRRR, 3'bGGG, 2'bBB }
 
   output wire oled_csn,
@@ -60,7 +60,7 @@ module oled_video
                 else
                 begin
                     data <= color;
-                    next <= 1'b1;
+                    next_pixel <= 1'b1;
                     if (x == C_x_size-1)
                     begin
                         x <= 0;
@@ -72,7 +72,7 @@ module oled_video
             end
             else
             begin
-              next <= 1'b0;
+              next_pixel <= 1'b0;
               if (init_cnt[0] == 1'b0) 
                 data[7:0] <= { data[6:0], 1'b0 };
             end
