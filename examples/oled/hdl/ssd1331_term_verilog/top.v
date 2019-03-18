@@ -19,12 +19,12 @@ module top (
         .locked(locked)
     );
 
-    wire [7:0] x;
+    wire [6:0] x;
     wire [5:0] y;
     wire [7:0] color;
 
-    spi_video
-    spi_video_inst(
+    oled_video
+    oled_video_inst(
         .clk(clk),
         .oled_csn(oled_csn),
         .oled_clk(oled_clk),
@@ -37,13 +37,12 @@ module top (
     );
 
     reg [7:0] mem [0:47];
-
+    // this initialization doesn't work for diamond
     integer k;
-
     initial
     begin
-      for (k = 0; k < 48; k = k + 1)
-        mem[k] <= 32; // ASCII space
+      for (k = 0; k < 48; k++)
+        mem[k] = 32; // ASCII space
     end
 
     wire rx_valid;
@@ -116,7 +115,7 @@ module top (
 
     font_rom vga_font(
         .clk(clk),
-        .addr({ mem[(y >> 4) * 12 + (x>>3)], y[3:0] }),
+        .addr({ mem[(y >> 4) * 12 + (x >> 3)], y[3:0] }),
         .data_out(data_out[7:0])
     );
 

@@ -24,7 +24,7 @@ TOP_MODULE_FILE = ../../hdl/ssd1331_term_verilog/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../hdl/ssd1331_term_verilog/pll.v \
-  ../../hdl/ssd1331_term_verilog/spi_video.v \
+  ../../hdl/ssd1331_video_verilog/oled_video.v \
   ../../hdl/ssd1331_term_verilog/font_rom.v \
   ../../hdl/ssd1331_term_verilog/uart_rx.v
 
