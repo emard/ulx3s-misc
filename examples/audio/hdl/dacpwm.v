@@ -1,4 +1,4 @@
-// combines resitor DAC and PWM
+// combines resistor DAC and PWM
 // upper bits using DAC, lower bit using PWM
 
 module dacpwm
@@ -8,7 +8,7 @@ module dacpwm
 )
 (
   input clk, // required to run PWM
-  input signed [C_pcm_bits-1:0] pcm, // 12-bit unsigned PCM input
+  input signed [C_pcm_bits-1:0] pcm, // 12-bit signed PCM input
   output [C_dac_bits-1:0] dac // 4-bit unsigned DAC output
 );
     parameter C_pwm_bits = C_pcm_bits-C_dac_bits; // how many bits for PWM that increases DAC resolution
