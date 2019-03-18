@@ -28,7 +28,10 @@ module oled_video
   output wire oled_resn
 );
 
-  wire [7:0] C_oled_init[0:C_init_size-1];
+  // "wire" should be used instead of "reg" because it's ROM.
+  // trellis works with either "wire" or "reg"
+  // diamond works only with "reg"
+  reg [7:0] C_oled_init[0:C_init_size-1];
   initial
   begin
     $readmemh(C_init_file, C_oled_init);
