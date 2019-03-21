@@ -3,6 +3,7 @@ PROJECT = dvi
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
+FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
