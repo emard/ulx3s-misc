@@ -2,7 +2,7 @@
 PROJECT = oled_spi_hex
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -23,11 +23,10 @@ TOP_MODULE_FILE = ../../../jtag_slave/hdl/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../../jtag_slave/hdl/jtag_slave.v \
-  ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
-  ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v \
+  ../../../jtag_slave/hdl/jtag_slave_clk.v \
   ../../../oled/hdl/ssd1331_video_verilog/spi/spi_slave.v \
-  ../../../oled/hdl/ssd1331_term_verilog/pll.v \
+  ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
+  ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = 
@@ -39,4 +38,3 @@ include $(SCRIPTS)/trellis_main.mk
 
 scan:
 	$(OPENOCD) --file=$(SCRIPTS)/ft231x2.ocd --file=jtag-slave-scan.ocd
-

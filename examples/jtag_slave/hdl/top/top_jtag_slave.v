@@ -25,19 +25,13 @@ module top_jtag_slave
     assign tms = ftdi_nrts;
     assign tdi = ftdi_txd;
     assign ftdi_rxd = tdo;
-    
-    wire clk, locked;
-    pll
-    pll_inst
-    (
-      .clki(clk_25mhz),
-      .clko(clk), // 12.5 MHz
-      .locked(locked)
-    );
 
-    jtag_slave
-    jtag_slave_inst
+    assign clk = clk_25mhz;
+
+    jtag_slave_clk
+    jtag_slave_clk_inst
     (
+      .clk(clk),
       .tck_pad_i(tck),
       .tms_pad_i(tms),
       .trstn_pad_i(1'b1),
@@ -90,6 +84,7 @@ module top_jtag_slave
       .data(S_tdo)
     );
 
+    localparam C_shift_hex_disp_left = 2; // how many bits to left-shift hex display 
     localparam C_row_digits = 16; // hex digits in one row
     localparam C_display_bits = 256;
     wire [C_display_bits-1:0] S_display;
@@ -100,14 +95,14 @@ module top_jtag_slave
       for(i = 0; i < C_row_digits; i++)
         assign S_display[4*i] = S_tdi[i];
       // row 1: TMS
-      for(i = 0; i < C_capture_bits-1; i++)
-        assign S_display[1*C_row_digits*4+C_capture_bits-0-i] = S_tms[i];
+      for(i = 0; i < C_capture_bits-C_shift_hex_disp_left; i++)
+        assign S_display[1*C_row_digits*4+C_capture_bits-1+C_shift_hex_disp_left-i] = S_tms[i];
       // row 2: TDI
-      for(i = 0; i < C_capture_bits-1; i++)
-        assign S_display[2*C_row_digits*4+C_capture_bits-0-i] = S_tdi[i];
+      for(i = 0; i < C_capture_bits-C_shift_hex_disp_left; i++)
+        assign S_display[2*C_row_digits*4+C_capture_bits-1+C_shift_hex_disp_left-i] = S_tdi[i];
       // row 3: TDO (slave response)
-      for(i = 0; i < C_capture_bits-1; i++)
-        assign S_display[3*C_row_digits*4+C_capture_bits-0-i] = S_tdo[i];
+      for(i = 0; i < C_capture_bits-C_shift_hex_disp_left; i++)
+        assign S_display[3*C_row_digits*4+C_capture_bits-1+C_shift_hex_disp_left-i] = S_tdo[i];
     endgenerate
 
     // lower row displays HEX data, incoming from right to left
