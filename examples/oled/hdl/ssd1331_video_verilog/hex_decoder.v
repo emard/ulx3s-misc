@@ -140,7 +140,8 @@ module hex_decoder
   // S_pixel <= x"FF" when R_char_line(R_char_line'high) = '1' else R_indexed_color; -- scan left to right
   assign S_pixel = R_char_line[0] == 1'b1 ? 8'hFF : R_indexed_color; // scan right to left (white on color background)
   // S_pixel <= x"FF" when R_char_line(0) = '1' else x"00"; -- scan right to left (white on black)
-  assign S_indexed_data = R_data[ {R_data_index, 2'd3} : {R_data_index, 2'd0} ]; // R_data_index*4
+  // assign S_indexed_data = R_data[ {R_data_index, 2'd3} : {R_data_index, 2'd0} ]; // R_data_index*4
+  assign S_indexed_data = R_data[ {R_data_index, 2'd0} +: 4 ]; // doesn't work for my diamond 3.7
 
   reg [10:0] R_counter;
   always @(posedge clk)
