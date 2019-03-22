@@ -24,28 +24,34 @@ module top_spi_hex
         .locked(locked)
     );
 
-    localparam C_bits_width = 64;
-    wire [C_bits_width-1:0] S_display; // something to display
+    localparam C_mosi_bits = 64;
+    wire [C_mosi_bits-1:0] S_mosi; // this is SPI MOSI shift register
     spi_slave
     #(
-        .C_data_len(C_bits_width)
+        .C_data_len(C_mosi_bits)
     )
-    spi_slave_inst
+    spi_slave_mosi_inst
     (
         .clk(btn[2]),
         .csn(1'b0),
         .mosi(btn[1]),
-        .data(S_display)
+        .data(S_mosi)
     );
+
+    localparam C_display_bits = 128;
+    wire [C_display_bits-1:0] S_display;
+    // upper row displays binary as shifted
+    // lower row displays HEX data
+    assign S_display[C_display_bits-1:C_display_bits-C_mosi_bits] = S_mosi;
 
     wire [6:0] x;
     wire [5:0] y;
     wire next_pixel;
     wire [7:0] color;
-    
+
     hex_decoder
     #(
-        .C_data_len(C_bits_width),
+        .C_data_len(C_display_bits),
         .C_font_file("oled_font.mem")
     )
     hex_decoder_inst
