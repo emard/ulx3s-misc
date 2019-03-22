@@ -1,3 +1,7 @@
+// BTN1 - MOSI data
+// BTN2 - CLOCK clock
+// while hoding (or not holding) BTN1 press BTN2
+
 module top_spi_hex
 (
     input  wire clk_25mhz,
@@ -40,8 +44,14 @@ module top_spi_hex
 
     localparam C_display_bits = 128;
     wire [C_display_bits-1:0] S_display;
-    // upper row displays binary as shifted
-    // lower row displays HEX data
+    // upper row displays binary as shifted in time, incoming from left to right
+    genvar i;
+    generate
+      for(i = 0; i < C_mosi_bits/4; i++)
+        assign S_display[C_mosi_bits-4*i-4] = S_mosi[i];
+    endgenerate
+    
+    // lower row displays HEX data, incoming from right to left
     assign S_display[C_display_bits-1:C_display_bits-C_mosi_bits] = S_mosi;
 
     wire [6:0] x;
