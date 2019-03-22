@@ -56,21 +56,6 @@ module hex_decoder
   wire [7:0] S_pixel;
   reg [7:0] R_pixel;
 
-  // type T_screen_line is array(0 to 15) of integer range 0 to 16;
-  // type T_screen is array(0 to 7) of T_screen_line;
-/*
-  signal C_screen: T_screen :=
-  ( -- example screen during debugging
-    (15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0),
-    (0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0),
-    (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-    (0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,0),
-    (0,0,0,0,0,0,16,0,0,15,0,0,0,0,0,0),
-    (0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0),
-    (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-    (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-  );
-*/
   reg [6:0] R_data_index = 7'b0000010; // tuned to start at 1st hex digit
   reg [3:0] R_indexed_data; // stored from input
   wire [3:0] S_indexed_data;
@@ -140,7 +125,6 @@ module hex_decoder
   // S_pixel <= x"FF" when R_char_line(R_char_line'high) = '1' else R_indexed_color; -- scan left to right
   assign S_pixel = R_char_line[0] == 1'b1 ? 8'hFF : R_indexed_color; // scan right to left (white on color background)
   // S_pixel <= x"FF" when R_char_line(0) = '1' else x"00"; -- scan right to left (white on black)
-  // assign S_indexed_data = R_data[ {R_data_index, 2'd3} : {R_data_index, 2'd0} ]; // R_data_index*4
   assign S_indexed_data = R_data[ {R_data_index, 2'd0} +: 4 ]; // doesn't work for my diamond 3.7
 
   reg [10:0] R_counter;
@@ -157,12 +141,6 @@ module hex_decoder
             if(R_cpixel == 5) // load new hex digit
             begin
               R_cpixel <= 0;
-              // this example shows data correctly
-              //R_indexed_color <= C_color_map(C_screen(conv_integer(S_row))(conv_integer(S_column)));
-              //R_char_line <= C_oled_font(
-              //  C_screen(conv_integer(S_row))(conv_integer(S_column))
-              //  )(conv_integer(S_scanline));
-              // useable but ugly pixels from signal propagation delays
               R_indexed_color <= C_color_map[R_indexed_data];
               R_char_line <= C_oled_font[ {R_indexed_data, S_scanline} ];
               R_increment <= R_increment + 1; // increment for column and scan line
@@ -179,8 +157,3 @@ module hex_decoder
   end
   assign color = R_pixel;
 endmodule
-
-// TODO
-// [x] latch input otherwise broken chars will appear
-// [ ] latched datata unreliably displayed, signal propagation delay problem
-
