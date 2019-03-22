@@ -32,11 +32,13 @@ module top_spi_hex
     wire [C_mosi_bits-1:0] S_mosi; // this is SPI MOSI shift register
     spi_slave
     #(
+        .C_sclk_capable_pin(1'b0),
         .C_data_len(C_mosi_bits)
     )
     spi_slave_mosi_inst
     (
-        .clk(btn[2]),
+        .clk(clk),
+        .sclk(btn[2]),
         .csn(1'b0),
         .mosi(btn[1]),
         .data(S_mosi)
