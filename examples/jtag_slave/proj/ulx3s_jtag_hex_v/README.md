@@ -1,4 +1,4 @@
-# OLED terminal
+# JTAG slave terminal
 
 cleanup:
 
@@ -18,20 +18,14 @@ or
 
 usage:
 
-    screen /dev/ttyUSB0 115200
+    make scan
 
-type some text...
+On OLED rows have this meaning
 
-to exit:
+    bin TDI
+    hex TMS
+    hex TDI
+    hex TDO
 
-    ctrl-a \
+TDO row should display JTAG ID 149511C3
 
-or
-
-    ctrl-a altgr-q
-
-# trellis-diamond difference
-
-For bitstream compiled with diamond,
-unwanted dot will appear at bottom of
-each character.

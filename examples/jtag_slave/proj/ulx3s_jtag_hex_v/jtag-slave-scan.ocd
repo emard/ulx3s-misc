@@ -8,5 +8,5 @@ jtag newtap jtagslave tap -expected-id 0x149511c3 -irlen 4 -irmask 0xF -ircaptur
 
 init
 scan_chain
-# svf -tap jtagslave.tap -quiet -progress ${FILE_SVF}
+svf -tap jtagslave.tap jtag-slave-test.svf
 shutdown
