@@ -27,7 +27,7 @@ module hex_decoder
   output wire [7:0] color
 );
 
-  wire [4:0] C_oled_font[0:C_font_size-1];
+  reg [4:0] C_oled_font[0:C_font_size-1];
   initial
   begin
     $readmemb(C_font_file, C_oled_font);
@@ -164,7 +164,7 @@ module hex_decoder
               //  )(conv_integer(S_scanline));
               // useable but ugly pixels from signal propagation delays
               R_indexed_color <= C_color_map[R_indexed_data];
-              R_char_line <= C_oled_font[R_indexed_data*8 + S_scanline];
+              R_char_line <= C_oled_font[ {R_indexed_data, S_scanline} ];
               R_increment <= R_increment + 1; // increment for column and scan line
               if(R_increment == 0 && R_go == 1'b1)
                 R_data <= data; // sample data
