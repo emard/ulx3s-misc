@@ -1,0 +1,12 @@
+# OpenOCD commands
+
+telnet_port 4444
+gdb_port 3333
+
+# JTAG TAPs
+jtag newtap jtagslave tap -expected-id 0x149511c3 -irlen 4 -irmask 0xF -ircapture 0x5
+
+init
+scan_chain
+svf -tap jtagslave.tap jtag-slave-test.svf
+shutdown
