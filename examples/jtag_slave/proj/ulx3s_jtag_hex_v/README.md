@@ -28,4 +28,4 @@ On OLED rows have this meaning
     hex TDO
 
 TDO row should display JTAG ID 149511C3
-
+Trellis always works. Diamond works but unreliable.
