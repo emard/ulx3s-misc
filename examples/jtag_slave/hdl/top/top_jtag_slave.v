@@ -26,6 +26,15 @@ module top_jtag_slave
     assign tdi = ftdi_txd;
     assign ftdi_rxd = tdo;
 
+    /*
+    wire clk_50MHz;
+    clk_25_50_25
+    clk_25_50_25_inst
+    (
+      .clki(clk_25mhz),
+      .clko(clk_50MHz)
+    );
+    */
     assign clk = clk_25mhz;
 
     jtag_slave_clk

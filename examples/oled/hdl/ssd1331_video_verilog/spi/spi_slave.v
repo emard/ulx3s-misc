@@ -28,14 +28,18 @@ module spi_slave
     begin
       // sclk is generic pin
       // it needs clock synchronous edge detection
+      reg R_mosi;
       reg [1:0] R_sclk;
       always @(posedge clk)
+      begin
         R_sclk <= {R_sclk[0], sclk};
+        R_mosi <= mosi;
+      end
       always @(posedge clk)
       begin
         if(csn == 1'b0)
           if(R_sclk == 2'b01) // rising edge
-            data <= { data[C_data_len-2:0], mosi };
+            data <= { data[C_data_len-2:0], R_mosi };
       end
     end
   endgenerate
