@@ -89,7 +89,7 @@ module top_jtag_slave
       .data(S_tdo)
     );
 
-    localparam C_shift_hex_disp_left = 2; // how many bits to left-shift hex display 
+    localparam C_shift_hex_disp_left = 0; // how many bits to left-shift hex display
     localparam C_row_digits = 16; // hex digits in one row
     localparam C_display_bits = 256;
     wire [C_display_bits-1:0] S_display;
