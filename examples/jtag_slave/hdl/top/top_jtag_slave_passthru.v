@@ -3,16 +3,17 @@ module top_jtag_slave_passthru
     input  wire clk_25mhz,
     input  wire [6:0] btn,
     output wire [7:0] led,
-    input  wire ftdi_ndtr, // TCK
-    input  wire ftdi_nrts, // TMS
-    input  wire ftdi_txd,  // TDI
+    input  wire ftdi_ndtr, ftdi_nrts, ftdi_txd, // TCK, TMS, TDI
     output wire ftdi_rxd,  // TDO
     output wire oled_csn, oled_clk, oled_mosi, oled_dc, oled_resn,
-    inout  wire [3:0] sd_d, // wifi_gpio 13,12,4,2
     input  wire sd_clk, sd_cmd, // wifi_gpio 14,15
-    output wire wifi_rxd, wifi_en, wifi_gpio0,
-    input  wire wifi_txd, wifi_gpio5, wifi_gpio16, wifi_gpio17
+    inout  wire [3:0] sd_d, // wifi_gpio 13,12,4,2
+    input  wire wifi_txd, wifi_gpio5, wifi_gpio16, wifi_gpio17,
+    output wire wifi_rxd, wifi_en, wifi_gpio0
 );
+    localparam C_prog_release_bits = 19;
+    reg [C_prog_release_bits-1:0] R_prog_release;
+
     wire tck, tms, tdi, tdo;
     // assign tck = ftdi_ndtr;
     // assign tms = ftdi_nrts;
@@ -23,6 +24,8 @@ module top_jtag_slave_passthru
     assign wifi_rxd = ftdi_txd;
     // Programming logic
     // SERIAL  ->  ESP32
+    // prog_in    prog_out
+    //  1   0      1   0
     // DTR RTS -> IO0  EN
     //  1   1      1   1
     //  0   0      1   1
@@ -31,10 +34,30 @@ module top_jtag_slave_passthru
     wire [1:0] S_prog_in;
     assign S_prog_in[1] = ftdi_ndtr;
     assign S_prog_in[0] = ftdi_nrts;
+    wire [1:0] S_prog_out;
     assign S_prog_out = S_prog_in == 2'b00 ? 2'b11 : S_prog_in;
-    assign wifi_en = S_prog_out[0];
     assign wifi_gpio0 = S_prog_out[1] & btn[0];
-    assign sd_d[0] = wifi_gpio0 ? 1'b1 : 1'b0; // sd_d[0] = wifi_gpio2 together with wifi_gpio0 to 0
+    // assign wifi_gpio0 = R_prog_release[C_prog_release_bits-1] ? btn[0] : S_prog_out[1] & btn[0];
+    assign sd_d[0] = R_prog_release[C_prog_release_bits-1] ? 1'bz : S_prog_out[1]; // sd_d[0] = wifi_gpio2 together with wifi_gpio0 to 0
+    // assign wifi_en = R_prog_release[C_prog_release_bits-1] ? 1'b1 : S_prog_out[0];
+    assign wifi_en = S_prog_out[0];
+    
+    assign led[7] = wifi_en;
+    assign led[5] = wifi_gpio5;
+    // assign led[0] = sd_d[0];
+
+    // programming release counter
+    reg [1:0] R_prog_in, R_prog_in_prev;
+    always @(posedge clk_25mhz)
+    begin
+        R_prog_in_prev <= R_prog_in;
+        R_prog_in <= S_prog_in;
+        if((R_prog_in == 2'b10 /* || R_prog_in == 2'b01 */) && R_prog_in_prev != 2'b10)
+          R_prog_release <= 0;
+        else
+          if(R_prog_release[C_prog_release_bits-1] == 1'b0)
+            R_prog_release <= R_prog_release + 1;
+    end
 
     /*
     wire clk_50MHz;
