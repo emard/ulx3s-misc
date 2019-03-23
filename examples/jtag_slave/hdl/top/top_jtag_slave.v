@@ -1,7 +1,3 @@
-// BTN1 - MOSI data
-// BTN2 - CLOCK clock
-// while hoding (or not holding) BTN1 press BTN2
-
 module top_jtag_slave
 (
     input  wire clk_25mhz,
