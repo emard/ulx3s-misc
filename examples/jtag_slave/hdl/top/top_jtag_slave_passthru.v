@@ -22,9 +22,9 @@ module top_jtag_slave_passthru
     // assign ftdi_rxd = tdo;
 
     assign tck = sd_clk; // wifi_gpio14
-    assign tms = sd_d[3]; // wifi_gpio13
+    assign tms = wifi_gpio16; // wifi_gpio16
     assign tdi = sd_cmd; // wifi_gpio15 
-    assign sd_d[2] = tdo; // wifi_gpio12 (miso is usually on sd_d[0])
+    // assign sd_d[2] = tdo; // wifi_gpio12 (miso is usually on sd_d[0])
 
     assign ftdi_rxd = wifi_txd;
     assign wifi_rxd = ftdi_txd;
