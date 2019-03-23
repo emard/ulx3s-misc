@@ -75,7 +75,7 @@ module hex_decoder
   localparam C_color_light_red     = 8'h80;
   localparam C_color_orange        = 8'h84;
   localparam C_color_light_yellow  = 8'h90;
-  localparam C_color_light_green   = 8'h15;
+  localparam C_color_light_green   = 8'h10;
   localparam C_color_light_cyan    = 8'h0A;
   localparam C_color_light_blue    = 8'h02;
   localparam C_color_light_violett = 8'h42;
