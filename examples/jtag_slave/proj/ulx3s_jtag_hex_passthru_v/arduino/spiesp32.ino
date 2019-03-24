@@ -15,9 +15,9 @@ unsigned long previousMillis = 0;        // will store last time LED was updated
 const long interval = 1000;           // interval at which to blink (milliseconds)
 
 #define TCK 14
-#define TMS 16
-#define TDI 15
-#define TDO 4
+#define TMS 15
+#define TDI 13
+#define TDO 12
 
 void bitbang(uint8_t data, uint8_t n)
 {

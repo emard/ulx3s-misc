@@ -2,7 +2,7 @@
 PROJECT = oled_spi_hex
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -17,7 +17,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
+CONSTRAINTS = constraints/ulx3s_v20_sdio_segpdi.lpf
 TOP_MODULE = top_jtag_slave_passthru
 TOP_MODULE_FILE = ../../../jtag_slave/hdl/top/$(TOP_MODULE).v
 
@@ -35,6 +35,3 @@ SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/diamond_path.mk
 include $(SCRIPTS)/trellis_path.mk
 include $(SCRIPTS)/trellis_main.mk
-
-scan:
-	$(OPENOCD) --file=$(SCRIPTS)/ft231x2.ocd --file=jtag-slave-scan.ocd

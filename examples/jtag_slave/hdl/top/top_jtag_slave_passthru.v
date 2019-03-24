@@ -6,8 +6,12 @@ module top_jtag_slave_passthru
     input  wire ftdi_ndtr, ftdi_nrts, ftdi_txd, // TCK, TMS, TDI
     output wire ftdi_rxd,  // TDO
     output wire oled_csn, oled_clk, oled_mosi, oled_dc, oled_resn,
-    input  wire sd_clk, sd_cmd, // wifi_gpio 14,15
-    inout  wire [3:0] sd_d, // wifi_gpio 13,12,4,2
+    input  wire sd_clk, // wifi_gpio 14
+    input  wire sd_cmd, // wifi_gpio 15
+    input  wire sd_d3, // wifi_gpio 13
+    output wire sd_d2, // wifi_gpio 12
+    input  wire sd_d1, // wifi_gpio 4
+    output wire sd_d0, // wifi_gpio 2
     input  wire wifi_txd, wifi_gpio5, wifi_gpio16, wifi_gpio17,
     output wire wifi_rxd, wifi_en, wifi_gpio0
 );
@@ -22,9 +26,9 @@ module top_jtag_slave_passthru
     // assign ftdi_rxd = tdo;
 
     assign tck = sd_clk; // wifi_gpio14
-    assign tms = wifi_gpio16; // wifi_gpio16
-    assign tdi = sd_cmd; // wifi_gpio15 
-    // assign sd_d[2] = tdo; // wifi_gpio12 (miso is usually on sd_d[0])
+    assign tms = sd_cmd; // wifi_gpio15
+    assign tdi = sd_d3; // wifi_gpio13 
+    assign sd_d2 = tdo; // wifi gpio12
 
     assign ftdi_rxd = wifi_txd;
     assign wifi_rxd = ftdi_txd;
@@ -44,7 +48,7 @@ module top_jtag_slave_passthru
     assign S_prog_out = S_prog_in == 2'b00 ? 2'b11 : S_prog_in;
     assign wifi_gpio0 = S_prog_out[1] & btn[0]; // simple and works, but is it reliable?
     // assign wifi_gpio0 = R_prog_release[C_prog_release_bits-1] ? btn[0] : S_prog_out[1] & btn[0]; // try if it works more reliable
-    assign sd_d[0] = R_prog_release[C_prog_release_bits-1] ? 1'b0 : S_prog_out[1]; // sd_d[0] = wifi_gpio2 together with wifi_gpio0 to 0
+    assign sd_d0 = R_prog_release[C_prog_release_bits-1] ? 1'b0 : S_prog_out[1]; // sd_d[0] = wifi_gpio2 together with wifi_gpio0 to 0
     // assign wifi_en = R_prog_release[C_prog_release_bits-1] ? 1'b1 : S_prog_out[0]; // try this if it works more reliable
     assign wifi_en = S_prog_out[0]; // simple and works, but is it reliable?
 
@@ -77,7 +81,6 @@ module top_jtag_slave_passthru
     */
     assign clk = clk_25mhz;
 
-    /*
     jtag_slave_clk
     jtag_slave_clk_inst
     (
@@ -88,7 +91,6 @@ module top_jtag_slave_passthru
       .tdi_pad_i(tdi),
       .tdo_pad_o(tdo)
     );
-    */
 
     localparam C_capture_bits = 64;
     wire [C_capture_bits-1:0] S_tms, S_tdi, S_tdo; // this is SPI MOSI shift register
