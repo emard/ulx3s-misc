@@ -1,5 +1,11 @@
-/* blink and bitbang soft-jtag
-*/
+/* SPI-accelerated JTAG and blink */
+
+#include <SPI.h>
+static const int spiClk = 30000000; // Hz (30 MHz normal speed)
+// static const int spiClk = 200; // Hz (200 Hz debug speed)
+
+//uninitalised pointers to SPI objects
+SPIClass * spi_jtag = NULL;
 
 // constants won't change. Used here to set a pin number:
 const int ledPin =  LED_BUILTIN;// the number of the LED pin
@@ -11,14 +17,16 @@ int ledState = LOW;             // ledState used to set the LED
 // The value will quickly become too large for an int to store
 unsigned long previousMillis = 0;        // will store last time LED was updated
 
-// constants won't change:
-const long interval = 1000;           // interval at which to blink (milliseconds)
+static int interval = 1000; // ms
+
+// JTAG pinout to the SPI-HEX-OLED core
 
 #define TCK 14
 #define TMS 15
 #define TDI 13
 #define TDO 12
 
+#if 0
 void bitbang(uint8_t data, uint8_t n)
 {
   for(int i = 0; i < n; i++)
@@ -33,15 +41,73 @@ void bitbang(uint8_t data, uint8_t n)
   }
   digitalWrite(TCK, 0);  
 }
+#endif
 
-void setup() {
-  // set the digital pin as output:
-  pinMode(ledPin, OUTPUT);
-  Serial.begin(115200);
+void prepare_spi_end()
+{
+  pinMode(TCK, INPUT_PULLDOWN);
+  pinMode(TMS, INPUT_PULLDOWN);
+  pinMode(TDI, INPUT_PULLDOWN);
+  pinMode(TDO, INPUT_PULLDOWN);
+}
+
+void init_bitbang_pins()
+{
+  digitalWrite(TCK, 0);
+  digitalWrite(TMS, 0);
+  digitalWrite(TDI, 0);
+  // for bitbanging
   pinMode(TCK, OUTPUT);
   pinMode(TMS, OUTPUT);
   pinMode(TDI, OUTPUT);
   pinMode(TDO, INPUT);
+  digitalWrite(TCK, 0);
+  digitalWrite(TMS, 0);
+  digitalWrite(TDI, 0);
+}
+
+void jtag_nibble(uint8_t data)
+{
+  uint32_t data_mosi, data_miso;
+  data_mosi = data;
+  //spi_jtag->beginTransaction(SPISettings(spiClk, LSBFIRST, SPI_MODE0));
+  spi_jtag->transferBits(data_mosi, &data_miso, 4);
+  //spi_jtag->endTransaction();
+}
+
+void jtag_byte(uint8_t data)
+{
+  uint8_t data_miso[8];
+  uint8_t data_mosi[8] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE };
+  data_mosi[0] = data;
+  //spi_jtag->beginTransaction(SPISettings(spiClk, LSBFIRST, SPI_MODE0));
+  spi_jtag->transferBytes(data_mosi, data_miso, 4);
+  //spi_jtag->endTransaction();
+}
+
+void setup() {
+  prepare_spi_end();
+  init_bitbang_pins();
+
+  // set the digital pin as output:
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(115200);
+
+  spi_jtag = new SPIClass(VSPI); // VSPI or HSPI can be used
+
+  //initialise HSPI with default pins
+  //SCLK = 14, MISO = 12, MOSI = 13, SS = 15
+  //spi_jtag->begin();
+  //alternatively route through GPIO pins
+  //spi_jtag->begin(25, 26, 27, 32); //SCLK, MISO, MOSI, SS
+  // set SS = 0 to disable hardware driving of SS pin
+  // software will drive it using digitalWrite()
+  spi_jtag->begin(TCK, TDO, TDI, 0); // SCLK, MISO, MOSI, SS
+  spi_jtag->beginTransaction(SPISettings(spiClk, LSBFIRST, SPI_MODE0));
+  // when done with transaction:
+  // spi_jtag->endTransaction();
+  // when done with jtag close the SPI port completely
+  // spi_jtag->end();
 }
 
 void loop() {
@@ -59,7 +125,12 @@ void loop() {
 
     // if the LED is off turn it on and vice-versa:
     if (ledState == LOW) {
-      bitbang(counter & 0xF, 4);
+      digitalWrite(TMS, 0);
+      jtag_nibble(0xA); // 4-bit header 0xA
+      digitalWrite(TMS, 1);
+      jtag_byte(counter & 0xFF); // 8-bit counter
+      digitalWrite(TMS, 0);
+      jtag_nibble(0xB); // 4-bit footer 0xB
       ledState = HIGH;
       Serial.println(counter & 0xF);
     } else {
