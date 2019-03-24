@@ -23,7 +23,7 @@ TOP_MODULE_FILE = ../../../jtag_slave/hdl/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../../jtag_slave/hdl/jtag_slave_clk.v \
+  ../../../jtag_slave/hdl/jtag_slave.v \
   ../../../oled/hdl/ssd1331_video_verilog/spi/spi_slave.v \
   ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
   ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v

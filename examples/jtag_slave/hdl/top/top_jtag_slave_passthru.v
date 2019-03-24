@@ -81,10 +81,10 @@ module top_jtag_slave_passthru
     */
     assign clk = clk_25mhz;
 
-    jtag_slave_clk
-    jtag_slave_clk_inst
+    jtag_slave
+    jtag_slave_inst
     (
-      .clk(clk),
+      // .clk(clk),
       .tck_pad_i(tck),
       .tms_pad_i(tms),
       .trstn_pad_i(1'b1),
@@ -97,7 +97,7 @@ module top_jtag_slave_passthru
 
     spi_slave
     #(
-      .C_sclk_capable_pin(1'b0),
+      .C_sclk_capable_pin(1'b1),
       .C_data_len(C_capture_bits)
     )
     spi_slave_tms_inst
@@ -111,7 +111,7 @@ module top_jtag_slave_passthru
 
     spi_slave
     #(
-      .C_sclk_capable_pin(1'b0),
+      .C_sclk_capable_pin(1'b1),
       .C_data_len(C_capture_bits)
     )
     spi_slave_tdi_inst
@@ -125,7 +125,7 @@ module top_jtag_slave_passthru
 
     spi_slave
     #(
-      .C_sclk_capable_pin(1'b0),
+      .C_sclk_capable_pin(1'b1),
       .C_data_len(C_capture_bits)
     )
     spi_slave_tdo_inst

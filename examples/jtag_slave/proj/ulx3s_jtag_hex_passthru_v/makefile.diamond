@@ -50,7 +50,7 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
-  ../../../jtag_slave/hdl/jtag_slave_clk.v \
+  ../../../jtag_slave/hdl/jtag_slave.v \
   ../../../oled/hdl/ssd1331_video_verilog/spi/spi_slave.v \
   ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
   ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v
