@@ -80,11 +80,13 @@ module top_jtag_slave_passthru
     );
     */
     assign clk = clk_25mhz;
-
+    
+    wire [3:0] tap_state;
     jtag_slave
     jtag_slave_inst
     (
       // .clk(clk),
+      .tap_state_o(tap_state),
       .tck_pad_i(tck),
       .tms_pad_i(tms),
       .trstn_pad_i(1'b1),
@@ -141,11 +143,13 @@ module top_jtag_slave_passthru
     localparam C_row_digits = 16; // hex digits in one row
     localparam C_display_bits = 256;
     wire [C_display_bits-1:0] S_display;
+    // home position hex digit shows TAP state
+    assign S_display[63:60] = tap_state; // leftmost hex is tap state
     // upper row displays binary as shifted in time, incoming from left to right
     genvar i;
     generate
       // row 0: binary TDI
-      for(i = 0; i < C_row_digits; i++)
+      for(i = 0; i < C_row_digits-1; i++)
         assign S_display[4*i] = S_tdi[i];
       // row 1: TMS
       for(i = 0; i < C_capture_bits-C_shift_hex_disp_left; i++)

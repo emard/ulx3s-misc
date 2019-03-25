@@ -117,10 +117,9 @@ input   trstn_pad_i;     // JTAG test reset pad
 input   tdi_pad_i;      // JTAG test data input pad
 output  tdo_pad_o;      // JTAG test data output pad
 output  tdo_padoe_o;    // Output enable for JTAG test data output pad 
-
-output  [3:0] tap_state_o;
  
 // TAP states
+output  [3:0] tap_state_o;
 output  test_logic_reset_o;
 output  run_test_idle_o;
 output  shift_dr_o;

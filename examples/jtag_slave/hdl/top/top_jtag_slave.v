@@ -95,8 +95,9 @@ module top_jtag_slave
     localparam C_row_digits = 16; // hex digits in one row
     localparam C_display_bits = 256;
     wire [C_display_bits-1:0] S_display;
-    // upper row displays binary as shifted in time, incoming from left to right
+    // home position hex digit shows TAP state
     assign S_display[63:60] = tap_state; // leftmost hex is tap state
+    // upper row displays binary as shifted in time, incoming from left to right
     genvar i;
     generate
       // row 0: binary TDI

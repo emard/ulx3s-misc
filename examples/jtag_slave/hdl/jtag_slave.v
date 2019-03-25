@@ -79,9 +79,11 @@ module jtag_slave(
                 tdo_pad_o, 
                 tdo_padoe_o,
  
+                // TAP state, encoded 
+                tap_state_o,
                 // TAP states
-				test_logic_reset_o,
-				run_test_idle_o,
+		test_logic_reset_o,
+		run_test_idle_o,
                 shift_dr_o,
                 pause_dr_o, 
                 update_dr_o,
@@ -112,6 +114,7 @@ output  tdo_pad_o;      // JTAG test data output pad
 output  tdo_padoe_o;    // Output enable for JTAG test data output pad 
  
 // TAP states
+output  [3:0] tap_state_o;
 output  test_logic_reset_o;
 output  run_test_idle_o;
 output  shift_dr_o;
@@ -204,7 +207,9 @@ assign debug_select_o = debug_select;
  
 reg [3:0] TAP_state = `STATE_test_logic_reset;  // current state of the TAP controller
 reg [3:0] next_TAP_state;  // state TAP will take at next rising TCK, combinational signal
- 
+
+assign tap_state_o = TAP_state; // output TAP state encoded
+
 // sequential part of the FSM
 always @ (posedge tck_pad_i or negedge trstn_pad_i)
 begin
