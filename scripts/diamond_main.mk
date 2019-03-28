@@ -108,10 +108,10 @@ SCRIPTS ?= scripts
 FPGA_CHIP_UPPERCASE := $(shell echo $(FPGA_CHIP) | tr '[:lower:]' '[:upper:]')
 FPGA_PACKAGE_UPPERCASE := $(shell echo $(FPGA_PACKAGE) | tr '[:lower:]' '[:upper:]')
 
-all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf
-#all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf
-#all: $(PROJECT)/$(PROJECT)_$(PROJECT).bit
-#all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
+#BITSTREAM ?= $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
+BITSTREAM ?= $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme
+
+all: $(BITSTREAM)
 
 # VHDL to VERILOG conversion
 %.v: %.vhd
@@ -206,7 +206,7 @@ $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT
 	  $(SCRIPTS)/xcf.xsl $(SCRIPTS)/$(BOARD)_flash_$(FLASH_CHIP).xcf > $@
 
 # run DDTCMD to generate flash VME file
-$(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme: ulx3s_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash.mcs
+$(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme: $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash.mcs
 	LANG=C ${DDTCMD} -oft -fullvme -if $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf -nocompress -noheader -of $@
 
 # generate SVF file by prjtrellis python script

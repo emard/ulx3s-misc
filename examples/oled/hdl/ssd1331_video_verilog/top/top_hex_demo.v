@@ -10,6 +10,7 @@ module top_hex_demo
     output wire oled_resn,
     output wire wifi_gpio0
 );
+    parameter C_color_bits = 16; // 8 or 16
     assign wifi_gpio0 = btn[0];
 
     wire clk, locked;
@@ -37,12 +38,13 @@ module top_hex_demo
     wire [6:0] x;
     wire [5:0] y;
     wire next_pixel;
-    wire [7:0] color;
-    
+    wire [C_color_bits-1:0] color;
+
     hex_decoder
     #(
         .C_data_len(128),
-        .C_font_file("oled_font.mem")
+        .C_font_file("oled_font.mem"),
+        .C_color_bits(C_color_bits)
     )
     hex_decoder_inst
     (
@@ -54,10 +56,18 @@ module top_hex_demo
         .next_pixel(next_pixel),
         .color(color)
     );
+    
+    generate
+      if(C_color_bits < 12)
+        localparam C_init_file = "oled_init_xflip.mem";
+      else
+        localparam C_init_file = "oled_init_xflip_16bit.mem";
+    endgenerate
 
     oled_video
     #(
-        .C_init_file("oled_init_xflip.mem")
+        .C_init_file(C_init_file),
+        .C_color_bits(C_color_bits)
     )
     oled_video_inst
     (

@@ -11,6 +11,7 @@ module top_checkered
     output wire wifi_gpio0
 );
     assign wifi_gpio0 = btn[0];
+    parameter C_color_bits = 16; // 8 or 16
 
     wire clk, locked;
     pll
@@ -23,12 +24,26 @@ module top_checkered
 
     wire [6:0] x;
     wire [5:0] y;
-    //                 checkered      red     green   blue      red     green   blue
-    wire [7:0] color = x[3] ^ y[3] ? {x[6:4], x[6:4], 2'b00} : {y[5:3], 3'b000, 2'b00};
 
+    generate
+    if(C_color_bits < 12)
+    begin
+    //                  checkered      red   green   blue     red     green blue
+    wire  [7:0] color = x[3] ^ y[3] ? {3'd0, x[6:4], 2'd0} : {y[5:3], 3'd0, 2'd0};
+    localparam C_init_file = "oled_init_xflip.mem";
+    end
+    else
+    begin
+    //                  checkered      red   green   blue     red     green blue
+    wire [15:0] color = x[3] ^ y[3] ? {5'd0, x[6:1], 5'd0} : {y[5:1], 6'd0, 5'd0};
+    localparam C_init_file = "oled_init_xflip_16bit.mem";
+    end
+    endgenerate
+    
     oled_video
     #(
-        .C_init_file("oled_init.mem")
+        .C_init_file(C_init_file),
+        .C_color_bits(C_color_bits)
     )
     oled_video_inst
     (

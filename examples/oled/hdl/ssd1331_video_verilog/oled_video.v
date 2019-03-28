@@ -8,6 +8,7 @@ module oled_video
   // screen can be also XY flipped and/or rotated from this init file
   parameter C_init_file = "oled_init.mem",
   parameter C_init_size = 44, // bytes in init file
+  parameter C_color_bits = 8, // 8 or 16 color depth (should match init file)
   parameter C_x_size = 96,  // pixel X screen size (don't touch)
   parameter C_y_size = 64,  // pixel Y screen size (don't touch)
   parameter C_x_bits = 7,   // fits X screen size (don't touch)
@@ -19,7 +20,7 @@ module oled_video
   output reg  [C_x_bits-1:0] x,
   output reg  [C_y_bits-1:0] y,
   output reg  next_pixel, // 1 when x/y changes
-  input  wire [7:0] color, // color = f(x,y) {3'bRRR, 3'bGGG, 2'bBB }
+  input  wire [C_color_bits-1:0] color, // color = f(x,y) {3'bRRR, 3'bGGG, 2'bBB }
 
   output wire oled_csn,
   output wire oled_clk,
@@ -42,6 +43,16 @@ module oled_video
   reg [7:0] data;
   reg dc;
 
+  reg byte; // alternates data byte for 16-bit mode
+  wire [7:0] color_to_data;
+  generate
+    if(C_color_bits < 12)
+      assign color_to_data = color;
+    else
+      assign color_to_data = byte ? color[15:8] : color[7:0];
+  endgenerate
+  reg [7:0] datalow; // LSB byte of 16-bit data transfer
+
   always @(posedge clk) begin
         if (reset_cnt != 2'b10) 
         begin
@@ -51,6 +62,7 @@ module oled_video
             dc <= 1'b0;
             x <= 0;
             y <= 0;
+            byte <= 0;
         end
         else 
         if (init_cnt[9:4] != C_init_size) 
@@ -62,15 +74,30 @@ module oled_video
                     data <= C_oled_init[init_cnt[9:4]];
                 else
                 begin
-                    data <= color;
-                    next_pixel <= 1'b1;
-                    if (x == C_x_size-1)
+                    if(C_color_bits < 12)
+                      data <= color;
+                    else
                     begin
+                      byte <= ~byte;
+                      if(byte == 1'b0)
+                      begin
+                        datalow <= color[7:0];
+                        data <= color[15:8];
+                      end
+                      else
+                        data <= datalow;
+                    end
+                    if(C_color_bits < 12 || byte == 1'b0)
+                    begin
+                      next_pixel <= 1'b1;
+                      if (x == C_x_size-1)
+                      begin
                         x <= 0;
                         y <= y + 1;
-                    end
-                    else
+                      end
+                      else
                         x <= x + 1;
+                    end
                 end
             end
             else

@@ -14,6 +14,7 @@ module hex_decoder
   // Display has 8 lines. Each line has 16 HEX digits or 64 bits.
   // C_data_len(63 downto 0) is shown on the first line
   // C_data_len(127 downto 64) is shown on second line etc.
+  parameter C_color_bits = 8,
   parameter C_x_bits = 7, // X screen bits
   parameter C_y_bits = 6  // Y screen bits
 )
@@ -24,7 +25,7 @@ module hex_decoder
   input  wire [C_x_bits-1:0] x,
   input  wire [C_y_bits-1:0] y,
   input  wire next_pixel,
-  output wire [7:0] color
+  output wire [C_color_bits-1:0] color
 );
 
   reg [4:0] C_oled_font[0:C_font_size-1];
@@ -53,16 +54,20 @@ module hex_decoder
   localparam C_char_line_bits = 5;
   reg [C_char_line_bits-1:0] R_char_line = 5'b01110;
   // signal R_cpixel: integer range 0 to 6; -- pixel counter
-  wire [7:0] S_pixel;
-  reg [7:0] R_pixel;
+  wire [C_color_bits-1:0] S_pixel;
+  reg [C_color_bits-1:0] R_pixel;
 
   reg [6:0] R_data_index = 7'b0000010; // tuned to start at 1st hex digit
   reg [3:0] R_indexed_data; // stored from input
   wire [3:0] S_indexed_data;
 
+  generate
+  if(C_color_bits < 12)
+  begin
+  // RGB332
   // red   20 40 80
   // green 04 08 10
-  // blue  01 02
+  // blue     01 02
   localparam C_color_black         = 8'h00;
   localparam C_color_dark_red      = 8'h40;
   localparam C_color_dark_brown    = 8'h44;
@@ -79,8 +84,35 @@ module hex_decoder
   localparam C_color_light_cyan    = 8'h0A;
   localparam C_color_light_blue    = 8'h02;
   localparam C_color_light_violett = 8'h42;
+  localparam C_color_white         = 8'hFF;
+  end
+  else
+  begin
+  // RGB565
+  // red        0800 1000 2000 4000 8000
+  // green 0020 0040 0080 0100 0200 0400
+  // blue       0001 0002 0004 0008 0010 
+  localparam C_color_black         = 16'h0000;
+  localparam C_color_dark_red      = 16'h4000;
+  localparam C_color_dark_brown    = 16'h2100;
+  localparam C_color_dark_yellow   = 16'h4200;
+  localparam C_color_dark_green    = 16'h0200;
+  localparam C_color_dark_cyan     = 16'h0208;
+  localparam C_color_dark_blue     = 16'h0008;
+  localparam C_color_dark_violett  = 16'h4008;
+  localparam C_color_gray          = 16'h630C;
+  localparam C_color_light_red     = 16'h8000;
+  localparam C_color_orange        = 16'h4200;
+  localparam C_color_light_yellow  = 16'h8400;
+  localparam C_color_light_green   = 16'h0400;
+  localparam C_color_light_cyan    = 16'h0410;
+  localparam C_color_light_blue    = 16'h0010;
+  localparam C_color_light_violett = 16'h8010;
+  localparam C_color_white         = 16'hFFFF;
+  end
+  endgenerate
 
-  wire [7:0] C_color_map[0:15]; // char background color map
+  wire [C_color_bits-1:0] C_color_map[0:15]; // char background color map
   assign C_color_map[0] = C_color_black;
   assign C_color_map[1] = C_color_dark_red;
   assign C_color_map[2] = C_color_dark_brown;
@@ -97,7 +129,7 @@ module hex_decoder
   assign C_color_map[13] = C_color_light_cyan;
   assign C_color_map[14] = C_color_light_blue;
   assign C_color_map[15] = C_color_light_violett;
-  reg [7:0] R_indexed_color;
+  reg [C_color_bits-1:0] R_indexed_color;
 
   generate
   if(C_debounce == 1'b1)
@@ -123,9 +155,9 @@ module hex_decoder
   endgenerate
 
   // S_pixel <= x"FF" when R_char_line(R_char_line'high) = '1' else R_indexed_color; -- scan left to right
-  assign S_pixel = R_char_line[0] == 1'b1 ? 8'hFF : R_indexed_color; // scan right to left (white on color background)
+  assign S_pixel = R_char_line[0] == 1'b1 ? C_color_white : R_indexed_color; // scan right to left (white on color background)
   // S_pixel <= x"FF" when R_char_line(0) = '1' else x"00"; -- scan right to left (white on black)
-  assign S_indexed_data = R_data[ {R_data_index, 2'd0} +: 4 ]; // doesn't work for my diamond 3.7
+  assign S_indexed_data = R_data[ {R_data_index, 2'd0} +: 4 ];
 
   reg [10:0] R_counter;
   always @(posedge clk)
