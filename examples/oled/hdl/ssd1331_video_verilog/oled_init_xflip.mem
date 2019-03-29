@@ -8,7 +8,15 @@
 BC
 // 1: Set display off
 AE
-// 2: Set data format (A0 20 normal, A0 22 X-flip, A0 32 Y-flip)
+// 2: Set data format
+// A0 20 normal 8bpp
+// A0 22 X-flip 8bpp
+// A0 30 Y-flip 8bpp
+// A0 32 XY-flip 8bpp
+// A0 60 normal 16bpp
+// A0 62 X-flip 16bpp
+// A0 70 Y-flip 16bpp
+// A0 72 XY-flip 16bpp
 A0
 22
 // 4: Set display start line

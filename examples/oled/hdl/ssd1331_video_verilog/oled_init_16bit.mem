@@ -18,7 +18,7 @@ AE
 // A0 70 Y-flip 16bpp
 // A0 72 XY-flip 16bpp
 A0
-20
+60
 // 4: Set display start line
 A1
 00
