@@ -51,7 +51,7 @@ VHDL_FILES = \
   hdl/tmds_encoder.vhd
 
 # synthesis options
-#YOSYS_OPTIONS = -noccu2
+NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../scripts
 include $(SCRIPTS)/diamond_path.mk

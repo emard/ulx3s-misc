@@ -56,6 +56,8 @@ BIT2SVF ?= $(TRELLIS)/tools/bit_to_svf.py
 #BASECFG ?= $(TRELLIS)/misc/basecfgs/empty_$(FPGA_CHIP_EQUIVALENT).config
 # yosys options, sometimes those can be used: -noccu2 -nomux -nodram
 YOSYS_OPTIONS ?= 
+# nextpnr options
+NEXTPNR_OPTIONS ?=
 
 # clock generator
 CLK0_NAME ?= clk0
@@ -121,7 +123,7 @@ $(PROJECT).json: $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)
 	$(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)
 
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config: $(PROJECT).json $(BASECFG)
-	$(NEXTPNR-ECP5) --$(FPGA_K)k --package $(FPGA_PACKAGE) --json $(PROJECT).json --lpf $(CONSTRAINTS) --textcfg $@
+	$(NEXTPNR-ECP5) $(NEXTPNR_OPTIONS) --$(FPGA_K)k --package $(FPGA_PACKAGE) --json $(PROJECT).json --lpf $(CONSTRAINTS) --textcfg $@
 
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config
 	LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPACK) $(IDCODE_CHIPID) --db $(TRELLISDB) --input $< --bit $@
