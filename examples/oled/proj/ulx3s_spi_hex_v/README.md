@@ -1,4 +1,4 @@
-# OLED terminal
+# OLED SPI sniffer HEX display
 
 cleanup:
 

@@ -1,4 +1,4 @@
-# SPI OLED core
+# SPI OLED core in VHDL
 
 This VHDL core displays HEX digits at SSD1331 color OLED display,
 showing realtime state of input parallel bus. It's useful 

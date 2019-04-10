@@ -1,4 +1,4 @@
-# OLED terminal
+# OLED HEX display demo
 
 cleanup:
 
