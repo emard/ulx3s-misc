@@ -1,0 +1,49 @@
+# ******* project, board and chip name *******
+PROJECT = camera_ov7670_dvi
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 25
+
+# ******* if programming with OpenOCD *******
+# using local latest openocd until in linux distribution
+OPENOCD=openocd_ft232r
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+# ulx3s-jtag-passthru
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
+# ulx2s
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft232r.ocd
+# external jtag
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
+
+# ******* design files *******
+CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
+#CONSTRAINTS = ../../hdl/ulx3s.lpf
+TOP_MODULE = top_OV7640
+TOP_MODULE_FILE = ../../hdl/$(TOP_MODULE).v
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+  ../../hdl/clk_25_250_125_25_100.v \
+  ../../hdl/OV7670_config.v \
+  ../../hdl/vgabuff.v \
+  ../../hdl/camera_read.v \
+  ../../hdl/camera_configure.v \
+  ../../hdl/OV7670_config_rom.v \
+  ../../hdl/SCCB_interface.v \
+  ../../hdl/hvsync_generator.v \
+  ../../../dvi/hdl/fake_differential.v \
+
+# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
+VHDL_FILES = \
+  ../../../dvi/hdl/vga2dvid.vhd \
+  ../../../dvi/hdl/tmds_encoder.vhd \
+  ../../hdl/edge_enhance.vhd
+
+SCRIPTS = ../../../../scripts/
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
+
+scan:
+	$(OPENOCD) --file=$(SCRIPTS)/ft231x2.ocd --file=jtag-slave-scan.ocd
