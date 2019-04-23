@@ -43,6 +43,11 @@ assign gn[3] = cam_RESET;
 */
 
 // straight pins on ULX3S and 40-pin flat cable to camera
+assign gp[10:7] = 4'bz;
+assign gn[10:7] = 4'bz;
+assign gp[1] = 1'bz;
+assign gn[1] = 1'bz;
+assign gn[2] = 1'bz;
 assign cam_data[7] = gp[7];
 assign cam_data[6] = gn[7];
 assign cam_data[5] = gp[8];
