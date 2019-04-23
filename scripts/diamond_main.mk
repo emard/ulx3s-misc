@@ -16,6 +16,7 @@ TOP_MODULE ?= top
 TOP_MODULE_FILE ?= $(TOP_MODULE).v
 VERILOG_FILES ?= $(TOP_MODULE_FILE)
 VHDL_FILES ?=
+SBX_FILES ?=
 
 # ******* tools installation paths *******
 # include $(SCRIPTS)/trellis_path.mk
@@ -114,8 +115,8 @@ BITSTREAM ?= $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJ
 all: $(BITSTREAM)
 
 # VHDL to VERILOG conversion
-%.v: %.vhd
-	$(VHDL2VL) $< $@
+#%.v: %.vhd
+#	$(VHDL2VL) $< $@
 
 #*.v: *.vhdl
 #	$(VHDL2VL) $< $@
@@ -151,6 +152,7 @@ $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).ldf: $(SCRIPTS)/project.ldf $(SCRIPTS)/ldf.xsl
 	  --stringparam TOP_MODULE_FILE $(TOP_MODULE_FILE) \
 	  --stringparam VHDL_FILES "$(VHDL_FILES)" \
 	  --stringparam VERILOG_FILES "$(VERILOG_FILES)" \
+	  --stringparam SBX_FILES "$(SBX_FILES)" \
 	  $(SCRIPTS)/ldf.xsl $(SCRIPTS)/project.ldf > $@
 
 project/project_project.bit: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).ldf $(VERILOG_FILES) $(VHDL_FILES)

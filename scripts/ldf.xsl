@@ -10,6 +10,7 @@
 <xsl:param name="TOP_MODULE_FILE"/>
 <xsl:param name="VERILOG_FILES"/>
 <xsl:param name="VHDL_FILES"/>
+<xsl:param name="SBX_FILES"/>
 <xsl:template match="node()|@*">
   <xsl:copy>
     <xsl:apply-templates select="node()|@*"/>
@@ -58,6 +59,10 @@
   <xsl:call-template name="tokenize">
     <xsl:with-param name="string" select="normalize-space($VERILOG_FILES)"/>
     <xsl:with-param name="type" select="'Verilog'"/>
+  </xsl:call-template>
+  <xsl:call-template name="tokenize">
+    <xsl:with-param name="string" select="normalize-space($SBX_FILES)"/>
+    <xsl:with-param name="type" select="'sbx'"/>
   </xsl:call-template>
 </xsl:template>
 
