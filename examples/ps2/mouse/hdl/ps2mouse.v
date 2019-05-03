@@ -29,6 +29,9 @@ reg	[15:0] mtimer;			// mouse timer
 reg	[2:0] mstate;			// mouse current state
 reg	[2:0] mnext;			// mouse next state
 
+initial
+	mstate = 3'b000;
+
 wire	mclkneg;				// negative edge of mouse clock strobe
 reg	mrreset;				// mouse receive reset
 wire	mrready;				// mouse receive ready;
