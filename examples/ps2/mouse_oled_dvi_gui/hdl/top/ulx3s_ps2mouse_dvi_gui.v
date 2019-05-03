@@ -1,19 +1,21 @@
-module ulx3s_ps2mouse_oled_dvi
+
+// move mouse and crosshair pointer will move
+// left click on the mouse and block color will change
+// to a random color
+
+module ulx3s_ps2mouse_dvi_gui
 (
   input clk_25mhz,
   input [6:0] btn,
   output [7:0] led,
   inout usb_fpga_dp, usb_fpga_dn,
   output usb_fpga_pu_dp, usb_fpga_pu_dn,
-  output wire oled_csn,
-  output wire oled_clk,
-  output wire oled_mosi,
-  output wire oled_dc,
-  output wire oled_resn,
   output [3:0] gpdi_dp, gpdi_dn,
   output wifi_gpio0
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
+    
+    reg [8:0] guitab [0:2047]; // GUI table
 
     wire [2:0] clocks;
     wire clk_locked;
@@ -68,6 +70,7 @@ module ulx3s_ps2mouse_oled_dvi
     assign usb_fpga_pu_dp = 1'b1;
     assign usb_fpga_pu_dn = 1'b1;
 
+    wire [2:0] mouse_btn;
     wire [9:0] mouse_x, mouse_y;
     ps2mouse
     #(
@@ -84,41 +87,34 @@ module ulx3s_ps2mouse_oled_dvi
       .ps2mclko(ps2mclk_out),
       .xcount(mouse_x),
       .ycount(mouse_y),
-      .btn(led[3:1])
+      .btn(mouse_btn)
     );
     assign led[7:6] = mouse_y[1:0];
     assign led[5:4] = mouse_x[1:0];
+    assign led[3:1] = mouse_btn[2:0];
 
-    wire [6:0] oled_x;
-    wire [5:0] oled_y;
-    // wire [15:0] color = x[3] ^ y[3] ? {5'd0, x[6:1], 5'd0} : {y[5:1], 6'd0, 5'd0};
-    wire [15:0] oled_color = oled_x[6:0] == mouse_x[6:0] || oled_y[5:0] == mouse_y[5:0] ? 16'hFFFF : 16'h0000;
-    oled_video
-    #(
-        .C_init_file("oled_init_16bit.mem"),
-        .C_color_bits(16)
-    )
-    oled_video_inst
-    (
-        .clk(clk),
-        .x(oled_x),
-        .y(oled_y),
-        .color(oled_color),
-        .oled_csn(oled_csn),
-        .oled_clk(oled_clk),
-        .oled_mosi(oled_mosi),
-        .oled_dc(oled_dc),
-        .oled_resn(oled_resn)
-    );
-
-
+    // draw colored blocks from memory, overlaid with mouse crosshair pointer
     wire [9:0] dvi_x, dvi_y;
-    reg [7:0] dvi_color;
+    wire [10:0] dvi_pointed_addr;
+    assign dvi_pointed_addr = { dvi_y[9:4], dvi_x[9:5] };
+    reg [8:0] dvi_color;
     always @(posedge clk_pixel)
-      dvi_color <= dvi_x[9:0] == mouse_x[9:0] || dvi_y[9:0] == mouse_y[9:0] ? 8'hFF : 8'h00;
+      dvi_color <= dvi_x[9:0] == mouse_x[9:0] || dvi_y[9:0] == mouse_y[9:0] ? 9'h1FF : guitab[dvi_pointed_addr];
+
+    // click mouse to change color
+    wire [10:0] mouse_pointed_addr;
+    assign mouse_pointed_addr = { mouse_y[9:4], mouse_x[9:5] };
+    always @(posedge clk_pixel)
+    begin
+      if(mouse_btn[0])
+        guitab[mouse_pointed_addr] <= dvi_y[8:0]; // at left mouse click, write changed color from dvi_y (appears as random)
+      else
+        if(mouse_btn[1])
+          guitab[mouse_pointed_addr] <= 9'd0; // at right mouse click, erase color to black
+    end
 
     // VGA signal generator
-    wire [7:0] vga_r, vga_g, vga_b;
+    // wire [7:0] vga_r, vga_g, vga_b;
     wire vga_hsync, vga_vsync, vga_blank;
     vga
     vga_instance
@@ -135,15 +131,16 @@ module ulx3s_ps2mouse_oled_dvi
     wire [1:0] tmds[3:0];
     vga2dvid
     #(
-      .C_ddr(C_ddr)
+      .C_ddr(C_ddr),
+      .C_depth(3)
     )
     vga2dvid_instance
     (
       .clk_pixel(clk_pixel),
       .clk_shift(clk_shift),
-      .in_red(dvi_color),
-      .in_green(dvi_color),
-      .in_blue(dvi_color),
+      .in_red(dvi_color[8:6]),
+      .in_green(dvi_color[5:3]),
+      .in_blue(dvi_color[2:0]),
       .in_hsync(vga_hsync),
       .in_vsync(vga_vsync),
       .in_blank(vga_blank),
