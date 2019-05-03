@@ -2,6 +2,10 @@
 // This module decodes the standard 3 byte packet of an PS/2 compatible 2 or 3 button mouse.
 // The module also automatically handles power-up initailzation of the mouse.
 module ps2mouse
+#(
+        parameter c_x_bits = 8,
+        parameter c_y_bits = 8
+)
 (
 	input 	clk,                    // bus clock
 	input 	reset,                  // reset 
@@ -9,11 +13,9 @@ module ps2mouse
 	input	ps2mclki,               // mouse PS/2 clk
 	output	ps2mdato,               // mouse PS/2 data
 	output	ps2mclko,               // mouse PS/2 clk
-	output	reg [7:0] ycount,       // mouse Y counter
-	output	reg [7:0] xcount,       // mouse X counter
-	output	reg [2:0] btn,          // {?, right, left} mouse button
-	input	test_load,              // load test value to mouse counter
-	input	[15:0] test_data	// mouse counter test value
+	output	reg [c_x_bits-1:0] ycount, // mouse Y counter
+	output	reg [c_y_bits-1:0] xcount, // mouse X counter
+	output	reg [2:0] btn           // {middle, right, left} mouse buttons
 );
 
 //local signals
@@ -83,23 +85,34 @@ assign mthalf=mtimer[11];
 //assign mttest=mtimer[13];
 assign mttest=mtimer[14];
 
+wire [c_x_bits-1:0] xinc;
+wire [c_y_bits-1:0] yinc;
+generate
+  if(c_x_bits > 8)
+    assign xinc = {{(c_x_bits-8){mreceive[8]}},mreceive[8:1]};
+  else
+    assign xinc = mreceive[c_x_bits:1];
+  if(c_y_bits > 8)
+    assign yinc = {{(c_y_bits-8){mreceive[8]}},mreceive[8:1]};
+  else
+    assign yinc = mreceive[c_y_bits:1];
+endgenerate
+
 // PS2 mouse packet decoding and handling
 always @(posedge clk)
 begin
 	if (reset) // reset
 	begin
 		btn <= 3'b000;
-		xcount[7:0] <= 8'h00;	
-		ycount[7:0] <= 8'h00;
+		xcount <= 0;	
+		ycount <= 0;
 	end
-	else if (test_load) // test value preload
-		{ycount[7:2],xcount[7:2]} <= {test_data[15:10],test_data[7:2]};
 	else if (mpacket==1) // buttons
 		btn <= mreceive[3:1];
 	else if (mpacket==2) // delta X movement
-		xcount[7:0] <= xcount[7:0] + mreceive[8:1];
+		xcount <= xcount + xinc;
 	else if (mpacket==3) // delta Y movement
-		ycount[7:0] <= ycount[7:0] - mreceive[8:1];
+		ycount <= ycount - yinc;
 end
 
 //--------------------------------------------------------------------------------------
