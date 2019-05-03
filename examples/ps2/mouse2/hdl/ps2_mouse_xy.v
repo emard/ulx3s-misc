@@ -7,7 +7,7 @@ module ps2_mouse_xy(clk, reset, ps2_clk, ps2_data, mx, my, btn_click);
    input clk, reset;
    inout ps2_clk, ps2_data;	// data to/from PS/2 mouse
    output [11:0] mx, my;  	// current mouse position, 12 bits
-   output [2:0]  btn_click;	// button click: Left-Middle-Right
+   output [2:0] btn_click;	// button click: Left-Middle-Right
    
    // module parameters
    parameter 	 MAX_X = 1023;
@@ -39,9 +39,9 @@ module ps2_mouse_xy(clk, reset, ps2_clk, ps2_data, mx, my, btn_click);
 
 ps2_mouse_interface  
 #(
-   .WATCHDOG_TIMER_VALUE_PP(52000),
-   .WATCHDOG_TIMER_BITS_PP(16),
-   .DEBOUNCE_TIMER_VALUE_PP(246),
+   .WATCHDOG_TIMER_VALUE_PP(13000),
+   .WATCHDOG_TIMER_BITS_PP(15),
+   .DEBOUNCE_TIMER_VALUE_PP(123),
    .DEBOUNCE_TIMER_BITS_PP(8)) 
 ps2_mouse_interface_inst
 (
