@@ -37,7 +37,7 @@ module ulx3s_ps2mouse
     assign reset = reset_counter[19];
     assign led[0] = reset;
 
-    wire [11:0] mx;
+    wire [11:0] mx, my;
     ps2_mouse_xy
     ps2_mouse_xy_inst
     (
@@ -45,8 +45,10 @@ module ulx3s_ps2mouse
       .reset(reset),
       .ps2_clk(usb_fpga_dp),
       .ps2_data(usb_fpga_dn),
-      .mx(mx)
+      .mx(mx),
+      .my(my)
     );
-    assign led[7:1] = mx[11:5];
+    assign led[7:6] = my[1:0];
+    assign led[5:4] = mx[1:0];
     
 endmodule
