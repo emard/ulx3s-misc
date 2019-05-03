@@ -3,42 +3,40 @@
 // The module also automatically handles power-up initailzation of the mouse.
 module ps2mouse
 (
-	input 	clk,		    	// bus clock
-	input 	reset,			   	// reset 
-	input	ps2mdat,			//mouse PS/2 data
-	input	ps2mclk,			//mouse PS/2 clk
-	output	ps2mdato,			//mouse PS/2 data
-	output	ps2mclko,			//mouse PS/2 clk
-	output	reg [7:0]ycount,	// mouse Y counter
-	output	reg [7:0]xcount,	// mouse X counter
-	output	reg _mleft,			// left mouse button output
-	output	reg _mthird,		// third(middle) mouse button output
-	output	reg _mright,		// right mouse button output
-	input	test_load,			// load test value to mouse counter
+	input 	clk,                    // bus clock
+	input 	reset,                  // reset 
+	input	ps2mdati,               // mouse PS/2 data
+	input	ps2mclki,               // mouse PS/2 clk
+	output	ps2mdato,               // mouse PS/2 data
+	output	ps2mclko,               // mouse PS/2 clk
+	output	reg [7:0] ycount,       // mouse Y counter
+	output	reg [7:0] xcount,       // mouse X counter
+	output	reg [2:0] btn,          // {?, right, left} mouse button
+	input	test_load,              // load test value to mouse counter
 	input	[15:0] test_data	// mouse counter test value
 );
 
 //local signals
-reg		mclkout; 				// mouse clk out
-wire	mdatout;				// mouse data out
-reg		mdatb,mclkb,mclkc;		// input synchronization	
+reg	mclkout; 			// mouse clk out
+wire	mdatout;			// mouse data out
+reg	mdatb,mclkb,mclkc;		// input synchronization	
 
-reg		[10:0] mreceive;		// mouse receive register	
-reg		[11:0] msend;			// mouse send register
-reg		[15:0] mtimer;			// mouse timer
-reg		[2:0] mstate;			// mouse current state
-reg		[2:0] mnext;			// mouse next state
+reg	[10:0] mreceive;		// mouse receive register	
+reg	[11:0] msend;			// mouse send register
+reg	[15:0] mtimer;			// mouse timer
+reg	[2:0] mstate;			// mouse current state
+reg	[2:0] mnext;			// mouse next state
 
 wire	mclkneg;				// negative edge of mouse clock strobe
-reg		mrreset;				// mouse receive reset
+reg	mrreset;				// mouse receive reset
 wire	mrready;				// mouse receive ready;
-reg		msreset;				// mosue send reset
+reg	msreset;				// mosue send reset
 wire	msready;				// mouse send ready;
-reg		mtreset;				// mouse timer reset
+reg	mtreset;				// mouse timer reset
 wire	mtready;				// mouse timer ready	 
 wire	mthalf;					// mouse timer somewhere halfway timeout
 wire	mttest;
-reg		[1:0] mpacket;			// mouse packet byte valid number
+reg	[1:0] mpacket;				// mouse packet byte valid number
 
 // bidirectional open collector IO buffers
 //assign ps2mclk = (mclkout) ? 1'bz : 1'b0;
@@ -49,8 +47,8 @@ assign ps2mdato=mdatout;
 // input synchronization of external signals
 always @(posedge clk)
 begin
-	mdatb <= ps2mdat;
-	mclkb <= ps2mclk;
+	mdatb <= ps2mdati;
+	mclkb <= ps2mclki;
 	mclkc <= mclkb;
 end						
 
@@ -90,14 +88,14 @@ always @(posedge clk)
 begin
 	if (reset) // reset
 	begin
-		{_mthird,_mright,_mleft} <= 3'b111;
+		btn <= 3'b000;
 		xcount[7:0] <= 8'h00;	
 		ycount[7:0] <= 8'h00;
 	end
 	else if (test_load) // test value preload
 		{ycount[7:2],xcount[7:2]} <= {test_data[15:10],test_data[7:2]};
 	else if (mpacket==1) // buttons
-		{_mthird,_mright,_mleft} <= ~mreceive[3:1];
+		btn <= mreceive[3:1];
 	else if (mpacket==2) // delta X movement
 		xcount[7:0] <= xcount[7:0] + mreceive[8:1];
 	else if (mpacket==3) // delta Y movement

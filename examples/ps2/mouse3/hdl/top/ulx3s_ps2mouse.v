@@ -35,18 +35,21 @@ module ulx3s_ps2mouse
     assign reset = reset_counter[19];
     assign led[0] = reset;
 
+    wire [7:0] xcount, ycount;
     ps2mouse
     ps2mouse_inst
     (
       .clk(clk),
       .reset(reset),
-      .ps2mdat(ps2mdat_in),
-      .ps2mclk(ps2mclk_in),
+      .ps2mdati(ps2mdat_in),
+      .ps2mclki(ps2mclk_in),
       .ps2mdato(ps2mdat_out),
       .ps2mclko(ps2mclk_out),
-      ._mright(led[1]),
-      ._mthird(led[2]),
-      ._mleft(led[3])
+      .xcount(xcount),
+      .ycount(ycount),
+      .btn(led[3:1])
     );
+    assign led[7:6] = xcount[1:0];
+    assign led[5:4] = ycount[1:0];
     
 endmodule
