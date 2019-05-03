@@ -34,17 +34,17 @@ module ps2_mouse_xy(clk, reset, ps2_clk, ps2_data, mx, my, btn_click);
 // divide the clk by a factor of two sot that it works with 65mhz and the original timing
 // parameters in the open core source.
 // if the Verilog doesn't work the user should update the timing parameters. This  Verilog assumes
-// 50Mhz clock; seems to work with 32.5mhz without problems. GPH  11/23/2008 with 
+// 50MHz clock; seems to work with 32.5mhz without problems. GPH  11/23/2008 with 
 // assist from BG
 
 ps2_mouse_interface  
-
-   #(.WATCHDOG_TIMER_VALUE_PP(26000),
-   .WATCHDOG_TIMER_BITS_PP(15),
+#(
+   .WATCHDOG_TIMER_VALUE_PP(52000),
+   .WATCHDOG_TIMER_BITS_PP(16),
    .DEBOUNCE_TIMER_VALUE_PP(246),
    .DEBOUNCE_TIMER_BITS_PP(8)) 
-
-   m1(
+ps2_mouse_interface_inst
+(
   .clk(clk),
   .reset(reset),
   .ps2_clk(ps2_clk),
@@ -55,9 +55,9 @@ ps2_mouse_interface
   .read(1'b1),  // force a read 
   .left_button(btn_click[2]),
   .right_button(btn_click[0])  // rx_read_o  
-  );
+);
   
-//  error_no_ack  not used
+   //  error_no_ack  not used
 
 
    // Update "absolute" position of mouse

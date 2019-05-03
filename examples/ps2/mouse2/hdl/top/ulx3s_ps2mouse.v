@@ -16,15 +16,6 @@ module ulx3s_ps2mouse
     assign usb_fpga_pu_dp = 1'b1;
     assign usb_fpga_pu_dn = 1'b1;
 
-    /*
-    wire ps2mdat_in, ps2mclk_in, ps2mdat_out, ps2mclk_out;
-    
-    assign usb_fpga_dp = ps2mclk_out ? 1'bz : 1'b0;
-    assign usb_fpga_dn = ps2mdat_out ? 1'bz : 1'b0;
-    assign ps2mclk_in = usb_fpga_dp;
-    assign ps2mdat_in = usb_fpga_dn;
-    */
-
     reg [19:0] reset_counter;
     always @(posedge clk)
     begin
@@ -46,7 +37,8 @@ module ulx3s_ps2mouse
       .ps2_clk(usb_fpga_dp),
       .ps2_data(usb_fpga_dn),
       .mx(mx),
-      .my(my)
+      .my(my),
+      .btn_click(led[3:1])
     );
     assign led[7:6] = my[1:0];
     assign led[5:4] = mx[1:0];
