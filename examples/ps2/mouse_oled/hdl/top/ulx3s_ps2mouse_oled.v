@@ -40,7 +40,7 @@ module ulx3s_ps2mouse_oled
     assign reset = reset_counter[19];
     assign led[0] = reset;
 
-    wire [7:0] xcount, ycount;
+    wire [7:0] mouse_x, mouse_y;
     ps2mouse
     ps2mouse_inst
     (
@@ -50,17 +50,17 @@ module ulx3s_ps2mouse_oled
       .ps2mclki(ps2mclk_in),
       .ps2mdato(ps2mdat_out),
       .ps2mclko(ps2mclk_out),
-      .xcount(xcount),
-      .ycount(ycount),
+      .xcount(mouse_x),
+      .ycount(mouse_y),
       .btn(led[3:1])
     );
-    assign led[7:6] = xcount[1:0];
-    assign led[5:4] = ycount[1:0];
+    assign led[7:6] = mouse_y[1:0];
+    assign led[5:4] = mouse_x[1:0];
 
-    wire [6:0] x;
-    wire [5:0] y;
+    wire [6:0] oled_x;
+    wire [5:0] oled_y;
     // wire [15:0] color = x[3] ^ y[3] ? {5'd0, x[6:1], 5'd0} : {y[5:1], 6'd0, 5'd0};
-    wire [15:0] color = x[6:0] == xcount[6:0] || y[5:0] == ycount[5:0] ? 16'hFFFF : 16'h0000;
+    wire [15:0] oled_color = oled_x[6:0] == mouse_x[6:0] || oled_y[5:0] == mouse_y[5:0] ? 16'hFFFF : 16'h0000;
     oled_video
     #(
         .C_init_file("oled_init_16bit.mem"),
@@ -69,9 +69,9 @@ module ulx3s_ps2mouse_oled
     oled_video_inst
     (
         .clk(clk),
-        .x(x),
-        .y(y),
-        .color(color),
+        .x(oled_x),
+        .y(oled_y),
+        .color(oled_color),
         .oled_csn(oled_csn),
         .oled_clk(oled_clk),
         .oled_mosi(oled_mosi),
