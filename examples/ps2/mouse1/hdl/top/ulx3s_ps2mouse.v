@@ -37,17 +37,24 @@ module ulx3s_ps2mouse
     assign reset = reset_counter[19];
     assign led[0] = reset;
 
-    wire [11:0] mx;
+    wire [8:0] x_increment, y_increment;
     ps2_mouse_interface
+    #(
+       .WATCHDOG_TIMER_VALUE_PP(10000),
+       .DEBOUNCE_TIMER_VALUE_PP(100)
+    )
     ps2_mouse_interface_inst
     (
       .clk(clk),
       .reset(reset),
       .ps2_clk(usb_fpga_dp),
       .ps2_data(usb_fpga_dn),
+      .x_increment(x_increment),
+      .y_increment(y_increment),
       .left_button(led[2]),
       .right_button(led[1]),
       .read(1'b1)
     );
-    
+    assign led[7:6] = y_increment[1:0];
+    assign led[5:4] = x_increment[1:0];
 endmodule
