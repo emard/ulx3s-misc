@@ -2,7 +2,7 @@
 PROJECT = dvi
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 12
+FPGA_SIZE = 85
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -51,6 +51,7 @@ VHDL_FILES = \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
+NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../scripts
 include $(SCRIPTS)/diamond_path.mk
