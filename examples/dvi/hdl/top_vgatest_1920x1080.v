@@ -73,6 +73,8 @@ module top_vgatest_1920x1080
     wire [1:0] tmds[3:0];
     vga2dvid
     #(
+      .C_shift_clock_synchronizer(1'b1),
+      .C_parallel(1'b0),
       .C_ddr(C_ddr)
     )
     vga2dvid_instance
