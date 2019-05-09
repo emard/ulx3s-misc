@@ -2,7 +2,7 @@
 PROJECT = dvi
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 25
+FPGA_SIZE = 85
 
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
@@ -17,10 +17,20 @@ TOP_MODULE_FILE = hdl/$(TOP_MODULE).v
 
 CLK0_NAME = clk_25_shift_pixel
 CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
-CLK0_OPTIONS = \
+CLK0_OPTIONS_OLD = \
   --input=25 \
   --output=375 \
   --s1=75
+
+# for new ecppll: to override above, rename CLK0_OPTIONS_NEW -> CLK0_OPTIONS
+CLK0_OPTIONS = \
+  --module=$(CLK0_NAME) \
+  --clkin_name=clki \
+  --clkin=25 \
+  --clkout0_name=clko \
+  --clkout0=375 \
+  --clkout1_name=clks1 \
+  --clkout1=75
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
@@ -33,5 +43,7 @@ VHDL_FILES = \
   hdl/vga2dvid.vhd \
   hdl/tmds_encoder.vhd
 
-SCRIPTS = scripts
-include $(SCRIPTS)/ulx3s_diamond.mk
+SCRIPTS = ../../scripts
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/diamond_main.mk
