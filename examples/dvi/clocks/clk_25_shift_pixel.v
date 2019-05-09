@@ -1,8 +1,8 @@
 module clk_25_shift_pixel
 (
     input clki, // 25 MHz, 0 deg
-    output clko, // 375 MHz, 0 deg
-    output clks1, // 75 MHz, 0 deg
+    output clko, // 325 MHz, 0 deg
+    output clks1, // 65 MHz, 0 deg
     output locked
 );
 wire clkfb;
@@ -15,15 +15,15 @@ EHXPLLL #(
         .INTFB_WAKE("DISABLED"),
         .DPHASE_SOURCE("DISABLED"),
         .CLKOP_FPHASE(0),
-        .CLKOP_CPHASE(0),
+        .CLKOP_CPHASE(1),
         .OUTDIVIDER_MUXA("DIVA"),
         .CLKOP_ENABLE("ENABLED"),
         .CLKOP_DIV(2),
         .CLKOS_ENABLE("ENABLED"),
         .CLKOS_DIV(10),
-        .CLKOS_CPHASE(0),
+        .CLKOS_CPHASE(1),
         .CLKOS_FPHASE(0),
-        .CLKFB_DIV(15),
+        .CLKFB_DIV(13),
         .CLKI_DIV(1),
         .FEEDBK_PATH("INT_OP")
     ) pll_i (
