@@ -1,5 +1,14 @@
 # Mouse from Minimig
 
+Move mouse pointer (crosshair) over the screen.
+Left click to draw random color block.
+Right click to erase color block (to black).
+
+Works correctly if compiled with diamond.
+
+If compiled with trellis, it kinda works but
+shows some some circuit-bending on screen.
+
 Microsoft IntelliMouse Optical USB/PS2
 
     X/Y movement works.
