@@ -26,7 +26,7 @@ module MouseM(
   inout msclk, msdat,
   output [27:0] out);
 
-  reg [9:0] x, y;
+  reg [10:0] x, y;
   reg [2:0] btns;
   reg [2:0] sent;
   reg [30:0] rx;
@@ -36,7 +36,7 @@ module MouseM(
   reg req;
   wire shift, endbit, endcount, done, run;
   wire [8:0] cmd;  //including odd tx parity bit
-  wire [9:0] dx, dy;
+  wire [10:0] dx, dy;
 
 // 322222222221111111111 (scroll mouse z and rx parity p ignored)
 // 0987654321098765432109876543210   X, Y = overflow
@@ -51,18 +51,18 @@ module MouseM(
   assign shift = ~req & (filter == 6'b100000);  //low for 200nS @25MHz
   assign endbit = run ? ~rx[0] : ~rx[10];
   assign done = endbit & endcount & ~req;
-  assign dx = {{2{rx[5]}}, rx[7] ? 8'b0 : rx[19:12]};  //sign+overfl
-  assign dy = {{2{rx[6]}}, rx[8] ? 8'b0 : rx[30:23]};  //sign+overfl
+  assign dx = {{3{rx[5]}}, rx[7] ? 8'b0 : rx[19:12]};  //sign+overfl
+  assign dy = {{3{rx[6]}}, rx[8] ? 8'b0 : rx[30:23]};  //sign+overfl
 //  assign out = {run,  // full debug
 //    run ? {rx[25:0], endbit} : {rx[30:10], endbit, sent, tx[0], ~req}};
 //  assign out = {run,  // debug then normal
 //    run ? {btns, 2'b0, y, 2'b0, x} : {rx[30:10], sent, endbit, tx[0], ~req}};
-  assign out = {run, btns, 2'b0, y, 2'b0, x}; // normal
+  assign out = {run, btns, 1'b0, y, 1'b0, x}; // normal
   assign msclk = req ? 1'b0 : 1'bz;  //bidir clk/request
   assign msdat = ~tx[0] ? 1'b0 : 1'bz;  //bidir data
 
   always @ (posedge clk) begin
-    filter <= {filter[5:0], msclk};
+    filter <= {filter[4:0], msclk};
     count <= (~rst | shift | endcount) ? 0 : count+1;
     req <= rst & ~run & (req ^ endcount);
     sent <= ~rst ? 0 : (done & ~run) ? sent+1 : sent;
