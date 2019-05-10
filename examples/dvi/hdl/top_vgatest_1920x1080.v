@@ -47,13 +47,13 @@ module top_vgatest_1920x1080
       .C_resolution_x(1920),
       .C_hsync_front_porch(88),
       .C_hsync_pulse(44),
-      //.C_hsync_back_porch(148),
-      .C_hsync_back_porch(133),
+      //.C_hsync_back_porch(148), // as specified by xvidc_timings
+      .C_hsync_back_porch(133), // our adjustment for 75 MHz pixel clock
       .C_resolution_y(1080),
       .C_vsync_front_porch(4),
       .C_vsync_pulse(5),
-      //.C_vsync_back_porch(36),
-      .C_vsync_back_porch(46),
+      //.C_vsync_back_porch(36), // as specified by xvidc_timings
+      .C_vsync_back_porch(46), // our adjustment for 75 MHz pixel clock
       .C_bits_x(12),
       .C_bits_y(11)
     )
@@ -73,6 +73,8 @@ module top_vgatest_1920x1080
     wire [1:0] tmds[3:0];
     vga2dvid
     #(
+      .C_shift_clock_synchronizer(1'b1),
+      .C_parallel(1'b0),
       .C_ddr(C_ddr)
     )
     vga2dvid_instance
