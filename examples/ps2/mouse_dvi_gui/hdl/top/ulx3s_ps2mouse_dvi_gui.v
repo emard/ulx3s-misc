@@ -4,6 +4,9 @@
 // to a random color
 
 module ulx3s_ps2mouse_dvi_gui
+#(
+  parameter mousecore = 1 // 0-minimig 1-oberon
+)
 (
   input clk_25mhz,
   input [6:0] btn,
@@ -15,6 +18,8 @@ module ulx3s_ps2mouse_dvi_gui
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
     
+    // this BRAM contains color blocks
+    // their color can be changed with mouse clicks
     reg [8:0] guitab [0:2047]; // GUI table
 
     wire [2:0] clocks;
@@ -60,11 +65,6 @@ module ulx3s_ps2mouse_dvi_gui
     assign led[0] = reset;
 
     wire ps2mdat_in, ps2mclk_in, ps2mdat_out, ps2mclk_out;
-    
-    assign usb_fpga_dp = ps2mclk_out ? 1'bz : 1'b0;
-    assign usb_fpga_dn = ps2mdat_out ? 1'bz : 1'b0;
-    assign ps2mclk_in = usb_fpga_dp;
-    assign ps2mdat_in = usb_fpga_dn;
 
     // enable pullups
     assign usb_fpga_pu_dp = 1'b1;
@@ -72,23 +72,53 @@ module ulx3s_ps2mouse_dvi_gui
 
     wire [2:0] mouse_btn;
     wire [9:0] mouse_x, mouse_y;
-    ps2mouse
-    #(
-      .c_x_bits(10),
-      .c_y_bits(10)
-    )
-    ps2mouse_inst
-    (
-      .clk(clk_pixel),
-      .reset(reset),
-      .ps2mdati(ps2mdat_in),
-      .ps2mclki(ps2mclk_in),
-      .ps2mdato(ps2mdat_out),
-      .ps2mclko(ps2mclk_out),
-      .xcount(mouse_x),
-      .ycount(mouse_y),
-      .btn(mouse_btn)
-    );
+
+    generate
+      if(mousecore == 0) // using amiga core
+      begin
+        wire ps2mdat_in, ps2mclk_in, ps2mdat_out, ps2mclk_out;
+        assign usb_fpga_dp = ps2mclk_out ? 1'bz : 1'b0;
+        assign usb_fpga_dn = ps2mdat_out ? 1'bz : 1'b0;
+        assign ps2mclk_in = usb_fpga_dp;
+        assign ps2mdat_in = usb_fpga_dn;
+        ps2mouse
+        #(
+          .c_x_bits(10),
+          .c_y_bits(10)
+        )
+        ps2mouse_amiga_inst
+        (
+          .clk(clk),
+          .reset(reset),
+          .ps2mdati(ps2mdat_in),
+          .ps2mclki(ps2mclk_in),
+          .ps2mdato(ps2mdat_out),
+          .ps2mclko(ps2mclk_out),
+          .xcount(mouse_x),
+          .ycount(mouse_y),
+          .btn(mouse_btn)
+        );
+      end
+      if(mousecore == 1) // using oberon core
+      begin
+        wire [27:0] mouse_out;
+        MouseM
+        ps2mouse_oberon_inst
+        (
+          .clk(clk),
+          .rst(~reset), // active low
+          .msclk(usb_fpga_dp),
+          .msdat(usb_fpga_dn),
+          .out(mouse_out)
+        );
+        assign mouse_x = mouse_out[9:0];
+        assign mouse_y = ~mouse_out[21:12]; // reverse mouse y direction to match display y direction 
+        assign mouse_btn[0] = mouse_out[26]; // left mouse button
+        assign mouse_btn[1] = mouse_out[24]; // right mouse button
+        assign mouse_btn[2] = mouse_out[25]; // middle mouse button 
+      end
+    endgenerate
+
     assign led[7:6] = mouse_y[1:0];
     assign led[5:4] = mouse_x[1:0];
     assign led[3:1] = mouse_btn[2:0];

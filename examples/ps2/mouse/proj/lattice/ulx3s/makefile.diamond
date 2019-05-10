@@ -49,7 +49,8 @@ CLK0_OPTIONS = \
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../../hdl/ps2mouse.v
+  ../../../hdl/ps2mouse.v \
+  ../../../hdl/MouseM.v
 
 SCRIPTS = ../../../../../../scripts
 

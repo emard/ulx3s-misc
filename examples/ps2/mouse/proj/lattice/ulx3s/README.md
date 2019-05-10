@@ -1,4 +1,12 @@
-# Mouse from Minimig
+# Mouse from Minimig and Oberon
+
+Toplevel parameter selects either minimig or oberon mouse core
+at compile time. I don't know about compatibilty but oberon 
+source is shorter, simpler and has slightly more reliable mouse
+initialization.
+
+After mouse re-plug, reset must be pressed for both cores to
+get mouse working again.
 
 Microsoft IntelliMouse Optical USB/PS2
 

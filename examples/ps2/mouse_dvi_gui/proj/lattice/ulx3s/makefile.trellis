@@ -43,6 +43,7 @@ VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   clocks/$(CLK0_NAME).v \
   ../../../../mouse/hdl/ps2mouse.v \
+  ../../../../mouse/hdl/MouseM.v \
   ../../../../../dvi/hdl/fake_differential.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)

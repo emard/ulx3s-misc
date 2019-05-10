@@ -18,6 +18,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
+
 CONSTRAINTS = ../../../../../../constraints/ulx3s_v20_segpdi.lpf
 TOP_MODULE = ulx3s_ps2mouse
 TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
@@ -45,7 +46,8 @@ CLK0_OPTIONS = \
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../../hdl/ps2mouse.v
+  ../../../hdl/ps2mouse.v \
+  ../../../hdl/MouseM.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 #VHDL_FILES = \
