@@ -97,11 +97,13 @@ begin
 	blue_d(7 downto 8-C_depth)  <= in_blue(C_depth-1 downto 0);
 
 	-- fill vacant low bits with value repeated (so min/max value is always 0 or 255)
-	--G_bits: for i in 8-C_depth-1 downto 0 generate
-	--	red_d(i)   <= in_red(0);
-	--	green_d(i) <= in_green(0);
-	--	blue_d(i)  <= in_blue(0);
-	--end generate;
+	G_vacant_bits: if C_depth < 8 generate
+	    G_bits: for i in 0 to 8-C_depth-1 generate
+		red_d(i)   <= in_red(0);
+		green_d(i) <= in_green(0);
+		blue_d(i)  <= in_blue(0);
+	    end generate;
+	end generate;
 
 	G_shift_clock_synchronizer: if C_shift_clock_synchronizer = '1' generate
 	-- sampler verifies is shift_clock state synchronous with pixel_clock
