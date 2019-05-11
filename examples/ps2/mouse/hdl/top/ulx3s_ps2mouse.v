@@ -81,6 +81,6 @@ module ulx3s_ps2mouse
     assign led[7:6] = mouse_z[1:0];
     assign led[5:4] = mouse_y[1:0];
     assign led[3:2] = mouse_x[1:0];
-    assign led[1:0] = mouse_btn[1:0];
+    assign led[1:0] = mouse_btn[1:0] ^ {1'b0, mouse_btn[2]};
     
 endmodule

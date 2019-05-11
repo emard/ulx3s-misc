@@ -20,9 +20,6 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 
 CONSTRAINTS = ../../../../../../constraints/ulx3s_v20_segpdi.lpf
-TOP_MODULE = ulx3s_ps2mouse
-TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
-
 CLK0_NAME = clk_25_250_125_25
 CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
 CLK0_OPTIONS_OLD = \
@@ -43,6 +40,9 @@ CLK0_OPTIONS = \
   --clkout1=125 \
   --clkout2_name=clks2 \
   --clkout2=25
+
+TOP_MODULE = ulx3s_ps2mouse
+TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
