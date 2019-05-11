@@ -62,7 +62,6 @@ module ulx3s_ps2mouse
       end
       if(mousecore == 1) // using oberon core
       begin
-        wire [39:0] mouse_out;
         MouseM
         #(
           .c_x_bits(11),

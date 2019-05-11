@@ -85,7 +85,7 @@ module MouseM
     tx <= (reset | run) ? {$bits(tx){1'b1}} : req ? {cmd, 1'b0} : shift ? {1'b1, tx[$bits(tx)-1:1]} : tx;
     rx <= (reset | done) ? {$bits(rx){1'b1}} : (shift & ~endbit) ? {msdat, rx[$bits(rx)-1:1]} : rx;
     x <= ~run ? 0 : done ? x + dx : x;
-    y <= ~run ? 0 : done ? y + dy : y;
+    y <= ~run ? 0 : done ? y - dy : y;
     z <= ~run ? 0 : done ? z + dz : z;
     btn <= ~run ? 0 : done ? rx[3:1] : btn;
   end

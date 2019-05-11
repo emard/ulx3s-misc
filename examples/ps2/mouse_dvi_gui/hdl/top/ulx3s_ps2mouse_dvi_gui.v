@@ -100,29 +100,30 @@ module ulx3s_ps2mouse_dvi_gui
       end
       if(mousecore == 1) // using oberon core
       begin
-        wire [39:0] mouse_out;
         MouseM
+        #(
+          .c_x_bits(10),
+          .c_y_bits(10),
+          .c_z_bits(10)
+        )
         ps2mouse_oberon_inst
         (
           .clk(clk),
-          .rst(~reset), // active low
+          .reset(reset),
           .msclk(usb_fpga_dp),
           .msdat(usb_fpga_dn),
-          .out(mouse_out)
+          .x(mouse_x),
+          .y(mouse_y),
+          .z(mouse_z),
+          .btn(mouse_btn)
         );
-        assign mouse_x = mouse_out[9:0];
-        assign mouse_y = ~mouse_out[21:12]; // reverse mouse y direction to match display y direction 
-        assign mouse_z = mouse_out[37:28];
-        assign mouse_btn[0] = mouse_out[26]; // left mouse button
-        assign mouse_btn[1] = mouse_out[24]; // right mouse button
-        assign mouse_btn[2] = mouse_out[25]; // middle mouse button 
       end
     endgenerate
 
     assign led[7:6] = mouse_z[1:0];
     assign led[5:4] = mouse_y[1:0];
     assign led[3:2] = mouse_x[1:0];
-    assign led[1:0] = mouse_btn[1:0];
+    assign led[1:0] = mouse_btn[1:0] ^ {1'b0, mouse_btn[2]};
 
     // draw colored blocks from memory, overlaid with mouse crosshair pointer
     wire [9:0] dvi_x, dvi_y;
