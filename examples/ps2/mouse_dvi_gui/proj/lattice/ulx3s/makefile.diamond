@@ -48,7 +48,7 @@ VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   clocks/$(CLK0_NAME).v \
   ../../../../mouse/hdl/ps2mouse.v \
-  ../../../../mouse/hdl/MouseM.v \
+  ../../../../mouse/hdl/mousem_v.v \
   ../../../../../dvi/hdl/fake_differential.v \
 
 VHDL_FILES = \
