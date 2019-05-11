@@ -21,22 +21,26 @@ CONNECTION WITH THE DEALINGS IN OR USE OR PERFORMANCE OF THE SOFTWARE.*/
 
 // PS/2 mouse PDR 14.10.2013 / 03.09.2015 / 01.10.2015
 // with Microsoft 3rd (scroll) button init magic
+
+// EMARD added z-axis (wheel) 10.05.2019
+// https://isdaman.com/alsos/hardware/mouse/ps2interface.htm
+
 module MouseM(
   input clk, rst,
   inout msclk, msdat,
-  output [27:0] out);
+  output [39:0] out);
 
-  reg [10:0] x, y;
+  reg [10:0] x, y, z;
   reg [2:0] btns;
   reg [2:0] sent;
-  reg [30:0] rx;
+  reg [41:0] rx;
   reg [9:0] tx;
   reg [14:0] count;
   reg [5:0] filter;
   reg req;
   wire shift, endbit, endcount, done, run;
   wire [8:0] cmd;  //including odd tx parity bit
-  wire [10:0] dx, dy;
+  wire [10:0] dx, dy, dz;
 
 // 322222222221111111111 (scroll mouse z and rx parity p ignored)
 // 0987654321098765432109876543210   X, Y = overflow
@@ -49,15 +53,16 @@ module MouseM(
    (sent == 2) ? 9'h0C8 : (sent == 4) ? 9'h064 : (sent == 6) ? 9'h150 : 9'h1F3;
   assign endcount = (count[14:12] == 3'b111);  // more than 11*100uS @25MHz
   assign shift = ~req & (filter == 6'b100000);  //low for 200nS @25MHz
-  assign endbit = run ? ~rx[0] : ~rx[10];
+  assign endbit = run ? ~rx[0] : ~rx[21]; //first received bit is 1, shifts right and acts as terminator
   assign done = endbit & endcount & ~req;
   assign dx = {{3{rx[5]}}, rx[7] ? 8'b0 : rx[19:12]};  //sign+overfl
   assign dy = {{3{rx[6]}}, rx[8] ? 8'b0 : rx[30:23]};  //sign+overfl
+  assign dz = {{7{rx[37]}}, rx[37:34]};  //sign,wheel
 //  assign out = {run,  // full debug
 //    run ? {rx[25:0], endbit} : {rx[30:10], endbit, sent, tx[0], ~req}};
 //  assign out = {run,  // debug then normal
 //    run ? {btns, 2'b0, y, 2'b0, x} : {rx[30:10], sent, endbit, tx[0], ~req}};
-  assign out = {run, btns, 1'b0, y, 1'b0, x}; // normal
+  assign out = {1'b0, z, run, btns, 1'b0, y, 1'b0, x}; // normal
   assign msclk = req ? 1'b0 : 1'bz;  //bidir clk/request
   assign msdat = ~tx[0] ? 1'b0 : 1'bz;  //bidir data
 
@@ -67,9 +72,10 @@ module MouseM(
     req <= rst & ~run & (req ^ endcount);
     sent <= ~rst ? 0 : (done & ~run) ? sent+1 : sent;
     tx <= (~rst | run) ? 10'h3FF : req ? {cmd, 1'b0} : shift ? {1'b1, tx[9:1]} : tx;
-    rx <= (~rst | done) ? 31'h7FFFFFFF : (shift & ~endbit) ? {msdat, rx[30:1]} : rx;
+    rx <= (~rst | done) ? 42'h3FFFFFFFFFF : (shift & ~endbit) ? {msdat, rx[41:1]} : rx;
     x <= ~run ? 0 : done ? x + dx : x;
     y <= ~run ? 0 : done ? y + dy : y;
+    z <= ~run ? 0 : done ? z + dz : z;
     btns <= ~run ? 0 : done ? {rx[1], rx[3], rx[2]} : btns;
   end
 
