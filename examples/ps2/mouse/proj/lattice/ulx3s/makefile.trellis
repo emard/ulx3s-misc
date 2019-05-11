@@ -47,11 +47,11 @@ TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../hdl/ps2mouse.v \
-  ../../../hdl/MouseM.v
+  ../../../hdl/mousem_v.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 #VHDL_FILES = \
-#  hdl/blink.vhd \
+#  ../../../hdl/mousem.vhd \
 #  hdl/vga.vhd \
 #  hdl/vga2dvid.vhd \
 #  hdl/tmds_encoder.vhd

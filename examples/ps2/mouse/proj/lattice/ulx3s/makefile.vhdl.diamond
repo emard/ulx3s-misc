@@ -50,7 +50,9 @@ TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../hdl/ps2mouse.v \
-  ../../../hdl/mousem_v.v
+
+VHDL_FILES = \
+  ../../../hdl/mousem.vhd \
 
 SCRIPTS = ../../../../../../scripts
 

@@ -100,7 +100,7 @@ module ulx3s_ps2mouse_dvi_gui
       end
       if(mousecore == 1) // using oberon core
       begin
-        MouseM
+        mousem
         #(
           .c_x_bits(10),
           .c_y_bits(10),

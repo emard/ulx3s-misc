@@ -62,7 +62,7 @@ module ulx3s_ps2mouse
       end
       if(mousecore == 1) // using oberon core
       begin
-        MouseM
+        mousem
         #(
           .c_x_bits(11),
           .c_y_bits(11),
