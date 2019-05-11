@@ -1,6 +1,6 @@
 module ulx3s_ps2mouse
 #(
-  parameter mousecore = 1 // 0-amiga 1-oberon
+  parameter mousecore = 1 // 0-minimig 1-oberon
 )
 (
   input clk_25mhz,
@@ -29,21 +29,24 @@ module ulx3s_ps2mouse
     end
     wire reset;
     assign reset = reset_counter[19];
-    assign led[0] = reset;
 
-    wire [7:0] xcount, ycount;
+    wire [10:0] mouse_x, mouse_y, mouse_z;
+    wire [2:0] mouse_btn;
 
     generate
-      if(mousecore == 0) // using amiga core
+      if(mousecore == 0) // using minimig core
       begin
         wire ps2mdat_in, ps2mclk_in, ps2mdat_out, ps2mclk_out;
         assign usb_fpga_dp = ps2mclk_out ? 1'bz : 1'b0;
         assign usb_fpga_dn = ps2mdat_out ? 1'bz : 1'b0;
         assign ps2mclk_in = usb_fpga_dp;
         assign ps2mdat_in = usb_fpga_dn;
-        wire [7:0] xcount, ycount;
         ps2mouse
-        ps2mouse_amiga_inst
+        #(
+          .c_x_bits(11),
+          .c_y_bits(11)
+        )
+        ps2mouse_minimig_inst
         (
           .clk(clk),
           .reset(reset),
@@ -51,14 +54,14 @@ module ulx3s_ps2mouse
           .ps2mclki(ps2mclk_in),
           .ps2mdato(ps2mdat_out),
           .ps2mclko(ps2mclk_out),
-          .xcount(xcount),
-          .ycount(ycount),
-          .btn(led[3:1])
+          .xcount(mouse_x),
+          .ycount(mouse_y),
+          .btn(mouse_btn)
         );
       end
       if(mousecore == 1) // using oberon core
       begin
-        wire [27:0] mouse_out;
+        wire [39:0] mouse_out;
         MouseM
         ps2mouse_oberon_inst
         (
@@ -68,13 +71,16 @@ module ulx3s_ps2mouse
           .msdat(usb_fpga_dn),
           .out(mouse_out)
         );
-        assign xcount = mouse_out[7:0];
-        assign ycount = mouse_out[19:12];
-        assign led[3:1] = mouse_out[26:24];
+        assign mouse_x = mouse_out[10:0];
+        assign mouse_y = mouse_out[22:12];
+        assign mouse_z = mouse_out[38:28];
+        assign mouse_btn = mouse_out[26:24];
       end
     endgenerate
 
-    assign led[7:6] = ycount[1:0];
-    assign led[5:4] = xcount[1:0];
+    assign led[7:6] = mouse_z[1:0];
+    assign led[5:4] = mouse_y[1:0];
+    assign led[3:2] = mouse_x[1:0];
+    assign led[1:0] = mouse_btn[1:0];
     
 endmodule
