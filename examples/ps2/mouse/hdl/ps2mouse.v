@@ -13,8 +13,8 @@ module ps2mouse
 	input	ps2mclki,               // mouse PS/2 clk
 	output	ps2mdato,               // mouse PS/2 data
 	output	ps2mclko,               // mouse PS/2 clk
-	output	reg [c_x_bits-1:0] ycount, // mouse Y counter
-	output	reg [c_y_bits-1:0] xcount, // mouse X counter
+	output	reg [c_x_bits-1:0] xcount, // mouse Y counter
+	output	reg [c_y_bits-1:0] ycount, // mouse X counter
 	output	reg [2:0] btn           // {middle, right, left} mouse buttons
 );
 
