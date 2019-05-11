@@ -44,7 +44,8 @@ module ulx3s_ps2mouse
         ps2mouse
         #(
           .c_x_bits(11),
-          .c_y_bits(11)
+          .c_y_bits(11),
+          .c_z_bits(11)
         )
         ps2mouse_minimig_inst
         (
@@ -63,18 +64,22 @@ module ulx3s_ps2mouse
       begin
         wire [39:0] mouse_out;
         MouseM
+        #(
+          .c_x_bits(11),
+          .c_y_bits(11),
+          .c_z_bits(11)
+        )
         ps2mouse_oberon_inst
         (
           .clk(clk),
-          .rst(~reset), // active low
+          .reset(reset),
           .msclk(usb_fpga_dp),
           .msdat(usb_fpga_dn),
-          .out(mouse_out)
+          .x(mouse_x),
+          .y(mouse_y),
+          .z(mouse_z),
+          .btn(mouse_btn)
         );
-        assign mouse_x = mouse_out[10:0];
-        assign mouse_y = mouse_out[22:12];
-        assign mouse_z = mouse_out[38:28];
-        assign mouse_btn = mouse_out[26:24];
       end
     endgenerate
 
