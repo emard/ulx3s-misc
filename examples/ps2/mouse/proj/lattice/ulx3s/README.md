@@ -11,15 +11,17 @@ get mouse working again.
 Microsoft IntelliMouse Optical USB/PS2
 
     X/Y movement works.
-    Left and Right mouse button clicks works.
-    Other buttons don't work.
+    Left and Right buttons work.
+    Wheel press (aka middle button) works.
+    Wheel rotation works with oberon "MouseM".
+    2 side buttons don't work.
 
 Logitech Wheel Mouse M-BT58 USB/PS2
 
     X/Y movement works.
-    Left, Right button clicks and Wheel press (aka middle button) work.
-
-Wheel rotation is not supported yet.
+    Left and Right buttons work.
+    Wheel press (aka middle button) works.
+    Wheel rotation works with oberon "MouseM".
 
 The initialization procedure is not very plug-n-play.
 Here's a manual procedure that gets it working:
