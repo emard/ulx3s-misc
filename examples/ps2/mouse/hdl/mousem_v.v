@@ -77,7 +77,7 @@ module mousem
   assign msdat = ~tx[0] ? 1'b0 : 1'bz;  //bidir data
 
   always @ (posedge clk) begin
-    filter <= {filter[4:0], msclk};
+    filter <= {filter[$bits(filter)-2:0], msclk};
     count <= (reset | shift | endcount) ? 0 : count+1;
     req <= ~reset & ~run & (req ^ endcount);
     sent <= reset ? 0 : (done & ~run) ? sent+1 : sent;

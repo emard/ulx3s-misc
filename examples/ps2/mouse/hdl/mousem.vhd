@@ -26,6 +26,7 @@ use ieee.std_logic_arith.all;
 -- with Microsoft 3rd (scroll) button init magic
 
 -- wheel support and rewritten to VHDL by EMARD 10.05.2019
+-- https://isdaman.com/alsos/hardware/mouse/ps2interface.htm
 
 entity mousem is
   generic
@@ -123,7 +124,7 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      filter <= filter(4 downto 0) & msclk;
+      filter <= filter(filter'high-1 downto 0) & msclk;
       count <= count_next;
       req <= (not reset) and (not run) and (req xor endcount);
       sent <= sent_next;
