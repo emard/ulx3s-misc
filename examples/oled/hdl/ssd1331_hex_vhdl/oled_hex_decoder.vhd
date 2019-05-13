@@ -25,9 +25,10 @@ generic
 port
 (
   clk: in std_logic; -- 1-25 MHz clock typical
+  clken: in std_logic := '1'; -- allows for optional clock slowdown
   en: in std_logic := '1'; -- enable/hold input for button
   data: in std_logic_vector(C_data_len-1 downto 0);
-  spi_resn, spi_clk, spi_csn, spi_dc, spi_mosi: out std_logic := '1'
+  spi_resn, spi_clk, spi_csn, spi_dc, spi_mosi: out std_logic := '1' -- spi_clk = clk/2
 );
 end;
 
@@ -128,7 +129,7 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      -- if R_go = '1' then
+     if clken = '1' then
       if R_reset_cnt(R_reset_cnt'high downto R_reset_cnt'high-1) /= "10" then
         R_reset_cnt <= R_reset_cnt+1;
       elsif conv_integer(R_init_cnt(R_init_cnt'high downto 4)) /= C_oled_init_seq'high+1 then
@@ -180,7 +181,7 @@ begin
       if conv_integer(R_init_cnt(R_init_cnt'high downto 4)) = C_oled_init_seq'high then
          R_init_cnt(R_init_cnt'high downto 4) <= conv_std_logic_vector(C_oled_init_seq'high-(C_last_init_send_as_data-1), R_init_cnt'length-4);
       end if;
-      -- end if; -- R_go slowdown
+     end if; -- clken (slowdown)
     end if; -- rising edge
   end process;
   spi_resn <= not R_reset_cnt(R_reset_cnt'high-1);

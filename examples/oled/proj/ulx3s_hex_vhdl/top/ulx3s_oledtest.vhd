@@ -120,6 +120,7 @@ begin
   port map
   (
     clk => clk_12MHz,
+    clken => R_counter(0),
     en => S_enable,
     data => S_data,
     spi_resn => oled_resn,
