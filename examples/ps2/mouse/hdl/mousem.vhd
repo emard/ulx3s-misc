@@ -135,7 +135,7 @@ begin
       y <= y_next;
       z <= z_next;
       btn <= btn_next;
-      update <= done;      
+      update <= done;
     end if;
   end process;  
 end syn;
