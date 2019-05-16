@@ -34,6 +34,7 @@ module mousem
 (
   input clk, reset,
   inout msclk, msdat,
+  output reg update,
   output reg [c_x_bits-1:0] x,
   output reg [c_y_bits-1:0] y,
   output reg [c_z_bits-1:0] z,
@@ -87,6 +88,7 @@ module mousem
     y <= ~run ? 0 : done ? y - dy : y;
     z <= ~run ? 0 : done ? z + dz : z;
     btn <= ~run ? 0 : done ? rx[3:1] : btn;
+    update <= done;
   end
 
 endmodule

@@ -39,6 +39,7 @@ entity mousem is
   (
     clk, reset: in std_logic;
     msclk, msdat: inout std_logic;
+    update: out std_logic;
     x: out std_logic_vector(c_x_bits-1 downto 0);
     y: out std_logic_vector(c_y_bits-1 downto 0);
     z: out std_logic_vector(c_z_bits-1 downto 0);
@@ -133,7 +134,8 @@ begin
       x <= x_next;
       y <= y_next;
       z <= z_next;
-      btn <= btn_next;      
+      btn <= btn_next;
+      update <= done;      
     end if;
   end process;  
 end syn;

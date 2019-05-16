@@ -30,6 +30,7 @@ module ulx3s_ps2mouse
     wire reset;
     assign reset = reset_counter[19];
 
+    wire mouse_update;
     wire [10:0] mouse_x, mouse_y, mouse_z;
     wire [2:0] mouse_btn;
 
@@ -59,6 +60,7 @@ module ulx3s_ps2mouse
           .ycount(mouse_y),
           .btn(mouse_btn)
         );
+        assign mouse_update = 1'b1;
       end
       if(mousecore == 1) // using oberon core
       begin
@@ -74,6 +76,7 @@ module ulx3s_ps2mouse
           .reset(reset),
           .msclk(usb_fpga_dp),
           .msdat(usb_fpga_dn),
+          .update(mouse_update),
           .x(mouse_x),
           .y(mouse_y),
           .z(mouse_z),
@@ -81,10 +84,17 @@ module ulx3s_ps2mouse
         );
       end
     endgenerate
-
-    assign led[7:6] = mouse_z[1:0];
-    assign led[5:4] = mouse_y[1:0];
-    assign led[3:2] = mouse_x[1:0];
-    assign led[1:0] = mouse_btn[1:0] ^ {1'b0, mouse_btn[2]};
     
+    wire [7:0] R_led;
+    always @(posedge clk)
+    begin
+      if(mouse_update)
+      begin
+        R_led[7:6] <= mouse_z[1:0];
+        R_led[5:4] <= mouse_y[1:0];
+        R_led[3:2] <= mouse_x[1:0];
+        R_led[1:0] <= mouse_btn[1:0] ^ {1'b0, mouse_btn[2]};
+      end
+    end
+    assign led = R_led;
 endmodule
