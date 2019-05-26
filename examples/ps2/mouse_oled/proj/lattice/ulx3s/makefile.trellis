@@ -46,6 +46,7 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../../mouse/hdl/ps2mouse.v \
+  ../../../../mouse/hdl/mousem_v.v \
   ../../../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
