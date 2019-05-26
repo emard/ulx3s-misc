@@ -58,9 +58,25 @@ module mousem
 // yyyyyyyy01pxxxxxxxx01pYXts1MRL0   normal report
 // p--ack---0Ap--cmd---01111111111   cmd + ack bit (A) & byte
 
+  // bytes to be sent
+  parameter [7:0] send0     = 8'hF4;  // 8'hF4 enable reporting
+  parameter [7:0] send2     = 8'd200; //   200
+  parameter [7:0] send4     = 8'd100; //   100
+  parameter [7:0] send6     = 8'd80;  //    80
+  parameter [7:0] send135   = 8'hF3;  // 8'hF3 set sample rate
+  // odd-parity bit prepended to each byte
+  parameter [8:0] psend0    = {~^send0,send0};
+  parameter [8:0] psend2    = {~^send2,send2};
+  parameter [8:0] psend4    = {~^send4,send4};
+  parameter [8:0] psend6    = {~^send6,send6};
+  parameter [8:0] psend135  = {~^send135,send135};
+
+  assign cmd = (sent == 0) ? psend0 :   // init sequence
+               (sent == 2) ? psend2 :
+               (sent == 4) ? psend4 :
+               (sent == 6) ? psend6 : 
+                             psend135;
   assign run = (sent == 7);
-  assign cmd = (sent == 0) ? 9'h0F4 :   //enable reporting, rate 200,100,80
-   (sent == 2) ? 9'h0C8 : (sent == 4) ? 9'h064 : (sent == 6) ? 9'h150 : 9'h1F3;
   assign endcount = (count[14:12] == 3'b111);  // more than 11*100uS @25MHz
   assign shift = ~req & (filter == 6'b100000);  //low for 200nS @25MHz
   // fireset bit that enters rx at MSB is 1 and it is shifted to the right
