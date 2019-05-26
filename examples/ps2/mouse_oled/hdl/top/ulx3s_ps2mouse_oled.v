@@ -89,6 +89,7 @@ module ulx3s_ps2mouse_oled
 
     assign led[7:6] = mouse_y[1:0];
     assign led[5:4] = mouse_x[1:0];
+    assign led[3:1] = mouse_btn;
 
     wire [6:0] oled_x;
     wire [5:0] oled_y;
