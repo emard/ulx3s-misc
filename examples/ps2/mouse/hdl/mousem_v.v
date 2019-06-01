@@ -27,9 +27,10 @@ CONNECTION WITH THE DEALINGS IN OR USE OR PERFORMANCE OF THE SOFTWARE.*/
 
 module mousem
 #(
-  parameter c_x_bits = 11, // >= 8
-  parameter c_y_bits = 11, // >= 8
-  parameter c_z_bits = 11  // >= 4
+  parameter c_x_bits = 11,   // >= 8
+  parameter c_y_bits = 11,   // >= 8
+  parameter c_z_bits = 11,   // >= 4
+  parameter c_z_ena  = 1     // 1:yes wheel, 0:not wheel
 )
 (
   input clk, reset,
@@ -41,7 +42,8 @@ module mousem
   output reg [2:0] btn
 );
   reg [2:0] sent;
-  reg [41:0] rx;
+  localparam c_rx_bits = c_z_ena ? 42 : 31;
+  reg [c_rx_bits-1:0] rx;
   reg [9:0] tx;
   reg [14:0] count;
   reg [5:0] filter;
@@ -79,13 +81,16 @@ module mousem
   assign run = (sent == 7);
   assign endcount = (count[14:12] == 3'b111);  // more than 11*100uS @25MHz
   assign shift = ~req & (filter == 6'b100000);  //low for 200nS @25MHz
-  // fireset bit that enters rx at MSB is 1 and it is shifted to the right
+  // first bit that enters rx at MSB is 1 and it is shifted to the right
   // when this bit reaches the position in rx, it indicates end of transmission
   assign endbit = run ? ~rx[0] : ~rx[$bits(rx)-21];
   assign done = endbit & endcount & ~req;
   assign dx = {{($bits(dx)-8){rx[5]}}, rx[7] ? 8'b0 : rx[19:12]};  //sign+overfl
   assign dy = {{($bits(dy)-8){rx[6]}}, rx[8] ? 8'b0 : rx[30:23]};  //sign+overfl
-  assign dz = {{($bits(dz)-3){rx[37]}}, rx[37:34]};  //sign,wheel
+  generate
+    if(c_z_ena)
+      assign dz = {{($bits(dz)-3){rx[37]}}, rx[37:34]};  //sign,wheel
+  endgenerate
 //  assign out = {run,  // full debug
 //    run ? {rx[25:0], endbit} : {rx[30:10], endbit, sent, tx[0], ~req}};
 //  assign out = {run,  // debug then normal

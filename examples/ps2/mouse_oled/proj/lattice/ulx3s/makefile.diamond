@@ -53,6 +53,10 @@ VERILOG_FILES = \
   ../../../../mouse/hdl/mousem_v.v \
   ../../../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
 
+
+#VHDL_FILES = \
+#  ../../../../mouse/hdl/mousem.vhd \
+
 SCRIPTS = ../../../../../../scripts
 
 include $(SCRIPTS)/trellis_path.mk

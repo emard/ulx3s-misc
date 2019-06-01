@@ -49,12 +49,10 @@ VERILOG_FILES = \
   ../../../../mouse/hdl/mousem_v.v \
   ../../../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
 
+
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 #VHDL_FILES = \
-#  hdl/blink.vhd \
-#  hdl/vga.vhd \
-#  hdl/vga2dvid.vhd \
-#  hdl/tmds_encoder.vhd
+#  ../../../../mouse/hdl/mousem.vhd \
 
 SCRIPTS = ../../../../../../scripts
 
