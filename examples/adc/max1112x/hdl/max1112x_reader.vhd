@@ -27,6 +27,8 @@ port
 end;
 
 architecture rtl of max1112x_reader is
+  type T_data is array (0 to C_channels-1) of unsigned(C_bits-1 downto 0);
+  signal R_data_array: T_data;
   signal R_data: std_logic_vector(data'range);
   -- constant init_seq: T_max1112x_init_seq := C_max1112x_init_seq;
   signal R_reset_cnt: std_logic_vector(1 downto 0) := (others => '0'); -- 20 downto 0
@@ -49,7 +51,8 @@ begin
           if conv_integer(R_init_cnt(R_init_cnt'high downto 6)) /= C_max1112x_init_seq'high
           or R_init_cnt(5 downto 0) /= "111111" then
             if conv_integer(R_init_cnt(5 downto 0)) = 0 then -- load new word init sequece
-              R_data <= R_bus_data(C_bits-1 downto 0) & R_data(R_data'high downto C_bits); -- 12-bit sample
+              -- R_data <= R_bus_data(C_bits-1 downto 0) & R_data(R_data'high downto C_bits); -- 12-bit sample
+              R_data_array(conv_integer(R_bus_data(15 downto 13))) <= R_bus_data(11 downto 0);
               R_bus_data <= C_max1112x_init_seq(conv_integer(R_init_cnt(R_init_cnt'high downto 6)));
             elsif R_init_cnt(1 downto 0) = "00" then -- shift one bit to the right
               R_bus_data <= R_bus_data(R_bus_data'high-1 downto 0) & spi_miso;
@@ -89,5 +92,7 @@ begin
   spi_clk <= R_init_cnt(1); -- clk/4 counter LSB to clock only during CSn=0
   spi_mosi <= R_bus_data(R_bus_data'high); -- data MSB always to MOSI output
   dv <= R_dv;
-  data <= R_data;
+  G_output: for i in 0 to C_channels-1 generate
+    data(C_bits*(i+1)-1 downto C_bits*i) <= R_data_array(i);
+  end generate G_output;
 end rtl;

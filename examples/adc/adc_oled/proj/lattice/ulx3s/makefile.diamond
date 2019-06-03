@@ -52,12 +52,15 @@ TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).vhd
 
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../../hdl/max1112x_init_pack.vhd \
-  ../../../hdl/max1112x_reader_array.vhd \
+  ../../../../max1112x/hdl/max1112x_init_pack.vhd \
+  ../../../../max1112x/hdl/max1112x_reader_array.vhd \
   ../../../../../oled/proj/ulx3s_hex_vhdl/clock/clk_25M_100M_7M5_12M_60M.vhd \
   ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_init_pack.vhd \
   ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_font_pack.vhd \
   ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_hex_decoder.vhd \
+
+# same as max1112x_reader_array but shifts data instead of addressed writing
+#  ../../../../max1112x/hdl/max1112x_reader_array.vhd \
 
 SCRIPTS = ../../../../../../scripts
 
