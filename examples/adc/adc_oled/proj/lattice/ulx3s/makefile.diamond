@@ -48,13 +48,12 @@ TOP_MODULE = ulx3s_adc_oled
 TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).vhd
 
 #VERILOG_FILES = \
-#  ../../../../../ps2/mouse/hdl/ps2mouse.v \
 #  ../../../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
 
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../hdl/max1112x_init_pack.vhd \
-  ../../../hdl/max1112x_reader.vhd \
+  ../../../hdl/max1112x_reader_array.vhd \
   ../../../../../oled/proj/ulx3s_hex_vhdl/clock/clk_25M_100M_7M5_12M_60M.vhd \
   ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_init_pack.vhd \
   ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_font_pack.vhd \
