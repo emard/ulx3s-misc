@@ -43,29 +43,31 @@
 // Additional Comments: 
 //////////////////////////////////////////////////////////////////////////////////
 
-`define RD1 8'h10		// 32 bytes  - cmd 10
-`define RD2 8'h80		// 256 bytes - cmd 11
-`define WR2 8'h80		// 256 bytes - cmd 01
-`define PitchBits	1	
+module sdram_16bit
+	#(
+		parameter [7:0] C_RD1 = 8'h10,
+		parameter [7:0] C_RD2 = 8'h80,
+		parameter [7:0] C_WR2 = 8'h80,
 
-`define ColBits	9	// column bits
-`define RowBits	13	// row bits
-`define BankBits	2	// bank bits
+		parameter C_PitchBits =  1,
 
-`define tRP		3
-`define tMRD 	2
-`define tRCD	3
-`define tRC		9
-`define CL		3		// CAS latency
-`define tREF	64		// ms
+		parameter C_ColBits   =  9, // column bits
+		parameter C_RowBits   = 13, // row bits
+		parameter C_BankBits  =  2, // bank bits
 
-`define RFB 11			// refresh bit = floor(log2(CLK*`tREF/(2^RowBits)))
+		parameter C_tRP       =  3,
+		parameter C_tMRD      =  2,
+		parameter C_tRCD      =  3,
+		parameter C_tRC       =  9,
+		parameter C_CL        =  3, // CAS latency
+		parameter C_tREF      = 64, // ms
 
-
-module sdram_16bit(
+		parameter C_RFB	      = 11  // refresh bit = floor(log2(CLK*C_tREF/(2^RowBits)))
+	)
+	(
 		input sys_CLK,						// clock
 		input [1:0]sys_CMD,					// 00=nop, 01 = write WR2 bytes, 10=read RD1 bytes, 11=read RD2 bytes
-		input [`RowBits+`BankBits+`ColBits-`PitchBits-1:0]sys_ADDR,			// word address, multiple of 2^PitchBits words
+		input [C_RowBits+C_BankBits+C_ColBits-C_PitchBits-1:0]sys_ADDR,			// word address, multiple of 2^PitchBits words
 		input [15:0]sys_DIN,				// data input
 		output reg [15:0]sys_DOUT,
 		output reg sys_rd_data_valid = 0,	// data valid out
@@ -79,16 +81,16 @@ module sdram_16bit(
 		output reg [1:0]sdr_DQM = 2'b11		// SDRAM DQM
 	);
 
-	reg [`RowBits-1:0]actLine[3:0];
-	reg [(1<<`BankBits)-1:0]actBank = 0;
+	reg [C_RowBits-1:0]actLine[3:0];
+	reg [(1<<C_BankBits)-1:0]actBank = 0;
 	reg [2:0]STATE = 0;
 	reg [2:0]RET;		// return state
 	reg [6:0]DLY;		// delay
 	reg [15:0]counter = 0;	// refresh counter
 	reg rfsh = 1;			// refresh bit
-	reg [`ColBits-`PitchBits-1:0]colAddr;
-	reg [`BankBits-1:0]bAddr;
-	reg [`RowBits-1:0]linAddr;
+	reg [C_ColBits-C_PitchBits-1:0]colAddr;
+	reg [C_BankBits-1:0]bAddr;
+	reg [C_RowBits-1:0]linAddr;
 	reg [15:0]reg_din;
 	reg [2:0]out_data_valid = 0;
 	
@@ -108,8 +110,8 @@ module sdram_16bit(
 					sys_rd_data_valid <= 1'b0;
 					if(sdr_DQM[0]) STATE <= counter[15] ? 2 : 0;	// initialization, wait >200uS
 					else begin	// wait new command
-						if(rfsh != counter[`RFB]) begin
-							rfsh <= counter[`RFB];
+						if(rfsh != counter[C_RFB]) begin
+							rfsh <= counter[C_RFB];
 							STATE <= 2;	// precharge all
 						end else if(|sys_CMD) begin
 							sys_cmd_ack <= sys_CMD;
@@ -128,26 +130,26 @@ module sdram_16bit(
 					sdr_n_CS_WE_RAS_CAS <= 4'b0001;
 					sdr_ADDR[10] <= 1'b1;
 					RET <= sdr_DQM[0] ? 3 : 4;
-					DLY <= `tRP - 2;
+					DLY <= C_tRP - 2;
 					actBank <= 0;
 				end
 					
 				3: begin	// Mode Register Set
 					sdr_n_CS_WE_RAS_CAS <= 4'b0000;
-					sdr_ADDR <= 13'b00_0_0_00_000_0_111 + (`CL<<4);	// burst read/burst write _ normal mode _ `CL CAS latency _ sequential _ full page burst
+					sdr_ADDR <= 13'b00_0_0_00_000_0_111 + (C_CL<<4);	// burst read/burst write _ normal mode _ C_CL CAS latency _ sequential _ full page burst
 					sdr_BA <= 2'b00;
 					RET <= 4;
-					DLY <= `tMRD - 2;
+					DLY <= C_tMRD - 2;
 				end
 				
 				4: begin // autorefresh
 					sdr_n_CS_WE_RAS_CAS <= 4'b0100;
-					if(rfsh != counter[`RFB]) RET <= 4;
+					if(rfsh != counter[C_RFB]) RET <= 4;
 					else begin
 						sdr_DQM <= 2'b00;
 						RET <= 0;
 					end
-					DLY <= `tRC - 2;
+					DLY <= C_tRC - 2;
 				end
 				
 				5: begin	// read/write
@@ -155,11 +157,11 @@ module sdram_16bit(
 					if(actBank[bAddr]) // bank active
 						if(actLine[bAddr] == linAddr) begin // line already active
 							sdr_ADDR[10] <= 1'b0; // no auto precharge
-							sdr_ADDR[`ColBits-1:0] <= {colAddr, {`PitchBits{1'b0}}}; 
+							sdr_ADDR[C_ColBits-1:0] <= {colAddr, {C_PitchBits{1'b0}}}; 
 							RET <= 7;
 							if(sys_cmd_ack[1]) begin	// read
 								sdr_n_CS_WE_RAS_CAS <= 4'b0110; // read command
-								DLY <= `CL - 1;
+								DLY <= C_CL - 1;
 							end else begin	// write
 								DLY <= 1;
 								sys_wr_data_valid <= 1'b1;
@@ -169,15 +171,15 @@ module sdram_16bit(
 							sdr_ADDR[10] <= 1'b0;
 							actBank[bAddr] <= 1'b0;
 							RET <= 5;
-							DLY <= `tRP - 2;								
+							DLY <= C_tRP - 2;								
 						end
 					else begin // bank activate
 						sdr_n_CS_WE_RAS_CAS <= 4'b0101;
-						sdr_ADDR[`RowBits-1:0] <= linAddr;
+						sdr_ADDR[C_RowBits-1:0] <= linAddr;
 						actBank[bAddr] <= 1'b1;
 						actLine[bAddr] <= linAddr;
 						RET <= 5;
-						DLY <= `tRCD - 2;
+						DLY <= C_tRCD - 2;
 					end
 				end 
 				
@@ -193,7 +195,7 @@ module sdram_16bit(
 					if(sys_cmd_ack[1]) sys_rd_data_valid <= 1'b1;
 					else sdr_n_CS_WE_RAS_CAS <= 4'b0010;	// write command
 					RET <= 6;
-					DLY <= sys_cmd_ack[1] ? sys_cmd_ack[0] ? `RD2 - 6 : `RD1 - 6 : `WR2 - 2;
+					DLY <= sys_cmd_ack[1] ? sys_cmd_ack[0] ? C_RD2 - 6 : C_RD1 - 6 : C_WR2 - 2;
 				end
 				
 			endcase

@@ -38,32 +38,77 @@ module sdram_hex_oled
     wire clk_oled;
     assign clk_oled = clk_out[2]; // 12.5 MHz
     
-    wire clk_sdr;
+    wire clk_sdram;
     assign clk_sdram = clk_out[3]; // 100 MHz
     wire [15:0] ram_out;
+    
+    reg [1:0] sys_cmd = 2'b00; // NOP
+    reg [24:0] sys_addr = 25'h000000;
+    reg [15:0] sys_din = 16'hABCD;
+    wire [15:0] sys_dout;
 
+    wire sys_rd_data_valid, sys_wr_data_valid;
+    wire [1:0] sys_cmd_ack;
     sdram_16bit
     sdram_16bit_inst
     (
-        .sys_CLK(clk_sdr),      // clock
-        .sys_CMD(2'b00),	// 00=nop, 01 = write 256 bytes, 10=read 32 bytes, 11=read 256 bytes
-        .sys_ADDR(25'h000000),	// word address
-        .sys_DIN(16'hABCD),	// data input
-        .sys_DOUT(ram_out),					// data output
-        //.sys_rd_data_valid(sys_rd_data_valid),	// data valid read
-        //.sys_wr_data_valid(sys_wr_data_valid),	// data valid write
-        //.sys_cmd_ack(sys_cmd_ack),			// command acknowledged
-		
-        .sdr_n_CS_WE_RAS_CAS({sdram_csn, sdram_wen, sdram_rasn, sdram_casn}), // SDRAM #CS, #WE, #RAS, #CAS
-        .sdr_BA(sdram_ba),					// SDRAM bank address
-        .sdr_ADDR(sdram_a),				// SDRAM address
-        .sdr_DATA(sdram_dq),				// SDRAM data
-        .sdr_DQM(sdram_dqm)					// SDRAM DQM
+        .sys_CLK(clk_sdram),    // clock
+        // CPU/system connection
+        .sys_CMD(sys_cmd),      // 2'b00:nop, 2'b01:write 256 bytes, 2'b10:read 32 bytes, 2'b11:read 256 bytes
+        .sys_ADDR(sys_addr),    // word address
+        .sys_DIN(sys_din),      // data input
+        .sys_DOUT(sys_dout),    // data output
+        .sys_rd_data_valid(sys_rd_data_valid),	// data valid read
+        .sys_wr_data_valid(sys_wr_data_valid),	// data valid write
+        .sys_cmd_ack(sys_cmd_ack),		// command acknowledged
+        // SDRAM chip connection
+        .sdr_n_CS_WE_RAS_CAS({sdram_csn, sdram_wen, sdram_rasn, sdram_casn}), // #CS, #WE, #RAS, #CAS
+        .sdr_BA(sdram_ba),      // SDRAM bank address
+        .sdr_ADDR(sdram_a),	// SDRAM address
+        .sdr_DATA(sdram_d),     // SDRAM data
+        .sdr_DQM(sdram_dqm)	// SDRAM byte select
     );
+    assign sdram_clk = ~clk_sdram; // phase shifted 180 deg
+
+    // RAM R/W state machine
+    reg [15:0] R_rd_data;
+    reg [23:0] R_state_latch;
+    reg [23:0] state;
+    always @(posedge clk_sdram)
+    begin
+      if(state == 24'h110000)
+        sys_cmd <= 2'b01; // write 256 bytes
+      if(sys_cmd == 2'b01 && sys_cmd_ack == 2'b01 && sys_wr_data_valid == 1'b1)
+      begin
+        R_state_latch <= state; // display at which state sys_wr_data_valid=1
+        sys_cmd <= 2'b00; // NOP
+      end
+      if(state == 24'h112000)
+        sys_cmd <= 2'b10; // read 32 bytes
+      if(sys_cmd == 2'b10 && sys_cmd_ack == 2'b10 && sys_rd_data_valid == 1'b1)
+      begin
+        //R_state_latch <= state; // display at which state sys_rd_data_valid=1
+        R_rd_data <= sys_dout;
+        sys_cmd <= 2'b00; // NOP
+        sys_din <= sys_din + 1; // write next
+      end
+      if(state == 24'h113000)
+        sys_cmd <= 2'b00; // NOP
+      state <= state + 1;
+    end
 
     reg [127:0] R_display; // something to display
     always @(posedge clk_oled)
     begin
+      R_display[63:48] <= sys_din;
+      R_display[40:16] <= sys_addr;
+      R_display[15:0] <= R_rd_data;
+      R_display[125:124] <= sys_cmd;
+      R_display[121:120] <= sys_cmd_ack;
+      R_display[116] <= sys_wr_data_valid;
+      R_display[112] <= sys_rd_data_valid;
+      R_display[23+64:64] <= R_state_latch;
+      /*
       R_display[0] <= btn[0];
       R_display[4] <= btn[1];
       R_display[8] <= btn[2];
@@ -71,7 +116,8 @@ module sdram_hex_oled
       R_display[16] <= btn[4];
       R_display[20] <= btn[5];
       R_display[24] <= btn[6];
-      R_display[127:64] <= R_display[127:64] + 1; // shown in next OLED row
+      */
+      // R_display[95:64] <= R_display[95:64] + 1; // shown in next OLED row
     end
 
     wire [6:0] x;
