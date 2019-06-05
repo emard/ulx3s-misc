@@ -26,17 +26,20 @@ module sdram_hex_oled
     parameter C_color_bits = 16; // 8 or 16
     assign wifi_gpio0 = btn[0];
 
-    wire clk, locked;
-    pll
-    pll_inst
-    (
-        .clki(clk_25mhz),
-        .clko(clk), // 12.5 MHz
-        .locked(locked)
+    wire [3:0] clk_out;
+    clk_25_125_25_12_100
+    clk_pll_inst
+    ( 
+      .clkin(clk_25mhz), // 25 MHz from onboard oscillator
+      .clkout(clk_out), // 0:125 1:25 2:12.5 3:100 MHz
+      .locked(locked)
     );
     
+    wire clk_oled;
+    assign clk_oled = clk_out[2]; // 12.5 MHz
+    
     wire clk_sdr;
-    assign clk_sdr = clk_25mhz;
+    assign clk_sdram = clk_out[3]; // 100 MHz
     wire [15:0] ram_out;
 
     sdram_16bit
@@ -59,7 +62,7 @@ module sdram_hex_oled
     );
 
     reg [127:0] R_display; // something to display
-    always @(posedge clk)
+    always @(posedge clk_oled)
     begin
       R_display[0] <= btn[0];
       R_display[4] <= btn[1];
@@ -84,7 +87,7 @@ module sdram_hex_oled
     )
     hex_decoder_inst
     (
-        .clk(clk),
+        .clk(clk_oled),
         .en(1'b1),
         .data(R_display),
         .x(x),
@@ -107,7 +110,7 @@ module sdram_hex_oled
     )
     oled_video_inst
     (
-        .clk(clk),
+        .clk(clk_oled),
         .x(x),
         .y(y),
         .next_pixel(next_pixel),
