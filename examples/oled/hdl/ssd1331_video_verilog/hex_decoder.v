@@ -61,56 +61,31 @@ module hex_decoder
   reg [3:0] R_indexed_data; // stored from input
   wire [3:0] S_indexed_data;
 
-  generate
-  if(C_color_bits < 12)
-  begin
   // RGB332
   // red   20 40 80
   // green 04 08 10
   // blue     01 02
-  localparam C_color_black         = 8'h00;
-  localparam C_color_dark_red      = 8'h40;
-  localparam C_color_dark_brown    = 8'h44;
-  localparam C_color_dark_yellow   = 8'h48;
-  localparam C_color_dark_green    = 8'h08;
-  localparam C_color_dark_cyan     = 8'h05;
-  localparam C_color_dark_blue     = 8'h01;
-  localparam C_color_dark_violett  = 8'h21;
-  localparam C_color_gray          = 8'h45;
-  localparam C_color_light_red     = 8'h80;
-  localparam C_color_orange        = 8'h84;
-  localparam C_color_light_yellow  = 8'h90;
-  localparam C_color_light_green   = 8'h10;
-  localparam C_color_light_cyan    = 8'h0A;
-  localparam C_color_light_blue    = 8'h02;
-  localparam C_color_light_violett = 8'h42;
-  localparam C_color_white         = 8'hFF;
-  end
-  else
-  begin
   // RGB565
   // red        0800 1000 2000 4000 8000
   // green 0020 0040 0080 0100 0200 0400
   // blue       0001 0002 0004 0008 0010 
-  localparam C_color_black         = 16'h0000;
-  localparam C_color_dark_red      = 16'h4000;
-  localparam C_color_dark_brown    = 16'h2100;
-  localparam C_color_dark_yellow   = 16'h4200;
-  localparam C_color_dark_green    = 16'h0200;
-  localparam C_color_dark_cyan     = 16'h0208;
-  localparam C_color_dark_blue     = 16'h0008;
-  localparam C_color_dark_violett  = 16'h4008;
-  localparam C_color_gray          = 16'h630C;
-  localparam C_color_light_red     = 16'h8000;
-  localparam C_color_orange        = 16'h4200;
-  localparam C_color_light_yellow  = 16'h8400;
-  localparam C_color_light_green   = 16'h0400;
-  localparam C_color_light_cyan    = 16'h0410;
-  localparam C_color_light_blue    = 16'h0010;
-  localparam C_color_light_violett = 16'h8010;
-  localparam C_color_white         = 16'hFFFF;
-  end
-  endgenerate
+  localparam C_color_black         = C_color_bits < 12 ? 8'h00 : 16'h0000 ;
+  localparam C_color_dark_red      = C_color_bits < 12 ? 8'h40 : 16'h4000 ;
+  localparam C_color_dark_brown    = C_color_bits < 12 ? 8'h44 : 16'h2100 ;
+  localparam C_color_dark_yellow   = C_color_bits < 12 ? 8'h48 : 16'h4200 ;
+  localparam C_color_dark_green    = C_color_bits < 12 ? 8'h08 : 16'h0200 ;
+  localparam C_color_dark_cyan     = C_color_bits < 12 ? 8'h05 : 16'h0208 ;
+  localparam C_color_dark_blue     = C_color_bits < 12 ? 8'h01 : 16'h0008 ;
+  localparam C_color_dark_violett  = C_color_bits < 12 ? 8'h21 : 16'h4008 ;
+  localparam C_color_gray          = C_color_bits < 12 ? 8'h45 : 16'h630C ;
+  localparam C_color_light_red     = C_color_bits < 12 ? 8'h80 : 16'h8000 ;
+  localparam C_color_orange        = C_color_bits < 12 ? 8'h84 : 16'h4200 ;
+  localparam C_color_light_yellow  = C_color_bits < 12 ? 8'h90 : 16'h8400 ;
+  localparam C_color_light_green   = C_color_bits < 12 ? 8'h10 : 16'h0400 ;
+  localparam C_color_light_cyan    = C_color_bits < 12 ? 8'h0A : 16'h0410 ;
+  localparam C_color_light_blue    = C_color_bits < 12 ? 8'h02 : 16'h0010 ;
+  localparam C_color_light_violett = C_color_bits < 12 ? 8'h42 : 16'h8010 ;
+  localparam C_color_white         = C_color_bits < 12 ? 8'hFF : 16'hFFFF ;
 
   wire [C_color_bits-1:0] C_color_map[0:15]; // char background color map
   assign C_color_map[0] = C_color_black;

@@ -56,13 +56,10 @@ module top_hex_demo
         .next_pixel(next_pixel),
         .color(color)
     );
-    
-    generate
-      if(C_color_bits < 12)
-        localparam C_init_file = "oled_init_xflip.mem";
-      else
-        localparam C_init_file = "oled_init_xflip_16bit.mem";
-    endgenerate
+
+    localparam C_init_file = C_color_bits < 12 ? 
+                             "oled_init_xflip.mem" :
+                             "oled_init_xflip_16bit.mem";
 
     oled_video
     #(
