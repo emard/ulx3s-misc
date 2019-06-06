@@ -1,4 +1,8 @@
-# SDRAM OLED HEX demo
+# SDRAM from OBERON with OLED HEX demo
+
+This SDRAM controller works in Oberon
+but I don't understand its signaling
+so testbench is not fully useful.
 
 cleanup:
 
@@ -15,3 +19,4 @@ program (upload to SRAM, temporary):
 or
 
     make -f makefile.trellis program_ocd
+
