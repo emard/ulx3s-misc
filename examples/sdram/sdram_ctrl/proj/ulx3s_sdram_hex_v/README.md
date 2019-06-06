@@ -1,6 +1,8 @@
 # SDRAM from OBERON with OLED HEX demo
 
-This SDRAM controller is from fpga4fun.
+This is
+[SDRAM controller from fpga4fun](https://www.fpga4fun.com/SDRAM2.html).
+
 Something works but I'm not sure about
 is signaling done right.
 
