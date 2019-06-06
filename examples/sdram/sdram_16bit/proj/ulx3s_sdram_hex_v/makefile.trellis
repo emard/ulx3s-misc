@@ -2,7 +2,7 @@
 PROJECT = init
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -30,7 +30,7 @@ CLK0_OPTIONS = \
 
 CONSTRAINTS = ../../../../../constraints/ulx3s_v20_segpdi.lpf
 TOP_MODULE = sdram_hex_oled
-TOP_MODULE_FILE = ../../hdl/top/$(TOP_MODULE).v
+TOP_MODULE_FILE = ../../../sdram_16bit/hdl/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
