@@ -69,6 +69,7 @@ module sdram_hex_oled
         .sdr_DQM(sdram_dqm)	// SDRAM byte select
     );
     assign sdram_clk = ~clk_sdram; // phase shifted 180 deg
+    assign sdram_cke = 1'b1;
 
     // RAM R/W state machine
     reg R_inc = 1'b0;
