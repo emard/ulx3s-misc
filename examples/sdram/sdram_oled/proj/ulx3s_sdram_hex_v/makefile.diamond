@@ -22,19 +22,32 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
-TOP_MODULE = top_hex_demo
-TOP_MODULE_FILE = ../../hdl/ssd1331_video_verilog/top/$(TOP_MODULE).v
+# for new ecppll: to override above, rename CLK0_OPTIONS_NEW -> CLK0_OPTIONS
+CLK0_NAME = clk_25_125_25_12_100
+CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
+CLK0_OPTIONS = \
+  --module=$(CLK0_NAME) \
+  --clkin=25 \
+  --clkout0=125 \
+  --clkout1=25 \
+  --clkout2=12.5 \
+  --clkout3=100
+
+CONSTRAINTS = ../../../../../constraints/ulx3s_v20_segpdi.lpf
+TOP_MODULE = sdram_hex_oled
+TOP_MODULE_FILE = ../../hdl/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../hdl/ssd1331_video_verilog/oled_video.v \
-  ../../hdl/ssd1331_video_verilog/hex_decoder.v \
-  ../../hdl/ssd1331_term_verilog/pll.v
+  $(CLK0_FILE_NAME) \
+  ../../../sdram_16bit/hdl/sdram_16bit.v \
+  ../../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
+  ../../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v \
 
+# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = 
 
-SCRIPTS = ../../../../scripts/
+SCRIPTS = ../../../../../scripts/
 include $(SCRIPTS)/trellis_path.mk
 include $(SCRIPTS)/diamond_path.mk
 include $(SCRIPTS)/diamond_main.mk

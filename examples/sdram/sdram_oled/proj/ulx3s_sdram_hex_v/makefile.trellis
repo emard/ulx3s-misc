@@ -38,7 +38,6 @@ VERILOG_FILES = \
   ../../../sdram_16bit/hdl/sdram_16bit.v \
   ../../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
   ../../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v \
-  ../../../../oled/hdl/ssd1331_term_verilog/pll.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = 

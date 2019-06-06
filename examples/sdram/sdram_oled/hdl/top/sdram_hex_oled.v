@@ -39,11 +39,11 @@ module sdram_hex_oled
     assign clk_oled = clk_out[2]; // 12.5 MHz
     
     wire clk_sdram;
-    assign clk_sdram = clk_out[3]; // 100 MHz
+    assign clk_sdram = clk_out[1]; // 25 MHz
     wire [15:0] ram_out;
     
     reg [1:0] sys_cmd = 2'b00; // NOP
-    reg [24:0] sys_addr = 25'h000000;
+    reg [22:0] sys_addr = 23'h000000;
     reg [15:0] sys_din = 16'hABCD;
     wire [15:0] sys_dout;
 
@@ -71,29 +71,43 @@ module sdram_hex_oled
     assign sdram_clk = ~clk_sdram; // phase shifted 180 deg
 
     // RAM R/W state machine
+    reg R_inc = 1'b0;
     reg [15:0] R_rd_data;
     reg [23:0] R_state_latch;
     reg [23:0] state;
     always @(posedge clk_sdram)
     begin
       if(state == 24'h110000)
-        sys_cmd <= 2'b01; // write 256 bytes
-      if(sys_cmd == 2'b01 && sys_cmd_ack == 2'b01 && sys_wr_data_valid == 1'b1)
       begin
-        R_state_latch <= state; // display at which state sys_wr_data_valid=1
+        sys_cmd <= 2'b01; // write 256 bytes
+        sys_addr <= 23'h000000;
+      end
+      if(sys_cmd == 2'b01 && sys_cmd_ack == 2'b01)
+      begin
+        // after ACK, remove CMD
+        // R_state_latch <= state; // display at which state sys_wr_data_valid=1
         sys_cmd <= 2'b00; // NOP
       end
-      if(state == 24'h112000)
-        sys_cmd <= 2'b10; // read 32 bytes
-      if(sys_cmd == 2'b10 && sys_cmd_ack == 2'b10 && sys_rd_data_valid == 1'b1)
+      if(sys_wr_data_valid)
       begin
+        R_state_latch <= state; // display at which state sys_wr_data_valid=1
+        R_inc <= 1'b1; // start incrementing
+      end
+      else
+        R_inc <= 1'b0; // stop incrementing
+      sys_din <= state[15:0];
+      if(state == 24'h112000)
+      begin
+        sys_cmd <= 2'b10; // read 32 bytes
+        sys_addr <= 23'h000000;
+      end
+      if(sys_cmd == 2'b10 && sys_cmd_ack == 2'b10) // && sys_rd_data_valid == 1'b1)
+      begin
+        // after ACK, remove CMD
         //R_state_latch <= state; // display at which state sys_rd_data_valid=1
         R_rd_data <= sys_dout;
         sys_cmd <= 2'b00; // NOP
-        sys_din <= sys_din + 1; // write next
       end
-      if(state == 24'h113000)
-        sys_cmd <= 2'b00; // NOP
       state <= state + 1;
     end
 
@@ -108,16 +122,6 @@ module sdram_hex_oled
       R_display[116] <= sys_wr_data_valid;
       R_display[112] <= sys_rd_data_valid;
       R_display[23+64:64] <= R_state_latch;
-      /*
-      R_display[0] <= btn[0];
-      R_display[4] <= btn[1];
-      R_display[8] <= btn[2];
-      R_display[12] <= btn[3];
-      R_display[16] <= btn[4];
-      R_display[20] <= btn[5];
-      R_display[24] <= btn[6];
-      */
-      // R_display[95:64] <= R_display[95:64] + 1; // shown in next OLED row
     end
 
     wire [6:0] x;
@@ -142,16 +146,9 @@ module sdram_hex_oled
         .color(color)
     );
     
-    generate
-      if(C_color_bits < 12)
-        localparam C_init_file = "oled_init_xflip.mem";
-      else
-        localparam C_init_file = "oled_init_xflip_16bit.mem";
-    endgenerate
-
     oled_video
     #(
-        .C_init_file(C_init_file),
+        .C_init_file("oled_init_xflip_16bit.mem"),
         .C_color_bits(C_color_bits)
     )
     oled_video_inst
