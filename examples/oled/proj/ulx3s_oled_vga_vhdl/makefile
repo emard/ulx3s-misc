@@ -33,7 +33,7 @@ VHDL_FILES = \
   $(TOP_MODULE_FILE) \
   clock/clk_25M_100M_7M5_12M_60M.vhd \
   ../../hdl/ssd1331_vga_vhdl/oled_vga.vhd \
-  ../../hdl/ssd1331_hex_vhdl/oled_init_pack.vhd
+  ../../hdl/ssd1331_vga_vhdl/oled_init_pack.vhd
 
 SCRIPTS = ../../../../scripts
 include $(SCRIPTS)/trellis_path.mk

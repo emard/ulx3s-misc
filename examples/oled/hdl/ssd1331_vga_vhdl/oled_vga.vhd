@@ -34,8 +34,9 @@ architecture rtl of oled_vga is
   -- (0) spi clock cycle
   signal R_spi_data: std_logic_vector(7 downto 0) := x"00"; -- one bit more
   signal R_dc: std_logic := '0'; -- 0-command, 1-data
-  signal R_x: std_logic_vector(6 downto 0) := "1011111"; -- adjusted to start at X=0
-  signal R_y: std_logic_vector(5 downto 0) :=  "111111"; -- adjusted to start at Y=0
+  --signal R_x: std_logic_vector(6 downto 0) := "1011111"; -- adjusted to start at X=0
+  signal R_x: std_logic_vector(6 downto 0) := "0000001"; -- adjusted to start at X=0
+  signal R_y: std_logic_vector(5 downto 0) :=  "000000"; -- adjusted to start at Y=0
   signal S_pixel: std_logic_vector(7 downto 0);
   constant C_last_init_send_as_data: integer := 1;
 begin
@@ -54,10 +55,11 @@ begin
             R_spi_data(7 downto 0) <= C_oled_init_seq(conv_integer(R_init_cnt(R_init_cnt'high downto 4)));
           else
             -- pixel data
-            if R_x(2) = '0' or R_y(2) = '0' then
-              R_spi_data(7 downto 0) <= S_pixel;
+            if R_x(3) = '0' or R_y(3) = '0' then
+            --if conv_integer(R_x) = 48 or conv_integer(R_y) = 32 then
+              R_spi_data(7 downto 0) <= S_pixel; -- from input
             else
-              R_spi_data(7 downto 0) <= x"80";
+              R_spi_data(7 downto 0) <= x"80"; -- red
             end if;
             if conv_integer(R_x) = 95 then
               R_x <= (others => '0');
