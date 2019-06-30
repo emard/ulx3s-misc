@@ -50,13 +50,13 @@ begin
       R_clk_pixel <= clk_pixel & R_clk_pixel(2 downto 1);
     end if;
   end process;
-  S_clk_pixel_rising_edge <= R_clk_pixel(0) and not R_clk_pixel(1);
+  S_clk_pixel_rising_edge <= R_clk_pixel(1) and not R_clk_pixel(0);
 
   S_pixel <= pixel; -- take pixel from input
   process(clk)
   begin
     if rising_edge(clk) then
-     if clken = '1' and blank = '0' and S_clk_pixel_rising_edge = '1' then
+     if clken = '1' then
       if R_reset_cnt(R_reset_cnt'high downto R_reset_cnt'high-1) /= "10" then
         R_reset_cnt <= R_reset_cnt+1;
       elsif conv_integer(R_init_cnt(R_init_cnt'high downto 4)) /= C_oled_init_seq'high+1 then

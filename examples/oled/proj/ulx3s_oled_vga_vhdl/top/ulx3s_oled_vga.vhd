@@ -115,7 +115,7 @@ begin
       if R_downclk(R_downclk'high) = '0' then
         R_downclk <= R_downclk - 1;
       else
-        R_downclk <= x"18"; -- clock divider
+        R_downclk <= x"1D"; -- clock divider
       end if;
     end if;
   end process;
@@ -126,15 +126,15 @@ begin
   generic map
   (
     C_resolution_x => 96,
-    C_hsync_front_porch => 2,
-    C_hsync_pulse => 2,
-    C_hsync_back_porch => 2,
+    C_hsync_front_porch => 1,
+    C_hsync_pulse => 1,
+    C_hsync_back_porch => 1,
     C_resolution_y => 64,
-    C_vsync_front_porch => 2,
-    C_vsync_pulse => 2,
-    C_vsync_back_porch => 2,
-    C_bits_x => 11,
-    C_bits_y => 11
+    C_vsync_front_porch => 1,
+    C_vsync_pulse => 1,
+    C_vsync_back_porch => 1,
+    C_bits_x => 8,
+    C_bits_y => 8
   )
   port map
   (
