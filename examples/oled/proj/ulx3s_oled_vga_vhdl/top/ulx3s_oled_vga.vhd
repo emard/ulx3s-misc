@@ -71,12 +71,18 @@ entity ulx3s_oled_vga is
 end;
 
 architecture Behavioral of ulx3s_oled_vga is
-  signal clk_100MHz, clk_60MHz, clk_7M5Hz, clk_12MHz: std_logic;
+  signal clk_100MHz, clk_60MHz, clk_7M5Hz, clk_12MHz, clk_500kHz: std_logic;
   signal S_reset: std_logic;  
-  -- signal S_data: std_logic_vector(6 downto 0);
   signal S_data: std_logic_vector(7 downto 0);
   signal R_counter: std_logic_vector(63 downto 0);
   signal S_enable: std_logic;
+  signal R_downclk: std_logic_vector(7 downto 0);
+
+  signal vga_hsync_test : std_logic;
+  signal vga_vsync_test : std_logic;
+  signal vga_blank_test : std_logic;
+  signal vga_rgb_test   : std_logic_vector(7 downto 0);
+
 begin
   clk_pll: entity work.clk_25M_100M_7M5_12M_60M
   port map
@@ -103,7 +109,50 @@ begin
     end if;
   end process;
 
-  S_data <= x"0" & btn(6 downto 3);
+  process(clk_12MHz)
+  begin
+    if rising_edge(clk_12MHz) then
+      if R_downclk(R_downclk'high) = '0' then
+        R_downclk <= R_downclk - 1;
+      else
+        R_downclk <= x"18"; -- clock divider
+      end if;
+    end if;
+  end process;
+  clk_500kHz <= R_downclk(R_downclk'high);
+
+  -- test picture video generrator for debug purposes
+  vga: entity work.vga
+  generic map
+  (
+    C_resolution_x => 96,
+    C_hsync_front_porch => 2,
+    C_hsync_pulse => 2,
+    C_hsync_back_porch => 2,
+    C_resolution_y => 64,
+    C_vsync_front_porch => 2,
+    C_vsync_pulse => 2,
+    C_vsync_back_porch => 2,
+    C_bits_x => 11,
+    C_bits_y => 11
+  )
+  port map
+  (
+    clk_pixel => clk_500kHz,
+    test_picture => '1',
+    red_byte => (others => '0'),
+    green_byte => (others => '0'),
+    blue_byte => (others => '0'),
+    vga_r(7 downto 5) => vga_rgb_test(7 downto 5),
+    vga_g(7 downto 5) => vga_rgb_test(4 downto 2),
+    vga_b(7 downto 6) => vga_rgb_test(1 downto 0),
+    vga_hsync => vga_hsync_test,
+    vga_vsync => vga_vsync_test,
+    vga_blank => vga_blank_test
+  );    
+
+  --S_data <= x"0" & btn(6 downto 3);
+  S_data <= vga_rgb_test;
 
   oled_inst: entity oled_vga
   generic map
@@ -114,6 +163,8 @@ begin
   (
     clk => clk_12MHz,
     clken => R_counter(0),
+    clk_pixel => clk_500kHz,
+    blank => vga_blank_test,
     pixel => S_data,
     spi_resn => oled_resn,
     spi_clk => oled_clk,
