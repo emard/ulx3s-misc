@@ -7,7 +7,7 @@ use ieee.std_logic_1164.all;
 -- OLED initialization sequence
 -- next byte after a NOP command encodes delay in ms
 
-package oled_init_pack is
+package oled_vga_init_pack is
   -- all this are commands and should be send with DC line low
   constant C_OLED_NOP1: std_logic_vector(7 downto 0) := x"BC"; -- 10111100
   constant C_OLED_NOP2: std_logic_vector(7 downto 0) := x"BD"; -- delay nop

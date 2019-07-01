@@ -9,7 +9,7 @@ use IEEE.std_logic_1164.ALL;
 use IEEE.std_logic_arith.ALL;
 use IEEE.std_logic_unsigned.ALL;
 
-use work.oled_init_pack.all;
+use work.oled_vga_init_pack.all;
 
 entity oled_vga is
 generic
