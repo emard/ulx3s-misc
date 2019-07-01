@@ -21,7 +21,7 @@ port
   clk: in std_logic; -- 1-25 MHz clock typical
   clken: in std_logic := '1'; -- allows for optional clock slowdown
   clk_pixel: in std_logic;
-  blank: in std_logic;
+  hsync, vsync, blank: in std_logic;
   pixel: in std_logic_vector(C_bits-1 downto 0);
   spi_resn, spi_clk, spi_csn, spi_dc, spi_mosi: out std_logic := '1' -- spi_clk = clk/2
 );
@@ -58,12 +58,18 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      if blank = '0' and S_clk_pixel_rising_edge = '1' then
-        if conv_integer(R_x_in) = 95 then
-          R_x_in <= (others => '0');
-          R_y_in <= R_y_in + 1;
+      if S_clk_pixel_rising_edge = '1' then
+        if vsync = '1' then
+          R_y_in <= (others => '0');
         else
-          R_x_in <= R_x_in + 1;
+          if hsync = '1' then
+            R_x_in <= (others => '0');
+            R_y_in <= R_y_in + 1;
+          else
+            if blank = '0' then
+              R_x_in <= R_x_in + 1;
+            end if;
+          end if;
         end if;
       end if;
     end if;

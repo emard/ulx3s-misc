@@ -164,8 +164,10 @@ begin
   (
     clk => clk_oled, -- 25 MHz
     clken => R_counter(0), -- divides clk_oled by 2 = 12.5 MHz
-    clk_pixel => clk_pixel, -- 1 MHz
+    clk_pixel => clk_pixel, -- 800 MHz
     blank => vga_blank_test,
+    hsync => vga_hsync_test,
+    vsync => vga_vsync_test,
     pixel => S_data,
     spi_resn => oled_resn,
     spi_clk => oled_clk,
