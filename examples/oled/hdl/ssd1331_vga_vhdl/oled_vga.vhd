@@ -48,7 +48,7 @@ architecture rtl of oled_vga is
 begin
   process(clk)
   begin
-    if rising_edge(clk) and clken = '1' then
+    if rising_edge(clk) then
       R_clk_pixel <= clk_pixel & R_clk_pixel(2 downto 1);
     end if;
   end process;
@@ -57,7 +57,7 @@ begin
   -- track signal's pixel coordinates
   process(clk)
   begin
-    if rising_edge(clk) and clken = '1' then
+    if rising_edge(clk) then
       if blank = '0' and S_clk_pixel_rising_edge = '1' then
         if conv_integer(R_x_in) = 95 then
           R_x_in <= (others => '0');
