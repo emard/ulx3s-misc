@@ -115,7 +115,7 @@ begin
       if R_downclk(R_downclk'high) = '0' then
         R_downclk <= R_downclk - 1;
       else
-        R_downclk <= x"1D"; -- clock divider
+        R_downclk <= x"1E"; -- clock divider
       end if;
     end if;
   end process;

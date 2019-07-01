@@ -71,7 +71,7 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-     if clken = '1' and R_x_in = R_x and R_y_in = R_y then
+     if clken = '1' and blank = '0' and R_x_in = R_x and R_y_in = R_y then
       if R_reset_cnt(R_reset_cnt'high downto R_reset_cnt'high-1) /= "10" then
         R_reset_cnt <= R_reset_cnt+1;
       elsif conv_integer(R_init_cnt(R_init_cnt'high downto 4)) /= C_oled_init_seq'high+1 then
