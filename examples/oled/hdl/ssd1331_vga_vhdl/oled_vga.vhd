@@ -64,10 +64,14 @@ begin
         else
           if hsync = '1' then
             R_x_in <= (others => '0');
-            R_y_in <= R_y_in + 1;
           else
             if blank = '0' then
-              R_x_in <= R_x_in + 1;
+              if R_x_in = "1011111" then -- if R_x_in=95
+                R_x_in <= (others => '0');
+                R_y_in <= R_y_in + 1;
+              else
+                R_x_in <= R_x_in + 1;
+              end if;
             end if;
           end if;
         end if;
@@ -91,7 +95,7 @@ begin
           else
             R_spi_data(7 downto 0) <= S_pixel; -- from input
             -- tracks XY pixel coordinates currently written to SPI diplay
-            if conv_integer(R_x) = 95 then
+            if R_x = "1011111" then -- if R_x=95
               R_x <= (others => '0');
               R_y <= R_y + 1;
             else
