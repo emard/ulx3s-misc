@@ -37,8 +37,8 @@ architecture rtl of oled_vga is
   signal R_spi_data: std_logic_vector(7 downto 0) := x"00"; -- one bit more
   signal R_dc: std_logic := '0'; -- 0-command, 1-data
   --signal R_x: std_logic_vector(6 downto 0) := "1011111"; -- adjusted to start at X=0
-  signal R_x: std_logic_vector(6 downto 0) := "0000001"; -- adjusted to start at X=0
-  signal R_y: std_logic_vector(5 downto 0) :=  "000000"; -- adjusted to start at Y=0
+  signal R_x, R_x_in: std_logic_vector(6 downto 0) := "0000001"; -- adjusted to start at X=0
+  signal R_y, R_y_in: std_logic_vector(5 downto 0) :=  "000000"; -- adjusted to start at Y=0
   signal S_pixel: std_logic_vector(7 downto 0);
   constant C_last_init_send_as_data: integer := 1;
   signal R_clk_pixel: std_logic_vector(2 downto 0);
@@ -52,11 +52,26 @@ begin
   end process;
   S_clk_pixel_rising_edge <= R_clk_pixel(1) and not R_clk_pixel(0);
 
+  -- track signal's pixel coordinates
+  process(clk)
+  begin
+    if rising_edge(clk) and clken = '1' then
+      if blank = '0' and S_clk_pixel_rising_edge = '1' then
+            if conv_integer(R_x_in) = 95 then
+              R_x_in <= (others => '0');
+              R_y_in <= R_y_in + 1;
+            else
+              R_x_in <= R_x_in + 1;
+            end if;
+      end if;
+    end if;
+  end process;
+
   S_pixel <= pixel; -- take pixel from input
   process(clk)
   begin
     if rising_edge(clk) then
-     if clken = '1' then
+     if clken = '1' and R_x_in = R_x and R_y_in = R_y then
       if R_reset_cnt(R_reset_cnt'high downto R_reset_cnt'high-1) /= "10" then
         R_reset_cnt <= R_reset_cnt+1;
       elsif conv_integer(R_init_cnt(R_init_cnt'high downto 4)) /= C_oled_init_seq'high+1 then
@@ -66,13 +81,8 @@ begin
             -- init sequence
             R_spi_data(7 downto 0) <= C_oled_init_seq(conv_integer(R_init_cnt(R_init_cnt'high downto 4)));
           else
-            -- pixel data
-            --if R_x(3) = '0' or R_y(3) = '0' then
-            --if conv_integer(R_x) = 48 or conv_integer(R_y) = 32 then
             R_spi_data(7 downto 0) <= S_pixel; -- from input
-            --else
-            --  R_spi_data(7 downto 0) <= x"80"; -- red
-            --end if;
+            -- tracks XY pixel coordinates currently written to SPI diplay
             if conv_integer(R_x) = 95 then
               R_x <= (others => '0');
               R_y <= R_y + 1;
