@@ -57,12 +57,12 @@ begin
   begin
     if rising_edge(clk) and clken = '1' then
       if blank = '0' and S_clk_pixel_rising_edge = '1' then
-            if conv_integer(R_x_in) = 95 then
-              R_x_in <= (others => '0');
-              R_y_in <= R_y_in + 1;
-            else
-              R_x_in <= R_x_in + 1;
-            end if;
+        if conv_integer(R_x_in) = 95 then
+          R_x_in <= (others => '0');
+          R_y_in <= R_y_in + 1;
+        else
+          R_x_in <= R_x_in + 1;
+        end if;
       end if;
     end if;
   end process;

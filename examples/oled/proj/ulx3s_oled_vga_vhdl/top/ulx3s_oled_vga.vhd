@@ -71,7 +71,7 @@ entity ulx3s_oled_vga is
 end;
 
 architecture Behavioral of ulx3s_oled_vga is
-  signal clk_100MHz, clk_60MHz, clk_7M5Hz, clk_12MHz, clk_500kHz: std_logic;
+  signal clk_100MHz, clk_60MHz, clk_7M5Hz, clk_12MHz, clk_400kHz, clk_pixel, clk_oled: std_logic;
   signal S_reset: std_logic;  
   signal S_data: std_logic_vector(7 downto 0);
   signal R_counter: std_logic_vector(63 downto 0);
@@ -102,24 +102,27 @@ begin
   wifi_gpio0 <= btn(0);
   S_reset <= not btn(0);
 
-  process(clk_12MHz)
+  process(clk_25MHz)
   begin
-    if rising_edge(clk_12MHz) then
+    if rising_edge(clk_25MHz) then
       R_counter <= R_counter + 1;
     end if;
   end process;
 
-  process(clk_12MHz)
+  process(clk_25MHz)
   begin
-    if rising_edge(clk_12MHz) then
+    if rising_edge(clk_25MHz) then
       if R_downclk(R_downclk'high) = '0' then
         R_downclk <= R_downclk - 1;
       else
-        R_downclk <= x"1E"; -- clock divider
+        R_downclk <= x"3E"; -- clock divider
       end if;
     end if;
   end process;
-  clk_500kHz <= R_downclk(R_downclk'high);
+  clk_400kHz <= R_downclk(R_downclk'high); -- LUT-generated clock
+  
+  clk_oled   <= clk_25MHz;
+  clk_pixel  <= clk_400kHz;
 
   -- test picture video generrator for debug purposes
   vga: entity work.vga
@@ -138,7 +141,7 @@ begin
   )
   port map
   (
-    clk_pixel => clk_500kHz,
+    clk_pixel => clk_pixel,
     test_picture => '1',
     red_byte => (others => '0'),
     green_byte => (others => '0'),
@@ -161,9 +164,9 @@ begin
   )
   port map
   (
-    clk => clk_12MHz,
-    clken => R_counter(0),
-    clk_pixel => clk_500kHz,
+    clk => clk_oled,
+    clken => R_counter(0), -- divides clk_oled by 2 = 12.5 MHz
+    clk_pixel => clk_pixel,
     blank => vga_blank_test,
     pixel => S_data,
     spi_resn => oled_resn,
