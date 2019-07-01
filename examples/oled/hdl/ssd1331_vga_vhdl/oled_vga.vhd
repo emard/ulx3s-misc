@@ -37,8 +37,10 @@ architecture rtl of oled_vga is
   signal R_spi_data: std_logic_vector(7 downto 0) := x"00"; -- one bit more
   signal R_dc: std_logic := '0'; -- 0-command, 1-data
   --signal R_x: std_logic_vector(6 downto 0) := "1011111"; -- adjusted to start at X=0
-  signal R_x, R_x_in: std_logic_vector(6 downto 0) := "0000001"; -- adjusted to start at X=0
-  signal R_y, R_y_in: std_logic_vector(5 downto 0) :=  "000000"; -- adjusted to start at Y=0
+  signal R_x: std_logic_vector(6 downto 0) := "0000001"; -- adjusted to start at X=0
+  signal R_y: std_logic_vector(5 downto 0) :=  "000000"; -- adjusted to start at Y=0
+  signal R_x_in: std_logic_vector(6 downto 0) := "0000000"; -- adjusted to start at X=0
+  signal R_y_in: std_logic_vector(5 downto 0) :=  "000000"; -- adjusted to start at Y=0
   signal S_pixel: std_logic_vector(7 downto 0);
   constant C_last_init_send_as_data: integer := 1;
   signal R_clk_pixel: std_logic_vector(2 downto 0);
@@ -71,7 +73,7 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-     if clken = '1' and blank = '0' and R_x_in = R_x and R_y_in = R_y then
+     if clken = '1' and R_x_in = R_x and R_y_in = R_y then
       if R_reset_cnt(R_reset_cnt'high downto R_reset_cnt'high-1) /= "10" then
         R_reset_cnt <= R_reset_cnt+1;
       elsif conv_integer(R_init_cnt(R_init_cnt'high downto 4)) /= C_oled_init_seq'high+1 then
