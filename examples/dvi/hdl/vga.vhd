@@ -39,6 +39,7 @@ entity vga is
   port
   (
     clk_pixel: in std_logic;  -- pixel clock, 25 MHz for 640x480
+    clk_pixel_ena: in std_logic := '1';  -- pixel clock ena
     test_picture: in std_logic := '0'; -- show test picture
     fetch_next: out std_logic; -- request FIFO to fetch next pixel data
     line_repeat: out std_logic; -- request FIFO to repeat previous scan line content (used in y-doublescan)
@@ -84,7 +85,7 @@ begin
   -- increment and wraparound X and Y counters
   process(clk_pixel)
   begin
-    if rising_edge(clk_pixel) then
+    if rising_edge(clk_pixel) and clk_pixel_ena = '1' then
       -- DrawArea is fetcharea delayed one clock later
       DrawArea <= fetcharea;
       -- on end of each X line, reset CounterX
@@ -109,7 +110,7 @@ begin
   -- Sync and VBlank generation
   process(clk_pixel)
   begin
-    if rising_edge(clk_pixel) then
+    if rising_edge(clk_pixel) and clk_pixel_ena = '1' then
       if CounterX = C_resolution_x + C_hsync_front_porch then
         hSync <= '1';
       end if;
@@ -140,7 +141,7 @@ begin
   T <= (others => CounterY(6));
   process(clk_pixel)
   begin
-    if rising_edge(clk_pixel) then
+    if rising_edge(clk_pixel) and clk_pixel_ena = '1' then
       test_red   <= (((CounterX(5 downto 0) and Z) & "00") or W) and not A;
       test_green <= ((CounterX(7 downto 0) and T) or W) and not A;
       test_blue  <= CounterY(7 downto 0) or W or A;
