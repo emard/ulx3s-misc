@@ -2,7 +2,7 @@
 PROJECT = oled_vga
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 12
 
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
@@ -31,7 +31,6 @@ VERILOG_FILES =
 
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  clock/clk_25M_100M_7M5_12M_60M.vhd \
   ../../../dvi/hdl/vga.vhd \
   ../../hdl/ssd1331_vga_vhdl/oled_vga.vhd \
   ../../hdl/ssd1331_vga_vhdl/oled_vga_init_pack.vhd

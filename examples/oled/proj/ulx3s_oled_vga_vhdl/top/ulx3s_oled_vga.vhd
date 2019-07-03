@@ -71,7 +71,8 @@ entity ulx3s_oled_vga is
 end;
 
 architecture Behavioral of ulx3s_oled_vga is
-  signal clk_100MHz, clk_60MHz, clk_7M5Hz, clk_12MHz, clk_pixel, clk_oled: std_logic;
+  signal clk_oled: std_logic;
+  signal clk_pixel_ena: std_logic;
   signal S_reset: std_logic;  
   signal S_data: std_logic_vector(7 downto 0);
   signal R_counter: std_logic_vector(63 downto 0);
@@ -84,20 +85,6 @@ architecture Behavioral of ulx3s_oled_vga is
   signal vga_rgb_test   : std_logic_vector(7 downto 0);
 
 begin
-  clk_pll: entity work.clk_25M_100M_7M5_12M_60M
-  port map
-  (
-      CLKI        =>  clk_25mhz,
-      CLKOP       =>  clk_100MHz,
-      CLKOS       =>  clk_7M5Hz,
-      CLKOS2      =>  clk_12MHz,
-      CLKOS3      =>  clk_60MHz
-  );
-
-  -- TX/RX passthru
-  --ftdi_rxd <= wifi_txd;
-  --wifi_rxd <= ftdi_txd;
-
   wifi_en <= '1';
   wifi_gpio0 <= btn(0);
   S_reset <= not btn(0);
@@ -109,17 +96,6 @@ begin
     end if;
   end process;
 
-  process(clk_25MHz)
-  begin
-    if rising_edge(clk_25MHz) then
-      if R_downclk(R_downclk'high) = '0' then
-        R_downclk <= R_downclk - 1;
-      else
-        R_downclk <= x"1E"; -- clock divider, must be even number here
-      end if;
-    end if;
-  end process;
-  clk_pixel  <= R_downclk(R_downclk'high); -- cca 800 kHz
   clk_oled   <= clk_25MHz;
 
   -- test picture video generrator for debug purposes
@@ -127,19 +103,20 @@ begin
   generic map
   (
     C_resolution_x => 96,
-    C_hsync_front_porch => 1,
+    C_hsync_front_porch => 1800,
     C_hsync_pulse => 1,
-    C_hsync_back_porch => 1,
+    C_hsync_back_porch => 1800,
     C_resolution_y => 64,
     C_vsync_front_porch => 1,
     C_vsync_pulse => 1,
     C_vsync_back_porch => 1,
-    C_bits_x => 8,
+    C_bits_x => 12,
     C_bits_y => 8
   )
   port map
   (
-    clk_pixel => clk_pixel,
+    clk_pixel => clk_oled,
+    clk_pixel_ena => '1',
     test_picture => '1',
     red_byte => (others => '0'),
     green_byte => (others => '0'),
@@ -164,7 +141,7 @@ begin
   (
     clk => clk_oled, -- 25 MHz
     clken => R_counter(0), -- divides clk_oled by 2 = 12.5 MHz
-    clk_pixel => clk_pixel, -- 800 MHz
+    clk_pixel_ena => '1', -- if not 1 real pixel rate would be 800 kHz
     blank => vga_blank_test,
     hsync => vga_hsync_test,
     vsync => vga_vsync_test,
