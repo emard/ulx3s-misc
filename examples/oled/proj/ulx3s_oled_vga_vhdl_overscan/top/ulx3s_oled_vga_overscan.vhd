@@ -106,7 +106,8 @@ begin
       end if;
     end if;
   end process;
-  clk_pixel_ena  <= R_downclk(R_downclk'high); -- cca 800 kHz
+  --clk_pixel_ena  <= R_downclk(R_downclk'high); -- cca 800 kHz
+  clk_pixel_ena  <= '1'; -- use full rate of clk_oled
   clk_oled   <= clk_25MHz;
 
   -- test picture video generrator for debug purposes
@@ -114,14 +115,14 @@ begin
   generic map
   (
     C_resolution_x => 96,
-    C_hsync_front_porch => 1,
+    C_hsync_front_porch => 1900,
     C_hsync_pulse => 1,
-    C_hsync_back_porch => 1,
+    C_hsync_back_porch => 1900,
     C_resolution_y => 64,
     C_vsync_front_porch => 1,
     C_vsync_pulse => 1,
     C_vsync_back_porch => 1,
-    C_bits_x => 8,
+    C_bits_x => 12,
     C_bits_y => 8
   )
   port map
@@ -152,7 +153,7 @@ begin
   (
     clk => clk_oled, -- 25 MHz
     clken => R_counter(0), -- divides clk_oled by 2 = 12.5 MHz
-    clk_pixel_ena => clk_pixel_ena, -- 800 MHz
+    clk_pixel_ena => clk_pixel_ena, -- if needed otherwise use 800 MHz
     blank => vga_blank_test,
     hsync => vga_hsync_test,
     vsync => vga_vsync_test,
