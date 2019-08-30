@@ -39,8 +39,21 @@ module top_memtest
     assign led[7:1] = countblink[7:1];
 
 
-    wire [11:0] freq[11];
-    // assign freq = {12'h167, 12'h160, 12'h150, 12'h140, 12'h130, 12'h120, 12'h110, 12'h100, 12'h90, 12'h80, 12'h70};
+    reg [10:0] freq[11];
+    initial
+    begin
+      freq[0]  = 12'h167;
+      freq[1]  = 12'h160;
+      freq[2]  = 12'h150;
+      freq[3]  = 12'h140;
+      freq[4]  = 12'h130;
+      freq[5]  = 12'h120;
+      freq[6]  = 12'h110;
+      freq[7]  = 12'h100;
+      freq[8]  = 12'h90;
+      freq[9]  = 12'h80;
+      freq[10] = 12'h70;
+    end
     reg   [3:0] pos  = 0;
     reg  [15:0] mins = 0;
     reg  [15:0] secs = 0;
