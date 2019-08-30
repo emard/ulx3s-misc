@@ -38,40 +38,42 @@ module top_memtest
     assign led[0] = btn[1];
     assign led[7:1] = countblink[7:1];
 
+
+    wire [11:0] freq[11];
+    // assign freq = {12'h167, 12'h160, 12'h150, 12'h140, 12'h130, 12'h120, 12'h110, 12'h100, 12'h90, 12'h80, 12'h70};
+    reg   [3:0] pos  = 0;
+    reg  [15:0] mins = 0;
+    reg  [15:0] secs = 0;
+    reg         auto = 0;
+    reg         ph_shift = 0;
+    reg  [31:0] pre_phase;
+    wire [31:0] passcount, failcount;
+
     // VGA signal generator
-    wire [7:0] vga_r, vga_g, vga_b;
-    wire vga_hsync, vga_vsync, vga_blank;
-    vga
-    #(
-      // https://github.com/Xilinx/embeddedsw/blob/master/XilinxProcessorIPLib/drivers/video_common/src/xvidc_timings_table.c
-      .C_resolution_x(720),
-      .C_hsync_front_porch(12),
-      .C_hsync_pulse(64),
-      .C_hsync_back_porch(68),
-      .C_resolution_y(576),
-      .C_vsync_front_porch(5),
-      .C_vsync_pulse(5),
-      .C_vsync_back_porch(39),
-      .C_bits_x(12),
-      .C_bits_y(11)
-    )
-    vga_instance
+    wire VGA_DE;
+    wire [1:0] vga_r, vga_g, vga_b;
+    vgaout showrez
     (
-      .clk_pixel(clk_pixel),
-      .clk_pixel_ena(1'b1),
-      .test_picture(1'b1), // enable test picture generation
-      .vga_r(vga_r),
-      .vga_g(vga_g),
-      .vga_b(vga_b),
-      .vga_hsync(vga_hsync),
-      .vga_vsync(vga_vsync),
-      .vga_blank(vga_blank)
+        .clk(clk_pixel),
+        .rez1(passcount),
+        .rez2(failcount),
+        .freq(16'hF000 | freq[pos]),
+        .elapsed(ph_shift ? pre_phase[15:0] : mins),
+        .mark(ph_shift ? 8'hF0 : auto ? 8'h80 >> secs[3:0] : 8'd0),
+        .hs(vga_hsync),
+        .vs(vga_vsync),
+        .de(VGA_DE),
+        .r(vga_r),
+        .g(vga_g),
+        .b(vga_b)
     );
+    assign vga_blank = ~VGA_DE;
 
     // VGA to digital video converter
     wire [1:0] tmds[3:0];
     vga2dvid
     #(
+      .C_depth(2),
       .C_ddr(C_ddr)
     )
     vga2dvid_instance
@@ -89,7 +91,7 @@ module top_memtest
       .out_green(tmds[1]),
       .out_blue(tmds[0])
     );
-
+    
     // output TMDS SDR/DDR data to fake differential lanes
     fake_differential
     #(

@@ -36,6 +36,7 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
+  ../../hdl/vgaout.v \
   ../../../../dvi/hdl/fake_differential.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
