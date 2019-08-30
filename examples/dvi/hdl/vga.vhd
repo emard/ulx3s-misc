@@ -85,7 +85,8 @@ begin
   -- increment and wraparound X and Y counters
   process(clk_pixel)
   begin
-    if rising_edge(clk_pixel) and clk_pixel_ena = '1' then
+    if rising_edge(clk_pixel) then
+    if clk_pixel_ena = '1' then
       -- DrawArea is fetcharea delayed one clock later
       DrawArea <= fetcharea;
       -- on end of each X line, reset CounterX
@@ -101,6 +102,7 @@ begin
         CounterX <= CounterX + 1;
       end if;
     end if;
+    end if;
   end process;
   
   beam_x <= CounterX;
@@ -110,7 +112,8 @@ begin
   -- Sync and VBlank generation
   process(clk_pixel)
   begin
-    if rising_edge(clk_pixel) and clk_pixel_ena = '1' then
+    if rising_edge(clk_pixel) then
+    if clk_pixel_ena = '1' then
       if CounterX = C_resolution_x + C_hsync_front_porch then
         hSync <= '1';
       end if;
@@ -128,6 +131,7 @@ begin
         vBlank <= '0';
       end if;
     end if;
+    end if;
   end process;
   vga_hsync <= hSync;
   vga_vsync <= vSync;
@@ -141,10 +145,12 @@ begin
   T <= (others => CounterY(6));
   process(clk_pixel)
   begin
-    if rising_edge(clk_pixel) and clk_pixel_ena = '1' then
+    if rising_edge(clk_pixel) then
+    if clk_pixel_ena = '1' then
       test_red   <= (((CounterX(5 downto 0) and Z) & "00") or W) and not A;
       test_green <= ((CounterX(7 downto 0) and T) or W) and not A;
       test_blue  <= CounterY(7 downto 0) or W or A;
+    end if;
     end if;
   end process;  
   

@@ -60,6 +60,7 @@ module top_vgatest_1920x1080
     vga_instance
     (
       .clk_pixel(clk_pixel),
+      .clk_pixel_ena(1'b1),
       .test_picture(1'b1), // enable test picture generation
       .vga_r(vga_r),
       .vga_g(vga_g),

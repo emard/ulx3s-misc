@@ -46,8 +46,7 @@ module top_vgatest_640x480
       .clk(clk_pixel),
       .led(countblink)
     );
-    assign led[0] = btn[1];
-    assign led[7:1] = countblink[7:1];
+    assign led[7:6] = countblink[7:6];
 
     // VGA signal generator
     wire [7:0] vga_r, vga_g, vga_b;
@@ -56,6 +55,7 @@ module top_vgatest_640x480
     vga_instance
     (
       .clk_pixel(clk_pixel),
+      .clk_pixel_ena(1'b1),
       .test_picture(1'b1), // enable test picture generation
       .vga_r(vga_r),
       .vga_g(vga_g),
@@ -64,12 +64,17 @@ module top_vgatest_640x480
       .vga_vsync(vga_vsync),
       .vga_blank(vga_blank)
     );
+    
+    assign led[0] = vga_vsync;
+    assign led[1] = vga_hsync;
+    assign led[2] = vga_blank;
 
     // VGA to digital video converter
     wire [1:0] tmds[3:0];
     vga2dvid
     #(
-      .C_ddr(C_ddr)
+      .C_ddr(C_ddr),
+      .C_shift_clock_synchronizer(1'b1)
     )
     vga2dvid_instance
     (

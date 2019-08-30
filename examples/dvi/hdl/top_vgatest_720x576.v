@@ -58,6 +58,7 @@ module top_vgatest_720x576
     vga_instance
     (
       .clk_pixel(clk_pixel),
+      .clk_pixel_ena(1'b1),
       .test_picture(1'b1), // enable test picture generation
       .vga_r(vga_r),
       .vga_g(vga_g),
