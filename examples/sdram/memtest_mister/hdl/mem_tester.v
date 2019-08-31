@@ -7,6 +7,11 @@ error...
 */
 
 module mem_tester
+#(
+  parameter DRAM_DATA_SIZE = 16,
+  parameter DRAM_COL_SIZE = 9,
+  parameter DRAM_ROW_SIZE = 13
+)
 (
 	input clk,
 	input rst_n,
@@ -28,10 +33,6 @@ module mem_tester
 	output DRAM_BA_0,
 	output DRAM_BA_1
 );
-
-parameter DRAM_DATA_SIZE = 16;
-parameter DRAM_COL_SIZE = 9;
-parameter DRAM_ROW_SIZE = 13;
 
 assign mmtst_state = curr_state;
 
@@ -68,7 +69,7 @@ reg dram_start,dram_rnw;
 wire dram_done,dram_ready;
 wire [DRAM_DATA_SIZE-1:0] dram_rdat;
 
-/*
+
 // FIXME combinatorial loop in sdram_control
 sdram_control my_dram
 (
@@ -95,7 +96,7 @@ sdram_control my_dram
 defparam my_dram.DRAM_DATA_SIZE = DRAM_DATA_SIZE;
 defparam my_dram.DRAM_COL_SIZE  = DRAM_COL_SIZE;
 defparam my_dram.DRAM_ROW_SIZE  = DRAM_ROW_SIZE;
-*/
+
 
 
 

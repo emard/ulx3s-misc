@@ -83,6 +83,8 @@ wire [63:0] reconfig_from_pll;
       freq[9]  = 12'h80;
       freq[10] = 12'h70;
     end
+    wire [31:0] cfg_param[44];
+
     reg   [3:0] pos  = 0;
     reg  [15:0] mins = 0;
     reg  [15:0] secs = 0;
