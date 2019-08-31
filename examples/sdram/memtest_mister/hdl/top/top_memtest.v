@@ -1,10 +1,10 @@
 module top_memtest
 (
-  input clk_25mhz,
-  input [6:0] btn,
-  output [7:0] led,
-  output [3:0] gpdi_dp, gpdi_dn,
-//  SDRAM interface (For use with 16Mx16bit or 32Mx16bit SDR DRAM, depending on version)
+    input clk_25mhz,
+    input [6:0] btn,
+    output [7:0] led,
+    output [3:0] gpdi_dp, gpdi_dn,
+    //  SDRAM interface (For use with 16Mx16bit or 32Mx16bit SDR DRAM, depending on version)
     output sdram_csn,       // chip select
     output sdram_clk,       // clock to SDRAM
     output sdram_cke,       // clock enable to SDRAM	
@@ -15,7 +15,7 @@ module top_memtest
     output [1:0] sdram_ba,  // SDRAM bank-address
     output [1:0] sdram_dqm, // byte select
     inout [15:0] sdram_d,   // data bus to/from SDRAM	
-  output wifi_gpio0
+    output wifi_gpio0
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
 
@@ -41,8 +41,8 @@ module top_memtest
     clock_ram_instance
     (
       .clkin(clk_25mhz),
-      .clk_sdram(clk_sdram), // to core
-      .clk_sdram_shift(sdram_clk), // to chip
+      .clk_sdram(clk_sdram), // to controller soft-core
+      .clk_sdram_shift(sdram_clk), // to SDRAM chip
       .locked(locked_sdram)
     );
     assign clk_gui = clk_pixel;
@@ -59,23 +59,23 @@ module top_memtest
       .clk(clk_gui),
       .led(countblink)
     );
-    assign led[0] = btn[1];
-    assign led[7:1] = countblink[7:1];
+//    assign led[0] = btn[1];
+//    assign led[7:1] = countblink[7:1];
 
-reg recfg = 0;
-reg pll_reset = 0;
+    reg recfg = 0;
+    reg pll_reset = 0;
 
-wire [31:0] status;
-assign status[0] = 1'b1;
-wire  [1:0] buttons;
-assign buttons = btn[1:0];
-reg [10:0] ps2_key;
-wire        mgmt_waitrequest;
-reg         mgmt_write;
-reg  [5:0]  mgmt_address;
-reg  [31:0] mgmt_writedata;
-wire [63:0] reconfig_to_pll;
-wire [63:0] reconfig_from_pll;
+    wire [31:0] status;
+    assign status[0] = 1'b1;
+    wire  [1:0] buttons;
+    assign buttons = btn[1:0];
+    reg [10:0] ps2_key;
+    wire        mgmt_waitrequest;
+    reg         mgmt_write;
+    reg  [5:0]  mgmt_address;
+    reg  [31:0] mgmt_writedata;
+    wire [63:0] reconfig_to_pll;
+    wire [63:0] reconfig_from_pll;
 
     reg [10:0] freq[11];
     initial
@@ -102,14 +102,15 @@ wire [63:0] reconfig_from_pll;
     reg  [31:0] pre_phase;
     wire [31:0] passcount, failcount;
 
-	reg  [7:0] state = 0;
-	reg        old_wait;
-	reg [31:0] phase;
-	integer    min = 0, sec = 0;
-	reg        old_stb = 0;
-	reg        shift = 0;
+    reg  [7:0] state = 0;
+    reg        old_wait;
+    reg [31:0] phase;
+    integer    min = 0, sec = 0;
+    reg        old_stb = 0;
+    reg        shift = 0;
 
-        always @(posedge clk_gui) begin // 50 MHz for real time minutes
+    always @(posedge clk_gui)
+    begin // 50 MHz for real time minutes
 
 	mgmt_write <= 0;
 
@@ -298,7 +299,7 @@ wire [63:0] reconfig_from_pll;
 		pos <= pos + 1'd1;
 		ph_shift <= 0;
 	end
-end
+    end
 
 ///////////////////////////////////////////////////////////////////
 
@@ -306,8 +307,8 @@ end
     always @(posedge clk_sdram)
         resetn <= btn[0] & locked_sdram;
 
-    defparam my_memtst.DRAM_COL_SIZE = 9;
-    defparam my_memtst.DRAM_ROW_SIZE = 13;
+    defparam my_memtst.DRAM_COL_SIZE = 10; // 9:32MB 10:64MB
+    defparam my_memtst.DRAM_ROW_SIZE = 13; // don't touch
     mem_tester my_memtst
     (
 	.clk(clk_sdram),
@@ -326,6 +327,9 @@ end
 	.DRAM_BA_1(sdram_ba[1])
     );
     assign sdram_cke = 1'b1;
+
+    // most important info is failcond - lower 8 bits shown on LEDs
+    assign led = failcount[7:0];
 
     // VGA signal generator
     wire VGA_DE;
