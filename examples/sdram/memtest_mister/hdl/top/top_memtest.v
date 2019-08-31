@@ -24,20 +24,29 @@ module top_memtest
     assign wifi_gpio0 = btn[0];
 
     // clock generator
-    wire clk_shift, clk_pixel, clk_locked;
-    wire CLK_50M;
+    wire clk_shift, clk_pixel, clk_sys;
+    wire clk_gui, clk_sdram;
+    wire locked;
     clk_25_shift_pixel
-    clock_instance
+    clock_video_instance
     (
       .clkin(clk_25mhz),
       .clk_shift(clk_shift),
       .clk_pixel(clk_pixel),
-      .clk_50m(CLK_50M),
-      .locked(clk_locked)
+      .clk_sys(clk_sys),
+      .locked(locked)
     );
-    wire locked;
-    assign locked = clk_locked;
-    
+    wire locked_sdram;
+    clk_25_sdram
+    clock_ram_instance
+    (
+      .clkin(clk_25mhz),
+      .clk_sdram(clk_sdram), // to core
+      .clk_sdram_shift(sdram_clk), // to chip
+      .locked(locked_sdram)
+    );
+    assign clk_gui = clk_pixel;
+
     // LED blinky
     localparam counter_width = 28;
     wire [7:0] countblink;
@@ -47,7 +56,7 @@ module top_memtest
     )
     blink_instance
     (
-      .clk(CLK_50M),
+      .clk(clk_gui),
       .led(countblink)
     );
     assign led[0] = btn[1];
@@ -100,7 +109,7 @@ wire [63:0] reconfig_from_pll;
 	reg        old_stb = 0;
 	reg        shift = 0;
 
-        always @(posedge CLK_50M) begin
+        always @(posedge clk_gui) begin // 50 MHz for real time minutes
 
 	mgmt_write <= 0;
 
@@ -292,21 +301,16 @@ wire [63:0] reconfig_from_pll;
 end
 
 ///////////////////////////////////////////////////////////////////
-wire clk_ram;
-assign clk_ram = clk_shift;
 
-assign sdram_cke = 1'b1;
-assign sdram_clk = ~clk_ram; // 180 deg phase shifted
+    reg resetn;
+    always @(posedge clk_sdram)
+        resetn <= btn[0] & locked_sdram;
 
-reg resetn;
-always @(posedge clk_ram)
-  resetn <= btn[0];
-
-defparam my_memtst.DRAM_COL_SIZE = 9;
-defparam my_memtst.DRAM_ROW_SIZE = 13;
-mem_tester my_memtst
-(
-	.clk(clk_ram),
+    defparam my_memtst.DRAM_COL_SIZE = 9;
+    defparam my_memtst.DRAM_ROW_SIZE = 13;
+    mem_tester my_memtst
+    (
+	.clk(clk_sdram),
 	.rst_n(resetn),
 	.passcount(passcount),
 	.failcount(failcount),
@@ -320,7 +324,8 @@ mem_tester my_memtst
 	.DRAM_CAS_N(sdram_casn),
 	.DRAM_BA_0(sdram_ba[0]),
 	.DRAM_BA_1(sdram_ba[1])
-);
+    );
+    assign sdram_cke = 1'b1;
 
     // VGA signal generator
     wire VGA_DE;
@@ -330,9 +335,9 @@ mem_tester my_memtst
         .clk(clk_pixel),
         .rez1(passcount),
         .rez2(failcount),
-        .freq(16'hF000 | freq[pos]),
         //.elapsed(ph_shift ? pre_phase[15:0] : mins),
-        .elapsed(mins),
+        .elapsed(secs),
+        .freq(16'hF000 | freq[pos]),
         .mark(ph_shift ? 8'hF0 : auto ? 8'h80 >> secs[3:0] : 8'd0),
         .hs(vga_hsync),
         .vs(vga_vsync),
