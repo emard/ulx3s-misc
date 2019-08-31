@@ -34,8 +34,34 @@ done  XXXXXXXX\_________ ....... _____________ .... ______________ .... ________
 */
 
 
-module sdram_control(
+module sdram_control
+#(
+// different bus sizes
+parameter DRAM_DATA_SIZE = 16,
 
+parameter DRAM_COL_SIZE = 9,
+parameter DRAM_ROW_SIZE = 13,
+parameter DRAM_BNK_SIZE = 2,
+parameter DRAM_ROWBNK = DRAM_ROW_SIZE + DRAM_BNK_SIZE,
+
+
+// commands for SDRAM, RAS-CAS-WE bits
+parameter cmdNOP  = 3'b111, // no op
+parameter cmdMRS  = 3'b000, // mode register set
+parameter cmdACT  = 3'b011, // activate
+parameter cmdREAD = 3'b101, // either with autoprecharge or not, depends on A10
+parameter cmdWRIT = 3'b100, // same as for read
+parameter cmdPRE  = 3'b010, // either single bank or all banks, depends on A10
+parameter cmdBST  = 3'b110, // burst stop
+parameter cmdREF  = 3'b001, // refresh
+
+parameter mrsMODE = 14'b00000000110111, // cas latency=2/3, sequential fullpage burst
+
+// some timing constants
+parameter CTR200US_SIZE = 15 // multifunctional counter with a maximum delay for startup 200us-minimum pause
+)
+(
+/*
   clk,
   rst_n,
 
@@ -63,34 +89,42 @@ module sdram_control(
   DRAM_CS_N,
   DRAM_BA_0,
   DRAM_BA_1
+*/
+input clk,
+input rst_n, // total reset
+input start, // start sequence
+output reg done, // =1 when operation is done,
+					 // also done=0 while reset SDRAM initialisation is in progress
+input rnw, // 1 - read, 0 - write sequence (latched when start=1)
+output reg ready, // strobe. when writing, one mean that data from wdat written to the memory
+					  // when reading, one mean that data read from memory is on rdat output
+
+output DRAM_LDQM,DRAM_UDQM,
+output DRAM_WE_N,
+output DRAM_CAS_N,
+output DRAM_RAS_N,
+output DRAM_CS_N,
+output DRAM_BA_0,
+output DRAM_BA_1,
+
+
+
+input      [DRAM_DATA_SIZE-1:0] wdat,
+
+output reg [DRAM_DATA_SIZE-1:0] rdat,
+
+
+inout wire  [DRAM_DATA_SIZE-1:0] DRAM_DQ,
+output wire [DRAM_ROW_SIZE-1:0] DRAM_ADDR,
+
+output [5:0] sdram_state
+
+
 );
 
-// different bus sizes
-parameter DRAM_DATA_SIZE = 16;
-
-parameter DRAM_COL_SIZE = 9;
-parameter DRAM_ROW_SIZE = 13;
-parameter DRAM_BNK_SIZE = 2;
-parameter DRAM_ROWBNK = DRAM_ROW_SIZE + DRAM_BNK_SIZE;
 
 
-// commands for SDRAM, RAS-CAS-WE bits
-parameter cmdNOP  = 3'b111; // no op
-parameter cmdMRS  = 3'b000; // mode register set
-parameter cmdACT  = 3'b011; // activate
-parameter cmdREAD = 3'b101; // either with autoprecharge or not, depends on A10
-parameter cmdWRIT = 3'b100; // same as for read
-parameter cmdPRE  = 3'b010; // either single bank or all banks, depends on A10
-parameter cmdBST  = 3'b110; // burst stop
-parameter cmdREF  = 3'b001; // refresh
-
-parameter mrsMODE = 14'b00000000110111; // cas latency=2/3, sequential fullpage burst
-
-// some timing constants
-parameter CTR200US_SIZE = 15; // multifunctional counter with a maximum delay for startup 200us-minimum pause
-
-
-
+/*
 input clk;
 input rst_n; // total reset
 input start; // start sequence
@@ -117,7 +151,7 @@ output reg [DRAM_DATA_SIZE-1:0] rdat;
 
 inout reg   [DRAM_DATA_SIZE-1:0] DRAM_DQ;
 output wire [DRAM_ROW_SIZE-1:0] DRAM_ADDR;
-
+*/
 
 reg [DRAM_ROW_SIZE-1:0] da; // SDRAM address
 reg [2:0] dcmd; // SDRAM cmd reg, mapped to RAS-CAS-WE pins
@@ -133,7 +167,6 @@ assign DRAM_LDQM                         = dqm;
 assign DRAM_UDQM                         = dqm;
 
 
-output [5:0] sdram_state;
 assign sdram_state = state;
 
 
@@ -492,12 +525,14 @@ always @(posedge clk,negedge rst_n) begin
 	end
 end
 
+reg [15:0] R_DRAM_DQ;
+assign DRAM_DQ = R_DRAM_DQ;
 
 always @(posedge clk) begin// read and write data handling
 	rdat <= DRAM_DQ;
 
-	if( busin ) DRAM_DQ <= 16'hZZZZ;
-		else DRAM_DQ <= wdat;
+	if( busin ) R_DRAM_DQ <= 16'hZZZZ;
+		else R_DRAM_DQ <= wdat;
 end
 
 
