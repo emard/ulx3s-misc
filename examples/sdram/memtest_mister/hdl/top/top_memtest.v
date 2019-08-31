@@ -292,10 +292,11 @@ wire [63:0] reconfig_from_pll;
 end
 
 ///////////////////////////////////////////////////////////////////
-assign SDRAM_CKE = 1;
-
 wire clk_ram;
 assign clk_ram = clk_shift;
+
+assign sdram_cke = 1'b1;
+assign sdram_clk = ~clk_ram; // 180 deg phase shifted
 
 reg resetn;
 always @(posedge clk_ram)
