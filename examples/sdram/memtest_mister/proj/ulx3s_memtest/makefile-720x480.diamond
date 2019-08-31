@@ -1,8 +1,11 @@
+# SDRAM test clock
+FREQ  = 112.5
+PHASE = 120
 # ******* project, board and chip name *******
-PROJECT = dvi
+PROJECT = memtest_32MB_$(FREQ)MHz_$(PHASE)deg
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 12
+FPGA_SIZE = 85
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
 FLASH_SPI = 4
@@ -46,9 +49,35 @@ CLK1_OPTIONS = \
   --clkin_name=clkin \
   --clkin=25 \
   --clkout0_name=clk_sdram \
-  --clkout0=135 \
+  --clkout0=$(FREQ) \
   --clkout1_name=clk_sdram_shift \
-  --clkout1=135 --phase1=180
+  --clkout1=$(FREQ) --phase1=$(PHASE)
+
+# blue v3.0.7 minimig loads "silkworms", shows demo screen but can't start game
+# 85F+64MB 112.5 MHz 0-225 deg PASS (center 112.5); 234-342 deg FAIL, 234 very low error rate
+# 85F+64MB 150 MHz 0-146.25, 292.5-360 deg PASS (center 40 deg); 168.75-281.25 deg FAIL
+# 85F+64MB 160 MHz 45 deg PASS
+# 85F+64MB 170 MHz 45 deg PASS
+# 85F+64MB 180 MHz 0-45, 285-360 deg PASS (center 345 deg); 60-270 deg FAIL. 60 and 270 deg very low error rate
+# 85F+64MB 190 MHz 345 deg PASS; 45 deg FAIL
+# 85F+64MB 200 MHz 270-330 deg PASS (center 300 deg); 0-240, 345-360 deg FAIL
+
+# blue v3.0.7 minimig shows red screen "menue firmware incompatible"
+# 85F+64MB 112.5 MHz 0-225 deg PASS (center 112.5 deg); 234-342 deg FAIL
+# 85F+64MB 180 MHz 0-15, 270-360 deg PASS (center 322 deg); 30-255 deg FAIL
+# 85F+64MB 190 MHz 315 deg PASS
+# 85F+64MB 200 MHz 300 deg FAIL
+
+# green v2.1.2 minimig works
+# 12F+64MB 112.5 MHz 45-243 deg PASS (center 144 deg); 0-27, 270-360 deg FAIL
+# 12F+64MB 180 MHz 0 deg PASS; 135,300 deg FAIL
+# 12F+64MB 190 MHz 15-60 deg PASS (center 37.5 deg); 0, 75-360 deg FAIL, 0 deg few error bits
+# 12F+64MB 200 MHz 0-30, 345 deg FAIL-few error bits; 330 deg FAIL
+
+# green v2.1.2
+# 85F+32MB 190 MHz 300 deg PASS
+# 85F+32MB 200 MHz 270-300 deg PASS
+# 85F+32MB 220 MHz 270-300 deg PASS (center 285 deg), 0-265, 315-360 deg FAIL
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
