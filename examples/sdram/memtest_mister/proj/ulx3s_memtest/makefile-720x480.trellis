@@ -1,3 +1,6 @@
+# SDRAM test clock
+FREQ  = 112.5
+PHASE = 120
 # ******* project, board and chip name *******
 PROJECT = dvi
 BOARD = ulx3s
@@ -32,12 +35,24 @@ CLK0_OPTIONS = \
   --clkout0=135 \
   --clkout1_name=clk_pixel \
   --clkout1=27 \
-  --clkout2_name=clk_50m \
+  --clkout2_name=clk_sys \
   --clkout2=50
+
+CLK1_NAME = clk_25_sdram
+CLK1_FILE_NAME = clocks/$(CLK1_NAME).v
+CLK1_OPTIONS = \
+  --module=$(CLK1_NAME) \
+  --clkin_name=clkin \
+  --clkin=25 \
+  --clkout0_name=clk_sdram \
+  --clkout0=$(FREQ) \
+  --clkout1_name=clk_sdram_shift \
+  --clkout1=$(FREQ) --phase1=$(PHASE)
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
+  $(CLK1_FILE_NAME) \
   ../../hdl/rnd_vec_gen.v \
   ../../hdl/sdram_control.v \
   ../../hdl/mem_tester.v \
