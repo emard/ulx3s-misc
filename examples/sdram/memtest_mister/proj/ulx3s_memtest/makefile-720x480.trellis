@@ -67,7 +67,7 @@ VHDL_FILES = \
   ../../../../dvi/hdl/tmds_encoder.vhd
 
 # synthesis options
-NEXTPNR_OPTIONS = --timing-allow-fail
+NEXTPNR_OPTIONS = --timing-allow-fail --ignore-loops
 
 SCRIPTS = ../../../../../scripts
 include $(SCRIPTS)/diamond_path.mk
