@@ -307,7 +307,7 @@ module top_memtest
     always @(posedge clk_sdram)
         resetn <= btn[0] & locked_sdram;
 
-    defparam my_memtst.DRAM_COL_SIZE = 10; // 9:32MB 10:64MB
+    defparam my_memtst.DRAM_COL_SIZE = 9; // 9:32MB 10:64MB
     defparam my_memtst.DRAM_ROW_SIZE = 13; // don't touch
     mem_tester my_memtst
     (
