@@ -170,8 +170,7 @@ assign DRAM_UDQM                         = dqm;
 assign sdram_state = state;
 
 
-reg [5:0] state,next;
-
+reg [5:0] state;
 
 
 reg [CTR200US_SIZE:0] ctr; // 200us counter
@@ -241,114 +240,111 @@ localparam WR_END1      = 6'd39;
 ///////////////////////////////// main FSM ////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-always @(posedge clk,negedge rst_n) begin
-	if( !rst_n ) state <= RESET;
-		else state <= next;
-end
-
 // next state selection
-always @* begin
+always @(posedge clk) begin
+	if (!rst_n) state <= RESET;
+	else
 	case( state )
 		///////////////////////////////////////////////////////////////////////////////
-		RESET:     next <= RST2;
-		RST2:      next <= W200US1;
-		W200US1:   next <= W200US2;
+		RESET:     state <= RST2;
+		RST2:      state <= W200US1;
+		W200US1:   state <= W200US2;
 		W200US2:
 			if( ctr[CTR200US_SIZE] )
-				next <= IPREA1;
+				state <= IPREA1;
 			else
-				next <= W200US2;
+				state <= W200US2;
 
-		IPREA1:    next <= IPREA2;
-		IPREA2:    next <= IREF1;
+		IPREA1:    state <= IPREA2;
+		IPREA2:    state <= IREF1;
 
-		IREF1:     next <= IREF2;
-		IREF2:     next <= IREF3;
-		IREF3:     next <= IREF4;
-		IREF4:     next <= IREF5;
-		IREF5:     next <= IREF6;
-		IREF6:     next <= IREF7;
+		IREF1:     state <= IREF2;
+		IREF2:     state <= IREF3;
+		IREF3:     state <= IREF4;
+		IREF4:     state <= IREF5;
+		IREF5:     state <= IREF6;
+		IREF6:     state <= IREF7;
 		IREF7:
-			if( ctr[7] ) next <= IMRS;
-				else next <= IREF1;
+			if( ctr[7] ) state <= IMRS;
+				else state <= IREF1;
 
-		IMRS:   next <= IDLE;
+		IMRS:   state <= IDLE;
 
 		IDLE:
 			begin
 				if( start ) begin
-					if( rnw ) next <= RD_BEGIN1;
-						else next <= WR_BEGIN1;
+					if( rnw ) state <= RD_BEGIN1;
+						else state <= WR_BEGIN1;
 				end
-					else next <= IDLE;
+					else state <= IDLE;
 			end
 
-		RD_BEGIN1: next <= RD_BEGIN2;
-		RD_BEGIN2: next <= RD_CHKEND;
+		RD_BEGIN1: state <= RD_BEGIN2;
+		RD_BEGIN2: state <= RD_CHKEND;
 		RD_CHKEND:
 			begin
 				if( actr[DRAM_ROWBNK] )
-					next <= IDLE;
+					state <= IDLE;
 				else
-					next <= RD_COL1;
+					state <= RD_COL1;
 			end
 
-		RD_COL1:   next <= RD_COL2;
-		RD_COL2:   next <= RD_COL3;
-		RD_COL3:   next <= RD_COL4;
-		RD_COL4:   next <= mrsMODE[4] ? RD_COL4_1 : RD_COL5;
-		RD_COL4_1: next <= RD_COL5;
-		RD_COL5:   next <= RD_COL6;
-		RD_COL6:   next <= RD_WAIT;
+		RD_COL1:   state <= RD_COL2;
+		RD_COL2:   state <= RD_COL3;
+		RD_COL3:   state <= RD_COL4;
+		RD_COL4:   state <= mrsMODE[4] ? RD_COL4_1 : RD_COL5;
+		RD_COL4_1: state <= RD_COL5;
+		RD_COL5:   state <= RD_COL6;
+		RD_COL6:   state <= RD_WAIT;
 
 		RD_WAIT:
 			begin
 				if( ctr[DRAM_COL_SIZE] )
-					next <= RD_PRE;
+					state <= RD_PRE;
 				else
-					next <= RD_WAIT;
+					state <= RD_WAIT;
 			end
 
-		RD_PRE:    next <= RD_END1;
-		RD_END1:   next <= RD_END2;
-		RD_END2:   next <= RD_CHKEND;
+		RD_PRE:    state <= RD_END1;
+		RD_END1:   state <= RD_END2;
+		RD_END2:   state <= RD_CHKEND;
 
 
-		WR_BEGIN1: next <= WR_BEGIN2;
-		WR_BEGIN2: next <= WR_CHKEND;
+		WR_BEGIN1: state <= WR_BEGIN2;
+		WR_BEGIN2: state <= WR_CHKEND;
 
 		WR_CHKEND:
 			begin
 				if( actr[DRAM_ROWBNK] )
-					next <= IDLE;
+					state <= IDLE;
 				else
-					next <= WR_COL1;
+					state <= WR_COL1;
 			end
 
-		WR_COL1:   next <= WR_COL2;
-		WR_COL2:   next <= WR_COL3;
-		WR_COL3:   next <= WR_WAIT1;
+		WR_COL1:   state <= WR_COL2;
+		WR_COL2:   state <= WR_COL3;
+		WR_COL3:   state <= WR_WAIT1;
 
 		WR_WAIT1:
 			begin
 				if( ctr[DRAM_COL_SIZE] )
-					next <= WR_WAIT2;
+					state <= WR_WAIT2;
 				else
-					next <= WR_WAIT1;
+					state <= WR_WAIT1;
 			end
 
-		WR_WAIT2:  next <= WR_BST;
-		WR_BST:    next <= WR_PRE;
-		WR_PRE:    next <= WR_END1;
-		WR_END1:   next <= WR_CHKEND;
+		WR_WAIT2:  state <= WR_BST;
+		WR_BST:    state <= WR_PRE;
+		WR_PRE:    state <= WR_END1;
+		WR_END1:   state <= WR_CHKEND;
 
-	endcase
+	endcase;
 end
 
 
 //outputs control
 // special case for async-resetting signals
-always @(posedge clk,negedge rst_n) begin
+always @(posedge clk) begin
 	if( !rst_n ) begin
 		dcsn  <= 1'b1;
 		done  <= 1'b0;
