@@ -5,7 +5,7 @@ PHASE = 120
 PROJECT = dvi
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 12
+FPGA_SIZE = 25
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -67,7 +67,8 @@ VHDL_FILES = \
   ../../../../dvi/hdl/tmds_encoder.vhd
 
 # synthesis options
-NEXTPNR_OPTIONS = --timing-allow-fail --ignore-loops
+NEXTPNR_OPTIONS = --timing-allow-fail
+#NEXTPNR_OPTIONS = --timing-allow-fail --ignore-loops
 
 SCRIPTS = ../../../../../scripts
 include $(SCRIPTS)/diamond_path.mk
