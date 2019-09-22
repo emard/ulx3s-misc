@@ -18,6 +18,18 @@ module top_memtest
     output wifi_gpio0
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
+    parameter C_clk_gui_Hz = 32'd40000000; // Hz
+    parameter C_clk_sdram_Hz = 32'd112500000; // Hz
+
+    localparam [31:0] C_sec_max = C_clk_gui_Hz - 1;
+    localparam [31:0] C_min_max = C_clk_gui_Hz*60 - 1;
+
+    localparam [15:0] C_clk_sdram_1MHz = C_clk_sdram_Hz / 1000000;
+    localparam [15:0] C_clk_sdram_10MHz = C_clk_sdram_1MHz / 10;
+    localparam [15:0] C_clk_sdram_100MHz = C_clk_sdram_10MHz / 10;
+    localparam [11:0] C_clk_sdram_bcd = (C_clk_sdram_100MHz % 10) * 'h100
+                                      + (C_clk_sdram_10MHz  % 10) * 'h10
+                                      + (C_clk_sdram_1MHz   % 10);
 
     // wifi_gpio0=1 keeps board from rebooting
     // hold btn0 to let ESP32 take control over the board
@@ -62,13 +74,13 @@ module top_memtest
 //    assign led[0] = btn[1];
 //    assign led[7:1] = countblink[7:1];
 
+///////////////////////////////////////////////////////////////////
+
+///// mister board specific keyboard control
+/*
     reg recfg = 0;
     reg pll_reset = 0;
 
-    wire [31:0] status;
-    assign status[0] = 1'b1;
-    wire  [1:0] buttons;
-    assign buttons = btn[1:0];
     reg [10:0] ps2_key;
     wire        mgmt_waitrequest;
     reg         mgmt_write;
@@ -77,40 +89,21 @@ module top_memtest
     wire [63:0] reconfig_to_pll;
     wire [63:0] reconfig_from_pll;
 
-    reg [10:0] freq[11];
-    initial
-    begin
-      freq[0]  = 12'h167;
-      freq[1]  = 12'h160;
-      freq[2]  = 12'h150;
-      freq[3]  = 12'h140;
-      freq[4]  = 12'h130;
-      freq[5]  = 12'h120;
-      freq[6]  = 12'h110;
-      freq[7]  = 12'h100;
-      freq[8]  = 12'h90;
-      freq[9]  = 12'h80;
-      freq[10] = 12'h70;
-    end
     wire [31:0] cfg_param[44];
 
     reg   [3:0] pos  = 0;
-    reg  [15:0] mins = 0;
-    reg  [15:0] secs = 0;
     reg         auto = 0;
     reg         ph_shift = 0;
     reg  [31:0] pre_phase;
-    wire [31:0] passcount, failcount;
 
     reg  [7:0] state = 0;
     reg        old_wait;
     reg [31:0] phase;
-    integer    min = 0, sec = 0;
     reg        old_stb = 0;
     reg        shift = 0;
 
     always @(posedge clk_gui)
-    begin // 50 MHz for real time minutes
+    begin
 
 	mgmt_write <= 0;
 
@@ -221,35 +214,6 @@ module top_memtest
 		end
 	end
 
-	if(recfg) begin
-		{min, mins} <= 0;
-		{sec, secs} <= 0;
-	end else begin
-		min <= min + 1;
-		if(min == 2999999999) begin
-			min <= 0;
-			if(mins[3:0]<9) mins[3:0] <= mins[3:0] + 1'd1;
-			else begin
-				mins[3:0] <= 0;
-				if(mins[7:4]<9) mins[7:4] <= mins[7:4] + 1'd1;
-				else begin
-					mins[7:4] <= 0;
-					if(mins[11:8]<9) mins[11:8] <= mins[11:8] + 1'd1;
-					else begin
-						mins[11:8] <= 0;
-						if(mins[15:12]<9) mins[15:12] <= mins[15:12] + 1'd1;
-						else mins[15:12] <= 0;
-					end
-				end
-			end
-		end
-		sec <= sec + 1;
-		if(sec == 4999999) begin
-			sec <= 0;
-			secs <= secs + 1'd1;
-		end
-	end
-
 	old_stb <= ps2_key[10];
 	if(old_stb != ps2_key[10]) begin
 		state <= 0;
@@ -300,14 +264,69 @@ module top_memtest
 		ph_shift <= 0;
 	end
     end
+*/
+///////////////////////////////////////////////////////////////////
+
+    reg timer_reset;
+    always @(posedge clk_gui)
+        timer_reset <= ~(btn[0] & locked);
+
+    reg [15:0] mins;
+    reg [31:0] min;
+    always @(posedge clk_gui)
+    begin
+	if(timer_reset) begin
+		min <= 0;
+		mins <= 0;
+	end else begin
+		if(min == C_min_max) begin
+			min <= 0;
+			if(mins[3:0]<9) mins[3:0] <= mins[3:0] + 1'd1;
+			else begin
+				mins[3:0] <= 0;
+				if(mins[7:4]<9) mins[7:4] <= mins[7:4] + 1'd1;
+				else begin
+					mins[7:4] <= 0;
+					if(mins[11:8]<9) mins[11:8] <= mins[11:8] + 1'd1;
+					else begin
+						mins[11:8] <= 0;
+						if(mins[15:12]<9) mins[15:12] <= mins[15:12] + 1'd1;
+						else mins[15:12] <= 0;
+					end
+				end
+			end
+		end
+		else
+			min <= min + 1;
+	end
+    end
+
+    reg [15:0] secs;
+    reg [31:0] sec;
+    always @(posedge clk_gui)
+    begin
+	if(timer_reset) begin
+		sec <= 0;
+		secs <= 0;
+	end else begin
+		if(sec == C_sec_max) begin
+			sec <= 0;
+			secs <= secs + 1;
+		end
+		else
+			sec <= sec + 1;
+	end
+    end
 
 ///////////////////////////////////////////////////////////////////
+
+    wire [31:0] passcount, failcount;
 
     reg resetn;
     always @(posedge clk_sdram)
         resetn <= btn[0] & locked_sdram;
 
-    defparam my_memtst.DRAM_COL_SIZE = 9; // 9:32MB 10:64MB
+    defparam my_memtst.DRAM_COL_SIZE = 10; // 9:32MB 10:64MB
     defparam my_memtst.DRAM_ROW_SIZE = 13; // don't touch
     mem_tester my_memtst
     (
@@ -339,10 +358,10 @@ module top_memtest
         .clk(clk_pixel),
         .rez1(passcount),
         .rez2(failcount),
-        //.elapsed(ph_shift ? pre_phase[15:0] : mins),
-        .elapsed(secs),
-        .freq(16'hF000 | freq[pos]),
-        .mark(ph_shift ? 8'hF0 : auto ? 8'h80 >> secs[3:0] : 8'd0),
+        // disabled to shorten compile time
+        //.mark(8'h80 >> secs[2:0]),
+        //.elapsed(mins),
+        //.freq(C_clk_sdram_bcd),
         .hs(vga_hsync),
         .vs(vga_vsync),
         .de(VGA_DE),
