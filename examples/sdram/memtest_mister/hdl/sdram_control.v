@@ -522,13 +522,11 @@ always @(posedge clk) begin
 end
 
 reg [15:0] R_DRAM_DQ;
-assign DRAM_DQ = R_DRAM_DQ;
+assign DRAM_DQ = busin ? 'hZZZZZZZZ : R_DRAM_DQ;
 
 always @(posedge clk) begin// read and write data handling
 	rdat <= DRAM_DQ;
-
-	if( busin ) R_DRAM_DQ <= 16'hZZZZ;
-		else R_DRAM_DQ <= wdat;
+	R_DRAM_DQ <= wdat;
 end
 
 
