@@ -1,1 +1,1 @@
-makefile-720x480.diamond
+makefile-720x480.trellis
