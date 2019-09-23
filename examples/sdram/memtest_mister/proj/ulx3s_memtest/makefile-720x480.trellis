@@ -77,6 +77,9 @@ VHDL_FILES = \
 # 85F+64MB 112.5 MHz 120 deg PASS
 # 85F+64MB 170   MHz 315-345 deg PASS (center ? deg); 0-300 deg FAIL
 
+# green v2.1.2
+# 12F+64MB 170   MHz 0-120 deg PASS (center 60 deg); 135-345 deg FAIL
+
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail
 #NEXTPNR_OPTIONS = --timing-allow-fail --ignore-loops
