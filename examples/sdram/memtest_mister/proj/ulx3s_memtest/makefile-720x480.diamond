@@ -36,11 +36,14 @@ CLK0_OPTIONS = \
   --clkin_name=clkin \
   --clkin=25 \
   --clkout0_name=clk_shift \
-  --clkout0=135 \
+  --clkout0=137.5 \
   --clkout1_name=clk_pixel \
-  --clkout1=27 \
+  --clkout1=27.5 \
   --clkout2_name=clk_sys \
-  --clkout2=50
+  --clkout2=50 \
+
+#  --feedback_clkout=0 \
+#  --internal_feedback \
 
 CLK1_NAME = clk_25_sdram
 CLK1_FILE_NAME = clocks/$(CLK1_NAME).v
@@ -51,7 +54,10 @@ CLK1_OPTIONS = \
   --clkout0_name=clk_sdram \
   --clkout0=$(FREQ) \
   --clkout1_name=clk_sdram_shift \
-  --clkout1=$(FREQ) --phase1=$(PHASE)
+  --clkout1=$(FREQ) --phase1=$(PHASE) \
+
+#  --feedback_clkout=0 \
+#  --internal_feedback \
 
 # blue v3.0.7 minimig loads "silkworms", shows demo screen but can't start game
 # 85F+64MB 112.5 MHz 0-225 deg PASS (center 112.5); 234-342 deg FAIL, 234 very low error rate
@@ -88,6 +94,12 @@ VERILOG_FILES = \
   ../../hdl/mem_tester.v \
   ../../hdl/vgaout.v \
   ../../../../dvi/hdl/fake_differential.v
+
+#  $(CLK0_FILE_NAME) \
+#  $(CLK1_FILE_NAME) \
+#  clkgen2/clk_25_shift_pixel/clk_25_shift_pixel.v \
+#  clkgen/clk_25_sdram/clk_25_sdram.v \
+#  clkgen/clk_25_sdram/clk_25_sdram.v \
 
 VHDL_FILES = \
   ../../../../dvi/hdl/blink.vhd \

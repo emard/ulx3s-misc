@@ -47,6 +47,13 @@ module top_memtest
       .clk_pixel(clk_pixel),
       .clk_sys(clk_sys),
       .locked(locked)
+    /*
+      .CLKI(clk_25mhz),
+      .CLKOP(clk_shift),
+      .CLKOS(clk_pixel),
+      .CLKOS2(clk_sys),
+      .LOCK(locked)
+    */
     );
     wire locked_sdram;
     clk_25_sdram
@@ -56,6 +63,12 @@ module top_memtest
       .clk_sdram(clk_sdram), // to controller soft-core
       .clk_sdram_shift(sdram_clk), // to SDRAM chip
       .locked(locked_sdram)
+    /*
+      .CLKI(clk_25mhz),
+      .CLKOP(clk_sdram), // to controller soft-core
+      .CLKOS(sdram_clk), // to SDRAM chip
+      .LOCK(locked_sdram)
+    */
     );
     assign clk_gui = clk_pixel;
 
@@ -326,7 +339,7 @@ module top_memtest
     always @(posedge clk_sdram)
         resetn <= btn[0] & locked_sdram;
 
-    defparam my_memtst.DRAM_COL_SIZE = 9; // 9:32MB 10:64MB
+    defparam my_memtst.DRAM_COL_SIZE = 10; // 9:32MB 10:64MB
     defparam my_memtst.DRAM_ROW_SIZE = 13; // don't touch
     mem_tester my_memtst
     (
@@ -359,9 +372,9 @@ module top_memtest
         .rez1(passcount),
         .rez2(failcount),
         // disabled to shorten compile time
-        //.mark(8'h80 >> secs[2:0]),
-        //.elapsed(mins),
-        //.freq(C_clk_sdram_bcd),
+//        .mark(8'h80 >> secs[2:0]),
+//        .elapsed(mins),
+//        .freq(C_clk_sdram_bcd),
         .hs(vga_hsync),
         .vs(vga_vsync),
         .de(VGA_DE),
