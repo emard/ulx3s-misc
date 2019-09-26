@@ -18,7 +18,7 @@ module top_memtest
     output wifi_gpio0
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
-    parameter C_clk_gui_Hz = 32'd40000000; // Hz
+    parameter C_clk_gui_Hz = 32'd27500000; // Hz
     parameter C_clk_sdram_Hz = 32'd112500000; // Hz
 
     localparam [31:0] C_sec_max = C_clk_gui_Hz - 1;
