@@ -21,6 +21,6 @@ module kbd_top
   wire ps2clk  = usb_fpga_dp;
   wire ps2data = usb_fpga_dn;
   
-  PS2KBD kbd(clk_25mhz, ps2clk, ps2data, led, , );
+  ps2kbd kbd(clk_25mhz, ps2clk, ps2data, led, , );
 
 endmodule
