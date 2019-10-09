@@ -521,7 +521,7 @@ always @(posedge clk) begin
 	end
 end
 
-reg [15:0] R_DRAM_DQ;
+reg [DRAM_DATA_SIZE-1:0] R_DRAM_DQ;
 assign DRAM_DQ = busin ? 'hZZZZZZZZ : R_DRAM_DQ;
 
 always @(posedge clk) begin// read and write data handling
