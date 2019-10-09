@@ -26,7 +26,7 @@ CONSTRAINTS = ../../../../../constraints/FFM-LFE5U-V0r0_mit_FFC-CA7-V2r0.lpf
 TOP_MODULE = top_ffm_memtest
 TOP_MODULE_FILE = ../../hdl/top/$(TOP_MODULE).v
 
-CLK0_NAME = clk_25_shift_pixel
+CLK0_NAME = clk_100_shift_pixel
 CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
 CLK0_OPTIONS = \
   --module=$(CLK0_NAME) \
@@ -42,7 +42,7 @@ CLK0_OPTIONS = \
 #  --feedback_clkout=0 \
 #  --internal_feedback \
 
-CLK1_NAME = clk_25_sdram
+CLK1_NAME = clk_100_sdram
 CLK1_FILE_NAME = clocks/$(CLK1_NAME).v
 CLK1_OPTIONS = \
   --module=$(CLK1_NAME) \

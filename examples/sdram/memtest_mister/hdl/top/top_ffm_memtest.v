@@ -42,7 +42,7 @@ module top_ffm_memtest
     wire clk_shift, clk_pixel, clk_sys;
     wire clk_gui, clk_sdram;
     wire locked;
-    clk_25_shift_pixel
+    clk_100_shift_pixel
     clock_video_instance
     (
       .clkin(clk_100mhz_p),
@@ -59,7 +59,7 @@ module top_ffm_memtest
     */
     );
     wire locked_sdram;
-    clk_25_sdram
+    clk_100_sdram
     clock_ram_instance
     (
       .clkin(clk_100mhz_p),
