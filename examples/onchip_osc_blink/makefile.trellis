@@ -1,0 +1,22 @@
+# ******* project, board and chip name *******
+PROJECT = oscg_blink
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 12
+
+# ******* design files *******
+CONSTRAINTS = ../../constraints/ulx3s_v20_segpdi.lpf
+TOP_MODULE = oscg_blink
+TOP_MODULE_FILE = $(TOP_MODULE).v
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+
+# synthesis options
+#YOSYS_OPTIONS = -noccu2
+NEXTPNR_OPTIONS = --timing-allow-fail
+
+SCRIPTS = ../../scripts
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
