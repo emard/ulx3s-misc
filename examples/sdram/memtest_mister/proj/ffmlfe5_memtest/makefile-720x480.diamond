@@ -15,9 +15,11 @@ FLASH_CHIP = is25lp128f
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
-OPENOCD=openocd_ft232r
-# default onboard usb-jtag
-OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+#OPENOCD=openocd_ft232r
+# default onboard jtag on FFM
+OPENOCD_INTERFACE=$(SCRIPTS)/ft4232.ocd
+# external usb-jtag
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ulx3s-jtag-passthru
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
 # ulx2s

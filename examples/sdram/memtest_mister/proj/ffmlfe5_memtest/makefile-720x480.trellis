@@ -12,7 +12,7 @@ FPGA_PACKAGE = CABGA554
 # using local latest openocd until in linux distribution
 OPENOCD=openocd_ft232r
 # default onboard usb-jtag
-OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+OPENOCD_INTERFACE=$(SCRIPTS)/ft4232.ocd
 # ulx3s-jtag-passthru
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
 # ulx2s
