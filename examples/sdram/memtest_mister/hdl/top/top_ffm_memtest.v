@@ -342,6 +342,8 @@ module top_ffm_memtest
     always @(posedge clk_sdram)
         resetn <= nreset_btn & locked_sdram;
 
+    wire sdram_dqm;
+    defparam my_memtst.DRAM_DATA_SIZE = 16; // currently only 16 works but this board has 32-bit SDRAM
     defparam my_memtst.DRAM_COL_SIZE = 9; // 9:64MB in 32-bit mode, 10:128MB in 32-bit mode
     defparam my_memtst.DRAM_ROW_SIZE = 13; // don't touch
     mem_tester my_memtst
@@ -351,12 +353,8 @@ module top_ffm_memtest
 	.passcount(passcount),
 	.failcount(failcount),
 	.DRAM_ADDR(dr_a),
-	.DRAM_DQ(dr_d[15:0]),
-	.DRAM_LDQM(dr_dqm[0]),
-	.DRAM_UDQM(dr_dqm[1]),
-//	.DRAM_DQ(dr_d[31:16]),
-//	.DRAM_LDQM(dr_dqm[2]),
-//	.DRAM_UDQM(dr_dqm[3]),
+	.DRAM_DQ(dr_d),
+	.DRAM_LDQM(sdram_dqm),
 	.DRAM_WE_N(dr_we_n),
 	.DRAM_CS_N(dr_cs_n),
 	.DRAM_RAS_N(dr_ras_n),
@@ -365,8 +363,10 @@ module top_ffm_memtest
 	.DRAM_BA_1(dr_ba[1])
     );
     assign dr_cke = 1'b1;
-//    assign dr_dqm[0:1] = 2'b11; // disable driving of upper 16-bit
-    assign dr_dqm[3:2] = 2'b11; // disable driving of upper 16-bit
+    assign dr_dqm[0] = sdram_dqm;
+    assign dr_dqm[1] = sdram_dqm;
+    assign dr_dqm[2] = sdram_dqm;
+    assign dr_dqm[3] = sdram_dqm;
 
     // most important info is failcount - lower 8 bits shown on LEDs
     assign led = failcount[2:0];
