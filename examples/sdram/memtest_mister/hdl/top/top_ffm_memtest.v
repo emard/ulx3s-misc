@@ -343,7 +343,7 @@ module top_ffm_memtest
         resetn <= nreset_btn & locked_sdram;
 
     wire sdram_dqm;
-    defparam my_memtst.DRAM_DATA_SIZE = 16; // currently only 16 works but this board has 32-bit SDRAM
+    defparam my_memtst.DRAM_DATA_SIZE = 32; // this board has 32-bit SDRAM
     defparam my_memtst.DRAM_COL_SIZE = 9; // 9:64MB in 32-bit mode, 10:128MB in 32-bit mode
     defparam my_memtst.DRAM_ROW_SIZE = 13; // don't touch
     mem_tester my_memtst
