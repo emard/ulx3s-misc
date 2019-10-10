@@ -522,7 +522,7 @@ always @(posedge clk) begin
 end
 
 reg [DRAM_DATA_SIZE-1:0] R_DRAM_DQ;
-assign DRAM_DQ = busin ? 'hZZZZZZZZ : R_DRAM_DQ;
+assign DRAM_DQ = busin ? {DRAM_DATA_SIZE{1'bZ}} : R_DRAM_DQ;
 
 always @(posedge clk) begin// read and write data handling
 	rdat <= DRAM_DQ;
