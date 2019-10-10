@@ -20,6 +20,7 @@ module top_memtest
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
     parameter C_clk_gui_Hz = 32'd27500000; // Hz
     parameter C_clk_sdram_Hz = 32'd112500000; // Hz
+    parameter C_size_MB = 32; // 8/16/32/64 MB
 
     localparam [31:0] C_sec_max = C_clk_gui_Hz - 1;
     localparam [31:0] C_min_max = C_clk_gui_Hz*60 - 1;
@@ -339,8 +340,8 @@ module top_memtest
     always @(posedge clk_sdram)
         resetn <= btn[0] & locked_sdram;
 
-    defparam my_memtst.DRAM_COL_SIZE = 9; // 9:32MB 10:64MB
-    defparam my_memtst.DRAM_ROW_SIZE = 13; // don't touch
+    defparam my_memtst.DRAM_COL_SIZE = C_size_MB == 64 ? 10 : C_size_MB == 32 ? 9 : 8; // 8:8-16MB 9:32MB 10:64MB
+    defparam my_memtst.DRAM_ROW_SIZE = C_size_MB > 8 ? 13 : 12; // 12:8MB 13:>=16MB
     mem_tester my_memtst
     (
 	.clk(clk_sdram),
