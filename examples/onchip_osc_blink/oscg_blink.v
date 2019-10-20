@@ -5,10 +5,14 @@
 
 module oscg_blink
 (
-  output [7:0] led
+  output [7:0] led,
+  input  [6:0] btn,
+  output wifi_gpio0
 );
   parameter oscillator_divider = 12; // f=310MHz/divider = 310/12 = 25.8 MHz
   parameter counter_bits = 28;
+
+  assign wifi_gpio0 = btn[0];
 
   wire clk;
 
