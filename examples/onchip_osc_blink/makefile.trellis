@@ -4,6 +4,8 @@ BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
 
+OPENOCD=openocd_ft232r
+
 # ******* design files *******
 CONSTRAINTS = ../../constraints/ulx3s_v20_segpdi.lpf
 TOP_MODULE = oscg_blink
