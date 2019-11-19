@@ -7,20 +7,19 @@ from micropython import const
 class oled:
 
   def __init__(self):
-    self.spi_channel = const(-1) # -1 soft, 1:sd, 2:jtag
-    self.spi_freq = const(1000000) # Hz SPI frequency
+    self.spi_channel = const(1) # -1 soft, 1:sd, 2:jtag
+    self.spi_freq = const(6000000) # Hz SPI frequency
     self.oled_ssd1331_commands()
     self.init_pinout_oled()
     self.init_spi()
     self.init_bitbang()
-#    self.oled_init()
 
   def init_pinout_oled(self):
     self.gpio_csn = const(17)
     self.gpio_resn = const(26)
     self.gpio_dc = const(16)
     self.gpio_sck = const(14)
-    self.gpio_mosi = const(15) # 13 or 15
+    self.gpio_mosi = const(15)
     self.gpio_miso = const(2)
   
   def init_spi(self):
@@ -86,35 +85,17 @@ class oled:
     ]) # end bytearray
 
 
-#void dc(uint8_t state)
-#{
-#  if(state)
-#    *simple_out |= (1<<11);
-#  else
-#    *simple_out &= ~(1<<11);
-#}
-
-
-#void resn(uint8_t state)
-#{
-#  if(state)
-#    *simple_out |= (1<<10);
-#  else
-#    *simple_out &= ~(1<<10);
-#}
-
-
   def oled_fill_screen(self, color):
     self.dc.value(0) # command
-    self.oled_spi.write(bytearray([self.C_OLED_SET_COLUMN_ADDRESS,
-    0,
-    0x5F,
-    self.C_OLED_SET_ROW_ADDRESS,
-    0,
-    0x3F]))
+    self.oled_spi.write(bytearray([
+      self.C_OLED_SET_COLUMN_ADDRESS, 0, 0x5F,
+      self.C_OLED_SET_ROW_ADDRESS,    0, 0x3F,
+    ]))
     self.dc.value(1) # data
     for i in range(6144):
       self.oled_spi.write(bytearray([color]))
+    self.oled_horizontal_line(10,0xFF)
+    self.oled_horizontal_line(20,0xC0)
 
   def oled_init(self):
     print("init")
@@ -127,16 +108,12 @@ class oled:
     self.oled_spi.write(self.oled_init_sequence)
     self.oled_fill_screen(0x42)
 
-#void oled_horizontal_line(uint8_t y, uint8_t color)
-#{
-#  dc(0); # command
-#  spi_rxtx(oled_spi, self.C_OLED_SET_ROW_ADDRESS);
-#  spi_rxtx(oled_spi, y);
-#  spi_rxtx(oled_spi, y);
-#  dc(1); # data
-#  for(int i = 0; i < 96; i++)
-#    spi_rxtx(oled_spi, color);
-#}
+  def oled_horizontal_line(self, y, color):
+    self.dc.value(0) # command
+    self.oled_spi.write(bytearray([self.C_OLED_SET_ROW_ADDRESS, y, y]))
+    self.dc.value(1) # data
+    for i in range(96):
+      self.oled_spi.write(bytearray([color]))
 
 #uint8_t oled_color_stripes()
 #{
