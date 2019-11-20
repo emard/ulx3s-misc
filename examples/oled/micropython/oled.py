@@ -6,15 +6,6 @@ from micropython import const
 
 class oled:
 
-  def __init__(self):
-    self.spi_channel = const(1) # -1 soft, 1:sd, 2:jtag
-    self.spi_freq = const(6000000) # Hz SPI frequency
-    self.oled_ssd1331_commands()
-    self.init_pinout_oled()
-    self.init_spi()
-    self.init_bitbang()
-    self.oled_y = 0 # for color stripes
-
   def init_pinout_oled(self):
     self.gpio_csn = const(17)
     self.gpio_resn = const(26)
@@ -22,14 +13,14 @@ class oled:
     self.gpio_sck = const(14)
     self.gpio_mosi = const(15)
     self.gpio_miso = const(2)
-  
-  def init_spi(self):
-    self.oled_spi=SPI(self.spi_channel, baudrate=self.spi_freq, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(self.gpio_sck), mosi=Pin(self.gpio_mosi), miso=Pin(self.gpio_miso))
 
   def init_bitbang(self):
     self.dc=Pin(self.gpio_dc,Pin.OUT)
     self.resn=Pin(self.gpio_resn,Pin.OUT)
     self.csn=Pin(self.gpio_csn,Pin.OUT)
+
+  def init_spi(self):
+    self.oled_spi=SPI(self.spi_channel, baudrate=self.spi_freq, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(self.gpio_sck), mosi=Pin(self.gpio_mosi), miso=Pin(self.gpio_miso))
 
   def oled_ssd1331_commands(self):
     self.C_OLED_NOP1 = 0xBC
@@ -59,31 +50,40 @@ class oled:
     self.C_OLED_SET_ROW_ADDRESS = 0x75
     self.C_OLED_SET_DISPLAY_ON = 0xAF
 
-    self.oled_init_sequence = bytearray([self.C_OLED_NOP1, # 0, 10111100
-    self.C_OLED_SET_DISPLAY_OFF, # 1, 0b10101110
-    self.C_OLED_SET_REMAP_COLOR, self.C_OLED_ULX3S_REMAP, # 2
-    self.C_OLED_SET_DISPLAY_START_LINE, 0x00, # 4
-    self.C_OLED_SET_DISPLAY_OFFSET, 0x00, # 6
-    self.C_OLED_SET_DISPLAY_MODE_NORMAL, # 8
-    self.C_OLED_SET_MULTIPLEX_RATIO, 0x3F, # 0b00111111, # 9, 15-16
-    self.C_OLED_SET_MASTER_CONFIGURATION, 0x8E, # 0b10001110, # 11, a[0]=0 Select external Vcc supply, a[0]=1 Reserved(reset)
-    self.C_OLED_SET_POWER_SAVE_MODE, 0x00, # 13, 0-no power save, 0x1A-power save
-    self.C_OLED_SET_PHASE_1_AND_2_PERIOD_ADJUSTMENT, 0x74, # 15
-    self.C_OLED_SET_DISPLAY_CLOCK_DIVIDER, 0xF0, # 17
-    self.C_OLED_SET_PRECHARGE_A, 0x64, # 19
-    self.C_OLED_SET_PRECHARGE_B, 0x78, # 21
-    self.C_OLED_SET_PRECHARGE_C, 0x64, # 23
-    self.C_OLED_SET_PRECHARGE_LEVEL, 0x31, # 25
-    self.C_OLED_SET_CONTRAST_COLOR_A, 0xFF, # 27, 255
-    self.C_OLED_SET_CONTRAST_COLOR_B, 0xFF, # 29, 255
-    self.C_OLED_SET_CONTRAST_COLOR_C, 0xFF, # 31, 255
-    self.C_OLED_SET_VCOMH, 0x3E,
-    self.C_OLED_SET_MASTER_CURRENT_CONTROL, 0x06,
-    self.C_OLED_SET_COLUMN_ADDRESS, 0x00, 0x5F, # 33, 96
-    self.C_OLED_SET_ROW_ADDRESS, 0x00, 0x3F, # 36, 63
-    self.C_OLED_SET_DISPLAY_ON, # 39
-    self.C_OLED_NOP1, # 40 -- during debugging sent as data
+    self.oled_init_sequence = bytearray([
+      self.C_OLED_NOP1, # 0, 10111100
+      self.C_OLED_SET_DISPLAY_OFF, # 1, 0b10101110
+      self.C_OLED_SET_REMAP_COLOR, self.C_OLED_ULX3S_REMAP, # 2
+      self.C_OLED_SET_DISPLAY_START_LINE, 0x00, # 4
+      self.C_OLED_SET_DISPLAY_OFFSET, 0x00, # 6
+      self.C_OLED_SET_DISPLAY_MODE_NORMAL, # 8
+      self.C_OLED_SET_MULTIPLEX_RATIO, 0x3F, # 0b00111111, # 9, 15-16
+      self.C_OLED_SET_MASTER_CONFIGURATION, 0x8E, # 0b10001110, # 11, a[0]=0 Select external Vcc supply, a[0]=1 Reserved(reset)
+      self.C_OLED_SET_POWER_SAVE_MODE, 0x00, # 13, 0-no power save, 0x1A-power save
+      self.C_OLED_SET_PHASE_1_AND_2_PERIOD_ADJUSTMENT, 0x74, # 15
+      self.C_OLED_SET_DISPLAY_CLOCK_DIVIDER, 0xF0, # 17
+      self.C_OLED_SET_PRECHARGE_A, 0x64, # 19
+      self.C_OLED_SET_PRECHARGE_B, 0x78, # 21
+      self.C_OLED_SET_PRECHARGE_C, 0x64, # 23
+      self.C_OLED_SET_PRECHARGE_LEVEL, 0x31, # 25
+      self.C_OLED_SET_CONTRAST_COLOR_A, 0xFF, # 27, 255
+      self.C_OLED_SET_CONTRAST_COLOR_B, 0xFF, # 29, 255
+      self.C_OLED_SET_CONTRAST_COLOR_C, 0xFF, # 31, 255
+      self.C_OLED_SET_VCOMH, 0x3E,
+      self.C_OLED_SET_MASTER_CURRENT_CONTROL, 0x06,
+      self.C_OLED_SET_COLUMN_ADDRESS, 0x00, 0x5F, # 33, 96
+      self.C_OLED_SET_ROW_ADDRESS, 0x00, 0x3F, # 36, 63
+      self.C_OLED_SET_DISPLAY_ON, # 39
+      self.C_OLED_NOP1, # 40 -- during debugging sent as data
     ]) # end bytearray
+
+  def __init__(self):
+    self.spi_channel = const(1) # -1 soft, 1:sd, 2:jtag
+    self.spi_freq = const(6000000) # Hz SPI frequency
+    self.oled_ssd1331_commands()
+    self.init_pinout_oled()
+    self.init_spi()
+    self.init_bitbang()
 
   def oled_fill_screen(self, color):
     self.dc.value(0) # command
@@ -96,13 +96,7 @@ class oled:
     for i in range(64):
       self.oled_spi.write(color_line)
 
-  def oled_run_stripes(self, n):
-    self.oled_y = 0 # reset Y of color stripes
-    for i in range(n):
-      self.oled_color_stripes()
-
   def oled_init(self):
-    print("init")
     self.csn.value(0) # enable OLED
     self.dc.value(0) # commands
     self.resn.value(0)
@@ -114,17 +108,21 @@ class oled:
 
   def oled_horizontal_line(self, y, color):
     self.dc.value(0) # command
-    self.oled_spi.write(bytearray([self.C_OLED_SET_ROW_ADDRESS, y, y]))
+    self.oled_spi.write(bytearray([self.C_OLED_SET_ROW_ADDRESS, y, 0x3F]))
     self.dc.value(1) # data
     self.oled_spi.write(bytearray([color for x in range(96)]))
 
-  def oled_color_stripes(self):
-    self.oled_horizontal_line((self.oled_y+ 0) & 63, 0xFF) # white
-    self.oled_horizontal_line((self.oled_y+16) & 63, 0x03) # blue
-    self.oled_horizontal_line((self.oled_y+32) & 63, 0x1C) # green
-    self.oled_horizontal_line((self.oled_y+48) & 63, 0xE0) # red
-    self.oled_y = (self.oled_y + 1) & 63
-    return self.oled_y
+  def oled_color_stripes(self, y):
+    y = y & 63
+    self.oled_horizontal_line((y+ 0) & 63, 0xFF) # white
+    self.oled_horizontal_line((y+16) & 63, 0x03) # blue
+    self.oled_horizontal_line((y+32) & 63, 0x1C) # green
+    self.oled_horizontal_line((y+48) & 63, 0xE0) # red
+
+  def oled_run_stripes(self, n):
+    print("OLED should display 4 horizontal stripes (RGBW) scrolling down")
+    for i in range(n):
+      self.oled_color_stripes(i)
 
 oled().oled_init()
 oled().oled_run_stripes(1024)
