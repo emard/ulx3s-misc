@@ -13,6 +13,7 @@ class oled:
     self.init_pinout_oled()
     self.init_spi()
     self.init_bitbang()
+    self.oled_y = 0 # for color stripes
 
   def init_pinout_oled(self):
     self.gpio_csn = const(17)
@@ -34,7 +35,7 @@ class oled:
     self.C_OLED_NOP1 = 0xBC
     self.C_OLED_NOP2 = 0xBD # delay nop
     self.C_OLED_NOP3 = 0xE3
-    self.C_OLED_SET_DISPLAY_OFF = 0xAE # 10101110
+    self.C_OLED_SET_DISPLAY_OFF = 0xAE # 0b10101110
     self.C_OLED_SET_REMAP_COLOR = 0xA0
     self.C_OLED_ULX3S_REMAP = 0x22 # 0b00100010 # A[7:6] = 00; 256 color. A[7:6] = 01; 65k color format rotation for ULX3S; A[1] = 1 scan right to left
     self.C_OLED_SET_DISPLAY_START_LINE = 0xA1
@@ -59,7 +60,7 @@ class oled:
     self.C_OLED_SET_DISPLAY_ON = 0xAF
 
     self.oled_init_sequence = bytearray([self.C_OLED_NOP1, # 0, 10111100
-    self.C_OLED_SET_DISPLAY_OFF, # 1, 10101110
+    self.C_OLED_SET_DISPLAY_OFF, # 1, 0b10101110
     self.C_OLED_SET_REMAP_COLOR, self.C_OLED_ULX3S_REMAP, # 2
     self.C_OLED_SET_DISPLAY_START_LINE, 0x00, # 4
     self.C_OLED_SET_DISPLAY_OFFSET, 0x00, # 6
@@ -84,18 +85,21 @@ class oled:
     self.C_OLED_NOP1, # 40 -- during debugging sent as data
     ]) # end bytearray
 
-
   def oled_fill_screen(self, color):
     self.dc.value(0) # command
     self.oled_spi.write(bytearray([
-      self.C_OLED_SET_COLUMN_ADDRESS, 0, 0x5F,
-      self.C_OLED_SET_ROW_ADDRESS,    0, 0x3F,
+      self.C_OLED_SET_COLUMN_ADDRESS, 0, 0x5F, # 96
+      self.C_OLED_SET_ROW_ADDRESS,    0, 0x3F, # 64
     ]))
     self.dc.value(1) # data
-    for i in range(6144):
-      self.oled_spi.write(bytearray([color]))
-    self.oled_horizontal_line(10,0xFF)
-    self.oled_horizontal_line(20,0xC0)
+    color_line = bytearray([color for x in range(96)])
+    for i in range(64):
+      self.oled_spi.write(color_line)
+
+  def oled_run_stripes(self, n):
+    self.oled_y = 0 # reset Y of color stripes
+    for i in range(n):
+      self.oled_color_stripes()
 
   def oled_init(self):
     print("init")
@@ -112,24 +116,15 @@ class oled:
     self.dc.value(0) # command
     self.oled_spi.write(bytearray([self.C_OLED_SET_ROW_ADDRESS, y, y]))
     self.dc.value(1) # data
-    for i in range(96):
-      self.oled_spi.write(bytearray([color]))
+    self.oled_spi.write(bytearray([color for x in range(96)]))
 
-#uint8_t oled_color_stripes()
-#{
-#  oled_horizontal_line((oled_y+ 0) & 63, 0xFF); # white
-#  oled_horizontal_line((oled_y+16) & 63, 0x03); # blue
-#  oled_horizontal_line((oled_y+32) & 63, 0x1C); # green
-#  oled_horizontal_line((oled_y+48) & 63, 0xE0); # red
-#  return oled_y++ & 63;
-#}
-
-
-# set up variables using the SD utility library functions:
-#void oled_read(char *a)
-#{
-#  uint8_t line = oled_color_stripes();
-#  sprintf(a, "OLED: %02x", line);
-#}
+  def oled_color_stripes(self):
+    self.oled_horizontal_line((self.oled_y+ 0) & 63, 0xFF) # white
+    self.oled_horizontal_line((self.oled_y+16) & 63, 0x03) # blue
+    self.oled_horizontal_line((self.oled_y+32) & 63, 0x1C) # green
+    self.oled_horizontal_line((self.oled_y+48) & 63, 0xE0) # red
+    self.oled_y = (self.oled_y + 1) & 63
+    return self.oled_y
 
 oled().oled_init()
+oled().oled_run_stripes(1024)
