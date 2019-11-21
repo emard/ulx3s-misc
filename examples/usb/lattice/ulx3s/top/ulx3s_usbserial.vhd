@@ -88,7 +88,7 @@ architecture Behavioral of ulx3s_usbtest is
   signal S_rxd: std_logic;
   signal S_rxdp, S_rxdn: std_logic;
   signal S_txdp, S_txdn, S_txoe: std_logic;
-  signal S_hid_report: std_logic_vector(63 downto 0);
+  signal S_oled_display: std_logic_vector(63 downto 0);
   signal S_dsctyp: std_logic_vector(2 downto 0);
   signal S_DATABUS16_8: std_logic;
   signal S_RESET: std_logic;
@@ -306,7 +306,7 @@ begin
   clk_usb <= gp(0);
   end generate G_external_usb_phy;
 
-  -- see the HID report on the OLED
+  -- see some data traffic on the OLED
   g_oled: if true generate
   process(clk_usb)
   begin
@@ -338,28 +338,28 @@ begin
       end if;
     end if;  
   end process;
-  S_hid_report(55 downto 52) <= R_sync_err;
-  S_hid_report(51 downto 48) <= R_bit_stuff_err;
-  S_hid_report(47 downto 44) <= R_byte_err;
-  S_hid_report(41 downto 40) <= R_OPMODE;
-  S_hid_report(37 downto 36) <= R_LINESTATE;
-  S_hid_report(32) <= R_TXVALID;
-  S_hid_report(31 downto 24) <= R_DATAIN;
-  S_hid_report(20) <= R_TXREADY;
-  S_hid_report(16) <= R_RXVALID;
-  S_hid_report(15 downto 8) <= R_DATAOUT;
-  S_hid_report(4) <= R_RXACTIVE;
-  S_hid_report(3 downto 0) <= R_RXERROR;
+  S_oled_display(55 downto 52) <= R_sync_err;
+  S_oled_display(51 downto 48) <= R_bit_stuff_err;
+  S_oled_display(47 downto 44) <= R_byte_err;
+  S_oled_display(41 downto 40) <= R_OPMODE;
+  S_oled_display(37 downto 36) <= R_LINESTATE;
+  S_oled_display(32) <= R_TXVALID;
+  S_oled_display(31 downto 24) <= R_DATAIN;
+  S_oled_display(20) <= R_TXREADY;
+  S_oled_display(16) <= R_RXVALID;
+  S_oled_display(15 downto 8) <= R_DATAOUT;
+  S_oled_display(4) <= R_RXACTIVE;
+  S_oled_display(3 downto 0) <= R_RXERROR;
   oled_inst: entity work.oled_hex_decoder
   generic map
   (
-    C_data_len => S_hid_report'length
+    C_data_len => S_oled_display'length
   )
   port map
   (
     clk => clk_7M5Hz,
     en => '1',
-    data => S_hid_report(63 downto 0),
+    data => S_oled_display(63 downto 0),
     spi_resn => oled_resn,
     spi_clk => oled_clk,
     spi_csn => oled_csn,
