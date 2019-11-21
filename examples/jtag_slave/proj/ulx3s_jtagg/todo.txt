@@ -1,0 +1,5 @@
+let's try JTAGG, vendor specific module that allows
+JTAG traffic to reach user bitstream, something similar to this:
+
+https://github.com/Spritetm/hadbadge2019_fpgasoc/blob/4ae8277c45e17e316bb4d46ce625c1507506cd36/soc/top_fpga.v#L312-L322
+https://github.com/Spritetm/hadbadge2019_fpgasoc/blob/master/soc/jtagload/main.c
