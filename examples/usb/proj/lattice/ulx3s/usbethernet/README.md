@@ -1,6 +1,6 @@
 # USB-CDC Ethernet core
 
-Plugg US2 to linux host, usb-ethernet device should be detected:
+Plug US2 to linux host, usb-ethernet device should be detected:
 
     cdc_ether 1-6.1:1.0 enx00aabbccddee: unregister 'cdc_ether' usb-0000:00:15.0-6.1, CDC Ethernet Device
     usb 1-6.1: new full-speed USB device number 116 using xhci_hcd
