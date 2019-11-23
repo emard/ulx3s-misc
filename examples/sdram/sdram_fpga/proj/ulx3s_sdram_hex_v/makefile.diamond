@@ -29,7 +29,7 @@ TOP_MODULE_FILE = ../../../sdram_fpga/hdl/top/$(TOP_MODULE).vhd
 
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../../sdram_fpga/hdl/sdram.vhd \
+  ../../../sdram_fpga/hdl/sdram_0bject.vhd \
   ../../../../oled/proj/ulx3s_hex_vhdl/clock/clk_25M_100M_7M5_12M_60M.vhd \
   ../../../../oled/hdl/ssd1331_hex_vhdl/oled_hex_decoder.vhd \
   ../../../../oled/hdl/ssd1331_hex_vhdl/oled_init_pack.vhd \

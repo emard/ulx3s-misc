@@ -112,7 +112,7 @@ begin
       CLKOS2      =>  clk_12MHz,
       CLKOS3      =>  clk_60MHz
   );
-  clk_sdram <= clk_60MHz;
+  clk_sdram <= clk_100MHz;
 
   -- TX/RX passthru
   --ftdi_rxd <= wifi_txd;
@@ -121,16 +121,8 @@ begin
   wifi_en <= '1';
   wifi_gpio0 <= btn(0);
   S_reset <= not btn(0);
-
   S_enable <= not btn(1); -- btn1 to hold
   
-  process(clk_12MHz)
-  begin
-    if rising_edge(clk_12MHz) then
-      R_counter <= R_counter + 1;
-    end if;
-  end process;
-
   process(clk_sdram)
   begin
     if rising_edge(clk_sdram) then
@@ -138,6 +130,37 @@ begin
       R_reset <= S_reset;
     end if;
   end process;
+
+  sdram_0bject_inst: entity sdram_0bject
+  generic map
+  (
+    CLK_FREQ    => 100, -- MHz
+    CAS_LATENCY => 2
+  )
+  port map
+  (
+    reset       => R_reset,
+    clk         => clk_sdram,
+    req         => R_request,
+    ack         => S_ack,
+    we          => R_write_enable,
+    addr        => R_addr(22 downto 0),
+    -- WRITE signaling
+    data        => R_write_data,
+    -- READ signaling
+    valid       => S_read_data_valid,
+    q           => S_read_data,
+    -- SDRAM chip connection
+    sdram_cke   => sdram_cke,
+    sdram_we_n  => sdram_wen,
+    sdram_ras_n => sdram_rasn,
+    sdram_cas_n => sdram_casn,
+    sdram_ba    => sdram_ba,
+    sdram_a     => sdram_a,
+    sdram_dq    => sdram_d,
+    sdram_dqm   => sdram_dqm
+  );
+  sdram_clk <= not clk_sdram;
 
   -- writer
   process(clk_sdram)
@@ -149,7 +172,7 @@ begin
           R_write_enable <= '1';
           R_addr <= x"000300";
           R_write_data <= x"01234567";
-        when x"200000" =>
+        when x"900000" =>
           R_request <= '1';
           R_write_enable <= '1';
           R_addr <= x"000700";
@@ -174,8 +197,8 @@ begin
   process(clk_sdram)
   begin
     if rising_edge(clk_sdram) then
-      if R_write_enable = '0' and R_request = '0' 
-      and R_prev_read_data_valid = '0' and S_read_data_valid = '1' then
+      if R_write_enable = '0' and -- R_request = '0' and
+      R_prev_read_data_valid = '0' and S_read_data_valid = '1' then
         R_state_latch <= R_state; -- display at which state we are
         R_read_data_latch <= S_read_data;
         R_valid_latch <= S_read_data_valid;
@@ -184,39 +207,15 @@ begin
     end if;
   end process;
 
-  sdram_inst: entity sdram
-  generic map
-  (
-    CLK_FREQ    => 60 -- MHz
-  )
-  port map
-  (
-    reset       => R_reset,
-    clk         => clk_sdram,
-    req         => R_request,
-    ack         => S_ack,
-    we          => R_write_enable,
-    addr        => R_addr(22 downto 0),
-    -- WRITE signaling
-    data        => R_write_data,
-    -- READ signaling
-    valid       => S_read_data_valid,
-    q           => S_read_data,
-    -- SDRAM chip connection
-    sdram_cke   => sdram_cke,
-    sdram_we_n  => sdram_wen,
-    sdram_ras_n => sdram_rasn,
-    sdram_cas_n => sdram_casn,
-    sdram_ba    => sdram_ba,
-    sdram_a     => sdram_a,
-    sdram_dq    => sdram_d,
-    sdram_dqml  => sdram_dqm(0),
-    sdram_dqmh  => sdram_dqm(1)
-  );
-  sdram_clk <= not clk_sdram;
+  process(clk_12MHz)
+  begin
+    if rising_edge(clk_12MHz) then
+      R_counter <= R_counter + 1;
+    end if;
+  end process;
 
-  S_data <= std_logic_vector(R_state) & x"00" & R_read_data_latch
-          & x"0000000000" & std_logic_vector(R_state_latch);
+  S_data <= R_write_data & R_read_data_latch
+          & "000" & R_valid_latch & x"000000000" & std_logic_vector(R_state_latch);
 
   oled_inst: entity oled_hex_decoder
   generic map
