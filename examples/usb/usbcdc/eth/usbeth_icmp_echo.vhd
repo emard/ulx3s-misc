@@ -15,13 +15,12 @@ use work.usb_cdc_descriptor.all;
 entity usbeth_icmp_echo is
 generic
 (
-  ethernet: boolean := false;
-  ping: boolean := false; -- echo reply to raw pings
+  ethernet: boolean := true;
+  ping: boolean := true -- echo reply to raw pings
   -- debug for usb_serial in network mode will reply to nping
   -- ifconfig enx00aabbccddee 192.168.99.1
   -- nping -c 100 --privileged -delay 10ms -q1 --send-eth -e enx00aabbccddee --dest-mac 00:11:22:33:44:AA --data 0011223344556677  192.168.99.2
   -- tcpdump -i enx00aabbccddee -e -XX -n icmp
-  test: boolean := false
 );
 port
 (
@@ -160,62 +159,62 @@ begin
   phy_rxen <= S_txoe;
   phy_rxvalid <= S_rxvalid;
 
-  G_usbserial_normal: if not test generate
     -- Direct interface to serial data transfer component
-    E_usb_serial: entity work.usb_serial
-        generic map (
-            descrom_fscfg   => choose_descriptor(ethernet, USBFS_CDC_config_ethernet, USBFS_CDC_config_serial), -- serial/ethernet
-            descrom_hscfg   => choose_descriptor(ethernet, USBHS_CDC_config_ethernet, USBHS_CDC_config_serial), -- serial/ethernet
-            VENDORID        => X"fb9a",
-            PRODUCTID       => X"fb9a",
-            VERSIONBCD      => X"0031",
-            VENDORSTR       => "Vendor",
-            PRODUCTSTR      => "Product",
-            SERIALSTR       => "00AABBCCDDEE", -- MAC for ethernet
-            HSSUPPORT       => false,
-            SELFPOWERED     => false,
-            RXBUFSIZE_BITS  => RXBUFSIZE_BITS,
-            TXBUFSIZE_BITS  => TXBUFSIZE_BITS )
-        port map (
-            CLK             => CLK,
-            RESET           => usb_devreset,
-            USBRST          => usb_busreset,
-            HIGHSPEED       => usb_highspeed,
-            SUSPEND         => usb_suspend,
-            ONLINE          => usb_online,
-            RXVAL           => usb_rxval,
-            RXDAT           => usb_rxdat,
-            RXRDY           => usb_rxrdy,
-            RXLEN           => usb_rxlen,
-            TXVAL           => usb_txval,
-            TXDAT           => usb_txdat,
-            TXRDY           => usb_txrdy,
-            TXROOM          => usb_txroom,
-            TXCORK          => usb_txcork,
-            -- BREAK           => BREAK,
-            -- dsctyp          => dsctyp, -- debugging
-            PHY_CLK         => clk_usb,
-            PHY_DATAIN      => S_DATAIN,
-            PHY_DATAOUT     => S_DATAOUT,
-            PHY_TXVALID     => S_TXVALID,
-            PHY_TXREADY     => S_TXREADY,
-            PHY_RXACTIVE    => S_RXACTIVE,
-            PHY_RXVALID     => S_RXVALID,
-            PHY_RXERROR     => S_RXERROR,
-            PHY_LINESTATE   => S_LINESTATE,
-            PHY_OPMODE      => S_OPMODE,
-            PHY_XCVRSELECT  => S_XCVRSELECT,
-            PHY_TERMSELECT  => S_TERMSELECT,
-            PHY_RESET       => S_RESET
-        );
-  end generate;
+  E_usb_serial: entity work.usb_serial
+  generic map
+  (
+    descrom_fscfg   => choose_descriptor(ethernet, USBFS_CDC_config_ethernet, USBFS_CDC_config_serial), -- serial/ethernet
+    descrom_hscfg   => choose_descriptor(ethernet, USBHS_CDC_config_ethernet, USBHS_CDC_config_serial), -- serial/ethernet
+    VENDORID        => X"fb9a",
+    PRODUCTID       => X"fb9a",
+    VERSIONBCD      => X"0031",
+    VENDORSTR       => "Vendor",
+    PRODUCTSTR      => "Product",
+    SERIALSTR       => "00AABBCCDDEE", -- MAC for ethernet
+    HSSUPPORT       => false,
+    SELFPOWERED     => false,
+    RXBUFSIZE_BITS  => RXBUFSIZE_BITS,
+    TXBUFSIZE_BITS  => TXBUFSIZE_BITS
+  )
+  port map
+  (
+    CLK             => CLK,
+    RESET           => usb_devreset,
+    USBRST          => usb_busreset,
+    HIGHSPEED       => usb_highspeed,
+    SUSPEND         => usb_suspend,
+    ONLINE          => usb_online,
+    RXVAL           => usb_rxval,
+    RXDAT           => usb_rxdat,
+    RXRDY           => usb_rxrdy,
+    RXLEN           => usb_rxlen,
+    TXVAL           => usb_txval,
+    TXDAT           => usb_txdat,
+    TXRDY           => usb_txrdy,
+    TXROOM          => usb_txroom,
+    TXCORK          => usb_txcork,
+    -- BREAK           => BREAK,
+    -- dsctyp          => dsctyp, -- debugging
+    PHY_CLK         => clk_usb,
+    PHY_DATAIN      => S_DATAIN,
+    PHY_DATAOUT     => S_DATAOUT,
+    PHY_TXVALID     => S_TXVALID,
+    PHY_TXREADY     => S_TXREADY,
+    PHY_RXACTIVE    => S_RXACTIVE,
+    PHY_RXVALID     => S_RXVALID,
+    PHY_RXERROR     => S_RXERROR,
+    PHY_LINESTATE   => S_LINESTATE,
+    PHY_OPMODE      => S_OPMODE,
+    PHY_XCVRSELECT  => S_XCVRSELECT,
+    PHY_TERMSELECT  => S_TERMSELECT,
+    PHY_RESET       => S_RESET
+  );
 
   -- TODO: make connect output from USB-Serial core
   usb_rxrdy <= '1';
   dv <= usb_rxval;
   byte <= usb_rxdat;
 
-  G_ping_reply: if ping generate
   B_send_ping_packets: block
   signal R_packet_raddr, R_packet_waddr, R_packet_addr_last: std_logic_vector(11 downto 0);
   type T_packet_buffer is array(0 to 2047) of std_logic_vector(7 downto 0);
@@ -281,6 +280,5 @@ begin
   usb_txcork <= usb_txval; -- after filling buffer, remove cork to burst out the packet
   usb_txdat <= R_packet_buffer(conv_integer(R_packet_raddr));
   end block;
-  end generate;
 
 end Behavioral;
