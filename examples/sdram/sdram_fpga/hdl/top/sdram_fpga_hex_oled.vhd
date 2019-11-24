@@ -134,8 +134,8 @@ begin
   sdram_0bject_inst: entity sdram_0bject
   generic map
   (
-    CLK_FREQ    => 100, -- MHz
-    CAS_LATENCY => 2
+    CLK_FREQ    => 100.0, -- MHz
+    CAS_LATENCY => 2      -- cycles 2: CLK_FREQ<133, 3: CLK_FREQ>133
   )
   port map
   (

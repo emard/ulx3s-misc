@@ -34,7 +34,7 @@ entity sdram_0bject is
     --
     -- This value must be provided, as it is used to calculate the number of
     -- clock cycles required for the other timing values.
-    CLK_FREQ : natural;
+    CLK_FREQ : real;
 
     -- 32-bit controller interface
     ADDR_WIDTH : natural := 23;
@@ -152,7 +152,7 @@ architecture arch of sdram_0bject is
   );
 
   -- calculate the clock period (in nanoseconds)
-  constant CLK_PERIOD : real := 1.0/real(CLK_FREQ)*1000.0;
+  constant CLK_PERIOD : real := 1.0/CLK_FREQ*1000.0;
 
   -- the number of clock cycles to wait before initialising the device
   constant DESELECT_WAIT : natural := natural(ceil(T_DESL/CLK_PERIOD));
@@ -204,7 +204,6 @@ architecture arch of sdram_0bject is
   -- counters
   signal wait_counter    : natural range 0 to 16383;
   signal refresh_counter : natural range 0 to 1023;
-  signal addr_wait_counter: unsigned(ilog2(BURST_LENGTH)-1 downto 0);
 
   -- registers
   signal addr_reg : unsigned(SDRAM_COL_WIDTH+SDRAM_ROW_WIDTH+SDRAM_BANK_WIDTH-1 downto 0);
@@ -435,6 +434,7 @@ begin
   B_data_mux: block
     type T_mux_sdram_dq is array (0 to BURST_LENGTH-1) of std_logic_vector(SDRAM_DATA_WIDTH-1 downto 0);
     signal S_mux_sdram_dq: T_mux_sdram_dq;
+    signal addr_wait_counter: unsigned(ilog2(BURST_LENGTH)-1 downto 0);
   begin
     G_mux_sdram_dq: for i in 0 to BURST_LENGTH-1 generate
       S_mux_sdram_dq(i) <= data_reg((BURST_LENGTH-i)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-i-1)*SDRAM_DATA_WIDTH);
