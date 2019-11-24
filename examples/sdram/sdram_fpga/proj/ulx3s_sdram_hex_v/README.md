@@ -20,3 +20,12 @@ program (upload to SRAM, temporary):
 or
 
     make program_ocd
+
+# OLED should display:
+
+left 32-bit should quicky alternate word to be written
+"01234567" and "600DCAFE". Hold BTN1 to freeze display
+to be able to read.
+
+right 32-bit should show word that has been read from RAM:
+it should be "01234567". Hold BTN2 and it should show "600DCAFE".
