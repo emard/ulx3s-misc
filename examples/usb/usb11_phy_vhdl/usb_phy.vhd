@@ -47,7 +47,6 @@ use ieee.std_logic_unsigned.all;
  
 entity usb_phy is
   generic (
-    C_emard_rx  : boolean := true;
     usb_rst_det : boolean := true
   );
   port (
@@ -149,33 +148,7 @@ begin
 --======================================================================================--
   -- RX Phy and DPLL                                                                    --
 --======================================================================================--
- 
-  G_rx_phy: if not C_emard_rx generate
-  i_rx_phy: entity work.usb_rx_phy
-  port map (
-    clk        => clk,
-    rst        => rst,
-    fs_ce_o    => fs_ce,
-    -- Transciever Interface
-    rxd        => rxd,
-    rxdp       => rxdp,
-    rxdn       => rxdn,
-    -- RX debug interface
-    sync_err_o => sync_err_o,
-    bit_stuff_err_o => bit_stuff_err_o,
-    byte_err_o => byte_err_o,
-    -- UTMI Interface
-    DataIn_o   => DataIn_o,
-    RxValid_o  => RxValid_o,
-    RxActive_o => RxActive_o,
-    RxError_o  => RxError_o,
-    RxEn_i     => txoe_out,
-    LineState  => LineState
-  );
-  end generate;
-
-  G_rx_phy_emard: if C_emard_rx generate
-  E_rx_phy_emard: entity work.usb_rx_phy_emard
+  E_rx_phy_emard: entity work.usb_rx_phy
   port map (
     clk        => clk,
     reset      => not rst,
@@ -184,21 +157,14 @@ begin
     usb_dif    => rxd,
     usb_dp     => rxdp,
     usb_dn     => rxdn,
-    -- RX debug interface
---    sync_err_o => sync_err_o,
---    bit_stuff_err_o => bit_stuff_err_o,
---    byte_err_o => byte_err_o,
     -- UTMI Interface
     data       => DataIn_o,
     valid      => RxValid_o,
     rx_active  => RxActive_o,
---    RxError_o  => RxError_o,
     rx_en      => txoe_out,
     linestate  => LineState
   );
   RxError_o <= '0';
-  end generate;
-  
   ce_o <= fs_ce;
  
 --======================================================================================--

@@ -15,7 +15,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity usb_rx_phy_emard is
+entity usb_rx_phy is
 generic
 (
   C_clk_input_hz: natural := 6000000; -- Hz input to this module (6 or 48 MHz)
@@ -37,7 +37,7 @@ port
 );
 end; -- entity
 
-architecture Behavioral of usb_rx_phy_emard is
+architecture Behavioral of usb_rx_phy is
   constant C_PA_inc: unsigned(C_PA_bits-1 downto 0) := to_unsigned(2**(C_PA_bits-1)*C_clk_bit_hz/C_clk_input_hz,C_PA_bits); -- default PA increment
   constant C_PA_phase: unsigned(C_PA_bits-2 downto 0) :=
   (
@@ -195,5 +195,4 @@ begin
     valid <= R_valid(0) and not R_valid_prev; -- single clk cycle
 --    valid <= R_valid(0); -- spans several clk cycles
   end block;
-
 end; -- architecture
