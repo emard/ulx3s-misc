@@ -24,32 +24,35 @@ class oled:
     self.oled_spi=SPI(self.spi_channel, baudrate=self.spi_freq, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(self.gpio_sck), mosi=Pin(self.gpio_mosi), miso=Pin(self.gpio_miso))
 
   def oled_ssd1331_commands(self):
-    self.C_OLED_NOP1 = 0xBC
-    self.C_OLED_NOP2 = 0xBD # delay nop
-    self.C_OLED_NOP3 = 0xE3
-    self.C_OLED_SET_DISPLAY_OFF = 0xAE # 0b10101110
-    self.C_OLED_SET_REMAP_COLOR = 0xA0
-    self.C_OLED_ULX3S_REMAP = 0x20 # 0b00100010 # A[7:6] = 00; 256 color. A[7:6] = 01; 65k color format rotation for ULX3S; A[1] = 1 scan right to left
-    self.C_OLED_SET_DISPLAY_START_LINE = 0xA1
-    self.C_OLED_SET_DISPLAY_OFFSET = 0xA1
-    self.C_OLED_SET_DISPLAY_MODE_NORMAL = 0xA4
-    self.C_OLED_SET_MULTIPLEX_RATIO = 0xA8
-    self.C_OLED_SET_MASTER_CONFIGURATION = 0xAD
-    self.C_OLED_SET_POWER_SAVE_MODE = 0xB0
-    self.C_OLED_SET_PHASE_1_AND_2_PERIOD_ADJUSTMENT = 0xB1
-    self.C_OLED_SET_DISPLAY_CLOCK_DIVIDER = 0xF0
-    self.C_OLED_SET_PRECHARGE_A = 0x8A
-    self.C_OLED_SET_PRECHARGE_B = 0x8B
-    self.C_OLED_SET_PRECHARGE_C = 0x8C
-    self.C_OLED_SET_PRECHARGE_LEVEL = 0xBB
-    self.C_OLED_SET_VCOMH = 0xBE
-    self.C_OLED_SET_MASTER_CURRENT_CONTROL = 0x87
-    self.C_OLED_SET_CONTRAST_COLOR_A = 0x81
-    self.C_OLED_SET_CONTRAST_COLOR_B = 0x82
-    self.C_OLED_SET_CONTRAST_COLOR_C = 0x83
-    self.C_OLED_SET_COLUMN_ADDRESS = 0x15
-    self.C_OLED_SET_ROW_ADDRESS = 0x75
-    self.C_OLED_SET_DISPLAY_ON = 0xAF
+    self.C_OLED_NOP1 = const(0xBC)
+    self.C_OLED_NOP2 = const(0xBD) # delay nop
+    self.C_OLED_NOP3 = const(0xE3)
+    self.C_OLED_SET_DISPLAY_OFF = const(0xAE) # 0b10101110
+    self.C_OLED_SET_REMAP_COLOR = const(0xA0)
+    self.C_OLED_ULX3S_REMAP = const(0x20) # 0b00100010 # A[7:6] = 00; 256 color. A[7:6] = 01; 65k color format rotation for ULX3S; A[1] = 1 scan right to left
+    self.C_OLED_SET_DISPLAY_START_LINE = const(0xA1)
+    self.C_OLED_SET_DISPLAY_OFFSET = const(0xA1)
+    self.C_OLED_SET_DISPLAY_MODE_NORMAL = const(0xA4)
+    self.C_OLED_SET_MULTIPLEX_RATIO = const(0xA8)
+    self.C_OLED_SET_MASTER_CONFIGURATION = const(0xAD)
+    self.C_OLED_SET_POWER_SAVE_MODE = const(0xB0)
+    self.C_OLED_SET_PHASE_1_AND_2_PERIOD_ADJUSTMENT = const(0xB1)
+    self.C_OLED_SET_DISPLAY_CLOCK_DIVIDER = const(0xF0)
+    self.C_OLED_SET_PRECHARGE_A = const(0x8A)
+    self.C_OLED_SET_PRECHARGE_B = const(0x8B)
+    self.C_OLED_SET_PRECHARGE_C = const(0x8C)
+    self.C_OLED_SET_PRECHARGE_LEVEL = const(0xBB)
+    self.C_OLED_SET_VCOMH = const(0xBE)
+    self.C_OLED_SET_MASTER_CURRENT_CONTROL = const(0x87)
+    self.C_OLED_SET_CONTRAST_COLOR_A = const(0x81)
+    self.C_OLED_SET_CONTRAST_COLOR_B = const(0x82)
+    self.C_OLED_SET_CONTRAST_COLOR_C = const(0x83)
+    self.C_OLED_SET_COLUMN_ADDRESS = const(0x15)
+    self.C_OLED_SET_ROW_ADDRESS = const(0x75)
+    self.C_OLED_SET_DISPLAY_ON = const(0xAF)
+    self.C_OLED_DRAW_LINE = const(0x21) # x0,y0,x1,y1,color_c,color_b,color_a
+    self.C_OLED_DRAW_RECTANGLE = const(0x22) # x0,y0,x1,y1,outline_c,outline_b,outline_a,fill_c,fill_b,fill_a
+    self.C_OLED_FILL_ENABLE = const(0x26) # a[0]=1 enable rectangle fill, a[4]=1 enable reverse copy
 
     self.oled_init_sequence = bytearray([
       self.C_OLED_NOP1, # 0, 10111100
@@ -92,22 +95,11 @@ class oled:
   def fb_show(self):
     self.dc.value(0) # command
     self.oled_spi.write(bytearray([
-      self.C_OLED_SET_COLUMN_ADDRESS, 0, 0x5F, # 96
-      self.C_OLED_SET_ROW_ADDRESS,    0, 0x3F, # 64
+      self.C_OLED_SET_COLUMN_ADDRESS, 0, self.width-1, # 96
+      self.C_OLED_SET_ROW_ADDRESS,    0, self.height-1, # 64
     ]))
     self.dc.value(1) # data
     self.oled_spi.write(self.fb)
-
-  def oled_fill_screen(self, color):
-    self.dc.value(0) # command
-    self.oled_spi.write(bytearray([
-      self.C_OLED_SET_COLUMN_ADDRESS, 0, 0x5F, # 96
-      self.C_OLED_SET_ROW_ADDRESS,    0, 0x3F, # 64
-    ]))
-    self.dc.value(1) # data
-    color_line = bytearray([color for x in range(96)])
-    for i in range(64):
-      self.oled_spi.write(color_line)
 
   def oled_init(self):
     self.csn.value(0) # enable OLED
@@ -117,24 +109,35 @@ class oled:
     self.resn.value(1)
     sleep_ms(20)
     self.oled_spi.write(self.oled_init_sequence)
-    self.oled_fill_screen(0x42)
+    self.box([0,0,self.width-1,self.height-1],[0,64,128],[0,64,128])
 
   def oled_horizontal_line(self, y, color):
+    self.line([0,y,self.width-1,y],color)
+
+  # line = bytearray([x0,y0,x1,y1])
+  # color = bytearray([r,g,b])
+  def line(self, line, color):
     self.dc.value(0) # command
-    self.oled_spi.write(bytearray([self.C_OLED_SET_ROW_ADDRESS, y, 0x3F]))
-    self.dc.value(1) # data
-    self.oled_spi.write(bytearray([color for x in range(96)]))
+    self.oled_spi.write(bytearray([self.C_OLED_DRAW_LINE]) + bytearray(line) + bytearray(color))
+
+  # line = bytearray([x0,y0,x1,y1])
+  # outline,inside = bytearray([r,g,b])
+  def box(self, box, outline, inside):
+    self.dc.value(0) # command
+    self.oled_spi.write(bytearray([self.C_OLED_FILL_ENABLE, 1]))
+    self.oled_spi.write(bytearray([self.C_OLED_DRAW_RECTANGLE]) + bytearray(box) + bytearray(outline) + bytearray(inside))
 
   def oled_color_stripes(self, y):
     y = y & 63
-    self.oled_horizontal_line((y+ 0) & 63, 0xFF) # white
-    self.oled_horizontal_line((y+16) & 63, 0x03) # blue
-    self.oled_horizontal_line((y+32) & 63, 0x1C) # green
-    self.oled_horizontal_line((y+48) & 63, 0xE0) # red
+    self.oled_horizontal_line((y+ 0) & 63, [255,255,255]) # white
+    self.oled_horizontal_line((y+16) & 63, [  0,  0,255]) # blue
+    self.oled_horizontal_line((y+32) & 63, [  0,255,  0]) # green
+    self.oled_horizontal_line((y+48) & 63, [255,  0,  0]) # red
 
   def oled_run_stripes(self, n):
     for i in range(n):
       self.oled_color_stripes(i)
+      sleep_ms(5)
 
 disp = oled()
 disp.oled_init()
@@ -145,4 +148,6 @@ disp.fb.fill(0)
 disp.fb.text('MicroPython!', 0, 0, 0xff)
 disp.fb.hline(0, 10, 96, 0xff)
 disp.fb_show()
+disp.line(bytearray([0,10,95,30]),bytearray([255,255,0]))
+disp.box(bytearray([0,30,95,63]),bytearray([255,255,255]),bytearray([255,0,0]))
 del disp
