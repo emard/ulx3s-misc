@@ -123,7 +123,7 @@ class oled:
   # x,y = coordinate upper left corner of the first char
   # text = string
   # color = bytearray([r,g,b])
-  def text(self, x, y, text, color, size=1):
+  def text(self, x, y, text, color, size=8):
     self.dc.value(0) # command
     x0 = x
     for char in text:
@@ -131,16 +131,24 @@ class oled:
         for i in range(len(line)//2-1):
           self.oled_spi.write(bytearray([
             self.C_OLED_DRAW_LINE,
-            size*line[i+i]+x0, size*line[i+i+1]+y, size*line[i+i+2]+x0, size*line[i+i+3]+y,
+            line[i+i]*size//8+x0, line[i+i+1]*size//8+y, line[i+i+2]*size//8+x0, line[i+i+3]*size//8+y,
             color[0], color[1], color[2]
           ]))
-      x0 += 6*size
+      x0 += 6*size//8
 
   # vector font as associative array of polylines
   def init_font(self):
     self.font = {
       "0":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5, 4,1, 0,5])],
       "1":[bytearray([1,1, 2,0, 2,6]),bytearray([1,6, 3,6])],
+      "2":[bytearray([0,1, 1,0, 3,0, 4,1, 4,2, 0,6, 4,6])],
+      "3":[bytearray([0,1, 1,0, 3,0, 4,1, 4,2, 3,3, 4,4, 4,5, 3,6, 1,6, 0,5]), bytearray([1,3, 3,3])],
+      "4":[bytearray([3,6, 3,0, 0,3, 0,4, 4,4])],
+      "5":[bytearray([4,0, 0,0, 0,3, 1,2, 3,2, 4,3, 4,5, 3,6, 1,6, 0,5])],
+      "6":[bytearray([4,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5, 4,3, 3,2, 0,2])],
+      "7":[bytearray([0,0, 4,0, 4,2, 1,5, 1,6])],
+      "8":[bytearray([1,3, 0,2, 0,1, 1,0, 3,0, 4,1, 4,2, 3,3, 4,4, 4,5, 3,6, 1,6, 0,5, 0,4, 1,3]), bytearray([1,3, 3,3])],
+      "9":[bytearray([0,6, 3,6, 4,5, 4,1, 3,0, 1,0, 0,1, 0,3, 1,4, 4,4])],
       "A":[bytearray([0,6, 0,2, 2,0, 4,2, 4,6]), bytearray([0,4, 4,4])],
       "B":[bytearray([3,3, 4,2, 4,1, 3,0, 0,0, 0,6, 3,6, 4,5, 4,4, 3,3, 0,3])],
       "C":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5])],
@@ -179,5 +187,5 @@ disp.fb.hline(0, 10, 96, 0xff)
 disp.fb_show()
 disp.box(bytearray([0,30,95,63]),bytearray([255,255,255]),bytearray([0,0,170]))
 disp.init_font()
-disp.text(2,32,"01ABCDEF",[255,255,255])
+disp.text(2,32,"0123456789ABCDE",[255,255,255],8)
 del disp
