@@ -155,6 +155,8 @@ disp.fb.fill(0)
 disp.fb.text('MicroPython!', 0, 0, 0xff)
 disp.fb.hline(0, 10, 96, 0xff)
 disp.fb_show()
-disp.polyline(bytearray([0,30, 8,10, 16,30, 24,10, 32,30, 40,10, 48,30, 56,10, 64,30, 72,10, 80,30, 88,10, 96,30]),bytearray([255,255,0]))
+zigzag_line = bytearray([0,30, 8,10, 16,30, 24,10, 32,30, 40,10, 48,30, 56,10, 64,30, 72,10, 80,30, 88,10, 96,30])
+disp.polyline(zigzag_line,bytearray([255,255,0]))
+del zigzag_line
 disp.box(bytearray([0,30,95,63]),bytearray([255,255,255]),bytearray([255,0,0]))
 del disp
