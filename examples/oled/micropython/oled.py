@@ -53,6 +53,7 @@ class oled:
     self.C_OLED_DRAW_LINE = const(0x21) # x0,y0,x1,y1,color_c,color_b,color_a
     self.C_OLED_DRAW_RECTANGLE = const(0x22) # x0,y0,x1,y1,outline_c,outline_b,outline_a,fill_c,fill_b,fill_a
     self.C_OLED_FILL_ENABLE = const(0x26) # a[0]=1 enable rectangle fill, a[4]=1 enable reverse copy
+    self.C_OLED_COPY = const(0x23) # x0,y0,x1,y1,x2,y2 copy 0-1 to 2
 
     self.oled_init_sequence = bytearray([
       self.C_OLED_NOP1, # 0, 10111100
@@ -146,15 +147,35 @@ class oled:
       "4":[bytearray([3,6, 3,0, 0,3, 0,4, 4,4])],
       "5":[bytearray([4,0, 0,0, 0,3, 1,2, 3,2, 4,3, 4,5, 3,6, 1,6, 0,5])],
       "6":[bytearray([4,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5, 4,3, 3,2, 0,2])],
-      "7":[bytearray([0,0, 4,0, 4,2, 1,5, 1,6])],
+      "7":[bytearray([0,1, 0,0, 4,0, 4,2, 1,5, 1,6])],
       "8":[bytearray([1,3, 0,2, 0,1, 1,0, 3,0, 4,1, 4,2, 3,3, 4,4, 4,5, 3,6, 1,6, 0,5, 0,4, 1,3]), bytearray([1,3, 3,3])],
-      "9":[bytearray([0,6, 3,6, 4,5, 4,1, 3,0, 1,0, 0,1, 0,3, 1,4, 4,4])],
+      "9":[bytearray([0,6, 3,6, 4,5, 4,1, 3,0, 1,0, 0,1, 0,2, 1,3, 4,3])],
       "A":[bytearray([0,6, 0,2, 2,0, 4,2, 4,6]), bytearray([0,4, 4,4])],
       "B":[bytearray([3,3, 4,2, 4,1, 3,0, 0,0, 0,6, 3,6, 4,5, 4,4, 3,3, 0,3])],
       "C":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5])],
       "D":[bytearray([0,0, 0,6, 3,6, 4,5, 4,1, 3,0, 0,0])],
       "E":[bytearray([4,0, 0,0, 0,6, 4,6]), bytearray([0,3, 3,3])],
       "F":[bytearray([4,0, 0,0, 0,6]), bytearray([0,3, 3,3])],
+      "G":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5, 4,3, 2,3])],
+      "H":[bytearray([0,0, 0,6]), bytearray([4,0, 4,6]), bytearray([0,3, 4,3])],
+      "I":[bytearray([2,0, 2,6]), bytearray([1,0, 3,0]), bytearray([1,6, 3,6])],
+      "J":[bytearray([0,5, 1,6, 3,6, 4,5, 4,0])],
+      "K":[bytearray([0,0, 0,6]), bytearray([4,0, 1,3, 0,3]), bytearray([4,6, 1,3])],
+      "L":[bytearray([0,0, 0,6, 4,6])],
+      "M":[bytearray([0,6, 0,0, 2,2, 4,0, 4,6])],
+      "N":[bytearray([0,6, 0,0, 4,4]), bytearray([4,0, 4,6])],
+      "O":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5, 4,1])],
+      "P":[bytearray([0,6, 0,0, 3,0, 4,1, 4,2, 3,3, 0,3])],
+      "Q":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 2,6, 4,3, 4,1]), bytearray([2,4, 4,6])],
+      "R":[bytearray([0,6, 0,0, 3,0, 4,1, 4,2, 3,3, 0,3]), bytearray([1,3, 4,6])],
+      "S":[bytearray([4,1, 3,0, 1,0, 0,1, 0,2, 1,3, 3,3, 4,4, 4,5, 3,6, 1,6, 0,5])],
+      "T":[bytearray([2,0, 2,6]), bytearray([0,0, 4,0])],
+      "U":[bytearray([0,0, 0,5, 1,6, 3,6, 4,5, 4,0])],
+      "V":[bytearray([0,0, 0,4, 2,6, 4,4, 4,0])],
+      "W":[bytearray([0,0, 0,6, 2,4, 4,6, 4,0])],
+      "X":[bytearray([0,0, 0,1, 4,5, 4,6]), bytearray([0,6, 0,5, 4,1, 4,0])],
+      "Y":[bytearray([0,0, 0,1, 2,3, 2,6]), bytearray([4,0, 4,1, 2,3])],
+      "Z":[bytearray([0,0, 4,0, 4,1, 0,5, 0,6, 4,6])],
     }
 
   # line = bytearray([x0,y0,x1,y1])
@@ -185,7 +206,9 @@ disp.fb.fill(0)
 disp.fb.text('MicroPython!', 0, 0, 0xff)
 disp.fb.hline(0, 10, 96, 0xff)
 disp.fb_show()
-disp.box(bytearray([0,30,95,63]),bytearray([255,255,255]),bytearray([0,0,170]))
+disp.box(bytearray([0,30,95,63]),bytearray([170,0,0]),bytearray([0,0,170]))
 disp.init_font()
-disp.text(2,32,"0123456789ABCDE",[255,255,255],8)
+disp.text(0,32,"0123456789ABCDEF",[255,255,255],8)
+disp.text(0,40,"GHIJKLMNOPQRSTUV",[255,255,255],8)
+disp.text(0,48,"WXYZ",[255,255,255],8)
 del disp
