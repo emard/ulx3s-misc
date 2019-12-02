@@ -147,7 +147,7 @@ class oled:
   # text = string
   # color = bytearray([r,g,b])
   # spacing = between chars
-  def text(self, text, x, y, color, spacing=6, width=6, height=8):
+  def text(self, text, x=0, y=0, color=b"\xFF\xFF\xFF", spacing=6, width=6, height=8):
     self.dc.value(0) # command
     buf = bytearray([self.C_OLED_DRAW_LINE,0,0,0,0,color[0],color[1],color[2]])
     x0 = x
@@ -234,17 +234,22 @@ disp.oled_run_stripes(128)
 # scroll some text
 black = bytearray([0,0,0])
 white = bytearray([255,255,255])
+yellow = bytearray([255,255,0])
+print("scroll line 0..99")
 for i in range(100):
   disp.scroll_up(8)
   sleep_ms(1) # wait for scroll to finish
   disp.box_black(bytearray([0,56,95,63])) # text background
   disp.text("SCROLL %d" % i,0,56,white) # text foreground
-print("print('MicroPython!'), white-on-black, underlined")
+print("print('MicroPython!'), raster font 8x8, underlined")
 disp.fb.fill(0)
 disp.fb.text('MicroPython!', 0, 0, 0xffff)
 disp.fb.hline(0, 10, 96, 0xffff)
 disp.fb_show()
+print("blue box with red outline")
 disp.box(bytearray([0,30,95,63]),bytearray([170,0,0]),bytearray([0,0,170]))
+print("print('1234 ABC'), vector font 12x16")
 disp.text("1234 ABC",1,32,white,12,12,16)
-disp.text("ČĆĐŠŽ",0,16,white)
+print("print('ČĆĐŠŽ'), vector font 6x8")
+disp.text("ČĆĐŠŽ",0,16,yellow)
 del disp
