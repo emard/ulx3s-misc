@@ -29,7 +29,7 @@ class oled:
     self.C_OLED_NOP3 = const(0xE3)
     self.C_OLED_SET_DISPLAY_OFF = const(0xAE) # 0b10101110
     self.C_OLED_SET_REMAP_COLOR = const(0xA0)
-    self.C_OLED_ULX3S_REMAP = const(0x20) # 0b00100010 # A[7:6] = 00; 256 color. A[7:6] = 01; 65k color format rotation for ULX3S; A[1] = 1 scan right to left
+    self.C_OLED_ULX3S_REMAP = const(0x60) # 0b01100000 # A[6]=0:RGB332, A[6]=1:RGB565; A[0]=0:left-to-right, A[1]=1:right-to-left
     self.C_OLED_SET_DISPLAY_START_LINE = const(0xA1)
     self.C_OLED_SET_DISPLAY_OFFSET = const(0xA1)
     self.C_OLED_SET_DISPLAY_MODE_NORMAL = const(0xA4)
@@ -54,6 +54,7 @@ class oled:
     self.C_OLED_DRAW_RECTANGLE = const(0x22) # x0,y0,x1,y1,outline_c,outline_b,outline_a,fill_c,fill_b,fill_a
     self.C_OLED_FILL_ENABLE = const(0x26) # a[0]=1 enable rectangle fill, a[4]=1 enable reverse copy
     self.C_OLED_COPY = const(0x23) # x0,y0,x1,y1,x2,y2 copy 0-1 to 2
+    self.C_OLED_CLEAR_WINDOW = const(0x25) # x0,y0,x1,y1
 
     self.oled_init_sequence = bytearray([
       self.C_OLED_NOP1, # 0, 10111100
@@ -92,7 +93,7 @@ class oled:
     self.init_font()
     self.width = const(96)
     self.height = const(64)
-    self.fb = framebuf.FrameBuffer(bytearray(self.width * self.height), self.width, self.height, framebuf.GS8)
+    self.fb = framebuf.FrameBuffer(bytearray(self.width * self.height * 2), self.width, self.height, framebuf.RGB565)
 
   def fb_show(self):
     self.dc.value(0) # command
@@ -129,7 +130,8 @@ class oled:
   # x,y = coordinate upper left corner of the first char
   # text = string
   # color = bytearray([r,g,b])
-  def text(self, x, y, text, color, size=8):
+  # spacing = between chars
+  def text(self, text, x, y, color, spacing=6, width=6, height=8):
     self.dc.value(0) # command
     x0 = x
     for char in text:
@@ -137,10 +139,10 @@ class oled:
         for i in range(len(line)//2-1):
           self.oled_spi.write(bytearray([
             self.C_OLED_DRAW_LINE,
-            line[i+i]*size//8+x0, line[i+i+1]*size//8+y, line[i+i+2]*size//8+x0, line[i+i+3]*size//8+y,
+            line[i+i]*width//6+x0, line[i+i+1]*height//8+y, line[i+i+2]*width//6+x0, line[i+i+3]*height//8+y,
             color[0], color[1], color[2]
           ]))
-      x0 += 6*size//8
+      x0 += spacing
 
   # vector font as associative array of polylines
   def init_font(self):
@@ -196,6 +198,11 @@ class oled:
     self.oled_spi.write(bytearray([self.C_OLED_FILL_ENABLE, 1]))
     self.oled_spi.write(bytearray([self.C_OLED_DRAW_RECTANGLE]) + bytearray(box) + bytearray(outline) + bytearray(inside))
 
+  # fills box with 0 (black)
+  def box_black(self, box):
+    self.dc.value(0) # command
+    self.oled_spi.write(bytearray([self.C_OLED_CLEAR_WINDOW]) + bytearray(box))
+
   def oled_color_stripes(self, y):
     y = y & 63
     self.oled_horizontal_line((y+ 0) & 63, [255,255,255]) # white
@@ -217,16 +224,15 @@ black = bytearray([0,0,0])
 white = bytearray([255,255,255])
 for i in range(100):
   disp.scroll_up(8)
-  disp.box(bytearray([0,56,95,63]),black,black) # text background
-  disp.text(0,56,"SCROLLING %d" % i,white,8) # text foreground
+  sleep_ms(1) # wait for scroll to finish
+  disp.box_black(bytearray([0,56,95,63])) # text background
+  disp.text("SCROLL %d" % i,0,56,white) # text foreground
 print("print('MicroPython!'), white-on-black, underlined")
 disp.fb.fill(0)
-disp.fb.text('MicroPython!', 0, 0, 0xff)
-disp.fb.hline(0, 10, 96, 0xff)
+disp.fb.text('MicroPython!', 0, 0, 0xffff)
+disp.fb.hline(0, 10, 96, 0xffff)
 disp.fb_show()
 disp.box(bytearray([0,30,95,63]),bytearray([170,0,0]),bytearray([0,0,170]))
-disp.text(0,32,"0123456789ABCDEF",[255,255,255],8)
-disp.text(0,40,"GHIJKLMNOPQRSTUV",[255,255,255],8)
-disp.text(0,48,"WXYZ",[255,255,255],8)
-disp.text(0,16,"ČĆĐŠŽ",[255,255,255],8)
+disp.text("1234 ABC",1,32,white,12,12,16)
+disp.text("ČĆĐŠŽ",0,16,white)
 del disp
