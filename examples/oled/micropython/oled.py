@@ -120,12 +120,15 @@ class oled:
     self.dc.value(0) # command
     self.oled_spi.write(bytearray([self.C_OLED_DRAW_LINE]) + bytearray(line) + bytearray(color))
 
-  # line = bytearray([x0,y0,x1,y1,...,xn,yn])
+  # lines = [bytearray([x0,y0,x1,y1,...,xn,yn]),...,[...]]
   # color = bytearray([r,g,b])
-  def polyline(self, line, color):
+  def polylines(self, lines, color):
     self.dc.value(0) # command
-    for i in range(len(line)//2-1):
-      self.oled_spi.write(bytearray([self.C_OLED_DRAW_LINE]) + line[i+i:i+i+4] + bytearray(color))
+    for line in lines:
+      for i in range(len(line)//2-1):
+        self.oled_spi.write(bytearray([self.C_OLED_DRAW_LINE]))
+        self.oled_spi.write(line[i+i:i+i+4])
+        self.oled_spi.write(color)
 
   # line = bytearray([x0,y0,x1,y1])
   # outline,inside = bytearray([r,g,b])
@@ -155,8 +158,8 @@ disp.fb.fill(0)
 disp.fb.text('MicroPython!', 0, 0, 0xff)
 disp.fb.hline(0, 10, 96, 0xff)
 disp.fb_show()
-zigzag_line = bytearray([0,30, 8,10, 16,30, 24,10, 32,30, 40,10, 48,30, 56,10, 64,30, 72,10, 80,30, 88,10, 96,30])
-disp.polyline(zigzag_line,bytearray([255,255,0]))
+zigzag_line = [bytearray([0,30, 8,10, 16,30, 24,10, 32,30, 40,10, 48,30, 56,10, 64,30, 72,10, 80,30, 88,10, 96,30])]
+disp.polylines(zigzag_line,bytearray([255,255,0]))
 del zigzag_line
 disp.box(bytearray([0,30,95,63]),bytearray([255,255,255]),bytearray([255,0,0]))
 del disp
