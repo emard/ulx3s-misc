@@ -160,6 +160,22 @@ class oled:
   def init_font(self):
     self.font = {
       " ":[],
+      ".":[bytearray([2,5, 2,6])],
+      ",":[bytearray([2,5, 2,6, 1,7])],
+      ":":[bytearray([2,0, 2,1]), bytearray([2,5, 2,6])],
+      ";":[bytearray([2,0, 2,1]), bytearray([2,5, 2,6, 1,7])],
+      "+":[bytearray([0,3, 4,3]), bytearray([2,1, 2,5])],
+      "-":[bytearray([0,3, 4,3])],
+      "*":[bytearray([0,2, 1,3, 3,3, 4,4]), bytearray([0,4, 1,3, 3,3, 4,2]), bytearray([2,1, 2,5])],
+      "/":[bytearray([4,1, 0,5])],
+      "=":[bytearray([0,2, 4,2]), bytearray([0,4, 4,4])],
+      "(":[bytearray([3,0, 2,1, 2,5, 3,6])],
+      ")":[bytearray([1,0, 2,1, 2,5, 1,6])],
+      "[":[bytearray([3,0, 2,0, 2,6, 3,6])],
+      "]":[bytearray([1,0, 2,0, 2,6, 1,6])],
+      "{":[bytearray([4,0, 3,0, 2,1, 2,2, 1,3, 2,4, 2,5, 3,6, 4,6]), bytearray([0,3, 1,3])],
+      "}":[bytearray([0,0, 1,0, 2,1, 2,2, 3,3, 2,4, 2,5, 1,6, 0,6]), bytearray([3,3, 4,3])],
+      "_":[bytearray([0,6, 4,6])],
       "0":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5, 4,1, 0,5])],
       "1":[bytearray([1,1, 2,0, 2,6]),bytearray([1,6, 3,6])],
       "2":[bytearray([0,1, 1,0, 3,0, 4,1, 4,2, 0,6, 4,6])],
@@ -251,5 +267,5 @@ disp.box(bytearray([0,30,95,63]),bytearray([170,0,0]),bytearray([0,0,170]))
 print("print('1234 ABC'), vector font 12x16")
 disp.text("1234 ABC",1,32,white,12,12,16)
 print("print('ČĆĐŠŽ'), vector font 6x8")
-disp.text("ČĆĐŠŽ",0,16,yellow)
+disp.text("ČĆĐŠŽ:1+2-3.5=4",0,16,yellow)
 del disp
