@@ -96,7 +96,6 @@ class oled:
       self.C_OLED_SET_ROW_ADDRESS,    0, 0x3F, # 64
     ]))
     self.dc.value(1) # data
-
     self.oled_spi.write(self.fb)
 
   def oled_fill_screen(self, color):
