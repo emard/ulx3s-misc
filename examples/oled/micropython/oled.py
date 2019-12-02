@@ -3,6 +3,7 @@
 from time import sleep_ms
 from machine import SPI,Pin
 from micropython import const
+from uctypes import addressof
 import framebuf
 
 class oled:
@@ -127,21 +128,32 @@ class oled:
     self.dc.value(0) # command
     self.oled_spi.write(bytearray([self.C_OLED_COPY]) + bytearray([0,n, self.width-1, self.height-1, 0,0]))
 
+  # x,y  = offset
+  # width, height = 6,8 default for 5x7 font
+  # line = bytearray([x0,y0, x1,y1, ... xn,yn])
+  # buf  = bytearray([self.C_OLED_DRAW_LINE,0,0,0,0,color[0],color[1],color[2]])
+  @micropython.viper
+  def polyline_fast(self, x:int, y:int, width:int, height:int, line, buf):
+    p = ptr8(addressof(line))
+    b = ptr8(addressof(buf))
+    b[3] = p[0]* width//6+x
+    b[4] = p[1]*height//8+y
+    for i in range(int(len(line))//2-1):
+      b[1+2*(i&1)] = p[2+2*i]* width//6+x
+      b[2+2*(i&1)] = p[3+2*i]*height//8+y
+      self.oled_spi.write(buf)
+
   # x,y = coordinate upper left corner of the first char
   # text = string
   # color = bytearray([r,g,b])
   # spacing = between chars
   def text(self, text, x, y, color, spacing=6, width=6, height=8):
     self.dc.value(0) # command
+    buf = bytearray([self.C_OLED_DRAW_LINE,0,0,0,0,color[0],color[1],color[2]])
     x0 = x
     for char in text:
       for line in self.font[char]:
-        for i in range(len(line)//2-1):
-          self.oled_spi.write(bytearray([
-            self.C_OLED_DRAW_LINE,
-            line[i+i]*width//6+x0, line[i+i+1]*height//8+y, line[i+i+2]*width//6+x0, line[i+i+3]*height//8+y,
-            color[0], color[1], color[2]
-          ]))
+        self.polyline_fast(x0,y,width,height,line,buf)
       x0 += spacing
 
   # vector font as associative array of polylines
