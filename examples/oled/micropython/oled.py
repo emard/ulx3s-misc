@@ -86,7 +86,7 @@ class oled:
 
   def __init__(self):
     self.spi_channel = const(1) # -1 soft, 1:sd, 2:jtag
-    self.spi_freq = const(6000000) # Hz SPI frequency
+    self.spi_freq = const(6600000) # Hz SPI frequency (150 ns datasheet p.57)
     self.oled_ssd1331_commands()
     self.init_pinout_oled()
     self.init_spi()
