@@ -3,6 +3,7 @@
 from time import sleep_ms
 from machine import SPI,Pin
 from micropython import const
+import framebuf
 
 class oled:
 
@@ -28,7 +29,7 @@ class oled:
     self.C_OLED_NOP3 = 0xE3
     self.C_OLED_SET_DISPLAY_OFF = 0xAE # 0b10101110
     self.C_OLED_SET_REMAP_COLOR = 0xA0
-    self.C_OLED_ULX3S_REMAP = 0x22 # 0b00100010 # A[7:6] = 00; 256 color. A[7:6] = 01; 65k color format rotation for ULX3S; A[1] = 1 scan right to left
+    self.C_OLED_ULX3S_REMAP = 0x20 # 0b00100010 # A[7:6] = 00; 256 color. A[7:6] = 01; 65k color format rotation for ULX3S; A[1] = 1 scan right to left
     self.C_OLED_SET_DISPLAY_START_LINE = 0xA1
     self.C_OLED_SET_DISPLAY_OFFSET = 0xA1
     self.C_OLED_SET_DISPLAY_MODE_NORMAL = 0xA4
@@ -84,6 +85,19 @@ class oled:
     self.init_pinout_oled()
     self.init_spi()
     self.init_bitbang()
+    self.width = const(96)
+    self.height = const(64)
+    self.fb = framebuf.FrameBuffer(bytearray(self.width * self.height), self.width, self.height, framebuf.GS8)
+
+  def fb_show(self):
+    self.dc.value(0) # command
+    self.oled_spi.write(bytearray([
+      self.C_OLED_SET_COLUMN_ADDRESS, 0, 0x5F, # 96
+      self.C_OLED_SET_ROW_ADDRESS,    0, 0x3F, # 64
+    ]))
+    self.dc.value(1) # data
+
+    self.oled_spi.write(self.fb)
 
   def oled_fill_screen(self, color):
     self.dc.value(0) # command
@@ -120,9 +134,16 @@ class oled:
     self.oled_horizontal_line((y+48) & 63, 0xE0) # red
 
   def oled_run_stripes(self, n):
-    print("OLED should display 4 horizontal stripes (RGBW) scrolling down")
     for i in range(n):
       self.oled_color_stripes(i)
 
-oled().oled_init()
-oled().oled_run_stripes(1024)
+disp = oled()
+disp.oled_init()
+print("4 horizontal stripes (RGBW) scrolling down")
+disp.oled_run_stripes(128)
+print("print('MicroPython!'), white-on-black, underlined")
+disp.fb.fill(0)
+disp.fb.text('MicroPython!', 0, 0, 0xff)
+disp.fb.hline(0, 10, 96, 0xff)
+disp.fb_show()
+del disp
