@@ -89,6 +89,7 @@ class oled:
     self.init_pinout_oled()
     self.init_spi()
     self.init_bitbang()
+    self.init_font()
     self.width = const(96)
     self.height = const(64)
     self.fb = framebuf.FrameBuffer(bytearray(self.width * self.height), self.width, self.height, framebuf.GS8)
@@ -121,6 +122,10 @@ class oled:
     self.dc.value(0) # command
     self.oled_spi.write(bytearray([self.C_OLED_DRAW_LINE]) + bytearray(line) + bytearray(color))
 
+  def scroll_up(self, n):
+    self.dc.value(0) # command
+    self.oled_spi.write(bytearray([self.C_OLED_COPY]) + bytearray([0,n, self.width-1, self.height-1, 0,0]))
+
   # x,y = coordinate upper left corner of the first char
   # text = string
   # color = bytearray([r,g,b])
@@ -140,6 +145,7 @@ class oled:
   # vector font as associative array of polylines
   def init_font(self):
     self.font = {
+      " ":[],
       "0":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5, 4,1, 0,5])],
       "1":[bytearray([1,1, 2,0, 2,6]),bytearray([1,6, 3,6])],
       "2":[bytearray([0,1, 1,0, 3,0, 4,1, 4,2, 0,6, 4,6])],
@@ -206,13 +212,19 @@ disp = oled()
 disp.oled_init()
 print("4 horizontal stripes (RGBW) scrolling down")
 disp.oled_run_stripes(128)
+# scroll some text
+black = bytearray([0,0,0])
+white = bytearray([255,255,255])
+for i in range(100):
+  disp.scroll_up(8)
+  disp.box(bytearray([0,56,95,63]),black,black) # text background
+  disp.text(0,56,"SCROLLING %d" % i,white,8) # text foreground
 print("print('MicroPython!'), white-on-black, underlined")
 disp.fb.fill(0)
 disp.fb.text('MicroPython!', 0, 0, 0xff)
 disp.fb.hline(0, 10, 96, 0xff)
 disp.fb_show()
 disp.box(bytearray([0,30,95,63]),bytearray([170,0,0]),bytearray([0,0,170]))
-disp.init_font()
 disp.text(0,32,"0123456789ABCDEF",[255,255,255],8)
 disp.text(0,40,"GHIJKLMNOPQRSTUV",[255,255,255],8)
 disp.text(0,48,"WXYZ",[255,255,255],8)
