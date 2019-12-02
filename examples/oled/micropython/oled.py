@@ -120,15 +120,34 @@ class oled:
     self.dc.value(0) # command
     self.oled_spi.write(bytearray([self.C_OLED_DRAW_LINE]) + bytearray(line) + bytearray(color))
 
-  # lines = [bytearray([x0,y0,x1,y1,...,xn,yn]),...,[...]]
+  # x,y = coordinate upper left corner of the first char
+  # text = string
   # color = bytearray([r,g,b])
-  def polylines(self, lines, color):
+  def text(self, x, y, text, color, size=1):
     self.dc.value(0) # command
-    for line in lines:
-      for i in range(len(line)//2-1):
-        self.oled_spi.write(bytearray([self.C_OLED_DRAW_LINE]))
-        self.oled_spi.write(line[i+i:i+i+4])
-        self.oled_spi.write(color)
+    x0 = x
+    for char in text:
+      for line in self.font[char]:
+        for i in range(len(line)//2-1):
+          self.oled_spi.write(bytearray([
+            self.C_OLED_DRAW_LINE,
+            size*line[i+i]+x0, size*line[i+i+1]+y, size*line[i+i+2]+x0, size*line[i+i+3]+y,
+            color[0], color[1], color[2]
+          ]))
+      x0 += 6*size
+
+  # vector font as associative array of polylines
+  def init_font(self):
+    self.font = {
+      "0":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5, 4,1, 0,5])],
+      "1":[bytearray([1,1, 2,0, 2,6]),bytearray([1,6, 3,6])],
+      "A":[bytearray([0,6, 0,2, 2,0, 4,2, 4,6]), bytearray([0,4, 4,4])],
+      "B":[bytearray([3,3, 4,2, 4,1, 3,0, 0,0, 0,6, 3,6, 4,5, 4,4, 3,3, 0,3])],
+      "C":[bytearray([4,1, 3,0, 1,0, 0,1, 0,5, 1,6, 3,6, 4,5])],
+      "D":[bytearray([0,0, 0,6, 3,6, 4,5, 4,1, 3,0, 0,0])],
+      "E":[bytearray([4,0, 0,0, 0,6, 4,6]), bytearray([0,3, 3,3])],
+      "F":[bytearray([4,0, 0,0, 0,6]), bytearray([0,3, 3,3])],
+    }
 
   # line = bytearray([x0,y0,x1,y1])
   # outline,inside = bytearray([r,g,b])
@@ -158,8 +177,7 @@ disp.fb.fill(0)
 disp.fb.text('MicroPython!', 0, 0, 0xff)
 disp.fb.hline(0, 10, 96, 0xff)
 disp.fb_show()
-zigzag_line = [bytearray([0,30, 8,10, 16,30, 24,10, 32,30, 40,10, 48,30, 56,10, 64,30, 72,10, 80,30, 88,10, 96,30])]
-disp.polylines(zigzag_line,bytearray([255,255,0]))
-del zigzag_line
-disp.box(bytearray([0,30,95,63]),bytearray([255,255,255]),bytearray([255,0,0]))
+disp.box(bytearray([0,30,95,63]),bytearray([255,255,255]),bytearray([0,0,170]))
+disp.init_font()
+disp.text(2,32,"01ABCDEF",[255,255,255])
 del disp
