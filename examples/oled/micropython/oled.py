@@ -129,36 +129,39 @@ class oled:
     self.oled_spi.write(bytearray([self.C_OLED_COPY]) + bytearray([0,n, self.width-1, self.height-1, 0,0]))
 
   # x,y  = offset
-  # width, height = 6,8 default for 5x7 font
+  # xscale, yscale = 256 default for 5x7 font
   # line = bytearray([x0,y0, x1,y1, ... xn,yn]); 128,128=new polyline
   # buf  = bytearray([self.C_OLED_DRAW_LINE,0,0,0,0,color[0],color[1],color[2]])
   @micropython.viper
-  def polyline_fast(self, x:int, y:int, width:int, height:int, line, buf):
+  def polyline_fast(self, x:int, y:int, xscale:int, yscale:int, line, buf):
+    if x >= int(self.width) or y >= int(self.height):
+      return
     p = ptr8(addressof(line))
     b = ptr8(addressof(buf))
     n = 0
-    for i in range(int(len(line))//2):
+    for i in range(int(len(line))>>1):
       xp = p[2*i]
       if xp == 128: # discontinue polyline
         n = 0 # start new polyline
       else:
-        b[1+2*(i&1)] =      xp * width//6+x
-        b[2+2*(i&1)] = p[1+2*i]*height//8+y
+        b[1+2*(i&1)] = ((     xp *xscale)>>8)+x
+        b[2+2*(i&1)] = ((p[1+2*i]*yscale)>>8)+y
         if n:
           self.oled_spi.write(buf)
         else:
           n = 1
 
   # x,y = coordinate upper left corner of the first char
+  # xscale, yscale = 256 for default size, 128 for half size, 512 for double size
   # text = string
   # color = bytearray([r,g,b])
   # spacing = between chars
-  def text(self, text, x=0, y=0, color=b"\xFF\xFF\xFF", spacing=6, width=6, height=8):
+  def text(self, text, x=0, y=0, color=b"\xFF\xFF\xFF", spacing=6, xscale=256, yscale=256):
     self.dc.value(0) # command
     buf = bytearray([self.C_OLED_DRAW_LINE,0,0,0,0,color[0],color[1],color[2]])
     x0 = x
     for char in text:
-      self.polyline_fast(x0,y,width,height,self.font[char],buf)
+      self.polyline_fast(x0,y,xscale,yscale,self.font[char],buf)
       x0 += spacing
 
   # vector font as associative array of polylines
@@ -280,8 +283,8 @@ disp.fb.hline(0, 10, 96, 0xffff)
 disp.fb_show()
 print("blue box with red outline")
 disp.box(bytearray([0,30,95,63]),bytearray([170,0,0]),bytearray([0,0,170]))
-print("print('1234 ABC'), vector font 12x16")
-disp.text("1234 ABC",1,32,white,12,12,16)
-print("print('ČĆĐŠŽ'), vector font 6x8")
+print("print('1234ABCD'), vector font 12x16 (10x14)")
+disp.text("1234ABCD",1,32,white,12,512,512)
+print("print('ČĆĐŠŽ'), vector font 6x8 (5x7)")
 disp.text("'Č'.Ć,Đ:Š;\"Ž\"",0,16,yellow)
 del disp
