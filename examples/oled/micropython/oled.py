@@ -130,7 +130,7 @@ class oled:
 
   # x,y  = offset
   # xscale, yscale = 256 default for 5x7 font
-  # line = bytearray([x0,y0, x1,y1, ... xn,yn]); 128,128=new polyline
+  # line = bytearray([x0,y0, x1,y1, ... xn,yn]); 128,any=delimiter
   # buf  = bytearray([self.C_OLED_DRAW_LINE,0,0,0,0,color[0],color[1],color[2]])
   @micropython.viper
   def polyline_fast(self, x:int, y:int, xscale:int, yscale:int, line, buf):
@@ -164,7 +164,7 @@ class oled:
       self.polyline_fast(x0,y,xscale,yscale,self.font[char],buf)
       x0 += spacing
 
-  # vector font as associative array of polylines
+  # vector font as associative array of polylines, delimited by 128,any
   def init_font(self):
     self.font = {
       " ":bytearray([]),
