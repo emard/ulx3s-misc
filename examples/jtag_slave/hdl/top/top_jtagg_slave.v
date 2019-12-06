@@ -3,10 +3,6 @@ module top_jtagg_slave
     input  wire clk_25mhz,
     input  wire [6:0] btn,
     output wire [7:0] led,
-    //input  wire ftdi_ndtr, // TCK
-    //input  wire ftdi_nrts, // TMS
-    //input  wire ftdi_txd,  // TDI
-    //output wire ftdi_rxd,  // TDO
     output wire oled_csn,
     output wire oled_clk,
     output wire oled_mosi,
@@ -17,20 +13,7 @@ module top_jtagg_slave
     assign wifi_gpio0 = btn[0];
     
     wire tck, tms, tdi, tdo;
-    assign tck = ftdi_ndtr;
-    assign tms = ftdi_nrts;
-    assign tdi = ftdi_txd;
-    assign ftdi_rxd = tdo;
 
-    /*
-    wire clk_50MHz;
-    clk_25_50_25
-    clk_25_50_25_inst
-    (
-      .clki(clk_25mhz),
-      .clko(clk_50MHz)
-    );
-    */
     assign clk = clk_25mhz;
 
     // vendor-specfic "JTAGG" module: passthru JTAG traffic to user bitstream
