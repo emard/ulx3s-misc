@@ -3,10 +3,10 @@ module top_jtagg_slave
     input  wire clk_25mhz,
     input  wire [6:0] btn,
     output wire [7:0] led,
-    input  wire ftdi_ndtr, // TCK
-    input  wire ftdi_nrts, // TMS
-    input  wire ftdi_txd,  // TDI
-    output wire ftdi_rxd,  // TDO
+    //input  wire ftdi_ndtr, // TCK
+    //input  wire ftdi_nrts, // TMS
+    //input  wire ftdi_txd,  // TDI
+    //output wire ftdi_rxd,  // TDO
     output wire oled_csn,
     output wire oled_clk,
     output wire oled_mosi,
@@ -33,19 +33,6 @@ module top_jtagg_slave
     */
     assign clk = clk_25mhz;
 
-    wire [3:0] tap_state;
-    jtag_slave_clk
-    jtag_slave_clk_inst
-    (
-      .clk(clk),
-      .tck_pad_i(tck),
-      .tms_pad_i(tms),
-      .trstn_pad_i(1'b1),
-      .tdi_pad_i(tdi),
-      .tdo_pad_o(tdo),
-      .tap_state_o(tap_state)
-    );
-
     // vendor-specfic "JTAGG" module: passthru JTAG traffic to user bitstream
     wire jtdi, jtck, jshift, jupdate, jce1, jce2, jrstn, jrti1, jrti2;
     JTAGG
@@ -70,41 +57,13 @@ module top_jtagg_slave
       .C_sclk_capable_pin(1'b0),
       .C_data_len(C_capture_bits)
     )
-    spi_slave_tms_inst
-    (
-      .clk(clk),
-      .csn(1'b0),
-      .sclk(tck),
-      .mosi(tms),
-      .data(S_tms)
-    );
-
-    spi_slave
-    #(
-      .C_sclk_capable_pin(1'b0),
-      .C_data_len(C_capture_bits)
-    )
     spi_slave_tdi_inst
     (
       .clk(clk),
       .csn(1'b0),
-      .sclk(~jtck),
+      .sclk(~jtck), // jtck must be inverted to work properly
       .mosi(jtdi),
       .data(S_tdi)
-    );
-
-    spi_slave
-    #(
-      .C_sclk_capable_pin(1'b0),
-      .C_data_len(C_capture_bits)
-    )
-    spi_slave_tdo_inst
-    (
-      .clk(clk),
-      .csn(1'b0),
-      .sclk(tck),
-      .mosi(tdo),
-      .data(S_tdo)
     );
 
     localparam C_shift_hex_disp_left = 0; // how many bits to left-shift hex display
@@ -112,7 +71,7 @@ module top_jtagg_slave
     localparam C_display_bits = 256;
     wire [C_display_bits-1:0] S_display;
     // home position hex digit shows TAP state
-    assign S_display[63:60] = tap_state; // leftmost hex is tap state
+    assign S_display[63:60] = 4'h0; // leftmost hex is tap state
     // upper row displays binary as shifted in time, incoming from left to right
     genvar i;
     generate
