@@ -1,5 +1,7 @@
 # JTAGG vendor specific demo
 
+JTAGG module allows user bitstream to receive JTAG traffic.
+
 cleanup:
 
     make -f makefile.trellis clean
