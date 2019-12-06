@@ -1,8 +1,9 @@
 # JTAGG vendor specific demo
 
 JTAGG module allows user bitstream to receive JTAG traffic from
-standard JTAG pins. JTAG side needs to send few vendor specific
-JTAG commands to put vendor-specific JTAG interface into bypass state.
+standard JTAG pins. JTAG master (openocd SVF in this example)
+needs to send few vendor specific JTAG commands to put vendor-specific
+JTAG slave interface into bypass state.
 
 cleanup:
 
