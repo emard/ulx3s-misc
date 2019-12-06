@@ -1,6 +1,8 @@
 # JTAGG vendor specific demo
 
-JTAGG module allows user bitstream to receive JTAG traffic.
+JTAGG module allows user bitstream to receive JTAG traffic from
+standard JTAG pins. JTAG side needs to send few vendor specific
+JTAG commands to put vendor-specific JTAG interface into bypass state.
 
 cleanup:
 
