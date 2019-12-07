@@ -50,12 +50,13 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../../mouse/hdl/ps2mouse.v \
-  ../../../../mouse/hdl/mousem_v.v \
   ../../../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
 
+#  ../../../../mouse/hdl/mousem_v.v \
 
-#VHDL_FILES = \
-#  ../../../../mouse/hdl/mousem.vhd \
+
+VHDL_FILES = \
+  ../../../../mouse/hdl/mousem.vhd \
 
 SCRIPTS = ../../../../../../scripts
 
