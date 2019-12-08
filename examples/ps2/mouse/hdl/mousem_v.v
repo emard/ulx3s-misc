@@ -33,8 +33,8 @@ module mousem
   parameter c_z_ena  = 1     // 1:yes wheel, 0:not wheel
 )
 (
-  input clk, reset,
-  inout msclk, msdat,
+  input clk, ps2m_reset,
+  inout ps2m_clk, ps2m_dat,
   output reg update,
   output reg [c_x_bits-1:0] x,
   output reg [c_y_bits-1:0] y,
@@ -95,16 +95,16 @@ module mousem
 //    run ? {rx[25:0], endbit} : {rx[30:10], endbit, sent, tx[0], ~req}};
 //  assign out = {run,  // debug then normal
 //    run ? {btns, 2'b0, y, 2'b0, x} : {rx[30:10], sent, endbit, tx[0], ~req}};
-  assign msclk = req ? 1'b0 : 1'bz;  //bidir clk/request
-  assign msdat = ~tx[0] ? 1'b0 : 1'bz;  //bidir data
+  assign ps2m_clk = req ? 1'b0 : 1'bz;  //bidir clk/request
+  assign ps2m_dat = ~tx[0] ? 1'b0 : 1'bz;  //bidir data
 
   always @ (posedge clk) begin
-    filter <= {filter[$bits(filter)-2:0], msclk};
-    count <= (reset | shift | endcount) ? 0 : count+1;
-    req <= ~reset & ~run & (req ^ endcount);
-    sent <= reset ? 0 : (done & ~run) ? sent+1 : sent;
-    tx <= (reset | run) ? {$bits(tx){1'b1}} : req ? {cmd, 1'b0} : shift ? {1'b1, tx[$bits(tx)-1:1]} : tx;
-    rx <= (reset | done) ? {$bits(rx){1'b1}} : (shift & ~endbit) ? {msdat, rx[$bits(rx)-1:1]} : rx;
+    filter <= {filter[$bits(filter)-2:0], ps2m_clk};
+    count <= (ps2m_reset | shift | endcount) ? 0 : count+1;
+    req <= ~ps2m_reset & ~run & (req ^ endcount);
+    sent <= ps2m_reset ? 0 : (done & ~run) ? sent+1 : sent;
+    tx <= (ps2m_reset | run) ? {$bits(tx){1'b1}} : req ? {cmd, 1'b0} : shift ? {1'b1, tx[$bits(tx)-1:1]} : tx;
+    rx <= (ps2m_reset | done) ? {$bits(rx){1'b1}} : (shift & ~endbit) ? {ps2m_dat, rx[$bits(rx)-1:1]} : rx;
     x <= ~run ? 0 : done ? x + dx : x;
     y <= ~run ? 0 : done ? y - dy : y;
     z <= ~run ? 0 : done ? z + dz : z;
