@@ -30,10 +30,12 @@ module mousem
   parameter c_x_bits = 11,   // >= 8
   parameter c_y_bits = 11,   // >= 8
   parameter c_z_bits = 11,   // >= 4
-  parameter c_z_ena  = 1     // 1:yes wheel, 0:not wheel
+  parameter c_z_ena  = 1,    // 1:yes wheel, 0:not wheel
+  parameter c_hotplug = 1,
 )
 (
-  input clk, ps2m_reset,
+  input clk, clk_ena,
+  input ps2m_reset,
   inout ps2m_clk, ps2m_dat,
   output reg update,
   output reg [c_x_bits-1:0] x,
