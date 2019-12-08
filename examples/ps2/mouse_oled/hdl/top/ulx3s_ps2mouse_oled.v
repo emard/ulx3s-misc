@@ -71,13 +71,13 @@ module ulx3s_ps2mouse_oled
         #(
           .c_x_bits(10),
           .c_y_bits(10),
-          .c_z_bits(10),
-          .c_hotplug(1)
+          .c_z_bits(10)//,
+          //.c_hotplug(1)
         )
         ps2mouse_oberon_inst
         (
           .clk(clk),
-          .clk_ena(1'b1),
+          //.clk_ena(1'b1),
           .ps2m_reset(reset),
           .ps2m_clk(usb_fpga_dp),
           .ps2m_dat(usb_fpga_dn),
