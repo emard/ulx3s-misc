@@ -31,7 +31,7 @@ module mousem
   parameter c_y_bits = 11,   // >= 8
   parameter c_z_bits = 11,   // >= 4
   parameter c_z_ena  = 1,    // 1:yes wheel, 0:not wheel
-  parameter c_hotplug = 1,
+  parameter c_hotplug = 1
 )
 (
   input clk, clk_ena,
