@@ -24,14 +24,6 @@ TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
 
 CLK0_NAME = clk_25_250_125_25
 CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
-CLK0_OPTIONS_OLD = \
-  --input=25 \
-  --output=250 \
-  --s1=125 \
-  --p1=0 \
-  --s2=25 \
-  --p2=0
-# for new ecppll: to override above, rename CLK0_OPTIONS_NEW -> CLK0_OPTIONS
 CLK0_OPTIONS = \
   --module=$(CLK0_NAME) \
   --clkin=25 \
@@ -43,6 +35,7 @@ VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   clocks/$(CLK0_NAME).v \
   ../../../../mouse/hdl/ps2mouse.v \
+  ../../../../mouse/hdl/mousem_v.v \
   ../../../../../dvi/hdl/fake_differential.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
@@ -50,6 +43,8 @@ VHDL_FILES = \
   ../../../../../dvi/hdl/vga.vhd \
   ../../../../../dvi/hdl/vga2dvid.vhd \
   ../../../../../dvi/hdl/tmds_encoder.vhd \
+
+NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../../../../../scripts
 

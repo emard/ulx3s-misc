@@ -1,4 +1,7 @@
 module ulx3s_ps2mouse_dvi
+#(
+  parameter mousecore = 1 // 0-minimig 1-oberon
+)
 (
   input clk_25mhz,
   input [6:0] btn,
@@ -16,13 +19,15 @@ module ulx3s_ps2mouse_dvi
     clock_instance
     (
       .clkin(clk_25mhz),
-      .clkout(clocks),
+      .clkout0(clocks[0]),
+      .clkout1(clocks[1]),
+      .clkout2(clocks[2]),
       .locked(clk_locked)
     );
-    wire clk_250MHz, clk_125MHz, clk_25MHz, clk_locked;
+    wire clk_250MHz, clk_125MHz, clk_25MHz;
     assign clk_250MHz = clocks[0];
     assign clk_125MHz = clocks[1];
-    assign clk_25MHz = clocks[2];
+    assign clk_25MHz  = clocks[2];
 
     // shift clock choice SDR/DDR
     wire clk_pixel, clk_shift;
@@ -43,13 +48,6 @@ module ulx3s_ps2mouse_dvi
     assign usb_fpga_pu_dp = 1'b1;
     assign usb_fpga_pu_dn = 1'b1;
 
-    wire ps2mdat_in, ps2mclk_in, ps2mdat_out, ps2mclk_out;
-    
-    assign usb_fpga_dp = ps2mclk_out ? 1'bz : 1'b0;
-    assign usb_fpga_dn = ps2mdat_out ? 1'bz : 1'b0;
-    assign ps2mclk_in = usb_fpga_dp;
-    assign ps2mdat_in = usb_fpga_dn;
-
     reg [19:0] reset_counter;
     always @(posedge clk)
     begin
@@ -62,39 +60,75 @@ module ulx3s_ps2mouse_dvi
     assign reset = reset_counter[19];
     assign led[0] = reset;
 
-    wire [9:0] xcount, ycount;
-    ps2mouse
-    #(
-      .c_x_bits(10),
-      .c_y_bits(10)
-    )
-    ps2mouse_inst
-    (
-      .clk(clk_pixel),
-      .reset(reset),
-      .ps2mdati(ps2mdat_in),
-      .ps2mclki(ps2mclk_in),
-      .ps2mdato(ps2mdat_out),
-      .ps2mclko(ps2mclk_out),
-      .xcount(xcount),
-      .ycount(ycount),
-      .btn(led[3:1])
-    );
-    assign led[7:6] = xcount[1:0];
-    assign led[5:4] = ycount[1:0];
+    wire [2:0] mouse_btn;
+    wire [9:0] mouse_x, mouse_y, mouse_z;
 
+    generate
+      if(mousecore == 0) // using amiga core
+      begin
+        wire ps2mdat_in, ps2mclk_in, ps2mdat_out, ps2mclk_out;
+        assign usb_fpga_dp = ps2mclk_out ? 1'bz : 1'b0;
+        assign usb_fpga_dn = ps2mdat_out ? 1'bz : 1'b0;
+        assign ps2mclk_in = usb_fpga_dp;
+        assign ps2mdat_in = usb_fpga_dn;
+        ps2mouse
+        #(
+          .c_x_bits(10),
+          .c_y_bits(10)
+        )
+        ps2mouse_amiga_inst
+        (
+          .clk(clk),
+          .reset(reset),
+          .ps2mdati(ps2mdat_in),
+          .ps2mclki(ps2mclk_in),
+          .ps2mdato(ps2mdat_out),
+          .ps2mclko(ps2mclk_out),
+          .xcount(mouse_x),
+          .ycount(mouse_y),
+          .btn(mouse_btn)
+        );
+      end
+      if(mousecore == 1) // using oberon core
+      begin
+        mousem
+        #(
+          .c_x_bits(10),
+          .c_y_bits(10),
+          .c_z_bits(10),
+          .c_hotplug(1)
+        )
+        ps2mouse_oberon_inst
+        (
+          .clk(clk),
+          .clk_ena(1'b1),
+          .ps2m_reset(reset),
+          .ps2m_clk(usb_fpga_dp),
+          .ps2m_dat(usb_fpga_dn),
+          .x(mouse_x),
+          .y(mouse_y),
+          .z(mouse_z),
+          .btn(mouse_btn)
+        );
+      end
+    endgenerate
+
+    assign led[7:6] = mouse_x[1:0];
+    assign led[5:4] = mouse_y[1:0];
+    assign led[3:1] = mouse_btn;
+    
     wire [9:0] x, y;
     reg [7:0] color;
     always @(posedge clk_pixel)
-      color <= x[9:0] == xcount[9:0] || y[9:0] == ycount[9:0] ? 8'hFF : 8'h00;
+      color <= x[9:0] == mouse_x[9:0] || y[9:0] == mouse_y[9:0] ? 8'hFF : 8'h00;
 
     // VGA signal generator
-    wire [7:0] vga_r, vga_g, vga_b;
     wire vga_hsync, vga_vsync, vga_blank;
     vga
     vga_instance
     (
       .clk_pixel(clk_pixel),
+      .clk_pixel_ena(1'b1),
       .beam_x(x),
       .beam_y(y),
       .vga_hsync(vga_hsync),

@@ -50,6 +50,7 @@ VERILOG_FILES = \
   ../../../../../dvi/hdl/fake_differential.v \
 
 VHDL_FILES = \
+  ../../../../mouse/hdl/mousem.vhd \
   ../../../../../dvi/hdl/vga.vhd \
   ../../../../../dvi/hdl/vga2dvid.vhd \
   ../../../../../dvi/hdl/tmds_encoder.vhd \
