@@ -62,8 +62,8 @@ architecture syn of mousem is
   signal r_btn, btn_next : std_logic_vector(2 downto 0);
   signal sent, sent_next : std_logic_vector(2 downto 0);
   constant c_rx_bits : integer := 31 + 11*c_z_ena;
-  constant c_rx_hotplug_pad : std_logic_vector(c_rx_bits-21 downto 0) := (others => '1');
-  constant c_rx_hotplug : std_logic_vector(c_rx_bits-1 downto 0) := "00000000011101010100" & c_rx_hotplug_pad;
+  signal c_rx_hotplug_pad : std_logic_vector(c_rx_bits-21 downto 0) := not (others => '0'); -- constant
+  signal c_rx_hotplug : std_logic_vector(c_rx_bits-1 downto 0) := ("00000000011101010100" & c_rx_hotplug_pad); -- constant
   signal rx, rx_next : std_logic_vector(c_rx_bits-1 downto 0);
   signal tx, tx_next : std_logic_vector(9 downto 0);
   signal rx7, rx8 : std_logic_vector(7 downto 0);
@@ -105,7 +105,7 @@ begin
     if rising_edge(clk) then
       if run = '1' then -- normal run after initialization
         if r_ps2m_reset = '0' then
-          if rx(rx'high downto rx'length-c_rx_hotplug'length) = c_rx_hotplug then
+          if rx(rx'high downto rx'high - c_rx_bits + 1) = c_rx_hotplug then
             r_ps2m_reset <= '1'; -- self-reset when mouse is hot-plugged
           else
             r_ps2m_reset <= ps2m_reset; -- reset by external
@@ -123,34 +123,34 @@ begin
   end generate;
 
   rx7 <= x"00" when rx(7) = '1' else rx(19 downto 12);
-  G_yes_pad_x: if C_x_bits > 8 generate
+  G_yes_pad_x: if c_x_bits > 8 generate
   pad_dx <= (others => rx(5));
   s_dx <= (others => '0') when run = '0'
      else pad_dx & rx7;
   end generate;
-  G_not_pad_x: if C_x_bits <= 8 generate
+  G_not_pad_x: if c_x_bits <= 8 generate
   s_dx <= (others => '0') when run = '0'
      else rx7;
   end generate;
   
   rx8 <= x"00" when rx(8) = '1' else rx(30 downto 23);
-  G_yes_pad_y: if C_y_bits > 8 generate
+  G_yes_pad_y: if c_y_bits > 8 generate
   pad_dy <= (others => rx(6));
   s_dy <= (others => '0') when run = '0'
      else pad_dy & rx8;
   end generate;
-  G_not_pad_y: if C_y_bits <= 8 generate
+  G_not_pad_y: if c_y_bits <= 8 generate
   s_dy <= (others => '0') when run = '0'
      else rx8;
   end generate;
 
   G_have_wheel: if c_z_ena > 0 generate
-  G_yes_pad_z: if C_z_bits > 4 generate
+  G_yes_pad_z: if c_z_bits > 4 generate
   pad_dz <= (others => rx(37));
   s_dz <= (others => '0') when run = '0'
      else pad_dz & rx(37 downto 34);
   end generate;
-  G_not_pad_z: if C_z_bits <= 4 generate
+  G_not_pad_z: if c_z_bits <= 4 generate
   s_dz <= (others => '0') when run = '0'
      else rx(37 downto 34);
   end generate;
@@ -173,12 +173,12 @@ begin
   x_next <= (others => '0') when run = '0'
         else r_x + s_dx when done = '1'
         else r_x;
-  G_not_invert_y: if C_y_neg = 0 generate
+  G_not_invert_y: if c_y_neg = 0 generate
   y_next <= (others => '0') when run = '0'
         else r_y - s_dy when done = '1' -- PS2 mouse sends negative dy
         else r_y;
   end generate;
-  G_yes_invert_y: if C_y_neg = 1 generate
+  G_yes_invert_y: if c_y_neg = 1 generate
   y_next <= (others => '0') when run = '0'
         else r_y + s_dy when done = '1' -- PS2 mouse sends negative dy
         else r_y;
