@@ -57,7 +57,7 @@ module ffm_ps2mouse_dvi
         reset_counter <= 0;
     end
     wire reset;
-    assign reset = reset_counter[19];
+    assign reset = ~reset_counter[19];
 
     wire [2:0] mouse_btn;
     wire [9:0] mouse_x, mouse_y, mouse_z;
@@ -115,7 +115,6 @@ module ffm_ps2mouse_dvi
     // PS/2 traffic shown on module LED
     assign fioa[5] = ~fioa[3];
     assign fioa[7] = ~fioa[1];
-
     assign led[3:1] = mouse_btn;
     
     wire [9:0] x, y;
