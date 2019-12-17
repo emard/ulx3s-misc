@@ -48,16 +48,8 @@ module ffm_ps2mouse_dvi
     wire clk;
     assign clk = clk_25MHz;
 
-    reg [19:0] reset_counter;
-    always @(posedge clk)
-    begin
-      if(clk_locked == 1'b1 && reset_counter[19] == 1'b0)
-        reset_counter <= reset_counter + 1;
-      if(clk_locked == 1'b0)
-        reset_counter <= 0;
-    end
     wire reset;
-    assign reset = ~reset_counter[19];
+    assign reset = ~clk_locked;
 
     wire [2:0] mouse_btn;
     wire [9:0] mouse_x, mouse_y, mouse_z;
