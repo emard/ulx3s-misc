@@ -1,0 +1,47 @@
+# ******* project, board and chip name *******
+PROJECT = ps2mouse_dvi
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 85
+FPGA_PACKAGE = CABGA554
+
+# ******* if programming with OpenOCD *******
+# using local latest openocd until in linux distribution
+OPENOCD=openocd
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft4232.ocd
+
+# ******* design files *******
+CONSTRAINTS = ../../../../../../constraints/FFM-LFE5U-V0r0_mit_FFC-CA7-V2r0.lpf
+TOP_MODULE = ffm_ps2mouse_dvi
+TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
+
+CLK0_NAME = clk_100_250_125_25
+CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
+CLK0_OPTIONS = \
+  --module=$(CLK0_NAME) \
+  --clkin=100 \
+  --clkout0=250 \
+  --clkout1=125 \
+  --clkout2=25
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+  clocks/$(CLK0_NAME).v \
+  ../../../../mouse/hdl/ps2mouse.v \
+  ../../../../mouse/hdl/mousem_v.v \
+  ../../../../../dvi/hdl/fake_differential.v \
+
+# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
+VHDL_FILES = \
+  ../../../../../dvi/hdl/vga.vhd \
+  ../../../../../dvi/hdl/vga2dvid.vhd \
+  ../../../../../dvi/hdl/tmds_encoder.vhd \
+
+NEXTPNR_OPTIONS = --timing-allow-fail
+
+SCRIPTS = ../../../../../../scripts
+
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
