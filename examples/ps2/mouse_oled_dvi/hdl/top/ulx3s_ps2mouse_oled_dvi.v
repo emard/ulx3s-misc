@@ -3,7 +3,7 @@ module ulx3s_ps2mouse_oled_dvi
   input clk_25mhz,
   input [6:0] btn,
   output [7:0] led,
-  inout usb_fpga_dp, usb_fpga_dn,
+  inout usb_fpga_bd_dp, usb_fpga_bd_dn,
   output usb_fpga_pu_dp, usb_fpga_pu_dn,
   output wire oled_csn,
   output wire oled_clk,
@@ -21,7 +21,9 @@ module ulx3s_ps2mouse_oled_dvi
     clock_instance
     (
       .clkin(clk_25mhz),
-      .clkout(clocks),
+      .clkout0(clocks[0]),
+      .clkout1(clocks[1]),
+      .clkout2(clocks[2]),
       .locked(clk_locked)
     );
     wire clk_250MHz, clk_125MHz, clk_25MHz, clk_locked;
@@ -59,10 +61,10 @@ module ulx3s_ps2mouse_oled_dvi
 
     wire ps2mdat_in, ps2mclk_in, ps2mdat_out, ps2mclk_out;
     
-    assign usb_fpga_dp = ps2mclk_out ? 1'bz : 1'b0;
-    assign usb_fpga_dn = ps2mdat_out ? 1'bz : 1'b0;
-    assign ps2mclk_in = usb_fpga_dp;
-    assign ps2mdat_in = usb_fpga_dn;
+    assign usb_fpga_bd_dp = ps2mclk_out ? 1'bz : 1'b0;
+    assign usb_fpga_bd_dn = ps2mdat_out ? 1'bz : 1'b0;
+    assign ps2mclk_in = usb_fpga_bd_dp;
+    assign ps2mdat_in = usb_fpga_bd_dn;
 
     // enable pullups
     assign usb_fpga_pu_dp = 1'b1;
@@ -124,6 +126,7 @@ module ulx3s_ps2mouse_oled_dvi
     vga_instance
     (
       .clk_pixel(clk_pixel),
+      .clk_pixel_ena(1'b1),
       .beam_x(dvi_x),
       .beam_y(dvi_y),
       .vga_hsync(vga_hsync),
