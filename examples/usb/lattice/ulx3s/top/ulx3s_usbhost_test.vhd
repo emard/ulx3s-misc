@@ -1,8 +1,6 @@
 -- (c)EMARD
 -- License=BSD
 
--- module to bypass user input and usbserial to esp32 wifi
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
@@ -10,14 +8,13 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 library ecp5u;
 use ecp5u.components.all;
 
--- USB packet generator functions
--- use work.usb_req_gen_func_pack.all;
--- package for decoded structure
--- use work.report_decoded_pack.all;
-
 entity ulx3s_usbhost_test is
   generic
   (
+    -- enable only one US2/US3/US4
+    C_us2: boolean := true;  -- onboard micro USB with OTG adapter
+    C_us3: boolean := false; -- PMOD US3 at GP,GN 25,22,21
+    C_us4: boolean := false; -- PMOD US4 at GP,GN 24,23,20
     C_usb_full_speed: boolean := false -- false:6 MHz true:48 MHz
   );
   port
@@ -59,8 +56,7 @@ entity ulx3s_usbhost_test is
   usb_fpga_pu_dp, usb_fpga_pu_dn: inout std_logic; -- pull up for slave, down for host mode
 
   -- Digital Video (differential outputs)
-  --gpdi_dp, gpdi_dn: out std_logic_vector(2 downto 0);
-  --gpdi_clkp, gpdi_clkn: out std_logic;
+  --gpdi_dp, gpdi_dn: out std_logic_vector(3 downto 0);
 
   -- Flash ROM (SPI0)
   --flash_miso   : in      std_logic;
@@ -69,9 +65,9 @@ entity ulx3s_usbhost_test is
   --flash_csn    : out     std_logic;
 
   -- SD card (SPI1)
-  --sd_dat3_csn, sd_cmd_di, sd_dat0_do, sd_dat1_irq, sd_dat2: inout std_logic := 'Z';
-  --sd_clk: inout std_logic := 'Z';
-  --sd_cdn, sd_wp: inout std_logic := 'Z'
+  --sd_d: inout std_logic_vector(3 downto 0) := (others => 'Z');
+  --sd_clk, sd_cmd: inout std_logic := 'Z';
+  --sd_cdn, sd_wp: inout std_logic := 'Z'; -- not connected
 
   -- SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
   shutdown: out std_logic := '0'
@@ -79,6 +75,31 @@ entity ulx3s_usbhost_test is
 end;
 
 architecture Behavioral of ulx3s_usbhost_test is
+
+  -- PMOD with US3 and US4
+  -- ULX3S pins up and flat cable: swap GP/GN and invert differential input
+  -- ULX3S direct or pins down and flat cable: don't swap GP/GN, normal differential input
+
+  alias us3_fpga_bd_dp: std_logic is gn(25);
+  alias us3_fpga_bd_dn: std_logic is gp(25);
+
+  alias us4_fpga_bd_dp: std_logic is gn(24);
+  alias us4_fpga_bd_dn: std_logic is gp(24);
+  
+  alias us4_fpga_pu_dp: std_logic is gn(23);
+  alias us4_fpga_pu_dn: std_logic is gp(23);
+  
+  alias us3_fpga_pu_dp: std_logic is gn(22);
+  alias us3_fpga_pu_dn: std_logic is gp(22);
+
+  alias us3_fpga_n_dp: std_logic is gp(21); -- flat cable
+  signal us3_fpga_dp: std_logic; -- flat cable
+  --alias us3_fpga_dp: std_logic is gp(21); -- direct
+
+  alias us4_fpga_n_dp: std_logic is gp(20); -- flat cable
+  signal us4_fpga_dp: std_logic; -- flat cable
+  --alias us4_fpga_dp: std_logic is gp(20); -- direct
+
   signal clk_200MHz, clk_100MHz, clk_89MHz, clk_60MHz, clk_48MHz, clk_12MHz, clk_7M5Hz, clk_6MHz: std_logic;
   signal clk_usb: std_logic; -- 48 MHz
   signal S_led: std_logic;
@@ -89,71 +110,8 @@ architecture Behavioral of ulx3s_usbhost_test is
   signal S_rxdp, S_rxdn: std_logic;
   signal S_txdp, S_txdn, S_txoe: std_logic;
   signal S_oled: std_logic_vector(63 downto 0);
-  signal S_dsctyp: std_logic_vector(2 downto 0);
-  signal S_DATABUS16_8: std_logic;
-  signal S_RESET: std_logic;
-  signal S_XCVRSELECT: std_logic_vector(1 downto 0);
-  signal S_TERMSELECT: std_logic;
-  signal S_OPMODE: std_logic_vector(1 downto 0);
-  signal S_LINESTATE: std_logic_vector(1 downto 0);
-  signal S_TXVALID: std_logic;
-  signal S_TXREADY: std_logic;
-  signal S_RXVALID: std_logic;
-  signal S_RXACTIVE: std_logic;
-  signal S_RXERROR: std_logic;
-  signal S_DATAIN: std_logic_vector(7 downto 0);
-  signal S_DATAOUT: std_logic_vector(7 downto 0);
-  signal S_BREAK: std_logic;
-  signal S_ulpi_data_out_i, S_ulpi_data_in_o: std_logic_vector(7 downto 0);
-  signal S_ulpi_dir_i: std_logic;
-  -- UTMI debug
-  signal S_sync_err, S_bit_stuff_err, S_byte_err: std_logic;
-  -- registers for OLED
-  signal R_txdp, R_txdn: std_logic;
-  signal R_OPMODE: std_logic_vector(1 downto 0);
-  signal R_LINESTATE: std_logic_vector(1 downto 0);
-  signal R_TXVALID: std_logic;
-  signal R_TXREADY: std_logic;
-  signal R_RXVALID: std_logic;
-  signal R_RXACTIVE: std_logic;
-  signal R_RXERROR: std_logic_vector(3 downto 0);
-  signal R_DATAIN: std_logic_vector(7 downto 0);
-  signal R_DATAOUT: std_logic_vector(7 downto 0);
-  signal S_dppulldown, S_dmpulldown: std_logic;
-  -- UTMI debug error counters
-  signal R_sync_err, R_bit_stuff_err, R_byte_err: std_logic_vector(3 downto 0);
-
-  component ulpi_wrapper
-    --generic (
-    --  dummy_x          : integer := 0;  -- 0-normal X, 1-double X
-    --  dummy_y          : integer := 0   -- 0-normal X, 1-double X
-    --);
-    port
-    (
-      -- ULPI Interface (PHY)
-      ulpi_clk60_i: in std_logic;  -- input clock 60 MHz
-      ulpi_rst_i: in std_logic;
-      ulpi_data_out_i: in std_logic_vector(7 downto 0);
-      ulpi_data_in_o: out std_logic_vector(7 downto 0);
-      ulpi_dir_i: in std_logic;
-      ulpi_nxt_i: in std_logic;
-      ulpi_stp_o: out std_logic;
-      -- UTMI Interface (SIE)
-      utmi_txvalid_i: in std_logic;
-      utmi_txready_o: out std_logic;
-      utmi_rxvalid_o: out std_logic;
-      utmi_rxactive_o: out std_logic;
-      utmi_rxerror_o: out std_logic;
-      utmi_data_in_o: out std_logic_vector(7 downto 0);
-      utmi_data_out_i: in std_logic_vector(7 downto 0);
-      utmi_xcvrselect_i: in std_logic_vector(1 downto 0);
-      utmi_termselect_i: in std_logic;
-      utmi_op_mode_i: in std_logic_vector(1 downto 0);
-      utmi_dppulldown_i: in std_logic;
-      utmi_dmpulldown_i: in std_logic;
-      utmi_linestate_o: out std_logic_vector(1 downto 0)
-    );
-  end component;
+  signal S_valid: std_logic;
+  signal R_byte0: std_logic_vector(7 downto 0);
 begin
   g_single_pll: if true generate
   clk_single_pll: entity work.clk_25M_100M_7M5_12M_60M
@@ -218,7 +176,10 @@ begin
   
   clk_usb <= clk_6MHz; -- 48MHz full speed, 6MHz low speed
 
-  usbhid_host_inst: entity usbh_host_hid
+  G_us2: if C_us2 generate
+  usb_fpga_pu_dp <= '0';
+  usb_fpga_pu_dn <= '0';
+  us2_hid_host_inst: entity usbh_host_hid
   generic map
   (
     C_usb_speed => '0' -- '0':Low-speed '1':Full-speed
@@ -227,14 +188,55 @@ begin
   (
     clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
     bus_reset => '0',
-    usb_dif => usb_fpga_dp,
-    usb_dp => usb_fpga_bd_dp,
-    usb_dn => usb_fpga_bd_dn,
+    usb_dif => usb_fpga_dp,    -- usb/us3/us4
+    usb_dp  => usb_fpga_bd_dp, -- usb/us3/us4
+    usb_dn  => usb_fpga_bd_dn, -- usb/us3/us4
     hid_report => S_oled,
-    hid_valid => open
+    hid_valid => S_valid
   );
-  usb_fpga_pu_dp <= '0';
-  usb_fpga_pu_dn <= '0';
+  end generate;
+  
+  G_us3: if C_us3 generate
+  us3_fpga_pu_dp <= '0';
+  us3_fpga_pu_dn <= '0';
+  us3_fpga_dp <= not us3_fpga_n_dp; -- flat cable
+  us3_hid_host_inst: entity usbh_host_hid
+  generic map
+  (
+    C_usb_speed => '0' -- '0':Low-speed '1':Full-speed
+  )
+  port map
+  (
+    clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+    bus_reset => '0',
+    usb_dif => us3_fpga_dp,    -- usb/us3/us4
+    usb_dp  => us3_fpga_bd_dp, -- usb/us3/us4
+    usb_dn  => us3_fpga_bd_dn, -- usb/us3/us4
+    hid_report => S_oled,
+    hid_valid => S_valid
+  );
+  end generate;
+
+  G_us4: if C_us4 generate
+  us4_fpga_pu_dp <= '0';
+  us4_fpga_pu_dn <= '0';
+  us4_fpga_dp <= not us4_fpga_n_dp; -- flat cable
+  us4_hid_host_inst: entity usbh_host_hid
+  generic map
+  (
+    C_usb_speed => '0' -- '0':Low-speed '1':Full-speed
+  )
+  port map
+  (
+    clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+    bus_reset => '0',
+    usb_dif => us4_fpga_dp,    -- usb/us3/us4
+    usb_dp  => us4_fpga_bd_dp, -- usb/us3/us4
+    usb_dn  => us4_fpga_bd_dn, -- usb/us3/us4
+    hid_report => S_oled,
+    hid_valid => S_valid
+  );
+  end generate;
 
   oled_inst: entity work.oled_hex_decoder
   generic map
@@ -252,14 +254,15 @@ begin
     spi_dc => oled_dc,
     spi_mosi => oled_mosi
   );
-
-  led(7 downto 4) <= R_RXERROR;
-  -- led(3) <= S_usb_rst; -- blue, blinks on USB reset
-  led(3) <= S_BREAK; -- blue lights during serial break
-  led(2) <= S_led; -- green, should blink when enumerated
-  -- linestate: low full speed
-  -- led(0):     D-  D+
-  -- led(1):     D+  D-
-  led(1 downto 0) <= S_LineState; -- orange/red
+  
+  process(clk_6MHz)
+  begin
+    if rising_edge(clk_6MHz) then
+      if S_valid = '1' then
+        R_byte0 <= S_oled(7 downto 0);
+      end if;
+    end if;
+  end process;
+  led <= R_byte0; -- report byte0 contains logitech mouse BTN state or keyboard SHIFT state
 
 end Behavioral;
