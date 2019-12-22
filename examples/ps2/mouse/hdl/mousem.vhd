@@ -62,8 +62,8 @@ architecture syn of mousem is
   signal r_btn, btn_next : std_logic_vector(2 downto 0);
   signal sent, sent_next : std_logic_vector(2 downto 0);
   constant c_rx_bits : integer := 31 + 11*c_z_ena;
-  signal c_rx_hotplug_pad : std_logic_vector(c_rx_bits-21 downto 0) := not (others => '0'); -- constant
-  signal c_rx_hotplug : std_logic_vector(c_rx_bits-1 downto 0) := ("00000000011101010100" & c_rx_hotplug_pad); -- constant
+  signal c_rx_hotplug_pad : std_logic_vector(c_rx_bits-21 downto 0) := (others => '0'); -- constant
+  signal c_rx_hotplug : std_logic_vector(c_rx_bits-1 downto 0) := ("00000000011101010100" & not c_rx_hotplug_pad); -- constant
   signal rx, rx_next : std_logic_vector(c_rx_bits-1 downto 0);
   signal tx, tx_next : std_logic_vector(9 downto 0);
   signal rx7, rx8 : std_logic_vector(7 downto 0);
