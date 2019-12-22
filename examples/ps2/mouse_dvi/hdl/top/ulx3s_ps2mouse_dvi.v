@@ -6,7 +6,7 @@ module ulx3s_ps2mouse_dvi
   input clk_25mhz,
   input [6:0] btn,
   output [7:0] led,
-  inout usb_fpga_dp, usb_fpga_dn,
+  inout usb_fpga_bd_dp, usb_fpga_bd_dn,
   output usb_fpga_pu_dp, usb_fpga_pu_dn,
   output [3:0] gpdi_dp, gpdi_dn,
   output wifi_gpio0
@@ -67,10 +67,10 @@ module ulx3s_ps2mouse_dvi
       if(mousecore == 0) // using amiga core
       begin
         wire ps2mdat_in, ps2mclk_in, ps2mdat_out, ps2mclk_out;
-        assign usb_fpga_dp = ps2mclk_out ? 1'bz : 1'b0;
-        assign usb_fpga_dn = ps2mdat_out ? 1'bz : 1'b0;
-        assign ps2mclk_in = usb_fpga_dp;
-        assign ps2mdat_in = usb_fpga_dn;
+        assign usb_fpga_bd_dp = ps2mclk_out ? 1'bz : 1'b0;
+        assign usb_fpga_bd_dn = ps2mdat_out ? 1'bz : 1'b0;
+        assign ps2mclk_in = usb_fpga_bd_dp;
+        assign ps2mdat_in = usb_fpga_bd_dn;
         ps2mouse
         #(
           .c_x_bits(10),
@@ -103,8 +103,8 @@ module ulx3s_ps2mouse_dvi
           .clk(clk),
           .clk_ena(1'b1),
           .ps2m_reset(reset),
-          .ps2m_clk(usb_fpga_dp),
-          .ps2m_dat(usb_fpga_dn),
+          .ps2m_clk(usb_fpga_bd_dp),
+          .ps2m_dat(usb_fpga_bd_dn),
           .x(mouse_x),
           .y(mouse_y),
           .z(mouse_z),
