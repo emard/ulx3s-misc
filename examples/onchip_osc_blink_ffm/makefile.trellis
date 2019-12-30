@@ -1,0 +1,27 @@
+# ******* project, board and chip name *******
+PROJECT = oscg_blink
+BOARD = ffmlfe5
+# 12 25 45 85
+FPGA_SIZE = 85
+FPGA_PACKAGE = CABGA554
+
+OPENOCD=openocd
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft4232.ocd
+
+# ******* design files *******
+CONSTRAINTS = ../../constraints/FFM-LFE5U-V0r0_mit_FFC-CA7-V2r0.lpf
+TOP_MODULE = oscg_blink
+TOP_MODULE_FILE = $(TOP_MODULE).v
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+
+# synthesis options
+#YOSYS_OPTIONS = -noccu2
+#NEXTPNR_OPTIONS = --timing-allow-fail
+
+SCRIPTS = ../../scripts
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
