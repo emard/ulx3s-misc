@@ -11,13 +11,8 @@ from micropython import const
 
 class spiram:
   def __init__(self):
-    #self.filename = file_bin
-    #print("FILE %s" % self.filename)
-    #self.buflen = const(1024)
-    #self.buf = bytearray(self.buflen)
     self.led = Pin(5, Pin.OUT)
     self.led.off()
-    #self.binfile = open(self.filename, "rb")
     self.spi_channel = const(1)
     self.init_pinout_sd()
     self.spi_freq = const(2000000)
@@ -28,37 +23,6 @@ class spiram:
     self.gpio_sck  = const(16)
     self.gpio_mosi = const(4)
     self.gpio_miso = const(12)
-
-  #@micropython.viper
-  #def run(self):
-  #  while(True):
-  #    if self.count != self.count_prev:
-  #      self.led.on()
-  #      track = self.hwspi.read(1)[0]
-  #      self.led.off()
-  #      self.diskfile.seek(self.tracklen * track)
-  #      self.diskfile.readinto(self.trackbuf)
-  #      self.led.on()
-  #      self.hwspi.write(self.trackbuf)
-  #      self.led.off()
-  #      self.count_prev = self.count
-  #      #for i in range(16):
-  #      #  print("%02X " % self.trackbuf[i], end="")
-  #      #print("(track %d)" % track)
-
-  def write(self, data, addr=0):
-    self.led.on()
-    self.hwspi.write(bytearray([0x00,(addr >> 8) & 0xFF, addr & 0xFF]))
-    self.hwspi.write(data)
-    self.led.off()
-
-  def read(self, addr=0, length=1):
-    self.led.on()
-    self.hwspi.write(bytearray([0x01,(addr >> 8) & 0xFF, addr & 0xFF, 0x00]))
-    result = bytearray(length)
-    self.hwspi.readinto(result)
-    self.led.off()
-    return result
 
   # read from file -> write to SPI RAM
   def load_stream(self, filedata, addr=0, blocksize=1024):
@@ -96,9 +60,7 @@ def help():
   print("spiram.load(\"file.bin\",addr=0)")
   print("spiram.save(\"file.bin\",addr=0,length=1024)")
 
-# debug to manually write data and
-#d.led.on(); d.hwspi.write(bytearray([0x00,0x11,0x22,0x33]));d.led.off()
-#d=spiram()
-#d.write(addr=0, data=bytearray([64,65,66,67]))
-#print(d.read(addr=0, length=4))
-#d.run()
+# debug to manually write and read 4 bytes
+#d=spiram.spiram()
+#d.led.on(); d.hwspi.write(bytearray([0x00,0x00,0x00,0x40,0x41,0x42,0x43])); d.led.off()
+#d.led.on(); d.hwspi.write(bytearray([0x01,0x00,0x00,0x00])); print(d.hwspi.read(4)); d.led.off()
