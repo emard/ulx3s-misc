@@ -54,7 +54,9 @@ def load(filename, addr=0):
 
 def save(filename, addr=0, length=1024):
   s=spiram()
-  s.save_stream(open(filename, "wb"), addr, length)
+  f=open(filename, "wb")
+  s.save_stream(f, addr, length)
+  f.close()
 
 def help():
   print("spiram.load(\"file.bin\",addr=0)")
