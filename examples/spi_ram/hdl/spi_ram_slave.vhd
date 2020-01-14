@@ -66,7 +66,7 @@ begin
   P_SCLK_shift_tracker: process(clk)
   begin
     if rising_edge(clk) then
-      R_SCLK_shift <= SCLK & R_SCLK_shift(1);
+      R_SCLK_shift <= sclk & R_SCLK_shift(1);
     end if;
   end process P_SCLK_shift_tracker;
 
@@ -132,7 +132,7 @@ begin
     end if;
   end process P_RAM_state;
 
-  MISO <= R_MISO_shift(R_MISO_shift'high) when csn = '0' else 'Z';
+  miso <= R_MISO_shift(R_MISO_shift'high) when csn = '0' else 'Z';
   ram_we <= R_ram_we;
   ram_do <= R_ram_do;
   ram_addr <= R_ram_addr;
