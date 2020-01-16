@@ -44,12 +44,12 @@ module top_spirw_hex
     wire spi_csn;
     assign spi_csn = ~wifi_gpio5; // LED is used as SPI CS
 
-    localparam C_mosi_bits = 64;
-    wire [C_mosi_bits-1:0] S_mosi; // this is SPI MOSI shift register
+    wire ram_we;
+    wire [15:0] ram_addr;
+    wire [7:0] ram_di, ram_do;
     spirw_slave
     #(
         .C_sclk_capable_pin(1'b0),
-        .C_data_len(C_mosi_bits)
     )
     spirw_slave_inst
     (
@@ -58,17 +58,29 @@ module top_spirw_hex
         .sclk(wifi_gpio16),
         .mosi(sd_d[1]), // wifi_gpio4
         .miso(sd_d[2]), // wifi_gpio12
-        .data_out(S_mosi)
+        .we(ram_we),
+        .addr(ram_addr),
+        .data_in(ram_do),
+        .data_out(ram_di)
     );
+    
+    reg [7:0] ram[0:255];
+    reg [7:0] R_ram_do;
+    always @(posedge clk)
+    begin
+      if(ram_we)
+        ram[ram_addr] <= ram_di;
+      else
+        R_ram_do <= ram[ram_addr];
+    end
+    assign ram_do = R_ram_do;
 
     localparam C_display_bits = 128;
     wire [C_display_bits-1:0] S_display;
-    // upper row displays binary as shifted in time, incoming from left to right
-    genvar i;
-    generate
-      for(i = 0; i < C_mosi_bits/4; i++)
-        assign S_display[C_mosi_bits-4*i-4] = S_mosi[i];
-    endgenerate
+    assign S_display[15:0] = addr;
+    assign S_display[23:16] = ram[0];
+    assign S_display[31:24] = ram[1];
+    assign S_display[39:32] = ram[2];
     
     // lower row displays HEX data, incoming from right to left
     assign S_display[C_display_bits-1:C_display_bits-C_mosi_bits] = S_mosi;
