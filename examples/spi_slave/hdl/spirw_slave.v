@@ -17,7 +17,7 @@ module spirw_slave
   input  wire sclk, mosi, csn, // SPI lines to be sniffed
   inout  wire miso, // 3-state line, active when csn=0
   // BRAM interface
-  output wire we,
+  output wire rd, wr,
   output wire [15:0] addr,
   input  wire [8-1:0] data_in,
   output wire [8-1:0] data_out
@@ -26,6 +26,7 @@ module spirw_slave
   //reg [8-1:0] R_MISO;
   //reg [8-1:0] R_MOSI;
   reg [8-1:0] R_byte;
+  reg R_request_read;
   reg R_request_write;
   reg [5:0] R_bit_count;
   generate
@@ -51,10 +52,15 @@ module spirw_slave
             begin
               if(R_bit_count[3:0] == 4'd7) // first bit in new byte, increment address from 5th SPI byte on
                 R_raddr[15:0] <= R_raddr[15:0] + 1;
+              if(R_bit_count[2:0] == 3'd3)
+                R_request_read <= 1'b1;
               if(R_bit_count[2:0] == 3'd0) // last bit in byte
               begin
                 if(R_raddr[16])
+                begin
+                  R_request_read <= 1'b0;
                   R_byte <= data_in; // read
+                end
                 else
                   R_request_write <= 1'b1; // write
                 R_bit_count[3] <= 1'b0; // allow to inc address from 5th SPI byte on
@@ -98,14 +104,22 @@ module spirw_slave
             begin
               if(R_bit_count[3:0] == 4'd7) // first bit in new byte, increment address from 5th SPI byte on
                 R_raddr[15:0] <= R_raddr[15:0] + 1;
+              if(R_raddr[16])
+              begin
+                if(R_bit_count[2:0] == 3'd1)
+                  R_request_read <= 1'b1;
+              end
               if(R_bit_count[2:0] == 3'd0) // last bit in byte
               begin
+                R_request_read <= 1'b0;
                 if(R_raddr[16])
                   R_byte <= data_in; // read
                 else
                   R_request_write <= 1'b1; // write
                 R_bit_count[3] <= 1'b0; // allow to inc address from 5th SPI byte on
               end
+              else
+                R_request_write <= 1'b0;
               R_bit_count[2:0] <= R_bit_count[2:0] - 1;
             end // after 1st 3 bytes
           end // sclk rising edge
@@ -113,7 +127,8 @@ module spirw_slave
       end // always
     end // generate
   endgenerate
-  assign we   = R_request_write;
+  assign rd   = R_request_read;
+  assign wr   = R_request_write;
   assign addr = R_raddr[15:0];
   assign miso = csn ? 1'bz : R_byte[8-1];
   assign data_out = R_byte;

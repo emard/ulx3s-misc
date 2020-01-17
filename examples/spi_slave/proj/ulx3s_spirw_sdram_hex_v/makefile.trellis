@@ -1,0 +1,53 @@
+# ******* project, board and chip name *******
+PROJECT = oled_spirw_sdram_hex
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 12
+
+# ******* if programming with OpenOCD *******
+# using local latest openocd until in linux distribution
+OPENOCD=openocd_ft232r
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+# ulx3s-jtag-passthru
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
+# ulx2s
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft232r.ocd
+# external jtag
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
+
+# ******* design files *******
+CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
+TOP_MODULE = top_spirw_sdram_hex
+TOP_MODULE_FILE = ../../../spi_slave/hdl/top/$(TOP_MODULE).v
+
+CLK0_NAME = clk_25_125_125s_25_12
+CLK0_FILE_NAME = ../../../../clocks/$(CLK0_NAME).v
+CLK0_OPTIONS = \
+  --module=$(CLK0_NAME) \
+  --clkin_name=clki_25 \
+  --clkin=25 \
+  --clkout0_name=clko_125 \
+  --clkout0=125 \
+  --clkout1_name=clko_125s \
+  --clkout1=125 --phase1=180 \
+  --clkout2_name=clko_25 \
+  --clkout2=25 \
+  --clkout3_name=clko_12 \
+  --clkout3=12.5 \
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+  $(CLK0_FILE_NAME) \
+  ../../../spi_slave/hdl/spirw_slave.v \
+  ../../../sdram/sdram_pnru/sdram_pnru.v \
+  ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
+  ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v \
+
+# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
+VHDL_FILES = 
+
+SCRIPTS = ../../../../scripts/
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
