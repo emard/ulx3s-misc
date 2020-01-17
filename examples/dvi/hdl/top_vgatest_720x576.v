@@ -1,3 +1,5 @@
+// 50Hz refresh example
+
 module top_vgatest_720x576
 (
   input clk_25mhz,
