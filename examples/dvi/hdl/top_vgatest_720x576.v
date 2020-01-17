@@ -82,7 +82,7 @@ module top_vgatest_720x576
       .in_green(vga_g),
       .in_blue(vga_b),
       .in_hsync(~vga_hsync),
-      .in_vsync(~vga_vsync),
+      .in_vsync(vga_vsync),
       .in_blank(vga_blank),
       .out_clock(tmds[3]),
       .out_red(tmds[2]),
