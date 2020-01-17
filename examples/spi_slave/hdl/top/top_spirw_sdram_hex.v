@@ -66,7 +66,7 @@ module top_spirw_sdram_hex
     )
     spirw_slave_inst
     (
-        .clk(clk_sdram),
+        .clk(clk_sdram), // clk will work too
         .csn(spi_csn),
         .sclk(wifi_gpio16),
         .mosi(sd_d[1]), // wifi_gpio4
@@ -79,7 +79,7 @@ module top_spirw_sdram_hex
     );
 
     assign sdram_cke = 1'b1;
-    wire ram_ack = !(ram_rd|ram_wr);
+    wire ram_ack = ~(ram_rd|ram_wr);
     wire ram_rdy;
     sdram_pnru
     sdram_pnru_inst
@@ -122,6 +122,8 @@ module top_spirw_sdram_hex
     */
     assign led[0] = ram_rd;
     assign led[1] = ram_wr;
+    assign led[5:2] = 0;
+    assign led[6] = ram_rdy;
     assign led[7] = |ram_do;
 
     localparam C_display_bits = 64;
