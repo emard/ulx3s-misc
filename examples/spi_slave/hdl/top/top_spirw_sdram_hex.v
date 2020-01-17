@@ -53,6 +53,7 @@ module top_spirw_sdram_hex
     
     assign sd_d[3] = 1'bz; // FPGA pin pullup sets SD card inactive at SPI bus
     
+    wire spi_cs = wifi_gpio5;
     wire spi_csn = ~wifi_gpio5; // LED is used as SPI CS
 
     wire ram_rd, ram_wr;
@@ -98,6 +99,27 @@ module top_spirw_sdram_hex
       .sdr_n_CS_WE_RAS_CAS({sdram_csn, sdram_wen, sdram_rasn, sdram_casn}),
       .sdr_dqm(sdram_dqm)
     );
+    /*
+    // this doesn't work properly
+    sdram_pnru2
+    sdram_pnru2_inst
+    (
+      .sys_clk(clk_sdram),
+      .sys_cs(spi_cs),
+      .sys_rd(ram_rd),
+      .sys_wr(ram_wr),
+      .sys_ab(ram_addr),
+      .sys_di({ram_di[7:0],ram_di[7:0]}),
+      .sys_do(ram_do),
+      .sys_rdy(ram_rdy),
+
+      .sdr_ab(sdram_a),
+      .sdr_db(sdram_d),
+      .sdr_ba(sdram_ba),
+      .sdr_cmd({sdram_csn, sdram_wen, sdram_rasn, sdram_casn}),
+      .sdr_dqm(sdram_dqm)
+    );
+    */
     assign led[0] = ram_rd;
     assign led[1] = ram_wr;
     assign led[7] = |ram_do;
