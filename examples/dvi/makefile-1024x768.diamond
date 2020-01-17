@@ -28,12 +28,7 @@ TOP_MODULE = top_vgatest_1024x768
 TOP_MODULE_FILE = hdl/$(TOP_MODULE).v
 
 CLK0_NAME = clk_25_shift_pixel
-CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
-CLK0_OPTIONS_OLD = \
-  --input=25 \
-  --output=325 \
-  --s1=65
-# for new ecppll: to override above, rename CLK0_OPTIONS_NEW -> CLK0_OPTIONS
+CLK0_FILE_NAME = ../../clocks/$(CLK0_NAME).v
 CLK0_OPTIONS = \
   --module=$(CLK0_NAME) \
   --clkin_name=clki \

@@ -3,7 +3,7 @@ module top_vgatest_1024x768
   input clk_25mhz,
   input [6:0] btn,
   output [7:0] led,
-  output [3:0] gpdi_dp, gpdi_dn,
+  output [3:0] gpdi_dp,
   output wifi_gpio0
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
@@ -71,6 +71,8 @@ module top_vgatest_1024x768
     wire [1:0] tmds[3:0];
     vga2dvid
     #(
+      .C_shift_clock_synchronizer(1'b1),
+      .C_parallel(1'b0),
       .C_ddr(C_ddr)
     )
     vga2dvid_instance
@@ -101,8 +103,7 @@ module top_vgatest_1024x768
       .in_red(tmds[2]),
       .in_green(tmds[1]),
       .in_blue(tmds[0]),
-      .out_p(gpdi_dp),
-      .out_n(gpdi_dn)
+      .out_p(gpdi_dp)
     );
 
 endmodule
