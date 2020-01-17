@@ -58,6 +58,11 @@ module top_vgatest_640x480
     // OSD video overlay
     wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
     wire osd_vga_hsync, osd_vga_vsync, osd_vga_blank;
+    wire [9:0] osd_x, osd_y;
+    wire [7:0] osd_r, osd_g, osd_b;
+    assign osd_r = 8'h50+osd_x;
+    assign osd_g = 8'h30+osd_y;
+    assign osd_b = 8'h20;
     osd
     osd_instance
     (
@@ -69,6 +74,11 @@ module top_vgatest_640x480
       .i_hsync(vga_hsync),
       .i_vsync(vga_vsync),
       .i_blank(vga_blank),
+      .o_osd_x(osd_x),
+      .o_osd_y(osd_y),
+      .i_osd_r(osd_r),
+      .i_osd_g(osd_g),
+      .i_osd_b(osd_b),
       .o_r(osd_vga_r),
       .o_g(osd_vga_g),
       .o_b(osd_vga_b),
