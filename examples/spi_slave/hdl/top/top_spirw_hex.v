@@ -49,7 +49,7 @@ module top_spirw_hex
     wire [7:0] ram_di, ram_do;
     spirw_slave
     #(
-        .C_sclk_capable_pin(1'b0),
+        .C_sclk_capable_pin(1'b0)
     )
     spirw_slave_inst
     (
@@ -77,13 +77,13 @@ module top_spirw_hex
 
     localparam C_display_bits = 128;
     wire [C_display_bits-1:0] S_display;
-    assign S_display[15:0] = addr;
+    assign S_display[15:0] = ram_addr;
     assign S_display[23:16] = ram[0];
     assign S_display[31:24] = ram[1];
     assign S_display[39:32] = ram[2];
     
     // lower row displays HEX data, incoming from right to left
-    assign S_display[C_display_bits-1:C_display_bits-C_mosi_bits] = S_mosi;
+    //assign S_display[C_display_bits-1:C_display_bits-C_mosi_bits] = S_mosi;
 
     wire [6:0] x;
     wire [5:0] y;
