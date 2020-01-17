@@ -30,7 +30,7 @@ CLK0_OPTIONS = \
   --clkout0_name=clko_125 \
   --clkout0=125 \
   --clkout1_name=clko_125s \
-  --clkout1=125 --phase1=180 \
+  --clkout1=125 --phase1=90 \
   --clkout2_name=clko_25 \
   --clkout2=25 \
   --clkout3_name=clko_12 \
@@ -48,6 +48,8 @@ VERILOG_FILES = \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = 
+
+# NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/diamond_path.mk
