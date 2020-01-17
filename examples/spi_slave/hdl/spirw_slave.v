@@ -52,10 +52,14 @@ module spirw_slave
             begin
               if(R_bit_count[3:0] == 4'd7) // first bit in new byte, increment address from 5th SPI byte on
                 R_raddr[15:0] <= R_raddr[15:0] + 1;
-              if(R_bit_count[2:0] == 3'd3)
-                R_request_read <= 1'b1;
+              if(R_raddr[16])
+              begin
+                if(R_bit_count[2:0] == 3'd1)
+                  R_request_read <= 1'b1;
+              end
               if(R_bit_count[2:0] == 3'd0) // last bit in byte
               begin
+                R_request_read <= 1'b0;
                 if(R_raddr[16])
                 begin
                   R_request_read <= 1'b0;
