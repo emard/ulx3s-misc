@@ -2,10 +2,10 @@
 
 module osd
 #(
-  parameter C_x_start = 120,
-  parameter C_x_stop  = 360,
-  parameter C_y_start = 120,
-  parameter C_y_stop  = 360
+  parameter C_x_start = 128,
+  parameter C_x_stop  = 383,
+  parameter C_y_start = 128,
+  parameter C_y_stop  = 383
 )
 (
   input  wire clk_pixel, clk_pixel_ena,

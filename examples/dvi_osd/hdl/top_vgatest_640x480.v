@@ -54,15 +54,17 @@ module top_vgatest_640x480
     assign led[0] = vga_vsync;
     assign led[1] = vga_hsync;
     assign led[2] = vga_blank;
-    
-    // OSD video overlay
-    wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
-    wire osd_vga_hsync, osd_vga_vsync, osd_vga_blank;
+
+    // OSD picture generator
     wire [9:0] osd_x, osd_y;
     wire [7:0] osd_r, osd_g, osd_b;
-    assign osd_r = 8'h50+osd_x;
-    assign osd_g = 8'h30+osd_y;
-    assign osd_b = 8'h20;
+    assign osd_r = osd_x[5] ^ osd_y[5] ? 8'h50 : 0;
+    assign osd_g = osd_x[5] ^ osd_y[5] ? 8'h30 : 0;
+    assign osd_b = osd_x[5] ^ osd_y[5] ? 8'h20 : 0;
+
+    // OSD overlay
+    wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
+    wire osd_vga_hsync, osd_vga_vsync, osd_vga_blank;
     osd
     osd_instance
     (
