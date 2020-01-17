@@ -1,1 +1,1 @@
-makefile-640x480.trellis
+makefile-char-640x480.trellis

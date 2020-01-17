@@ -1,0 +1,13 @@
+Hello! This is OSD (on-screen display)
+video overlay soft-core. It can display
+ASCII character map over the video display.
+VGA pixel stream is intercepted.
+In a rectangular screen area video content
+is replaced with pixels coming from ASCII font,
+forming a "window". This can be combined with
+a SPI slave receiver and used to provide screen
+display for external CPU. For example, ESP32 micropython
+code can "print" to OSD screen. This method can be
+used to make SD card file selection menu, for example.
+______________________________________________________
+
