@@ -3,13 +3,13 @@
 
 module spi_osd_v
 #(
-  parameter C_start_x   = 64,  // x1  pixel window h-position
-  parameter C_start_y   = 48,  // x1  pixel window v-position
-  parameter C_chars_x   = 64,  // x8  pixel window h-size
-  parameter C_chars_y   = 24,  // x16 pixel window v-size
-  parameter C_init_on   = 1'b1, // 0:default OFF 1:default ON
-  parameter C_char_file = "osd.mem", // initial window content, 2 ASCII HEX digits per line
-  parameter C_font_file = "font_vga.mem" // font bitmap, 2 ASCII HEX digits per line
+  parameter c_start_x   = 64,  // x1  pixel window h-position
+  parameter c_start_y   = 48,  // x1  pixel window v-position
+  parameter c_chars_x   = 64,  // x8  pixel window h-size
+  parameter c_chars_y   = 24,  // x16 pixel window v-size
+  parameter c_init_on   = 1,   // 0:default OFF 1:default ON
+  parameter c_char_file = "osd.mem", // initial window content, 2 ASCII HEX digits per line
+  parameter c_font_file = "font_vga.mem" // font bitmap, 2 ASCII HEX digits per line
 )
 (
   input  wire clk_pixel, clk_pixel_ena,
@@ -25,9 +25,9 @@ module spi_osd_v
   output wire o_hsync, o_vsync, o_blank
 );
 
-    reg [7:0] tile_map [0:C_chars_x*C_chars_y-1]; // tile memory (character map)
+    reg [7:0] tile_map [0:c_chars_x*c_chars_y-1]; // tile memory (character map)
     initial
-      $readmemh(C_char_file, tile_map);
+      $readmemh(c_char_file, tile_map);
 
     wire ram_wr;
     wire [15:0] ram_addr;
@@ -35,7 +35,7 @@ module spi_osd_v
     reg  [7:0] ram_do;
     spirw_slave
     #(
-        .C_sclk_capable_pin(1'b0)
+        .c_sclk_capable_pin(1'b0)
     )
     spirw_slave_inst
     (
@@ -56,7 +56,7 @@ module spi_osd_v
       //ram_do <= tile_map[ram_addr];
     end
 
-    reg osd_en = C_init_on;
+    reg osd_en = c_init_on;
     always @(posedge clk_pixel)
     begin
       if(ram_wr && (ram_addr[15:8]==16'hFE)) // write to 0xFE00 enables/disables OSD
@@ -66,10 +66,10 @@ module spi_osd_v
     wire [9:0] osd_x, osd_y;
     reg [7:0] font[0:4095];
     initial
-      $readmemh(C_font_file, font);
+      $readmemh(c_font_file, font);
     reg [7:0] data_out;
     always @(posedge clk_pixel)
-      data_out[7:0] <= font[{ tile_map[(osd_y >> 4) * C_chars_x + (osd_x >> 3)], osd_y[3:0] }];
+      data_out[7:0] <= font[{ tile_map[(osd_y >> 4) * c_chars_x + (osd_x >> 3)], osd_y[3:0] }];
     wire [7:0] data_out_align = {data_out[0], data_out[7:1]};
     wire osd_pixel = data_out_align[7-osd_x[2:0]];
 
@@ -80,10 +80,10 @@ module spi_osd_v
     // OSD overlay
     osd
     #(
-      .C_x_start(C_start_x),
-      .C_x_stop (C_start_x+8*C_chars_x-1),
-      .C_y_start(C_start_y),
-      .C_y_stop (C_start_y+16*C_chars_y-1)
+      .C_x_start(c_start_x),
+      .C_x_stop (c_start_x+8*c_chars_x-1),
+      .C_y_start(c_start_y),
+      .C_y_stop (c_start_y+16*c_chars_y-1)
     )
     osd_instance
     (
