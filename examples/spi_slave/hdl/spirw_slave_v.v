@@ -8,7 +8,7 @@
 // write 00 <MSB_addr> <LSB_addr> <byte0> <byte1>
 // read  01 <MSB_addr> <LSB_addr> <dummy_byte> <byte0> <byte1>
 
-module spirw_slave
+module spirw_slave_v
 #(
   parameter c_sclk_capable_pin = 1'b0 //, // 0-sclk is generic pin, 1-sclk is clock capable pin
 )
