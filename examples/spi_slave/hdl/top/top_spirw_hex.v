@@ -40,7 +40,7 @@ module top_spirw_hex
     wire spi_csn;
     assign spi_csn = ~wifi_gpio5; // LED is used as SPI CS
 
-    wire ram_we;
+    wire ram_wr;
     wire [15:0] ram_addr;
     wire [7:0] ram_di, ram_do;
     spirw_slave
@@ -54,7 +54,7 @@ module top_spirw_hex
         .sclk(wifi_gpio16),
         .mosi(sd_d[1]), // wifi_gpio4
         .miso(sd_d[2]), // wifi_gpio12
-        .wr(ram_we),
+        .wr(ram_wr),
         .addr(ram_addr),
         .data_in(ram_do),
         .data_out(ram_di)
@@ -64,7 +64,7 @@ module top_spirw_hex
     reg [7:0] R_ram_do;
     always @(posedge clk)
     begin
-      if(ram_we)
+      if(ram_wr)
         ram[ram_addr] <= ram_di;
       else
         R_ram_do <= ram[ram_addr];
