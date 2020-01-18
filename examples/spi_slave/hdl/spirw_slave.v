@@ -88,6 +88,7 @@ module spirw_slave
       begin
         if(csn)
         begin
+          R_request_read <= 1'b0;
           R_request_write <= 1'b0;
           R_bit_count <= 6'd23; // 24 bits = 3 bytes to read cmd/addr, then data
         end
