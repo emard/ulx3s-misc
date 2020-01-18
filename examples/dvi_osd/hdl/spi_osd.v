@@ -3,12 +3,13 @@
 
 module spi_osd
 #(
-  parameter C_start_x   = 64,  // x1  pixel
-  parameter C_start_y   = 48,  // x1  pixel
-  parameter C_chars_x   = 64,  // x8  pixel
-  parameter C_chars_y   = 24,  // x16 pixel
-  parameter C_char_file = "osd.mem",
-  parameter C_font_file = "font_vga.mem"
+  parameter C_start_x   = 64,  // x1  pixel window h-position
+  parameter C_start_y   = 48,  // x1  pixel window v-position
+  parameter C_chars_x   = 64,  // x8  pixel window h-size
+  parameter C_chars_y   = 24,  // x16 pixel window v-size
+  parameter C_init_on   = 1'b1, // 0:default OFF 1:default ON
+  parameter C_char_file = "osd.mem", // initial window content, 2 ASCII HEX digits per line
+  parameter C_font_file = "font_vga.mem" // font bitmap, 2 ASCII HEX digits per line
 )
 (
   input  wire clk_pixel, clk_pixel_ena,
@@ -55,7 +56,7 @@ module spi_osd
       //ram_do <= tile_map[ram_addr];
     end
 
-    reg osd_en = 1'b0;
+    reg osd_en = C_init_on;
     always @(posedge clk_pixel)
     begin
       if(ram_wr && (ram_addr[15:8]==16'hFE)) // write to 0xFE00 enables/disables OSD
