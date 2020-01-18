@@ -10,7 +10,7 @@
 
 module spirw_slave
 #(
-  parameter C_sclk_capable_pin = 1'b0 //, // 0-sclk is generic pin, 1-sclk is clock capable pin
+  parameter c_sclk_capable_pin = 1'b0 //, // 0-sclk is generic pin, 1-sclk is clock capable pin
 )
 (
   input  wire clk, // faster than SPI clock
@@ -30,7 +30,7 @@ module spirw_slave
   reg R_request_write;
   reg [5:0] R_bit_count;
   generate
-    if(C_sclk_capable_pin)
+    if(c_sclk_capable_pin)
     begin
       // sclk is clock capable pin
       always @(posedge sclk or posedge csn)

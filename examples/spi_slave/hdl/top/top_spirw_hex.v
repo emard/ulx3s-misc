@@ -45,7 +45,7 @@ module top_spirw_hex
     wire [7:0] ram_di, ram_do;
     spirw_slave
     #(
-        .C_sclk_capable_pin(1'b0)
+        .c_sclk_capable_pin(1'b0)
     )
     spirw_slave_inst
     (
