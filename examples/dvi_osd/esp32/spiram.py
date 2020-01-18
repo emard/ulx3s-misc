@@ -8,6 +8,7 @@
 
 from machine import SPI, Pin
 from micropython import const
+from time import sleep_ms
 
 class spiram:
   def __init__(self):
@@ -64,9 +65,26 @@ def help():
 
 def test():
   s=spiram()
-  s.led.on();
-  s.hwspi.write(bytearray([0,0,0]))
-  s.hwspi.write(bytearray("MICROPYTHON ESP32 HERE"))
+  
+  # blink OSD off/on few times
+  for i in range(6):
+    s.led.on()
+    s.hwspi.write(bytearray([0,0xFE,0x00,i&1])) # 1:show/0:hide OSD
+    s.led.off()
+    sleep_ms(200)
+
+  # overwrite stars to the right of the screen (demonstrates writing single bytes)
+  for i in range(24):
+    s.led.on()
+    s.hwspi.write(bytearray([0,i//(256//64),i*64+63,ord("*")])) # sets address and writes content
+    s.led.off()
+  
+  # demonstrates writing multiple bytes, some text
+  s.led.on()
+  # two separate writes can be also joined in one bytearray but this way is
+  # more readable as python code
+  s.hwspi.write(bytearray([0,11,20])) # sets address
+  s.hwspi.write(bytearray("ESP%d MICROPYTHON WAS HERE" % (32))) # writes content
   s.led.off()
 
 # debug to manually write and read 4 bytes
