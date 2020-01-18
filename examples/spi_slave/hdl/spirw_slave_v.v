@@ -10,17 +10,17 @@
 
 module spirw_slave_v
 #(
-  parameter c_sclk_capable_pin = 1'b0 //, // 0-sclk is generic pin, 1-sclk is clock capable pin
+  parameter c_sclk_capable_pin = 0 //, // 0-sclk is generic pin, 1-sclk is clock capable pin
 )
 (
   input  wire clk, // faster than SPI clock
-  input  wire sclk, mosi, csn, // SPI lines to be sniffed
+  input  wire csn, sclk, mosi, // SPI lines to be sniffed
   inout  wire miso, // 3-state line, active when csn=0
   // BRAM interface
   output wire rd, wr,
   output wire [15:0] addr,
-  input  wire [8-1:0] data_in,
-  output wire [8-1:0] data_out
+  input  wire [7:0] data_in,
+  output wire [7:0] data_out
 );
   reg [16:0] R_raddr;
   //reg [8-1:0] R_MISO;

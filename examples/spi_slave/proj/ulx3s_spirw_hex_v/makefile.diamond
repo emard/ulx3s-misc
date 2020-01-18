@@ -33,7 +33,8 @@ VERILOG_FILES = \
   ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v \
   ../../../oled/hdl/ssd1331_term_verilog/pll.v \
 
-VHDL_FILES = 
+VHDL_FILES = \
+  ../../../spi_slave/hdl/spirw_slave.vhd
 
 SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/trellis_path.mk
