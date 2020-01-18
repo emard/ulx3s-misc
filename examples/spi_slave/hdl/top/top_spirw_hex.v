@@ -43,11 +43,11 @@ module top_spirw_hex
     wire ram_wr;
     wire [15:0] ram_addr;
     wire [7:0] ram_di, ram_do;
-    spirw_slave
+    spirw_slave_v
     #(
         .c_sclk_capable_pin(1'b0)
     )
-    spirw_slave_inst
+    spirw_slave_v_inst
     (
         .clk(clk),
         .csn(spi_csn),

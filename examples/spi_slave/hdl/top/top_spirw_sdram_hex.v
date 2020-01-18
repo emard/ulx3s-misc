@@ -60,11 +60,11 @@ module top_spirw_sdram_hex
     wire [15:0] ram_addr;
     wire [15:0] ram_di;
     wire [15:0] ram_do;
-    spirw_slave
+    spirw_slave_v
     #(
         .c_sclk_capable_pin(1'b0)
     )
-    spirw_slave_inst
+    spirw_slave_v_inst
     (
         .clk(clk_sdram), // clk will work too
         .csn(spi_csn),
