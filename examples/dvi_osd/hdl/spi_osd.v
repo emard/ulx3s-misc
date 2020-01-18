@@ -59,13 +59,11 @@ module spi_osd
     reg [7:0] font[0:4095];
     initial
       $readmemh(C_font_file, font);
-    reg [8:0] data_out;
+    reg [7:0] data_out;
     always @(posedge clk_pixel)
-    begin
-      data_out[8] <= 1'b0;
       data_out[7:0] <= font[{ tile_map[(osd_y >> 4) * C_chars_x + (osd_x >> 3)], osd_y[3:0] }];
-    end
-    wire osd_pixel = data_out[7-osd_x[2:0]+1]; // +1 for sync
+    wire [7:0] data_out_align = {data_out[0], data_out[7:1]};
+    wire osd_pixel = data_out_align[7-osd_x[2:0]];
 
     wire [7:0] osd_r = osd_pixel ? 8'hff : 8'h50;
     wire [7:0] osd_g = osd_pixel ? 8'hff : 8'h30;
