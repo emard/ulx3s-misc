@@ -19,7 +19,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 # ******* design files *******
 CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
-TOP_MODULE = top_char_640x480
+TOP_MODULE = top_spi_char_640x480
 TOP_MODULE_FILE = hdl/$(TOP_MODULE).v
 
 CLK0_NAME = clk_25_250_125_25
@@ -38,8 +38,9 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
+  hdl/spi_osd.v \
   hdl/osd.v \
-  ../oled/hdl/ssd1331_term_verilog/font_rom.v \
+  ../spi_slave/hdl/spirw_slave.v \
   ../dvi/hdl/fake_differential.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
@@ -53,6 +54,7 @@ osd.mem: osd.txt
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
+NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../scripts
 include $(SCRIPTS)/diamond_path.mk
