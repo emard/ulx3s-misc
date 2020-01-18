@@ -72,8 +72,8 @@ module top_spi_char_640x480
     // OSD overlay
     wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
     wire osd_vga_hsync, osd_vga_vsync, osd_vga_blank;
-    spi_osd
-    spi_osd_instance
+    spi_osd_v
+    spi_osd_v_instance
     (
       .clk_pixel(clk_pixel),
       .clk_pixel_ena(1'b1),
