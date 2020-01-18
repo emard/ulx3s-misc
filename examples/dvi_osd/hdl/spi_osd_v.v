@@ -1,7 +1,7 @@
 // SPI receiver for OSD text window
 // VGA video stream pipeline processor
 
-module spi_osd
+module spi_osd_v
 #(
   parameter C_start_x   = 64,  // x1  pixel window h-position
   parameter C_start_y   = 48,  // x1  pixel window v-position
