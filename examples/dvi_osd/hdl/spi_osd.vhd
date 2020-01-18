@@ -21,8 +21,8 @@ entity spi_osd is
     i_hsync, i_vsync, i_blank: in    std_logic;
     i_csn, i_sclk, i_mosi    : in    std_logic;
     o_miso                   : inout std_logic;
-    i_r, i_g, i_b            : out   std_logic_vector(7 downto 0);
-    i_hsync, i_vsync, i_blank: out   std_logic
+    o_r, o_g, o_b            : out   std_logic_vector(7 downto 0);
+    o_hsync, o_vsync, o_blank: out   std_logic
   );
 end;
 
@@ -45,8 +45,8 @@ architecture syn of spi_osd is
     i_hsync, i_vsync, i_blank: in    std_logic;
     i_csn, i_sclk, i_mosi    : in    std_logic;
     o_miso                   : inout std_logic;
-    i_r, i_g, i_b            : out   std_logic_vector(7 downto 0);
-    i_hsync, i_vsync, i_blank: out   std_logic
+    o_r, o_g, o_b            : out   std_logic_vector(7 downto 0);
+    o_hsync, o_vsync, o_blank: out   std_logic
   );
   end component;
 
@@ -68,7 +68,7 @@ begin
     i_r => i_r, i_g => i_g, i_b => i_b,
     i_hsync => i_hsync, i_vsync => i_vsync, i_blank => i_blank,
     i_csn => i_csn, i_sclk => i_sclk, i_mosi => i_mosi, o_miso => o_miso,
-    i_r => i_r, i_g => i_g, i_b => i_b,
-    i_hsync => i_hsync, i_vsync => i_vsync, i_blank => i_blank,
+    o_r => o_r, o_g => o_g, o_b => o_b,
+    o_hsync => o_hsync, o_vsync => o_vsync, o_blank => o_blank
   );
 end syn;

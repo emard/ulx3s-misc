@@ -35,7 +35,7 @@ module spi_osd_v
     reg  [7:0] ram_do;
     spirw_slave
     #(
-        .c_sclk_capable_pin(1'b0)
+        .C_sclk_capable_pin(1'b0)
     )
     spirw_slave_inst
     (

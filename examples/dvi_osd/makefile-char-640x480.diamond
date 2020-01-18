@@ -42,12 +42,13 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
-  hdl/spi_osd.v \
+  hdl/spi_osd_v.v \
   hdl/osd.v \
   ../spi_slave/hdl/spirw_slave.v \
   ../dvi/hdl/fake_differential.v
 
 VHDL_FILES = \
+  hdl/spi_osd.vhd \
   ../dvi/hdl/vga.vhd \
   ../dvi/hdl/vga2dvid.vhd \
   ../dvi/hdl/tmds_encoder.vhd

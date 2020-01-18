@@ -45,6 +45,7 @@ VERILOG_FILES = \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
+  hdl/spi_osd.vhd \
   ../dvi/hdl/vga.vhd \
   ../dvi/hdl/vga2dvid.vhd \
   ../dvi/hdl/tmds_encoder.vhd

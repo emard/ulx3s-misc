@@ -13,7 +13,7 @@ module osd
   input  wire [7:0] i_g,
   input  wire [7:0] i_b,
   input  wire i_hsync, i_vsync, i_blank,
-  input  wire i_osd_en = 1'b1,
+  input  wire i_osd_en,
   input  wire [7:0] i_osd_r,
   input  wire [7:0] i_osd_g,
   input  wire [7:0] i_osd_b,
