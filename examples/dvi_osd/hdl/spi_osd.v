@@ -3,10 +3,10 @@
 
 module spi_osd
 #(
-  parameter C_start_x   = 128, // x1 pixel
-  parameter C_start_y   = 128, // x1 pixel
-  parameter C_chars_x   = 32,  // x8 pixel
-  parameter C_chars_y   = 32,  // x8 pixel
+  parameter C_start_x   = 64,  // x1  pixel
+  parameter C_start_y   = 64,  // x1  pixel
+  parameter C_chars_x   = 64,  // x8  pixel
+  parameter C_chars_y   = 16,  // x16 pixel
   parameter C_char_file = "osd.mem",
   parameter C_font_file = "font_vga.mem"
 )
@@ -75,7 +75,7 @@ module spi_osd
       .C_x_start(C_start_x),
       .C_x_stop (C_start_x+8*C_chars_x-1),
       .C_y_start(C_start_y),
-      .C_y_stop (C_start_y+8*C_chars_y-1)
+      .C_y_stop (C_start_y+16*C_chars_y-1)
     )
     osd_instance
     (
