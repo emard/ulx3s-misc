@@ -40,7 +40,7 @@ VERILOG_FILES = \
   $(CLK0_FILE_NAME) \
   hdl/spi_osd_v.v \
   hdl/osd.v \
-  ../spi_slave/hdl/spirw_slave.v \
+  ../spi_slave/hdl/spirw_slave_v.v \
   ../dvi/hdl/fake_differential.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)

@@ -33,9 +33,9 @@ module spi_osd_v
     wire [15:0] ram_addr;
     wire [7:0] ram_di;
     reg  [7:0] ram_do;
-    spirw_slave
+    spirw_slave_v
     #(
-        .C_sclk_capable_pin(1'b0)
+        .c_sclk_capable_pin(1'b0)
     )
     spirw_slave_inst
     (
