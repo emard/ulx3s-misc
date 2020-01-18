@@ -50,7 +50,7 @@ VHDL_FILES = \
   ../dvi/hdl/tmds_encoder.vhd
 
 osd.mem: osd.txt
-	hexdump -n 1024 -v -e '1/1 "%02x " "\n"' $< > $@
+	hexdump -n 1536 -v -e '1/1 "%02x " "\n"' $< > $@
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2

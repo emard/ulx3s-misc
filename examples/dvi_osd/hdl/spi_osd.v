@@ -4,9 +4,9 @@
 module spi_osd
 #(
   parameter C_start_x   = 64,  // x1  pixel
-  parameter C_start_y   = 64,  // x1  pixel
+  parameter C_start_y   = 48,  // x1  pixel
   parameter C_chars_x   = 64,  // x8  pixel
-  parameter C_chars_y   = 16,  // x16 pixel
+  parameter C_chars_y   = 24,  // x16 pixel
   parameter C_char_file = "osd.mem",
   parameter C_font_file = "font_vga.mem"
 )
