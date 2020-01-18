@@ -51,8 +51,15 @@ module spi_osd
     always @(posedge clk_pixel)
     begin
       if(ram_wr)
-        tile_map[ram_addr] <= ram_di;
+        tile_map[ram_addr] <= ram_di; // write to 0x0000-0x1000 writes chars to OSD
       //ram_do <= tile_map[ram_addr];
+    end
+
+    reg osd_en = 1'b0;
+    always @(posedge clk_pixel)
+    begin
+      if(ram_wr && (ram_addr[15:8]==16'hFE)) // write to 0xFE00 enables/disables OSD
+        osd_en <= ram_di[0];
     end
 
     wire [9:0] osd_x, osd_y;
@@ -87,6 +94,7 @@ module spi_osd
       .i_hsync(i_hsync),
       .i_vsync(i_vsync),
       .i_blank(i_blank),
+      .i_osd_en(osd_en),
       .o_osd_x(osd_x),
       .o_osd_y(osd_y),
       .i_osd_r(osd_r),

@@ -13,6 +13,7 @@ module osd
   input  wire [7:0] i_g,
   input  wire [7:0] i_b,
   input  wire i_hsync, i_vsync, i_blank,
+  input  wire i_osd_en = 1'b1,
   input  wire [7:0] i_osd_r,
   input  wire [7:0] i_osd_g,
   input  wire [7:0] i_osd_b,
@@ -91,7 +92,7 @@ module osd
   begin
     if(clk_pixel_ena)
     begin
-      if(osd_en)
+      if(osd_en & i_osd_en)
       begin
         R_vga_r <= i_osd_r;
         R_vga_g <= i_osd_g;
