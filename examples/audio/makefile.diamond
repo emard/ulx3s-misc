@@ -1,8 +1,8 @@
 # ******* project, board and chip name *******
-PROJECT = dvi
+PROJECT = audio
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 12
+FPGA_SIZE = 25
 
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
@@ -31,7 +31,8 @@ VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   hdl/trianglewave.v \
   hdl/sinewave.v \
-  hdl/dacpwm.v
+  hdl/dacpwm.v \
+  hdl/pcm5102.v
 
 VHDL_FILES = \
   hdl/spdif_tx.vhd
