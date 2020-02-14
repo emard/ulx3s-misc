@@ -16,7 +16,6 @@ module i2s
 );
   reg [31:0] i2s_data;
   reg [div+5:0] i2s_cnt; // 6 extra bits, 5 for 32-bit data, 1 for clock
-  reg dbit;
   parameter [4:0] latch_phase = fmt ? ~0 : 0;
   always @(posedge clk)
   begin
