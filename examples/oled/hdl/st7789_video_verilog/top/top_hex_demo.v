@@ -23,6 +23,7 @@ module top_hex_demo
       R_display[16] <= btn[4];
       R_display[20] <= btn[5];
       R_display[24] <= btn[6];
+      R_display[58:52] <= btn;
       R_display[127:64] <= R_display[127:64] + 1; // shown in next OLED row
     end
 
@@ -35,6 +36,7 @@ module top_hex_demo
     #(
         .C_data_len(128),
         .C_row_bits(4),
+        .C_grid_6x8(0), // NOTE DIAMOND supports 0 or 1, TRELLIS only 0
         .C_font_file("oled_font.mem"),
 	.C_color_bits(C_color_bits)
     )
@@ -47,11 +49,17 @@ module top_hex_demo
         .color(color)
     );
 
-    localparam C_init_file = "st7789_init.mem";
+    // allow large combinatorial logic
+    // to calculate color(x,y)
+    wire next_pixel;
+    reg [C_color_bits-1:0] R_color;
+    always @(posedge clk_25mhz)
+      if(next_pixel)
+        R_color <= color;
 
     lcd_video
     #(
-        .C_init_file(C_init_file),
+        .C_init_file("st7789_init.mem"),
         .C_init_size(36)
     )
     lcd_video_inst
@@ -59,7 +67,8 @@ module top_hex_demo
         .clk(clk_25mhz),
         .x(x),
         .y(y),
-        .color(color),
+        .next_pixel(next_pixel),
+        .color(R_color),
         .oled_csn(oled_csn),
         .oled_clk(oled_clk),
         .oled_mosi(oled_mosi),

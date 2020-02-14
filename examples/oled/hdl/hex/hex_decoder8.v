@@ -2,21 +2,19 @@
 // AUTHOR=EMARD
 // LICENSE=BSD
 
-// simplified hex decoder for 8x8 font grid
+// simplified hex decoder for 6x6 and 8x8 font grid
+// FIXME: signal latency, use pipelining?
 
 module hex_decoder8
 #(
-  // Useful values of C_data_len: 4,8,16,32,64,128,192,256,320,448,512
-  // Display has 8 lines. Each line has 16 HEX digits or 64 bits.
-  // C_data_len(63 downto 0) is shown on the first line
-  // C_data_len(127 downto 64) is shown on second line etc.
-  parameter C_data_len = 8, // input bits report len
-  parameter C_row_bits = 4, // 2^n hex digits in a row 4:16, 5:32, etc.
+  parameter C_data_len = 64, // input bits data len
+  parameter C_row_bits = 4,  // 2^n hex digits: splits data into rows of hex digits 3:8, 4:16, 5:32, 6:64, etc.
+  parameter C_grid_6x8 = 0,  // 0:8x8 grid, 1:6x8 grid NOTE:not for trellis, compiles forever
   parameter C_font_file = "oled_font.mem",
   parameter C_font_size = 136,
   parameter C_color_bits = 16,
-  parameter C_x_bits = 8, // X screen bits
-  parameter C_y_bits = 8  // Y screen bits
+  parameter C_x_bits = 7,    // X screen bits
+  parameter C_y_bits = 7     // Y screen bits
 )
 (
   input  wire clk, // 1-25 MHz clock typical
@@ -82,9 +80,15 @@ module hex_decoder8
     for(i = 0; i < C_data_len/4; i=i+1)
       assign S_data_array[i] = data[i*4+3:i*4];
   endgenerate
-  wire [3:0] S_hex_digit = S_data_array[{y[7:3],x[2+C_row_bits:3]}];
-  wire [C_color_bits-1:0] S_bg = C_color_map[S_hex_digit];
+
+  // NOTE large combinatorial logic!
+  // Works for slow SPI LCD screens that take a long time
+  // from changing (x,y) to reading color.
+  wire [C_row_bits-1:0] S_xdiv = C_grid_6x8 ? x/6 : x[2+C_row_bits:3]; // x/6 : x/8
+  wire [2:0] S_xmod = C_grid_6x8 ? x%6 : x[2:0]; // x%6 : x%8
+  wire [3:0] S_hex_digit = S_data_array[{y[C_y_bits-1:3],S_xdiv}]; // y/8*2^C_row_bits+x/8
+  wire [C_color_bits-1:0] S_background = C_color_map[S_hex_digit];
   wire [6:0] S_font_addr = {S_hex_digit,y[2:0]};
-  wire S_pixel_on = x[2:0] < 5 ? C_oled_font[S_font_addr][x[2:0]] : 1'b0;
-  assign color = S_pixel_on ? C_color_white : S_bg;
+  wire S_pixel_on = S_xmod < 5 ? C_oled_font[S_font_addr][S_xmod] : 1'b0;
+  assign color = S_pixel_on ? C_color_white : S_background;
 endmodule
