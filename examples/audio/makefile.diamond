@@ -32,7 +32,7 @@ VERILOG_FILES = \
   hdl/trianglewave.v \
   hdl/sinewave.v \
   hdl/dacpwm.v \
-  hdl/pcm5102.v
+  hdl/i2s.v
 
 VHDL_FILES = \
   hdl/spdif_tx.vhd

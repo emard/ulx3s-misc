@@ -26,7 +26,7 @@ VERILOG_FILES = \
   hdl/trianglewave.v \
   hdl/sinewave.v \
   hdl/dacpwm.v \
-  hdl/pcm5102.v
+  hdl/i2s.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \

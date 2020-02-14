@@ -75,13 +75,15 @@ module top_audio
     assign audio_v[3:2] = 2'b00;
     assign audio_v[1] = spdif; // 0.4V at SPDIF (standard: 0.6V MAX)
     assign audio_v[0] = 1'b0;
-    
+
+    parameter i2s_fmt = 0; // 0-i2s standard, 1-left justified
     wire bck, din, lrck;
-    pcm5102
+    i2s
     #(
-      .DAC_CLK_DIV_BITS(2)
+      .fmt(i2s_fmt),
+      .div(3)
     )
-    pcm5102_instance
+    i2s_instance
     (
       .clk(clk_25mhz),
       .left(pcm_24s[23:8]), // sine default, BTN0 pressed -> triangle wave
@@ -90,8 +92,8 @@ module top_audio
       .bck(bck),
       .lrck(lrck)
     );
-
-    assign gp[7]  = 1'b1;        // FMT 1=i2s
+    
+    assign gp[7]  = i2s_fmt;     // FMT 0=i2s
     assign gp[8]  = lrck;        // LCK
     assign gp[9]  = din;         // DIN
     assign gp[10] = bck;         // BCK
@@ -99,7 +101,7 @@ module top_audio
     assign gp[12] = 1'b1;        // DMP
     assign gp[13] = 1'b1;        // FLT
 
-    assign gn[7]  = 1'b1;        // FMT 1=i2s
+    assign gn[7]  = i2s_fmt;     // FMT 0=i2s
     assign gn[8]  = lrck|btn[6]; // LCK
     assign gn[9]  = din;         // DIN
     assign gn[10] = bck;         // BCK
