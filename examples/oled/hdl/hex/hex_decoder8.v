@@ -9,7 +9,7 @@ module hex_decoder8
 #(
   parameter C_data_len = 64, // input bits data len
   parameter C_row_bits = 4,  // 2^n hex digits: splits data into rows of hex digits 3:8, 4:16, 5:32, 6:64, etc.
-  parameter C_grid_6x8 = 0,  // 0:8x8 grid, 1:6x8 grid NOTE:not for trellis, compiles forever
+  parameter C_grid_6x8 = 0,  // 0:8x8 grid, 1:6x8 grid NOTE: trellis must use "-abc9" to compile
   parameter C_font_file = "oled_font.mem",
   parameter C_font_size = 136,
   parameter C_color_bits = 16,

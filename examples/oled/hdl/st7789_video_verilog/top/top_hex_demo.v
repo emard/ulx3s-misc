@@ -36,7 +36,7 @@ module top_hex_demo
     #(
         .C_data_len(128),
         .C_row_bits(4),
-        .C_grid_6x8(0), // NOTE DIAMOND supports 0 or 1, TRELLIS only 0
+        .C_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
         .C_font_file("oled_font.mem"),
 	.C_color_bits(C_color_bits)
     )
