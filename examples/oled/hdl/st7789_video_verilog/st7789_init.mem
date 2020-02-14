@@ -1,0 +1,50 @@
+// SWRESET, delay 256ms
+01
+80
+08
+// SLPOUT, delay 16ms
+11
+80
+04
+// COLMOD, 16-bit color, delay 16ms
+3A
+81
+55
+04
+// MADCTL
+36
+01
+00
+// CASET X
+2A
+04
+// X start MSB,LSB
+00
+00
+// X end MSB,LSB
+00
+EF
+// RASET Y
+2B
+04
+// Y start MSB,LSB
+00
+00
+// Y end MSB,LSB
+00
+EF
+// INVON, delay 16ms
+21
+80
+04
+// NORON, delay 16ms
+13
+80
+04
+// DISPON, delay 16ms
+29
+80
+04
+// RAMWR 2C 00
+2C
+00
