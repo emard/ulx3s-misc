@@ -3,13 +3,13 @@
 // LICENSE=BSD
 
 // simplified hex decoder for 6x6 and 8x8 font grid
-// FIXME: signal latency, use pipelining?
 
 module hex_decoder8
 #(
   parameter C_data_len = 64, // input bits data len
   parameter C_row_bits = 4,  // 2^n hex digits: splits data into rows of hex digits 3:8, 4:16, 5:32, 6:64, etc.
   parameter C_grid_6x8 = 0,  // 0:8x8 grid, 1:6x8 grid NOTE: trellis must use "-abc9" to compile
+  parameter C_pipeline = 1,  // 0:combinatorial (no clk), 1:pipelined (uses clk)
   parameter C_font_file = "oled_font.mem",
   parameter C_font_size = 136,
   parameter C_color_bits = 16,
@@ -17,7 +17,7 @@ module hex_decoder8
   parameter C_y_bits = 7     // Y screen bits
 )
 (
-  input  wire clk, // 1-25 MHz clock typical
+  input  wire clk, // 25-100 MHz clock typical
   input  wire [C_data_len-1:0] data,
   input  wire [C_x_bits-1:0] x,
   input  wire [C_y_bits-1:0] y,
@@ -74,21 +74,53 @@ module hex_decoder8
   assign C_color_map[14] = C_color_light_blue;
   assign C_color_map[15] = C_color_light_violett;
 
-  wire [3:0] S_data_array[C_data_len/4-1:0];
+  wire [3:0] S_data_mux[C_data_len/4-1:0];
   generate
     genvar i;
     for(i = 0; i < C_data_len/4; i=i+1)
-      assign S_data_array[i] = data[i*4+3:i*4];
+      assign S_data_mux[i] = data[i*4+3:i*4];
   endgenerate
 
-  // NOTE large combinatorial logic!
-  // Works for slow SPI LCD screens that take a long time
-  // from changing (x,y) to reading color.
-  wire [C_row_bits-1:0] S_xdiv = C_grid_6x8 ? x/6 : x[2+C_row_bits:3]; // x/6 : x/8
-  wire [2:0] S_xmod = C_grid_6x8 ? x%6 : x[2:0]; // x%6 : x%8
-  wire [3:0] S_hex_digit = S_data_array[{y[C_y_bits-1:3],S_xdiv}]; // y/8*2^C_row_bits+x/8
-  wire [C_color_bits-1:0] S_background = C_color_map[S_hex_digit];
-  wire [6:0] S_font_addr = {S_hex_digit,y[2:0]};
-  wire S_pixel_on = S_xmod < 5 ? C_oled_font[S_font_addr][S_xmod] : 1'b0;
-  assign color = S_pixel_on ? C_color_white : S_background;
+  generate
+    if(C_pipeline)
+    begin
+      reg [C_y_bits-1:0] R_y1, R_y2;
+      reg [C_row_bits-1:0] R_xdiv;
+      reg [2:0] R_xmod, R_xmod2;
+      reg [3:0] R_hex_digit;
+      reg [C_color_bits-1:0] R_background, R_color;
+      reg [6:0] R_font_addr;
+      reg R_pixel_on;
+      always @(posedge clk) 
+      begin
+        // stage 1
+        R_xdiv <= C_grid_6x8 ? x/6 : x[2+C_row_bits:3]; // x/6 : x/8
+        R_xmod <= C_grid_6x8 ? x%6 : x[2:0]; // x%6 : x%8
+        R_y1 <= y;
+        // stage 2
+        R_hex_digit <= S_data_mux[{R_y1[C_y_bits-1:3],R_xdiv}]; // y/8*2^C_row_bits+x/8
+        R_xmod2 <= R_xmod;
+        R_y2 <= R_y1;
+        // stage 3
+        R_background <= C_color_map[R_hex_digit];
+        R_pixel_on <= R_xmod2 < 5 ? C_oled_font[{R_hex_digit,R_y2[2:0]}][R_xmod2] : 0;
+        // stage 4
+        R_color <= R_pixel_on ? C_color_white : R_background;
+      end
+      assign color = R_color;
+    end
+    else // combinatorial
+    begin
+      // NOTE large combinatorial logic!
+      // Works for slow SPI LCD screens that take a long time
+      // from changing (x,y) to reading color.
+      wire [C_row_bits-1:0] S_xdiv = C_grid_6x8 ? x/6 : x[2+C_row_bits:3]; // x/6 : x/8
+      wire [2:0] S_xmod = C_grid_6x8 ? x%6 : x[2:0]; // x%6 : x%8
+      wire [3:0] S_hex_digit = S_data_mux[{y[C_y_bits-1:3],S_xdiv}]; // y/8*2^C_row_bits+x/8
+      wire [C_color_bits-1:0] S_background = C_color_map[S_hex_digit];
+      wire [6:0] S_font_addr = {S_hex_digit,y[2:0]};
+      wire S_pixel_on = S_xmod < 5 ? C_oled_font[S_font_addr][S_xmod] : 1'b0;
+      assign color = S_pixel_on ? C_color_white : S_background;
+    end
+  endgenerate
 endmodule
