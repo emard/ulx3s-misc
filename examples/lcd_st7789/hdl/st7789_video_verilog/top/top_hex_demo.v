@@ -59,8 +59,9 @@ module top_hex_demo
 
     lcd_video
     #(
-        .C_init_file("st7789_init.mem"),
-        .C_init_size(36)
+        .c_clk_mhz(25),
+        .c_init_file("st7789_init.mem"),
+        .c_init_size(36)
     )
     lcd_video_inst
     (

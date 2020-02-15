@@ -1,16 +1,16 @@
-// SWRESET, delay 128ms
+// SWRESET, delay 2^17 us = 131us
 01
 80
-07
-// SLPOUT, delay 16ms
+11
+// SLPOUT, delay 2^14 us = 16ms
 11
 80
-04
-// COLMOD, 16-bit color, delay 16ms
+0E
+// COLMOD, 16-bit color, delay 2^14 us = 16ms
 3A
 81
 55
-04
+0E
 // MADCTL
 36
 01
@@ -33,18 +33,18 @@ EF
 // Y end MSB,LSB
 00
 EF
-// INVON, delay 16ms
+// INVON, delay 2^14 us = 16ms
 21
 80
-04
-// NORON, delay 16ms
+0E
+// NORON, delay 2^14 us = 16ms
 13
 80
-04
-// DISPON, delay 16ms
+0E
+// DISPON, delay 2^14 us = 16ms
 29
 80
-04
+0E
 // RAMWR 2C 00
 2C
 00

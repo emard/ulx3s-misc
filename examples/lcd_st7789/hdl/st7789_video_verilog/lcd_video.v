@@ -3,25 +3,25 @@
 // LICENSE=BSD
 
 module lcd_video #(
-  parameter ms_cycles = 25000, // kHz clk freq
-  parameter C_reset_ms = 128,  // ms holding hardware reset
-  parameter C_color_bits = 16, // RGB565
-  parameter C_x_size = 240,  // pixel X screen size
-  parameter C_y_size = 240,  // pixel Y screen size
-  parameter C_x_bits = $clog2(C_x_size),
-  parameter C_y_bits = $clog2(C_y_size),
+  parameter c_clk_mhz = 25, // MHz clk freq (125 MHz max for st7789)
+  parameter c_reset_us = 150000,  // us holding hardware reset
+  parameter c_color_bits = 16, // RGB565
+  parameter c_x_size = 240,  // pixel X screen size
+  parameter c_y_size = 240,  // pixel Y screen size
+  parameter c_x_bits = $clog2(c_x_size),
+  parameter c_y_bits = $clog2(c_y_size),
   // file name is relative to directory path in which verilog compiler is running
   // screen can be also XY flipped and/or rotated from this init file
-  parameter C_init_file = "st7789_init.mem",
-  parameter C_init_size = 36 // bytes in init file
+  parameter c_init_file = "st7789_init.mem",
+  parameter c_init_size = 36 // bytes in init file
 ) (
   input  wire clk, // SPI display clock rate will be half of this clock rate
   input  wire reset,
   
-  output reg  [C_x_bits-1:0] x,
-  output reg  [C_y_bits-1:0] y,
+  output reg  [c_x_bits-1:0] x,
+  output reg  [c_y_bits-1:0] y,
   output reg  next_pixel, // 1 when x/y changes
-  input  wire [C_color_bits-1:0] color, 
+  input  wire [c_color_bits-1:0] color, 
 
   output wire oled_csn,
   output wire oled_clk,
@@ -31,9 +31,9 @@ module lcd_video #(
 );
 
 
-  reg [7:0] C_oled_init[0:C_init_size-1];
+  reg [7:0] c_oled_init[0:c_init_size-1];
   initial begin
-    $readmemh(C_init_file, C_oled_init);
+    $readmemh(c_init_file, c_oled_init);
   end
 
   reg [10:0] init_cnt;
@@ -42,7 +42,7 @@ module lcd_video #(
   reg byte_toggle; // alternates data byte for 16-bit mode
   reg init = 1;
   reg [4:0] num_args;
-  reg [25:0] delay_cnt = ms_cycles*C_reset_ms; // initial delay is 512ms for reset
+  reg [27:0] delay_cnt = c_clk_mhz*c_reset_us; // initial delay fits 1.3s at 100MHz
   reg [5:0] arg;
   reg delay_set = 0;
   reg [7:0] last_cmd;
@@ -55,12 +55,12 @@ module lcd_video #(
   assign oled_mosi = data[7];       // Shift out data
 
   // The next byte in the initialisation sequence
-  wire [7:0] next_byte = C_oled_init[init_cnt[10:4]];
+  wire [7:0] next_byte = c_oled_init[init_cnt[10:4]];
 
   // Do the initialisation sequence and then start sending pixels
   always @(posedge clk) begin
     if (reset) begin
-      delay_cnt <= C_reset_ms*ms_cycles;
+      delay_cnt <= c_reset_us*c_clk_mhz;
       delay_set <= 0;
       init_cnt <= 0;
       init <= 1;
@@ -70,10 +70,10 @@ module lcd_video #(
       y <= 0;
       byte_toggle <= 0;
       arg <= 0;
-    end else if (delay_cnt[25] == 0) begin // Delay
+    end else if (delay_cnt[$bits(delay_cnt)-1] == 0) begin // Delay
       delay_cnt <= delay_cnt - 1;
       resn <= 1;
-    end else if (init_cnt[10:4] != C_init_size) begin
+    end else if (init_cnt[10:4] != c_init_size) begin
       init_cnt <= init_cnt + 1;
       if (init_cnt[3:0] == 0) begin // Start of byte
         if (init) begin // Still initialisation
@@ -92,7 +92,7 @@ module lcd_video #(
             dc <= 1;
             if (arg == num_args + 1 && !delay_set) arg <= 0;
           end else if (delay_set) begin // delay
-            delay_cnt <= ms_cycles << next_byte;
+            delay_cnt <= c_clk_mhz << (next_byte[4:0]); // 2^n us delay
             data <= 0;
             delay_set <= 0;
             arg <= 0;
@@ -103,9 +103,9 @@ module lcd_video #(
           data <= byte_toggle ? color[7:0] : color[15:8];
           if (byte_toggle) begin
             next_pixel <= 1;
-            if (x == C_x_size-1) begin
+            if (x == c_x_size-1) begin
               x <= 0;
-              if (y == C_y_size-1)
+              if (y == c_y_size-1)
                 y <= 0;
               else
                 y <= y + 1;
@@ -118,7 +118,7 @@ module lcd_video #(
       end
     end else begin // Initialisation done, start sending pixels
       init <= 0;
-      init_cnt[10:4] <= C_init_size - 1;
+      init_cnt[10:4] <= c_init_size - 1;
     end
   end
 endmodule
