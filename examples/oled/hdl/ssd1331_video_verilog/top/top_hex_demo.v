@@ -49,13 +49,44 @@ module top_hex_demo
         .color(color)
     );
 
+generate
+if(0)
+begin
+    wire o_csn, o_clk; 
+    lcd_video
+    #(
+        .c_init_file("ssd1331_init_xflip_16bit.mem"),
+        .c_init_size(90),
+        .c_x_size(96),
+        .c_y_size(64),
+        .c_color_bits(C_color_bits)
+    )
+    lcd_video_inst
+    (
+        .clk(clk),
+        .reset(~btn[0]),
+        .x(x),
+        .y(y),
+        //.next_pixel(next_pixel),
+        .color(color),
+        .oled_csn(o_csn),
+        .oled_clk(o_clk),
+        .oled_mosi(oled_mosi),
+        .oled_dc(oled_dc),
+        .oled_resn(oled_resn)
+    );
+    assign oled_csn = ~o_csn;
+    assign oled_clk = ~o_clk;
+end
+else
+begin
     localparam C_init_file = C_color_bits < 12 ? 
                              "oled_init_xflip.mem" :
                              "oled_init_xflip_16bit.mem";
-
     oled_video
     #(
         .C_init_file(C_init_file),
+        .C_init_size(44),
         .C_color_bits(C_color_bits)
     )
     oled_video_inst
@@ -71,5 +102,7 @@ module top_hex_demo
         .oled_dc(oled_dc),
         .oled_resn(oled_resn)
     );
+end
+endgenerate
 
 endmodule
