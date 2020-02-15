@@ -84,12 +84,12 @@ module hex_decoder_v
   generate
     if(C_pipeline)
     begin
-      reg [C_y_bits-1:0] R_y1, R_y2;
+      reg [C_y_bits-1:0] R_y1;
+      reg [2:0] R_y2;
       reg [C_row_bits-1:0] R_xdiv;
       reg [2:0] R_xmod, R_xmod2;
       reg [3:0] R_hex_digit;
       reg [C_color_bits-1:0] R_background, R_color;
-      reg [6:0] R_font_addr;
       reg R_pixel_on;
       always @(posedge clk) 
       begin
@@ -100,7 +100,7 @@ module hex_decoder_v
         // stage 2
         R_hex_digit <= S_data_mux[{R_y1[C_y_bits-1:3],R_xdiv}]; // y/8*2^C_row_bits+x/8
         R_xmod2 <= R_xmod;
-        R_y2 <= R_y1;
+        R_y2 <= R_y1[2:0];
         // stage 3
         R_background <= C_color_map[R_hex_digit];
         R_pixel_on <= R_xmod2 < 5 ? C_oled_font[{R_hex_digit,R_y2[2:0]}][R_xmod2] : 0;
