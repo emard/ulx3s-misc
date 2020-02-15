@@ -3,6 +3,7 @@ PROJECT = st7789_hex
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
+
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
 FLASH_SPI = 4
@@ -25,12 +26,12 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
 #TOP_MODULE = top_checkered
 TOP_MODULE = top_hex_demo
-TOP_MODULE_FILE = ../../hdl/st7789_video_verilog/top/$(TOP_MODULE).v
+TOP_MODULE_FILE = ../../../lcd_st7789/hdl/st7789_video_verilog/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../hdl/st7789_video_verilog/lcd_video.v \
-  ../../hdl/hex/hex_decoder8.v \
+  ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v \
+  ../../../hex/decoder/hex_decoder_v.v \
 
 VHDL_FILES = 
 
