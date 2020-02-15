@@ -1,5 +1,6 @@
 module top_checkered (
     input  wire clk_25mhz,
+    input  wire [6:0] btn,
     output wire oled_csn,
     output wire oled_clk,
     output wire oled_mosi,
@@ -16,6 +17,7 @@ module top_checkered (
         .C_init_size(36)
     ) lcd_video_inst (
         .clk(clk_25mhz),
+        .reset(~btn[0]),
         .x(x),
         .y(y),
         .color(color),

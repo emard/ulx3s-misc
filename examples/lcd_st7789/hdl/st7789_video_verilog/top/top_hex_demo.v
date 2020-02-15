@@ -65,6 +65,7 @@ module top_hex_demo
     lcd_video_inst
     (
         .clk(clk_25mhz),
+        .reset(~btn[0]),
         .x(x),
         .y(y),
         .next_pixel(next_pixel),

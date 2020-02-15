@@ -1,7 +1,7 @@
-// SWRESET, delay 256ms
+// SWRESET, delay 128ms
 01
 80
-08
+07
 // SLPOUT, delay 16ms
 11
 80
