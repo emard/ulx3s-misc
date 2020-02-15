@@ -2,7 +2,7 @@
 PROJECT = init
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 12
+FPGA_SIZE = 25
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -17,18 +17,20 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
+CONSTRAINTS = ../../../../constraints/ulx3s_v20.lpf
 TOP_MODULE = top_hex_demo
-TOP_MODULE_FILE = ../../hdl/ssd1331_video_verilog/top/$(TOP_MODULE).v
+TOP_MODULE_FILE = ../../../oled/hdl/ssd1331_video_verilog/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../hdl/ssd1331_video_verilog/oled_video.v \
-  ../../hdl/ssd1331_video_verilog/hex_decoder.v \
-  ../../hdl/ssd1331_term_verilog/pll.v
+  ../../decoder/hex_decoder_v.v \
+  ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = 
+
+YOSYS_OPTIONS = -abc9
+NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/diamond_path.mk

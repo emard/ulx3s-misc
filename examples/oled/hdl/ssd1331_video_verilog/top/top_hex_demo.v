@@ -13,14 +13,7 @@ module top_hex_demo
     parameter C_color_bits = 16; // 8 or 16
     assign wifi_gpio0 = btn[0];
 
-    wire clk, locked;
-    pll
-    pll_inst
-    (
-        .clki(clk_25mhz),
-        .clko(clk), // 12.5 MHz
-        .locked(locked)
-    );
+    wire clk = clk_25mhz;
 
     reg [127:0] R_display; // something to display
     always @(posedge clk)
@@ -40,20 +33,19 @@ module top_hex_demo
     wire next_pixel;
     wire [C_color_bits-1:0] color;
 
-    hex_decoder
+    hex_decoder_v
     #(
-        .C_data_len(128),
-        .C_font_file("oled_font.mem"),
-        .C_color_bits(C_color_bits)
+        .c_data_len(128),
+        .c_font_file("hex_font.mem"),
+        .c_grid_6x8(1),
+        .c_color_bits(C_color_bits)
     )
-    hex_decoder_inst
+    hex_decoder_v_inst
     (
         .clk(clk),
-        .en(1'b1),
         .data(R_display),
         .x(x),
         .y(y),
-        .next_pixel(next_pixel),
         .color(color)
     );
 
