@@ -34,11 +34,11 @@ module top_hex_demo
     wire [C_color_bits-1:0] color;
     hex_decoder_v
     #(
-        .C_data_len(128),
-        .C_row_bits(4),
-        .C_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
-        .C_font_file("hex_font.mem"),
-	.C_color_bits(C_color_bits)
+        .c_data_len(128),
+        .c_row_bits(4),
+        .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
+        .c_font_file("hex_font.mem"),
+	.c_color_bits(C_color_bits)
     )
     hex_decoder_v_inst
     (
