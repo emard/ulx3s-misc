@@ -2,6 +2,8 @@
 // AUTHORS=EMARD,MMICKO and Lawrie Griffiths
 // LICENSE=BSD
 
+// FIXME after reset needs 5ms delay before commands
+
 module lcd_video #(
   parameter c_clk_mhz = 25, // MHz clk freq (125 MHz max for st7789)
   parameter c_reset_us = 150000,  // us holding hardware reset
@@ -13,7 +15,7 @@ module lcd_video #(
   // file name is relative to directory path in which verilog compiler is running
   // screen can be also XY flipped and/or rotated from this init file
   parameter c_init_file = "st7789_init.mem",
-  parameter c_init_size = 36 // bytes in init file
+  parameter c_init_size = 38 // bytes in init file
 ) (
   input  wire clk, // SPI display clock rate will be half of this clock rate
   input  wire reset,
@@ -69,7 +71,7 @@ module lcd_video #(
       x <= 0;
       y <= 0;
       byte_toggle <= 0;
-      arg <= 0;
+      arg <= 1; // after reset, before commands take delay from init sequence
     end else if (delay_cnt[$bits(delay_cnt)-1] == 0) begin // Delay
       delay_cnt <= delay_cnt - 1;
       resn <= 1;

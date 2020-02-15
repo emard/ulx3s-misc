@@ -28,8 +28,22 @@ CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
 TOP_MODULE = top_hex_demo
 TOP_MODULE_FILE = ../../../lcd_st7789/hdl/st7789_video_verilog/top/$(TOP_MODULE).v
 
+CLK0_NAME = clk_25_250_125_25
+CLK0_FILE_NAME = ../../../../clocks/$(CLK0_NAME).v
+CLK0_OPTIONS = \
+  --module=$(CLK0_NAME) \
+  --clkin_name=clk25_i \
+  --clkin=25 \
+  --clkout0_name=clk250_o \
+  --clkout0=250 \
+  --clkout1_name=clk125_o \
+  --clkout1=125 \
+  --clkout2_name=clk25_o \
+  --clkout2=25
+
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
+  $(CLK0_FILE_NAME) \
   ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v \
   ../../../hex/decoder/hex_decoder_v.v \
 
