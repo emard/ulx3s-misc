@@ -40,7 +40,7 @@ module lcd_video #(
 
   reg [10:0] init_cnt;
   reg [7:0] data;
-  reg dc;
+  reg dc = 1;
   reg byte_toggle; // alternates data byte for 16-bit mode
   reg init = 1;
   reg [4:0] num_args;
@@ -66,7 +66,7 @@ module lcd_video #(
       delay_set <= 0;
       init_cnt <= 0;
       init <= 1;
-      dc <= 0;
+      dc <= 1;
       resn <= 0;
       x <= 0;
       y <= 0;
