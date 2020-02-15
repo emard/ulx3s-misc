@@ -68,17 +68,17 @@ module top_hex_640x480
     // for reverse screen:
     wire [9:0] rx = 636-x;
     wire [C_color_bits-1:0] color;
-    hex_decoder8
+    hex_decoder_v
     #(
-        .C_data_len(128),
+        .C_data_len(256),
         .C_row_bits(5),
         .C_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
-        .C_font_file("oled_font.mem"),
+        .C_font_file("hex_font.mem"),
         .C_x_bits(8),
         .C_y_bits(8),
 	.C_color_bits(C_color_bits)
     )
-    hex_decoder8_inst
+    hex_decoder_v_inst
     (
         .clk(clk_pixel),
         .data(R_display),

@@ -2,7 +2,7 @@
 PROJECT = hexdvi
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 12
+FPGA_SIZE = 25
 FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
@@ -38,7 +38,7 @@ CLK0_OPTIONS = \
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   $(CLK0_FILE_NAME) \
-  ../../../oled/hdl/hex/hex_decoder8.v \
+  ../../../hex/decoder/hex_decoder_v.v \
   ../../../dvi/hdl/fake_differential.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
