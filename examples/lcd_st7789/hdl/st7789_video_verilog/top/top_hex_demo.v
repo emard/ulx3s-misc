@@ -32,15 +32,15 @@ module top_hex_demo
     // for reverse screen:
     wire [7:0] ry = 239-y;
     wire [C_color_bits-1:0] color;
-    hex_decoder8
+    hex_decoder_v
     #(
         .C_data_len(128),
         .C_row_bits(4),
         .C_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
-        .C_font_file("oled_font.mem"),
+        .C_font_file("hex_font.mem"),
 	.C_color_bits(C_color_bits)
     )
-    hex_decoder8_inst
+    hex_decoder_v_inst
     (
         .clk(clk_25mhz),
         .data(R_display),
