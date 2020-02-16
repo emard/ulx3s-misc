@@ -52,6 +52,8 @@ module top_checkered
     oled_video
     #(
         .c_init_file(C_init_file),
+        .c_x_size(128),
+        .c_y_size(128),
         .c_color_bits(C_color_bits)
     )
     oled_video_inst

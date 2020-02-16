@@ -29,17 +29,6 @@ B5
 // 11: SSD1351_CMD_FUNCTIONSELECT Set functionselect (internal, diode drop)
 AB
 01
-// 4: SSD1351_CMD_PRECHARGE
-B1
-32
-// 2: NOP was Set data format A0 62
-// A0 20 normal 8bpp
-// A0 60 normal 16bpp
-// A0 22 X-flip 8bpp
-// A0 62 X-flip 16bpp
-// A0 32 Y-flip 8bpp
-B0
-B0
 // 33: SSD1351_CMD_VCOMH Set Vcomh voltage
 BE
 05
@@ -53,7 +42,23 @@ C8
 // 31: SSD1351_CMD_CONTRASTMASTER Set contrast master
 C7
 0F
-// 35: NOP was Master current control
+// 25: SSD1351_CMD_SETVSL Set VSL
+B4
+A0
+B5
+55
+// 21: SSD1351_CMD_PRECHARGE2 Set precharge2
+B6
+01
+// 4: SSD1351_CMD_PRECHARGE
+B1
+32
+// 2: NOP was Set data format A0 62
+// A0 20 normal 8bpp
+// A0 60 normal 16bpp
+// A0 22 X-flip 8bpp
+// A0 62 X-flip 16bpp
+// A0 32 Y-flip 8bpp
 B0
 B0
 // 37: NOP was Set column address 15 00 7F
@@ -64,13 +69,9 @@ B0
 B0
 B0
 B0
-// 25: SSD1351_CMD_SETVSL Set VSL
-B4
-A0
-B5
-55
-// 21: SSD1351_CMD_PRECHARGE2 Set precharge2
-B6
-01
 // 43: SSD1351_CMD_DISPLAYON Set display on
 AF
+// 35: NOP
+B0
+// SSD1351_CMD_WRITERAM (data follows)
+5C
