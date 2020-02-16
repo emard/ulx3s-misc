@@ -1,0 +1,76 @@
+// This file must be in the directory from where
+// the verilog compiler is running.
+// The path to this file is not relative to the
+// verilog source that needs to include this file.
+// Use symlink (ln -s orig copy) or copy (cp orig copy).
+// 44 bytes follow:
+// 0: NOP
+B0
+// 19: SSD1351_CMD_COMMANDLOCK Set command lock
+FD
+12
+// 23: SSD1351_CMD_COMMANDLOCK Set command lock
+FD
+B1
+// 1: SSD1351_CMD_DISPLAYOFF Set display off
+AE
+// 17: SSD1351_CMD_CLOCKDIV Set display clock divider
+B3
+F1
+// 9: SSD1351_CMD_MUXRATIO Set multiplex ratio
+CA
+7F
+// 6: SSD1351_CMD_DISPLAYOFFSET Set display offset
+A2
+00
+// 13: SSD1351_CMD_SETGPIO Set gpio
+B5
+00
+// 11: SSD1351_CMD_FUNCTIONSELECT Set functionselect (internal, diode drop)
+AB
+01
+// 4: SSD1351_CMD_PRECHARGE
+B1
+32
+// 2: NOP was Set data format A0 62
+// A0 20 normal 8bpp
+// A0 60 normal 16bpp
+// A0 22 X-flip 8bpp
+// A0 62 X-flip 16bpp
+// A0 32 Y-flip 8bpp
+B0
+B0
+// 33: SSD1351_CMD_VCOMH Set Vcomh voltage
+BE
+05
+// 8: SSD1351_CMD_NORMALDISPLAY Set display mode normal
+A6
+// 27: SSD1351_CMD_CONTRASTABC Set contrast ABC
+C1
+C8
+80
+C8
+// 31: SSD1351_CMD_CONTRASTMASTER Set contrast master
+C7
+0F
+// 35: NOP was Master current control
+B0
+B0
+// 37: NOP was Set column address 15 00 7F
+B0
+B0
+B0
+// 40: NOP was Set row address 75 00 7F
+B0
+B0
+B0
+// 25: SSD1351_CMD_SETVSL Set VSL
+B4
+A0
+B5
+55
+// 21: SSD1351_CMD_PRECHARGE2 Set precharge2
+B6
+01
+// 43: SSD1351_CMD_DISPLAYON Set display on
+AF
