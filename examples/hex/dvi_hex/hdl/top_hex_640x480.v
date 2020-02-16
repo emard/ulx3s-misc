@@ -70,13 +70,13 @@ module top_hex_640x480
     wire [C_color_bits-1:0] color;
     hex_decoder_v
     #(
-        .C_data_len(256),
-        .C_row_bits(5),
-        .C_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
-        .C_font_file("hex_font.mem"),
-        .C_x_bits(8),
-        .C_y_bits(8),
-	.C_color_bits(C_color_bits)
+        .c_data_len(256),
+        .c_row_bits(5),
+        .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
+        .c_font_file("hex_font.mem"),
+        .c_x_bits(8),
+        .c_y_bits(8),
+	.c_color_bits(C_color_bits)
     )
     hex_decoder_v_inst
     (
