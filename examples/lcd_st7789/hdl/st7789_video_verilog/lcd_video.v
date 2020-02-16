@@ -8,8 +8,8 @@ module lcd_video #(
   parameter c_color_bits = 16, // RGB565
   parameter c_x_size = 240,  // pixel X screen size
   parameter c_y_size = 240,  // pixel Y screen size
-  parameter c_x_bits = $clog2(c_x_size),
-  parameter c_y_bits = $clog2(c_y_size),
+  parameter c_x_bits = $clog2(c_x_size), // 240->8
+  parameter c_y_bits = $clog2(c_y_size), // 240->8
   parameter c_clk_polarity = 1, // spi_clk polarity 0:normal (ssd1331), 1:inverted (st7789)
   // file name is relative to directory path in which verilog compiler is running
   // screen can be also XY flipped and/or rotated from this init file
