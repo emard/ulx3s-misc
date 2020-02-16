@@ -52,7 +52,7 @@ module top_hex_demo
 // we can use either lcd or oled video driver
 // oled driver core and init is shorter
 generate
-if(1)
+if(0)  // driver type 0-oled 1-lcd (both should work)
 begin
     wire oled_clkn; 
     lcd_video
@@ -87,22 +87,23 @@ begin
                              "oled_init_xflip_16bit.mem";
     oled_video
     #(
-        .C_init_file(C_init_file),
-        .C_init_size(44),
-        .C_color_bits(C_color_bits)
+        .c_init_file(C_init_file),
+        .c_init_size(44),
+        .c_color_bits(C_color_bits)
     )
     oled_video_inst
     (
         .clk(clk),
+        .reset(~btn[0]),
         .x(x),
         .y(y),
         .next_pixel(next_pixel),
         .color(color),
-        .oled_csn(oled_csn),
-        .oled_clk(oled_clk),
-        .oled_mosi(oled_mosi),
-        .oled_dc(oled_dc),
-        .oled_resn(oled_resn)
+        .spi_csn(oled_csn),
+        .spi_clk(oled_clk),
+        .spi_mosi(oled_mosi),
+        .spi_dc(oled_dc),
+        .spi_resn(oled_resn)
     );
 end
 endgenerate
