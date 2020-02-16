@@ -43,7 +43,7 @@ module top_checkered
     //                  checkered      red   green   blue     red     green blue
     wire [15:0] color = x[3] ^ y[3] ? {5'd0, x[6:1], 5'd0} : {y[5:1], 6'd0, 5'd0};
     //localparam C_init_file = "oled_init_16bit.mem";
-    localparam C_init_file = "ssd1351_init_xflip_16bit.mem";
+    localparam C_init_file = "oled_init_xflip_16bit.mem";
     //localparam C_init_file = "oled_init_yflip_16bit.mem";
     //localparam C_init_file = "oled_init_xyflip_16bit.mem";
     end
