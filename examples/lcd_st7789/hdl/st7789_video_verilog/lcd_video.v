@@ -28,7 +28,7 @@ module lcd_video #(
   input  wire [c_color_bits-1:0] color, 
 
   output wire spi_csn,
-  output wire spi_clk,
+  output wire spi_clk, // for SSD1331 invert spi_clk
   output wire spi_mosi,
   output wire spi_dc,
   output wire spi_resn
