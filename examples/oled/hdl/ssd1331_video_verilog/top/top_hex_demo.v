@@ -30,7 +30,6 @@ module top_hex_demo
 
     wire [6:0] x;
     wire [5:0] y;
-    wire next_pixel;
     wire [C_color_bits-1:0] color;
 
     hex_decoder_v
@@ -70,7 +69,6 @@ begin
         .reset(~btn[0]),
         .x(x),
         .y(y),
-        //.next_pixel(next_pixel),
         .color(color),
         .spi_csn(oled_csn),
         .spi_clk(oled_clkn),
@@ -97,7 +95,6 @@ begin
         .reset(~btn[0]),
         .x(x),
         .y(y),
-        .next_pixel(next_pixel),
         .color(color),
         .spi_csn(oled_csn),
         .spi_clk(oled_clk),
