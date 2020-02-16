@@ -14,7 +14,10 @@ module lcd_video #(
   // screen can be also XY flipped and/or rotated from this init file
   parameter c_init_file = "st7789_init.mem",
   parameter c_init_size = 38, // bytes in init file
-  parameter c_nop = 8'h00 // during delays and arg parsing: set data to this NOP
+  // although SPI CLK will be stopped during
+  // arg parsing and delays, to be on the safe side
+  // this will put NOP command at SPI MOSI line
+  parameter c_nop = 8'h00 // NOP command from datasheet
 ) (
   input  wire clk, // SPI display clock rate will be half of this clock rate
   input  wire reset,
@@ -24,11 +27,11 @@ module lcd_video #(
   output reg  next_pixel, // 1 when x/y changes
   input  wire [c_color_bits-1:0] color, 
 
-  output wire oled_csn,
-  output wire oled_clk,
-  output wire oled_mosi,
-  output wire oled_dc,
-  output wire oled_resn
+  output wire spi_csn,
+  output wire spi_clk,
+  output wire spi_mosi,
+  output wire spi_dc,
+  output wire spi_resn
 );
 
 
@@ -37,7 +40,7 @@ module lcd_video #(
     $readmemh(c_init_file, c_oled_init);
   end
 
-  reg [10:0] init_cnt;
+  reg [10:0] index;
   reg [7:0] data = c_nop;
   reg dc = 1;
   reg byte_toggle; // alternates data byte for 16-bit mode
@@ -50,21 +53,16 @@ module lcd_video #(
   reg resn = 0;
   reg clken = 0;
 
-  assign oled_resn = resn;          // Reset is High, Low, High for first 3 cycles
-  assign oled_csn = resn;           // Connected to backlight
-  assign oled_dc = dc;              // 0 for commands, 1 for command parameters and data
-  assign oled_clk = init_cnt[0] | ~clken; // no clock during delay
-  assign oled_mosi = data[7];       // Shift out data
 
   // The next byte in the initialisation sequence
-  wire [7:0] next_byte = c_oled_init[init_cnt[10:4]];
+  wire [7:0] next_byte = c_oled_init[index[10:4]];
 
   // Do the initialisation sequence and then start sending pixels
   always @(posedge clk) begin
     if (reset) begin
       delay_cnt <= c_reset_us*c_clk_mhz;
       delay_set <= 0;
-      init_cnt <= 0;
+      index <= 0;
       init <= 1;
       dc <= 1;
       resn <= 0;
@@ -77,9 +75,9 @@ module lcd_video #(
     end else if (delay_cnt[$bits(delay_cnt)-1] == 0) begin // Delay
       delay_cnt <= delay_cnt - 1;
       resn <= 1;
-    end else if (init_cnt[10:4] != c_init_size) begin
-      init_cnt <= init_cnt + 1;
-      if (init_cnt[3:0] == 0) begin // Start of byte
+    end else if (index[10:4] != c_init_size) begin
+      index <= index + 1;
+      if (index[3:0] == 0) begin // Start of byte
         if (init) begin // Still initialisation
           dc <= 0;
           arg <= arg + 1;
@@ -123,11 +121,18 @@ module lcd_video #(
         end
       end else begin // Shift out byte
         next_pixel <= 0;
-        if (init_cnt[0] == 0) data <= { data[6:0], 1'b0 };
+        if (index[0] == 0) data <= { data[6:0], 1'b0 };
       end
     end else begin // Initialisation done, start sending pixels
       init <= 0;
-      init_cnt[10:4] <= c_init_size - 1;
+      index[10:4] <= c_init_size - 1;
     end
   end
+
+  assign spi_resn = resn;             // Reset is High, Low, High for first 3 cycles
+  assign spi_csn = ~clken;            // Connected to backlight
+  assign spi_dc = dc;                 // 0 for commands, 1 for command parameters and data
+  assign spi_clk = index[0] | ~clken; // stop clock during arg and delay
+  assign spi_mosi = data[7];          // Shift out data
+
 endmodule

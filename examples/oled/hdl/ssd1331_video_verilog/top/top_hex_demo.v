@@ -54,7 +54,7 @@ module top_hex_demo
 generate
 if(1)
 begin
-    wire o_csn, o_clk; 
+    wire oled_clkn; 
     lcd_video
     #(
         .c_init_file("ssd1331_init_xflip_16bit.mem"),
@@ -72,14 +72,13 @@ begin
         .y(y),
         //.next_pixel(next_pixel),
         .color(color),
-        .oled_csn(o_csn),
-        .oled_clk(o_clk),
-        .oled_mosi(oled_mosi),
-        .oled_dc(oled_dc),
-        .oled_resn(oled_resn)
+        .spi_csn(oled_csn),
+        .spi_clk(oled_clkn),
+        .spi_mosi(oled_mosi),
+        .spi_dc(oled_dc),
+        .spi_resn(oled_resn)
     );
-    assign oled_csn = ~o_csn;
-    assign oled_clk = ~o_clk;
+    assign oled_clk = ~oled_clkn;
 end
 else
 begin
