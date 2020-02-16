@@ -10,6 +10,7 @@ module lcd_video #(
   parameter c_y_size = 240,  // pixel Y screen size
   parameter c_x_bits = $clog2(c_x_size),
   parameter c_y_bits = $clog2(c_y_size),
+  parameter c_clk_polarity = 1, // spi_clk polarity 0:normal (ssd1331), 1:inverted (st7789)
   // file name is relative to directory path in which verilog compiler is running
   // screen can be also XY flipped and/or rotated from this init file
   parameter c_init_file = "st7789_init.mem",
@@ -132,7 +133,7 @@ module lcd_video #(
   assign spi_resn = resn;             // Reset is High, Low, High for first 3 cycles
   assign spi_csn = ~clken;            // Connected to backlight
   assign spi_dc = dc;                 // 0 for commands, 1 for command parameters and data
-  assign spi_clk = index[0] | ~clken; // stop clock during arg and delay
+  assign spi_clk = (index[0] | ~clken) ^ ~c_clk_polarity; // stop clock during arg and delay
   assign spi_mosi = data[7];          // Shift out data
 
 endmodule
