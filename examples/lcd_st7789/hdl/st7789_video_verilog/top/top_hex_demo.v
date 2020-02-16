@@ -84,11 +84,12 @@ module top_hex_demo
         .y(y),
         .next_pixel(next_pixel),
         .color(R_color),
-        .oled_csn(oled_csn),
-        .oled_clk(oled_clk),
-        .oled_mosi(oled_mosi),
-        .oled_dc(oled_dc),
-        .oled_resn(oled_resn)
+        //.spi_csn(oled_csn),
+        .spi_clk(oled_clk),
+        .spi_mosi(oled_mosi),
+        .spi_dc(oled_dc),
+        .spi_resn(oled_resn)
     );
+    assign oled_csn = 1; // CSN is connected to BLK (backlight enable pin)
 
 endmodule
