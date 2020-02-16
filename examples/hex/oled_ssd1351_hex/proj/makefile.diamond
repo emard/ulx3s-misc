@@ -2,7 +2,7 @@
 PROJECT = ssd1331_hex
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 25
+FPGA_SIZE = 12
 
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
@@ -24,8 +24,9 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 # ******* design files *******
 CONSTRAINTS = ../../../../constraints/ulx3s_v20.lpf
+#TOP_MODULE = top_checkered
 TOP_MODULE = top_hex_demo
-TOP_MODULE_FILE = ../../../oled/hdl/ssd1331_video_verilog/top/$(TOP_MODULE).v
+TOP_MODULE_FILE = ../../../oled/hdl/ssd1351_video_verilog/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \

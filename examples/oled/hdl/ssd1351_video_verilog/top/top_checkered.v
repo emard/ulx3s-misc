@@ -48,7 +48,60 @@ module top_checkered
     //localparam C_init_file = "oled_init_xyflip_16bit.mem";
     end
     endgenerate
-    
+
+generate
+if(1)  // driver type 0-oled 1-lcd (both should work)
+begin
+    wire oled_clkn; 
+    lcd_video
+    #(
+        .c_init_file("ssd1351_linit_16bit.mem"),
+        .c_init_size(59),
+        .c_reset_us(1000),
+        .c_clk_polarity(0),
+        .c_x_size(128),
+        .c_y_size(128),
+        .c_color_bits(C_color_bits)
+    )
+    lcd_video_inst
+    (
+        .clk(clk),
+        .reset(~btn[0]),
+        .x(x),
+        .y(y),
+        .color(color),
+        .spi_csn(oled_csn),
+        .spi_clk(oled_clk),
+        .spi_mosi(oled_mosi),
+        .spi_dc(oled_dc),
+        .spi_resn(oled_resn)
+    );
+end
+else
+begin
+    oled_video
+    #(
+        .c_init_file("ssd1351_init_xflip_16bit.mem"),
+        .c_x_size(128),
+        .c_y_size(128),
+        .c_color_bits(C_color_bits)
+    )
+    oled_video_inst
+    (
+        .clk(clk),
+        .reset(~btn[0]),
+        .x(x),
+        .y(y),
+        .color(color),
+        .spi_csn(oled_csn),
+        .spi_clk(oled_clk),
+        .spi_mosi(oled_mosi),
+        .spi_dc(oled_dc),
+        .spi_resn(oled_resn)
+    );
+end
+endgenerate
+/*
     oled_video
     #(
         .c_init_file(C_init_file),
@@ -68,5 +121,5 @@ module top_checkered
         .spi_dc(oled_dc),
         .spi_resn(oled_resn)
     );
-
+*/
 endmodule

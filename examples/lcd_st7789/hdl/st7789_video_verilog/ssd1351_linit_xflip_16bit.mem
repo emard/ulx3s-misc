@@ -1,0 +1,90 @@
+// SSD1351 OLED init for lcd_video core
+// This file must be in the directory from where
+// the verilog compiler is running.
+// The path to this file is not relative to the
+// verilog source that needs to include this file.
+// Use symlink (ln -s orig copy) or copy (cp orig copy).
+// 59 bytes follow:
+// after reset, delay 2^10 us = 1ms before sending commands
+80
+0A
+// : SSD1351_CMD_NOP B0 00
+// : SSD1351_CMD_COMMANDLOCK unlock
+FD
+01
+12
+// : SSD1351_CMD_COMMANDLOCK parameters accessible
+FD
+01
+B1
+// : SSD1351_CMD_DISPLAYOFF Set display off
+AE
+00
+// : SSD1351_CMD_CLOCKDIV Set display clock divider
+B3
+01
+F0
+// : SSD1351_CMD_MUXRATIO Set multiplex ratio
+CA
+01
+7F
+// : SSD1351_CMD_DISPLAYOFFSET Set display offset
+A2
+01
+00
+// : SSD1351_CMD_SETGPIO Set gpio
+B5
+01
+00
+// : SSD1351_CMD_FUNCTIONSELECT Set functionselect (internal, diode drop)
+AB
+01
+01
+// : SSD1351_CMD_PRECHARGE
+B1
+01
+82
+// : SSD1351_CMD_VCOMH Set Vcomh voltage
+BE
+01
+05
+// : SSD1351_CMD_NORMALDISPLAY Set display mode normal
+A6
+00
+// : SSD1351_CMD_CONTRASTABC Set contrast ABC (default C1 03 8A 51 8A)
+C1
+03
+C8
+80
+C8
+// : SSD1351_CMD_CONTRASTMASTER Set contrast master
+C7
+01
+0F
+// : SSD1351_CMD_SETVSL Set VSL
+B4
+03
+A0
+B5
+55
+// : SSD1351_CMD_PRECHARGE2 Set precharge2
+B6
+01
+08
+// : SSD1351_CMD_PRECHARGELEVEL BB 01 17
+// : SSD1351_CMD_SETREMAP
+A0
+01
+64
+// : Set column address 15 02 00 7F
+// : Set row address 75 02 00 7F
+// : SSD1351_CMD_DISPLAYON Set display on
+AF
+00
+// : SSD1351_CMD_COMMANDLOCK parameters inaccessible
+FD
+01
+B0
+// : SSD1351_CMD_WRITERAM (data follows)
+5C
+00
