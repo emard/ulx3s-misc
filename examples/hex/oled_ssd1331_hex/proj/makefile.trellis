@@ -1,8 +1,8 @@
 # ******* project, board and chip name *******
-PROJECT = init
+PROJECT = ssd1331_hex
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 25
+FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution

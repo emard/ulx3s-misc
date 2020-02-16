@@ -49,14 +49,17 @@ module top_hex_demo
         .color(color)
     );
 
+// we can use either lcd or oled video driver
+// oled driver core and init is shorter
 generate
-if(0)
+if(1)
 begin
     wire o_csn, o_clk; 
     lcd_video
     #(
         .c_init_file("ssd1331_init_xflip_16bit.mem"),
         .c_init_size(90),
+        .c_reset_us(1000),
         .c_x_size(96),
         .c_y_size(64),
         .c_color_bits(C_color_bits)
