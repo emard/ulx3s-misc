@@ -5,12 +5,12 @@
 // The path to this file is not relative to the
 // verilog source that needs to include this file.
 // Use symlink (ln -s orig copy) or copy (cp orig copy).
-// 25 bytes follow:
+// 31 bytes follow:
 // SSD1306_DISPLAYOFF
 AE
-// SSD1306_SETDISPLAYCLOCKDIV D5->D4?
+// SSD1306_SETDISPLAYCLOCKDIV
 D5
-80
+F0
 // SSD1306_SETMULTIPLEX
 A8
 3F
@@ -47,3 +47,11 @@ A4
 A6
 // SSD1306_DISPLAYON
 AF
+// set column address
+21
+00
+7F
+// set page address
+22
+00
+07
