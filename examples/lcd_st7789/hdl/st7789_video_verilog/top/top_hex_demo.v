@@ -24,7 +24,7 @@ module top_hex_demo
       .clk25_o(clk_25MHz),
       .locked(clk_locked)
     );
-    wire clk = clk_25MHz; // up to clk_125MHz NOTE below lcd_video_inst .c_clk_mhz(125)
+    wire clk = clk_125MHz; // up to clk_125MHz NOTE below lcd_video_inst .c_clk_mhz(125)
 
     reg [127:0] R_display; // something to display
     always @(posedge clk)
@@ -72,7 +72,7 @@ module top_hex_demo
 
     lcd_video
     #(
-        .c_clk_mhz(25),
+        .c_clk_mhz(125),
         .c_init_file("st7789_init.mem"),
         .c_init_size(38)
     )
