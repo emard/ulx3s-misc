@@ -1,7 +1,7 @@
 # OLED HEX display demo
 
 SSD1351 initializes to random color pixel screen,
-(picture is slightly dim). content is not yet shown
+picture is slightly dim, probably it's normal for larger OLEDs.
 
 cleanup:
 
