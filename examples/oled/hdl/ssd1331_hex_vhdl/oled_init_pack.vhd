@@ -22,7 +22,7 @@ package oled_init_pack is
   constant C_OLED_SET_MASTER_CONFIGURATION: std_logic_vector(7 downto 0) := x"AD";
   constant C_OLED_SET_POWER_SAVE_MODE: std_logic_vector(7 downto 0) := x"B0";
   constant C_OLED_SET_PHASE_1_AND_2_PERIOD_ADJUSTMENT: std_logic_vector(7 downto 0) := x"B1";
-  constant C_OLED_SET_DISPLAY_CLOCK_DIVIDER: std_logic_vector(7 downto 0) := x"F0";
+  constant C_OLED_SET_DISPLAY_CLOCK_DIVIDER: std_logic_vector(7 downto 0) := x"B3";
   constant C_OLED_SET_PRECHARGE_A: std_logic_vector(7 downto 0) := x"8A";
   constant C_OLED_SET_PRECHARGE_B: std_logic_vector(7 downto 0) := x"8B";
   constant C_OLED_SET_PRECHARGE_C: std_logic_vector(7 downto 0) := x"8C";
