@@ -1,0 +1,49 @@
+// SSD1306 init for oled-only driver, UNTESTED
+// same sequence is for spi and i2c
+// This file must be in the directory from where
+// the verilog compiler is running.
+// The path to this file is not relative to the
+// verilog source that needs to include this file.
+// Use symlink (ln -s orig copy) or copy (cp orig copy).
+// 25 bytes follow:
+// SSD1306_DISPLAYOFF
+AE
+// SSD1306_SETDISPLAYCLOCKDIV D5->D4?
+D5
+80
+// SSD1306_SETMULTIPLEX
+A8
+3F
+// SSD1306_SETDISPLAYOFFSET
+D3
+00
+// SSD1306_SETSTARTLINE
+40
+// SSD1306_CHARGEPUMP
+8D
+14
+// SSD1306_MEMORYMODE
+20
+00
+// SSD1306_SEGREMAP A0->A1?
+A0
+// SSD1306_COMSCANDEC
+C8
+// SSD1306_SETCOMPINS
+DA
+12
+// SSD1306_SETCONTRAST
+81
+CF
+// SSD1306_SETPRECHARGE
+D9
+F1
+// SSD1306_SETVCOMDESELECT
+D8
+40
+// SSD1306_DISPLAYALLON_RESUME
+A4
+// SSD1306_NORMALDISPLAY
+A6
+// SSD1306_DISPLAYON
+AF
