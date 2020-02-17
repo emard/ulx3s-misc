@@ -1,3 +1,5 @@
+// FIXME: old content,
+// better init sequence is in ssd1351_linit_xflip_16bit.mem
 // This file must be in the directory from where
 // the verilog compiler is running.
 // The path to this file is not relative to the
