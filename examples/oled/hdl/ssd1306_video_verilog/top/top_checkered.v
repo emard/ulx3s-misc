@@ -19,8 +19,8 @@ module top_checkered
     wire [6:0] x;
     wire [5:0] y;
 
-    //                  checkered     white   black
-    wire  [7:0] color = x[3] ^ y[3] ? 8'hFF : 8'h00;
+    //                  checkered     pixels  black
+    wire  [7:0] color = x[3] ^ y[0] ? x     : 8'h00;
 
 generate
 if(0)  // driver type 0-oled 1-lcd (both should work)
@@ -56,8 +56,8 @@ begin
     #(
         .c_init_file("ssd1306_oinit.mem"),
         .c_init_size(31),
-        .c_x_size(128/8),
-        .c_y_size(64),
+        .c_x_size(128),
+        .c_y_size(64/8),
         .c_color_bits(C_color_bits)
     )
     oled_video_inst
