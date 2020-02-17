@@ -41,7 +41,7 @@ B0
 B1
 74
 // 17: Set display clock divider
-F0
+B3
 F0
 // 19: Set precharge A
 8A

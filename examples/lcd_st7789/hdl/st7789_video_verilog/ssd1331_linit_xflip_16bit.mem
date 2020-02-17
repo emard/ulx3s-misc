@@ -58,7 +58,7 @@ B1
 74
 00
 // 17: Set display clock divider
-F0
+B3
 00
 F0
 00
