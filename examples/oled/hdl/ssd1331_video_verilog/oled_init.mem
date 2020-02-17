@@ -1,3 +1,4 @@
+// SSD1331 init for oled-only driver
 // This file must be in the directory from where
 // the verilog compiler is running.
 // The path to this file is not relative to the
