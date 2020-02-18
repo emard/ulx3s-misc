@@ -95,7 +95,7 @@ module hex_decoder_v
       wire [c_row_bits-1:0] S_xdiv = c_grid_6x8 ? x/6 : x[2+c_row_bits:3]; // x/6 : x/8
       wire [2:0] S_xmod = c_grid_6x8 ? x%6 : x[2:0]; // x%6 : x%8
       wire [3:0] S_hex_digit = S_data_mux[{y[c_y_bits-1:0],S_xdiv}]; // y/8*2^c_row_bits+x/8
-      wire [6:0] S_font_addr = {S_hex_digit,2'd0} + S_hex_digit + S_xmod; // hex_digit * 5 + xmod
+      wire [6:0] S_font_addr = {S_hex_digit+1,2'd0} + S_hex_digit - S_xmod; // hex_digit * 5 + 4 - xmod
       assign color = S_xmod < 5 ? C_oled_font[S_font_addr] : 7'd0;
   end
   else // color bits != 7
