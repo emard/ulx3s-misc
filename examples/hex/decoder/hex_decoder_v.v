@@ -12,7 +12,7 @@ module hex_decoder_v
   parameter c_pipeline = 1,  // 0:combinatorial (no clk), 1:pipelined (uses clk)
   parameter c_font_file = "hex_font.mem",
   parameter c_font_size = 136,
-  parameter c_color_bits = 16,
+  parameter c_color_bits = 16, // 8 or 16 for color screens, 7 monochrome for SSD1306
   parameter c_x_bits = 7,    // X screen bits
   parameter c_y_bits = 7     // Y screen bits
 )
@@ -24,7 +24,12 @@ module hex_decoder_v
   output wire [c_color_bits-1:0] color
 );
 
-  reg [4:0] C_oled_font[0:c_font_size-1];
+  generate
+  if(c_color_bits == 7) // special for monochrome SSD1306
+    reg [6:0] C_oled_font[0:c_font_size-1];
+  else
+    reg [4:0] C_oled_font[0:c_font_size-1];
+  endgenerate
   initial
   begin
     $readmemb(c_font_file, C_oled_font);
@@ -82,6 +87,19 @@ module hex_decoder_v
   endgenerate
 
   generate
+  if(c_color_bits == 7)
+  begin
+      // NOTE large combinatorial logic!
+      // Works for slow SPI LCD screens that take a long time
+      // from changing (x,y) to reading color.
+      wire [c_row_bits-1:0] S_xdiv = c_grid_6x8 ? x/6 : x[2+c_row_bits:3]; // x/6 : x/8
+      wire [2:0] S_xmod = c_grid_6x8 ? x%6 : x[2:0]; // x%6 : x%8
+      wire [3:0] S_hex_digit = S_data_mux[{y[c_y_bits-1:0],S_xdiv}]; // y/8*2^c_row_bits+x/8
+      wire [6:0] S_font_addr = {S_hex_digit,2'd0} + S_hex_digit + S_xmod; // hex_digit * 5 + xmod
+      assign color = S_xmod < 5 ? C_oled_font[S_font_addr] : 7'd0;
+  end
+  else // color bits != 7
+  begin
     if(c_pipeline)
     begin
       reg [c_y_bits-1:0] R_y1;
@@ -122,5 +140,6 @@ module hex_decoder_v
       wire S_pixel_on = S_xmod < 5 ? C_oled_font[S_font_addr][S_xmod] : 1'b0;
       assign color = S_pixel_on ? C_color_white : S_background;
     end
+  end
   endgenerate
 endmodule
