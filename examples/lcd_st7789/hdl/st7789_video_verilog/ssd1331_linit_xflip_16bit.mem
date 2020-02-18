@@ -1,20 +1,20 @@
-// this init allows lcd_video core to drive SSD1331 OLED
-// after reset, delay 2^10 us = 1ms before sending commands
-80
-0A
+// init for SSD1331 OLED and lcd_video.v
 // This file must be in the directory from where
 // the verilog compiler is running.
 // The path to this file is not relative to the
 // verilog source that needs to include this file.
 // Use symlink (ln -s orig copy) or copy (cp orig copy).
-// 44 bytes follow:
-// 0: NOP
+// 90 bytes follow:
+// after reset, delay 2^10 us = 1ms before sending commands
+80
+0A
+// NOP
 BC
 00
-// 1: Set display off
+// Set display off
 AE
 00
-// 2: Set data format
+// Set data format
 // A0 20 normal 8bpp
 // A0 60 normal 16bpp
 // A0 22 X-flip 8bpp
@@ -24,103 +24,103 @@ A0
 00
 62
 00
-// 4: Set display start line
+// Set display start line
 A1
 00
 00
 00
-// 6: Set display offset
+// Set display offset
 A2
 00
 00
 00
-// 8: Set display mode normal
+// Set display mode normal
 A4
 00
-// 9: Set multiplex ratio
+// Set multiplex ratio
 A8
 00
 3F
 00
-// 11: Set master configuration
+// Set master configuration
 AD
 00
 8E
 00
-// 13: Set power save mode
+// Set power save mode
 B0
 00
 00
 00
-// 15: Phase 1/2 period adjustment
+// Phase 1/2 period adjustment
 B1
 00
 74
 00
-// 17: Set display clock divider
+// Set display clock divider
 B3
 00
 F0
 00
-// 19: Set precharge A
+// Set precharge A
 8A
 00
 64
 00
-// 21: Set precharge B
+// Set precharge B
 8B
 00
 78
 00
-// 23: Set precharge C
+// Set precharge C
 8C
 00
 64
 00
-// 25: Set precharge voltage
+// Set precharge voltage
 BB
 00
 31
 00
-// 27: Set contrast A
+// Set contrast A
 81
 00
 FF
 00
-// 29: Set contrast B
+// Set contrast B
 82
 00
 FF
 00
-// 31: Set contrast C
+// Set contrast C
 83
 00
 FF
 00
-// 33: Set Vcomh voltage
+// Set Vcomh voltage
 BE
 00
 3E
 00
-// 35: Master current control
+// Master current control
 87
 00
 06
 00
-// 37: Set column address
+// Set column address
 15
 00
 00
 00
 5F
 00
-// 40: Set row address
+// Set row address
 75
 00
 00
 00
 3F
 00
-// 43: Set display on
+// Set display on
 AF
 00
