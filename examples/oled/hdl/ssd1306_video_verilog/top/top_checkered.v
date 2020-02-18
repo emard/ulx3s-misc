@@ -28,7 +28,7 @@ begin
     wire oled_clkn; 
     lcd_video
     #(
-        .c_init_file("ssd1331_linit_xflip_16bit.mem"),
+        .c_init_file("ssd1306_linit_xflip.mem"),
         .c_init_size(59),
         .c_reset_us(1000),
         .c_clk_polarity(0),
@@ -54,7 +54,7 @@ else
 begin
     oled_video
     #(
-        .c_init_file("ssd1306_oinit.mem"),
+        .c_init_file("ssd1306_oinit_xflip.mem"),
         .c_init_size(31),
         .c_x_size(128),
         .c_y_size(64/8),

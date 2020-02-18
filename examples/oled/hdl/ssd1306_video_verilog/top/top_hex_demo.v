@@ -4,14 +4,15 @@ module top_hex_demo
     input  wire [6:0] btn,
     output wire [7:0] led,
     inout  wire [27:0] gp, gn,
+    /*
     output wire oled_csn,
     output wire oled_clk,
     output wire oled_mosi,
     output wire oled_dc,
     output wire oled_resn,
+    */
     output wire wifi_gpio0
 );
-    parameter C_color_bits = 7; // special value for SSD1306
     assign wifi_gpio0 = btn[0];
 
     wire clk = clk_25mhz;
@@ -31,7 +32,7 @@ module top_hex_demo
 
     wire [6:0] x;
     wire [5:0] y;
-    wire [C_color_bits-1:0] color;
+    wire [6:0] color;
 
     hex_decoder_v
     #(
@@ -54,16 +55,15 @@ module top_hex_demo
 generate
 if(0)  // driver type 0-oled 1-lcd (both should work)
 begin
-    wire oled_clkn; 
     lcd_video
     #(
-        .c_init_file("ssd1331_linit_xflip_16bit.mem"),
-        .c_init_size(90),
+        .c_init_file("ssd1306_linit_xflip.mem"),
+        .c_init_size(64),
         .c_reset_us(1000),
         .c_clk_polarity(0),
         .c_x_size(128),
         .c_y_size(64/8),
-        .c_color_bits(C_color_bits)
+        .c_color_bits(8)
     )
     lcd_video_inst
     (
@@ -72,18 +72,17 @@ begin
         .x(x),
         .y(y),
         .color(color),
-        .spi_csn(oled_csn),
-        .spi_clk(oled_clk),
-        .spi_mosi(oled_mosi),
-        .spi_dc(oled_dc),
-        .spi_resn(oled_resn)
+        .spi_clk(gp[0]),
+        .spi_mosi(gp[1]),
+        .spi_csn(gp[2]),
+        .spi_dc(gp[3])
     );
 end
 else
 begin
     oled_video
     #(
-        .c_init_file("ssd1306_oinit.mem"),
+        .c_init_file("ssd1306_oinit_xflip.mem"),
         .c_init_size(31),
         .c_x_size(128),
         .c_y_size(64/8), // divide by 8 for SSD1306 128x64

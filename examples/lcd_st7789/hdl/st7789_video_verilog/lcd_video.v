@@ -105,11 +105,14 @@ module lcd_video #(
             arg <= 0;
           end
         end else begin // Send pixels and set x,y and next_pixel
-          byte_toggle <= ~byte_toggle;
           dc <= 1;
-          data <= byte_toggle ? color[7:0] : color[15:8];
+          byte_toggle <= ~byte_toggle;
+          if(c_color_bits < 12)
+            data <= color[7:0];
+          else
+            data <= byte_toggle ? color[7:0] : color[15:8];
           clken <= 1;
-          if (byte_toggle) begin
+          if (byte_toggle || c_color_bits < 12) begin
             next_pixel <= 1;
             if (x == c_x_size-1) begin
               x <= 0;
