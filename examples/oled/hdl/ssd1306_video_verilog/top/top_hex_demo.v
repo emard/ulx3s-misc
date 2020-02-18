@@ -62,7 +62,7 @@ begin
         .c_reset_us(1000),
         .c_clk_polarity(0),
         .c_x_size(128),
-        .c_y_size(64/8),
+        .c_y_size(64/8), // HACK for OLED1306 128x64
         .c_color_bits(8)
     )
     lcd_video_inst
@@ -85,7 +85,7 @@ begin
         .c_init_file("ssd1306_oinit_xflip.mem"),
         .c_init_size(31),
         .c_x_size(128),
-        .c_y_size(64/8), // divide by 8 for SSD1306 128x64
+        .c_y_size(64/8), // HACK for OLED1306 128x64
         .c_color_bits(8)
     )
     oled_video_inst

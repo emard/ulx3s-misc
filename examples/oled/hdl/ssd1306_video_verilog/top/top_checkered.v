@@ -4,15 +4,16 @@ module top_checkered
     input  wire [6:0] btn,
     output wire [7:0] led,
     inout  wire [27:0] gp, gn,
+    /*
     output wire oled_csn,
     output wire oled_clk,
     output wire oled_mosi,
     output wire oled_dc,
     output wire oled_resn,
+    */
     output wire wifi_gpio0
 );
     assign wifi_gpio0 = btn[0];
-    parameter C_color_bits = 8; // 8 or 16
 
     wire clk = clk_25mhz;
 
@@ -29,12 +30,12 @@ begin
     lcd_video
     #(
         .c_init_file("ssd1306_linit_xflip.mem"),
-        .c_init_size(59),
+        .c_init_size(64),
         .c_reset_us(1000),
         .c_clk_polarity(0),
         .c_x_size(128),
-        .c_y_size(64),
-        .c_color_bits(C_color_bits)
+        .c_y_size(64/8), // HACK for OLED1306 128x64
+        .c_color_bits(8)
     )
     lcd_video_inst
     (
@@ -43,11 +44,10 @@ begin
         .x(x),
         .y(y),
         .color(color),
-        .spi_csn(oled_csn),
-        .spi_clk(oled_clk),
-        .spi_mosi(oled_mosi),
-        .spi_dc(oled_dc),
-        .spi_resn(oled_resn)
+        .spi_clk(gp[0]),
+        .spi_mosi(gp[1]),
+        .spi_csn(gp[2]),
+        .spi_dc(gp[3])
     );
 end
 else
@@ -57,8 +57,8 @@ begin
         .c_init_file("ssd1306_oinit_xflip.mem"),
         .c_init_size(31),
         .c_x_size(128),
-        .c_y_size(64/8),
-        .c_color_bits(C_color_bits)
+        .c_y_size(64/8), // HACK for OLED1306 128x64
+        .c_color_bits(8)
     )
     oled_video_inst
     (
