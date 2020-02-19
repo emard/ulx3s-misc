@@ -70,10 +70,13 @@ module top_hex_demo
       if(next_pixel)
         R_color <= color;
 
+    wire oled_res;
     lcd_video
     #(
         .c_clk_mhz(125),
         .c_init_file("st7789_init.mem"),
+        .c_clk_phase(0),
+        .c_clk_polarity(1),
         .c_init_size(38)
     )
     lcd_video_inst

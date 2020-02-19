@@ -59,7 +59,8 @@ begin
         .c_init_file("ssd1331_linit_xflip_16bit.mem"),
         .c_init_size(90),
         .c_reset_us(1000),
-        .c_clk_polarity(0),
+        .c_clk_phase(0),
+        .c_clk_polarity(1),
         .c_x_size(96),
         .c_y_size(64),
         .c_color_bits(C_color_bits)

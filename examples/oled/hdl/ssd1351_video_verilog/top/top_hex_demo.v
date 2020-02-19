@@ -51,7 +51,7 @@ module top_hex_demo
 // we can use either lcd or oled video driver
 // oled driver core and init is shorter
 generate
-if(1)  // driver type 0-oled 1-lcd (both should work)
+if(0)  // driver type 0-oled 1-lcd (both should work)
 begin
     wire oled_clkn; 
     lcd_video
@@ -59,7 +59,8 @@ begin
         .c_init_file("ssd1351_linit_xflip_16bit.mem"),
         .c_init_size(59),
         .c_reset_us(1000),
-        .c_clk_polarity(0),
+        .c_clk_phase(0),
+        .c_clk_polarity(1),
         .c_x_size(128),
         .c_y_size(128),
         .c_color_bits(C_color_bits)
