@@ -24,6 +24,18 @@ VHDL_FILES ?=
 # https://github.com/SymbiFlow/prjtrellis
 #TRELLIS ?= /mt/scratch/tmp/openfpga/prjtrellis
 
+# open source synthesis tools
+TRELLISDB ?= $(TRELLIS)/database
+LIBTRELLIS ?= $(TRELLIS)/libtrellis
+ECPPLL ?= LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(TRELLIS)/libtrellis/ecppll
+ECPPACK ?= LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(TRELLIS)/libtrellis/ecppack --db $(TRELLISDB)
+BIT2SVF ?= $(TRELLIS)/tools/bit_to_svf.py
+#BASECFG ?= $(TRELLIS)/misc/basecfgs/empty_$(FPGA_CHIP_EQUIVALENT).config
+# yosys options, sometimes those can be used: -noccu2 -nomux -nodram
+YOSYS_OPTIONS ?=
+# nextpnr options
+NEXTPNR_OPTIONS ?=
+
 ifeq ($(FPGA_CHIP), lfe5u-12f)
   CHIP_ID=0x21111043
 endif
@@ -47,17 +59,6 @@ endif
 
 FPGA_CHIP_EQUIVALENT ?= lfe5u-$(FPGA_K)f
 
-# open source synthesis tools
-ECPPLL ?= $(TRELLIS)/libtrellis/ecppll
-ECPPACK ?= $(TRELLIS)/libtrellis/ecppack
-TRELLISDB ?= $(TRELLIS)/database
-LIBTRELLIS ?= $(TRELLIS)/libtrellis
-BIT2SVF ?= $(TRELLIS)/tools/bit_to_svf.py
-#BASECFG ?= $(TRELLIS)/misc/basecfgs/empty_$(FPGA_CHIP_EQUIVALENT).config
-# yosys options, sometimes those can be used: -noccu2 -nomux -nodram
-YOSYS_OPTIONS ?= 
-# nextpnr options
-NEXTPNR_OPTIONS ?=
 
 # clock generator
 CLK0_NAME ?= clk0
@@ -126,19 +127,19 @@ $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config: $(PROJECT).json $(BASECFG)
 	$(NEXTPNR-ECP5) $(NEXTPNR_OPTIONS) --$(FPGA_K)k --package $(FPGA_PACKAGE) --json $(PROJECT).json --lpf $(CONSTRAINTS) --textcfg $@
 
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config
-	LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPACK) $(IDCODE_CHIPID) --db $(TRELLISDB) --compress --input $< --bit $@
+	$(ECPPACK) $(IDCODE_CHIPID) --compress --input $< --bit $@
 
 $(CLK0_FILE_NAME):
-	LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPLL) $(CLK0_OPTIONS) --file $@
+	$(ECPPLL) $(CLK0_OPTIONS) --file $@
 
 $(CLK1_FILE_NAME):
-	LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPLL) $(CLK1_OPTIONS) --file $@
+	$(ECPPLL) $(CLK1_OPTIONS) --file $@
 
 $(CLK2_FILE_NAME):
-	LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPLL) $(CLK2_OPTIONS) --file $@
+	$(ECPPLL) $(CLK2_OPTIONS) --file $@
 
 $(CLK3_FILE_NAME):
-	LANG=C LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPLL) $(CLK3_OPTIONS) --file $@
+	$(ECPPLL) $(CLK3_OPTIONS) --file $@
 
 # generate XCF programming file for DDTCMD
 $(BOARD)_$(FPGA_SIZE)f.xcf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(SCRIPTS)/$(BOARD)_sram.xcf $(SCRIPTS)/xcf.xsl $(DTD_FILE)
@@ -161,8 +162,7 @@ $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme: $(BOARD)_$(FPGA_SIZE)f.xcf $(BOARD)_$(FPG
 #	$(BIT2SVF) $< $@
 
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config
-#	LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPACK) $(IDCODE_CHIPID) --db $(TRELLISDB) $< --freq 62.0 --svf-rowsize 8000 --svf $@
-	LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPACK) $(IDCODE_CHIPID) --db $(TRELLISDB) $< --freq 62.0 --svf-rowsize 800000 --svf $@
+	$(ECPPACK) $(IDCODE_CHIPID) $< --freq 62.0 --svf-rowsize 800000 --svf $@
 
 # program SRAM  with ujrprog (temporary)
 program: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
