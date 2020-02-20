@@ -48,7 +48,8 @@ module top_hex_640x480
     );
     assign led[7:6] = countblink[7:6];
 
-    reg [127:0] R_display; // something to display
+    parameter C_bits = 256;
+    reg [C_bits-1:0] R_display; // something to display
     always @(posedge clk_25mhz)
     begin
       R_display[0] <= btn[0];
@@ -60,6 +61,7 @@ module top_hex_640x480
       R_display[24] <= btn[6];
       R_display[58:52] <= btn;
       R_display[127:64] <= R_display[127:64] + 1; // shown in next OLED row
+      R_display[31+128:128] <= R_display[31+128:128] + 1; // shown in next OLED row
     end
 
     parameter C_color_bits = 16; 
@@ -70,12 +72,12 @@ module top_hex_640x480
     wire [C_color_bits-1:0] color;
     hex_decoder_v
     #(
-        .c_data_len(256),
-        .c_row_bits(5),
+        .c_data_len(C_bits),
+        .c_row_bits(5), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
         .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
         .c_font_file("hex_font.mem"),
         .c_x_bits(8),
-        .c_y_bits(8),
+        .c_y_bits(4),
 	.c_color_bits(C_color_bits)
     )
     hex_decoder_v_inst
@@ -83,7 +85,7 @@ module top_hex_640x480
         .clk(clk_pixel),
         .data(R_display),
         .x(rx[9:2]),
-        .y(y[9:2]),
+        .y(y[5:2]),
         .color(color)
     );
 
@@ -149,7 +151,6 @@ module top_hex_640x480
       .in_green(tmds[1]),
       .in_blue(tmds[0]),
       .out_p(gpdi_dp)
-      //.out_n(gpdi_dn)
     );
 
 endmodule
