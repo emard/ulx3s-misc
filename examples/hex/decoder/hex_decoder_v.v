@@ -23,18 +23,10 @@ module hex_decoder_v
   input  wire [c_y_bits-1:0] y,
   output wire [c_color_bits-1:0] color
 );
-
-  generate
-  if(c_color_bits == 7) // special for monochrome SSD1306
-    reg [6:0] C_oled_font[0:c_font_size-1];
-  else
-    reg [4:0] C_oled_font[0:c_font_size-1];
-  endgenerate
+  parameter C_fontbits = c_color_bits == 7 ? 7 : 5;
+  reg [C_fontbits-1:0] C_oled_font[0:c_font_size-1];
   initial
-  begin
     $readmemb(c_font_file, C_oled_font);
-  end
-
   // RGB332
   // red   20 40 80
   // green 04 08 10
