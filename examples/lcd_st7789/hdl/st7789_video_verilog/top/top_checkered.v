@@ -15,18 +15,19 @@ module top_checkered (
     lcd_video #(
         .c_clk_mhz(25),
         .c_init_file("st7789_init.mem"),
-        .c_init_size(36)
+        .c_init_size(38)
     ) lcd_video_inst (
         .clk(clk_25mhz),
         .reset(~btn[0]),
         .x(x),
         .y(y),
         .color(color),
-        .oled_csn(oled_csn),
-        .oled_clk(oled_clk),
-        .oled_mosi(oled_mosi),
-        .oled_dc(oled_dc),
-        .oled_resn(oled_resn)
+        .spi_clk(oled_clk),
+        .spi_mosi(oled_mosi),
+        .spi_dc(oled_dc),
+        .spi_resn(oled_resn)
     );
+    assign oled_csn = 1; // oled_csn is connected to BLK (backlight enable pin)
+
 
 endmodule
