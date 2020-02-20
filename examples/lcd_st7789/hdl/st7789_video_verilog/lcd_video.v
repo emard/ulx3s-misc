@@ -1,11 +1,12 @@
-// SPI ST7789 display video XY scan core
+// SPI ST7789 display core providing VGA-compatible input
 // AUTHORS=EMARD,MMICKO and Lawrie Griffiths
 // LICENSE=BSD
 
 module lcd_video #(
   parameter c_clk_mhz = 25, // MHz clk freq (125 MHz max for st7789)
-  parameter c_reset_us = 150000,  // us holding hardware reset
+  parameter c_reset_us = 150000, // us holding hardware reset
   parameter c_color_bits = 16, // RGB565
+  parameter c_vga_sync = 0,  // 0:free running, 1:sync to hsync/vsync/blank
   parameter c_x_size = 240,  // pixel X screen size
   parameter c_y_size = 240,  // pixel Y screen size
   parameter c_x_bits = $clog2(c_x_size), // 240->8
@@ -23,11 +24,13 @@ module lcd_video #(
 ) (
   input  wire clk, // SPI display clock rate will be half of this clock rate
   input  wire reset,
-  
+  input  wire clk_pixel_ena = 1,
+  input  wire hsync, vsync, blank,
+  input  wire [c_color_bits-1:0] color,
+
   output reg  [c_x_bits-1:0] x,
   output reg  [c_y_bits-1:0] y,
   output reg  next_pixel, // 1 when x/y changes
-  input  wire [c_color_bits-1:0] color, 
 
   output wire spi_csn,
   output wire spi_clk, // for SSD1331 invert spi_clk
@@ -42,6 +45,50 @@ module lcd_video #(
     $readmemh(c_init_file, c_oled_init);
   end
 
+  reg [c_x_bits-1:0] R_x_in;
+  reg [c_y_bits-1:0] R_y_in;
+  generate
+  if(c_vga_sync)
+  begin
+  reg [c_color_bits-1:0] R_scanline[0:c_x_size-1];
+  always @(posedge clk)
+  begin
+      if(clk_pixel_ena)
+      begin
+        if(vsync)
+          R_y_in <= 0;
+        else
+        begin
+          if(hsync)
+            R_x_in <= 0;
+          else
+          begin
+            if(blank == 0)
+            begin
+              R_scanline[R_x_in] <= color;
+              if (R_x_in == c_x_size-1)
+              begin
+                R_x_in <= 0;
+                if (R_y_in == c_y_size-1)
+                  R_y_in <= 0;
+                else
+                  R_y_in <= R_y_in + 1;
+              end
+              else
+                R_x_in <= R_x_in + 1;
+            end // blank
+          end // hsync
+        end // vsync
+      end // clk_pixel_ena
+  end // posedge clk
+  wire [c_color_bits-1:0] S_color = R_scanline[x];
+  end
+  else // not c_vga_sync
+  begin
+    wire [c_color_bits-1:0] S_color = color;
+  end  // c_vga_sync
+  endgenerate
+  
   reg [10:0] index;
   reg [7:0] data = c_nop;
   reg dc = 1;
@@ -106,12 +153,14 @@ module lcd_video #(
             arg <= 0;
           end
         end else begin // Send pixels and set x,y and next_pixel
+         if(R_y_in == y || c_vga_sync == 0)
+         begin
           dc <= 1;
           byte_toggle <= ~byte_toggle;
           if(c_color_bits < 12)
-            data <= color[7:0];
+            data <= S_color[7:0];
           else
-            data <= byte_toggle ? color[7:0] : color[15:8];
+            data <= byte_toggle ? S_color[7:0] : S_color[15:8];
           clken <= 1;
           if (byte_toggle || c_color_bits < 12) begin
             next_pixel <= 1;
@@ -123,6 +172,9 @@ module lcd_video #(
                 y <= y + 1;
             end else x <= x + 1;
           end
+         end // y == y_in
+         else
+           clken <= 0;
         end
       end else begin // Shift out byte
         next_pixel <= 0;
