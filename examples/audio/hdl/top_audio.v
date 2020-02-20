@@ -6,7 +6,7 @@ module top_audio
   input [6:0] btn,
   output [7:0] led,
   output [3:0] audio_l, audio_r, audio_v,
-  inout [27:0] gp, gn,
+  output [27:0] gp, gn,
   output wifi_gpio0
 );
     // wifi_gpio0=1 keeps board from rebooting
@@ -76,12 +76,13 @@ module top_audio
     assign audio_v[1] = spdif; // 0.4V at SPDIF (standard: 0.6V MAX)
     assign audio_v[0] = 1'b0;
 
-    parameter i2s_fmt = 0; // 0-i2s standard, 1-left justified
+    parameter i2s_fmt = 1; // 0-i2s standard, 1-left justified
     wire bck, din, lrck;
     i2s
     #(
       .fmt(i2s_fmt),
-      .div(3)
+      .clk_hz(25000000),
+      .lrck_hz(48000)
     )
     i2s_instance
     (
@@ -93,6 +94,22 @@ module top_audio
       .lrck(lrck)
     );
     
+    assign gp[0] = 1'b1;         // FLT
+    assign gp[1] = 1'b1;         // DMP
+    assign gp[2] = 1'b0;         // SCL
+    assign gp[3] = bck;          // BCK
+    assign gp[4] = din;          // DIN
+    assign gp[5] = lrck;         // LCK
+    assign gp[6] = i2s_fmt;      // FMT 0=i2s
+
+    assign gn[0] = 1'b1;         // FLT
+    assign gn[1] = 1'b1;         // DMP
+    assign gn[2] = 1'b0;         // SCL
+    assign gn[3] = bck;          // BCK
+    assign gn[4] = din;          // DIN
+    assign gn[5] = lrck;         // LCK
+    assign gn[6] = i2s_fmt;      // FMT 0=i2s
+
     assign gp[7]  = i2s_fmt;     // FMT 0=i2s
     assign gp[8]  = lrck;        // LCK
     assign gp[9]  = din;         // DIN
@@ -108,4 +125,5 @@ module top_audio
     assign gn[11] = 1'b0;        // SCL
     assign gn[12] = 1'b1;        // DMP
     assign gn[13] = 1'b1;        // FLT
+
 endmodule
