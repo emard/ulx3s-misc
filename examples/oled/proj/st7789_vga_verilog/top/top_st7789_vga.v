@@ -63,10 +63,8 @@ module top_st7789_vga
   reg [1:0] R_clk_pixel;
   always @(posedge clk_lcd)
     R_clk_pixel <= {clk_pixel,R_clk_pixel[1]}; 
-  
   wire clk_pixel_ena = R_clk_pixel == 2'b10 ? 1 : 0;
   
-  wire next_pixel;
   lcd_video
   #(
     .c_clk_mhz(125),
