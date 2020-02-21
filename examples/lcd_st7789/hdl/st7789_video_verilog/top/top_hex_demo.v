@@ -43,7 +43,7 @@ module top_hex_demo
     wire [7:0] x;
     wire [7:0] y;
     // for reverse screen:
-    wire [7:0] ry = 239-y;
+    //wire [7:0] ry = 239-y;
     wire [C_color_bits-1:0] color;
     hex_decoder_v
     #(
@@ -58,7 +58,7 @@ module top_hex_demo
         .clk(clk),
         .data(R_display),
         .x(x[7:1]),
-        .y(ry[7:1]),
+        .y(y[7:1]),
         .color(color)
     );
 
@@ -74,7 +74,7 @@ module top_hex_demo
     lcd_video
     #(
         .c_clk_mhz(125),
-        .c_init_file("st7789_init.mem"),
+        .c_init_file("st7789_linit.mem"),
         .c_clk_phase(0),
         .c_clk_polarity(1),
         .c_init_size(38)
