@@ -47,6 +47,7 @@ module lcd_video #(
 
   reg [c_x_bits-1:0] R_x_in;
   reg [c_y_bits-1:0] R_y_in;
+  wire [c_color_bits-1:0] S_color;
   generate
   if(c_vga_sync)
   begin
@@ -81,11 +82,11 @@ module lcd_video #(
         end // vsync
       end // clk_pixel_ena
   end // posedge clk
-  wire [c_color_bits-1:0] S_color = R_scanline[x];
+  assign S_color = R_scanline[x];
   end
   else // not c_vga_sync
   begin
-    wire [c_color_bits-1:0] S_color = color;
+    assign S_color = color;
   end  // c_vga_sync
   endgenerate
   
