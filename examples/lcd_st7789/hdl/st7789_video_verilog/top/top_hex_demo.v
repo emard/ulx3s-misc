@@ -74,7 +74,7 @@ module top_hex_demo
     lcd_video
     #(
         .c_clk_mhz(125),
-        .c_init_file("st7789_linit.mem"),
+        .c_init_file("st7789_linit_xflip.mem"),
         .c_clk_phase(0),
         .c_clk_polarity(1),
         .c_init_size(38)
