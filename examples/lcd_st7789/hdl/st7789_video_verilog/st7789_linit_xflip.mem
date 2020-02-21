@@ -1,0 +1,56 @@
+// ST7789 init lcd_video (display mounted pins down)
+// image X-flip
+// 38 bytes
+// after reset, delay 2^13 us = 8ms before sending commands
+80
+0D
+// SWRESET, delay 2^17 us = 131us
+01
+80
+11
+// SLPOUT, delay 2^14 us = 16ms
+11
+80
+0E
+// COLMOD, 16-bit color, delay 2^14 us = 16ms
+3A
+81
+55
+0E
+// MADCTL
+36
+01
+80
+// CASET X
+2A
+04
+// X start MSB,LSB
+00
+00
+// X end MSB,LSB
+00
+EF
+// RASET Y
+2B
+04
+// Y start MSB,LSB
+00
+50
+// Y end MSB,LSB
+01
+3F
+// INVON, delay 2^14 us = 16ms
+21
+80
+0E
+// NORON, delay 2^14 us = 16ms
+13
+80
+0E
+// DISPON, delay 2^14 us = 16ms
+29
+80
+0E
+// RAMWR 2C 00
+2C
+00
