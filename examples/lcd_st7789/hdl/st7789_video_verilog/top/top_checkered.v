@@ -7,14 +7,15 @@ module top_checkered (
     output wire oled_dc,
     output wire oled_resn
 );
-    //                  checkered      red   green  blue     red    green blue
-    wire [15:0] color = x[4] ^ y[4] ? {5'd0, 6'd63, 5'd0} : {5'd31, 6'd0, 5'd0};
     wire [7:0] x;
     wire [7:0] y;
+    //                  checkered      red   green   blue     red    green  blue
+    wire [15:0] color = x[4] ^ y[4] ? {5'd0, x[7:3], 6'd0} : {y[7:3], 6'd0, 5'd0};
 
     lcd_video #(
         .c_clk_mhz(25),
-        .c_init_file("st7789_init.mem"),
+        .c_init_file("st7789_linit.mem"),
+        .c_color_bits(16),
         .c_init_size(38)
     ) lcd_video_inst (
         .clk(clk_25mhz),
@@ -28,6 +29,5 @@ module top_checkered (
         .spi_resn(oled_resn)
     );
     assign oled_csn = 1; // oled_csn is connected to BLK (backlight enable pin)
-
 
 endmodule
