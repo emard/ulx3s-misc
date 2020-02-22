@@ -2,7 +2,7 @@
 PROJECT = audio
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 25
+FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -26,10 +26,11 @@ VERILOG_FILES = \
   hdl/trianglewave.v \
   hdl/sinewave.v \
   hdl/dacpwm.v \
-  hdl/i2s.v
+  hdl/i2s_v.v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
+  hdl/i2s.vhd \
   hdl/spdif_tx.vhd
 
 # synthesis options

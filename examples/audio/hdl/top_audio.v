@@ -82,13 +82,13 @@ module top_audio
     #(
       .fmt(i2s_fmt),
       .clk_hz(25000000),
-      .lrck_hz(48000)
+      .lrck_hz(44100)
     )
     i2s_instance
     (
       .clk(clk_25mhz),
-      .left(pcm_24s[23:8]), // sine default, BTN0 pressed -> triangle wave
-      .right({pcm_sinewave[11],pcm_sinewave,3'b0}), // sine always
+      .l(pcm_24s[23:8]), // sine default, BTN0 pressed -> triangle wave
+      .r({pcm_sinewave[11],pcm_sinewave,3'b0}), // sine always
       .din(din),
       .bck(bck),
       .lrck(lrck)
