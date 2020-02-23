@@ -35,6 +35,8 @@ assign ftdi_rxd = wifi_txd;
 // D6 = GP[23]  RD  = GN[22]
 // D7 = GP[22]  WR  = GN[21]
 
+// see https://github.com/djuseeq/Ch376msc
+
 // enable CH376 SPI mode
 assign GN[21]   = 0; // CH376_WR;
 assign GN[22]   = 0; // CH376_RD;
