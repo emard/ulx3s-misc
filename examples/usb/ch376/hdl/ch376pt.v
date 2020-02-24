@@ -38,21 +38,36 @@ assign ftdi_rxd = wifi_txd;
 // see https://github.com/djuseeq/Ch376msc
 
 // enable CH376 SPI mode
-assign GN[21]   = 0; // CH376_WR;
-assign GN[22]   = 0; // CH376_RD;
-assign GN[23]   = 1; // CH376_CS;
+assign gn[21]   = 0; // CH376_WR;
+assign gn[22]   = 0; // CH376_RD;
+assign gn[23]   = 1; // CH376_CS;
 
 wire spi_csn, spi_clk, spi_mosi, spi_miso, spi_int;
 
-assign GP[26]   = spi_csn;
-assign GP[24]   = spi_clk;
-assign GP[23]   = spi_mosi;
-assign spi_miso = GP[22];
-assign spi_int  = GN[25];
+assign gp[26]   = spi_csn;
+assign gp[24]   = spi_clk;
+assign gp[23]   = spi_mosi;
+assign gp[22]   = 1'bz;
+assign spi_miso = gp[22];
+assign gp[25]   = 1'bz;
+assign spi_int  = gn[25];
 
 assign spi_csn  = ~wifi_gpio5;
 assign spi_clk  =  wifi_gpio16;
-assign spi_mosi =  sd_d[1];  // wifi_gpio4
-assign sd_d[2]  =  spi_miso; // wifi_gpio12 
+
+assign sd_d[3]  = 1'bz;
+assign sd_d[2]  = spi_miso; // wifi_gpio12
+assign sd_d[1]  = 1'bz;
+assign spi_mosi = sd_d[1];  // wifi_gpio4
+assign sd_d[0]  = 1'bz;
+
+
+assign led[0]   = spi_csn;
+assign led[1]   = spi_clk;
+assign led[2]   = spi_mosi;
+assign led[3]   = spi_miso;
+assign led[4]   = spi_int;
+
+assign led[7:5] = 0;
 
 endmodule
