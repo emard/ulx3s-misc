@@ -9,6 +9,13 @@ def test():
  for value in bytearray([0x5A, 0xF0, 0xC3]):
    s.write([0x57, 0xAB, 0x06, value])
    r = s.read(1)
-   print("(0x%02X expected) reply: 0x%02X %s" % (value ^ 0xFF, r[0], msg[(value ^ 0xFF) == r[0]]))
+   if len(r):
+     if (value ^ 0xFF) == r[0]:
+       msg = "OK"
+     else:
+       msg = "FAIL"
+     print("(0x%02X expected) reply: 0x%02X %s" % (value ^ 0xFF, r[0], msg))
+   else:
+     print("no response")
 
 test()

@@ -38,8 +38,8 @@ assign ftdi_rxd = wifi_txd;
 // see https://github.com/djuseeq/Ch376msc
 
 // enable CH376 SPI mode
-assign gn[21]   = 0; // CH376_WR;
-assign gn[22]   = 0; // CH376_RD;
+assign gn[21]   = 1; // CH376_WR;
+assign gn[22]   = 1; // CH376_RD;
 assign gn[23]   = 1; // CH376_CS;
 
 wire spi_csn, spi_clk, spi_mosi, spi_miso, spi_int, spi_busy;
@@ -72,5 +72,4 @@ assign led[4]   = spi_int;
 assign led[5]   = spi_busy;
 
 assign led[7:6] = 0;
-
 endmodule
