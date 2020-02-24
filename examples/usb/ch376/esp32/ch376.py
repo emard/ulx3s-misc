@@ -15,7 +15,7 @@ class ch376:
     self.led = Pin(5, Pin.OUT)
     self.led.off()
     self.spi_channel = const(1)
-    self.hwspi=SPI(self.spi_channel, baudrate=1, polarity=0, phase=1, bits=8, firstbit=SPI.MSB, sck=Pin(16), mosi=Pin(4), miso=Pin(12))
+    self.hwspi=SPI(self.spi_channel, baudrate=1, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(16), mosi=Pin(4), miso=Pin(12))
 
 def help():
   print("ch376.test()")

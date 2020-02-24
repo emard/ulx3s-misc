@@ -42,9 +42,11 @@ assign gn[21]   = 0; // CH376_WR;
 assign gn[22]   = 0; // CH376_RD;
 assign gn[23]   = 1; // CH376_CS;
 
-wire spi_csn, spi_clk, spi_mosi, spi_miso, spi_int;
+wire spi_csn, spi_clk, spi_mosi, spi_miso, spi_int, spi_busy;
 
 assign gp[26]   = spi_csn;
+assign gp[25]   = 1'bz;
+assign spi_busy = gp[25];
 assign gp[24]   = spi_clk;
 assign gp[23]   = spi_mosi;
 assign gp[22]   = 1'bz;
@@ -67,7 +69,8 @@ assign led[1]   = spi_clk;
 assign led[2]   = spi_mosi;
 assign led[3]   = spi_miso;
 assign led[4]   = spi_int;
+assign led[5]   = spi_busy;
 
-assign led[7:5] = 0;
+assign led[7:6] = 0;
 
 endmodule
