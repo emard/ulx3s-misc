@@ -14,8 +14,8 @@ class ch376:
   def __init__(self):
     self.led = Pin(5, Pin.OUT)
     self.led.off()
-    self.spi_channel = const(1)
-    self.hwspi=SPI(self.spi_channel, baudrate=1, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(16), mosi=Pin(4), miso=Pin(12))
+    self.spi_channel = const(-1)
+    self.hwspi=SPI(self.spi_channel, baudrate=100, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(16), mosi=Pin(4), miso=Pin(12))
 
 def help():
   print("ch376.test()")
@@ -24,10 +24,20 @@ def test():
   s=ch376()
 
   s.led.on()
-  buf = bytearray([0x06,0x1A,0x00]) # CHECK_EXIST
+  buf = bytearray([0x05]) # RESET
   s.hwspi.write_readinto(buf,buf)
-  s.led.off()
   print(buf)
+  s.led.off()
+  
+  sleep_ms(36)
+
+  s.led.on()
+  buf = bytearray([0x06,0x0F]) # CHECK_EXIST
+  s.hwspi.write_readinto(buf,buf)
+  print(buf)
+  buf=s.hwspi.read(1)
+  print(buf)
+  s.led.off()
 
   #print("%02X" % r[0])
 

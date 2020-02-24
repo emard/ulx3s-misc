@@ -26,14 +26,14 @@ assign ftdi_rxd = wifi_txd;
 // CH376 module jumper "P_S" should connect "_" and "S"
 // flat cable crimped pinout (plugged to male pins up on ULX3S)
 // if male pins down, or female 90° then swap GP/GN
-// D0 = GN[27]  GND = GND
-// D1 = GP[27]  GND = GND
-// D2 = GN[26]  VCC = +5V
-// D3 = GP[26]  INT = GN[25]
-// D4 = GP[25]  AO  = GN[24]
-// D5 = GP[24]  CS  = GN[23]
-// D6 = GP[23]  RD  = GN[22]
-// D7 = GP[22]  WR  = GN[21]
+//      D0 = GN[27]  GND = GND
+//      D1 = GP[27]  GND = GND
+//      D2 = GN[26]  VCC = +5V
+// CSN  D3 = GP[26]  INT = GN[25]
+// BUSY D4 = GP[25]  AO  = GN[24]
+// SCK  D5 = GP[24]  CS  = GN[23] 1
+// MOSI D6 = GP[23]  RD  = GN[22] 0
+// MISO D7 = GP[22]  WR  = GN[21] 0
 
 // see https://github.com/djuseeq/Ch376msc
 
@@ -58,16 +58,16 @@ assign spi_csn  = ~wifi_gpio5;
 assign spi_clk  =  wifi_gpio16;
 
 assign sd_d[3]  = 1'bz;
-assign sd_d[2]  = spi_miso; // wifi_gpio12
+assign sd_d[2]  = spi_miso & btn[0]; // MISO wifi_gpio12
 assign sd_d[1]  = 1'bz;
-assign spi_mosi = sd_d[1];  // wifi_gpio4
+assign spi_mosi = sd_d[1] & btn[0]; // MOSI wifi_gpio4
 assign sd_d[0]  = 1'bz;
 
 
 assign led[0]   = spi_csn;
 assign led[1]   = spi_clk;
-assign led[2]   = spi_mosi;
-assign led[3]   = spi_miso;
+assign led[2]   = spi_miso;
+assign led[3]   = spi_mosi;
 assign led[4]   = spi_int;
 assign led[5]   = spi_busy;
 
