@@ -60,6 +60,7 @@ assign spi_int  = gn[25];
 
 assign spi_csn  = ~wifi_gpio5;
 assign spi_clk  =  wifi_gpio16;
+assign wifi_gpio0 = spi_int;
 
 assign sd_d[3]  = 1'bz;
 assign sd_d[2]  = spi_miso & btn[0]; // MISO wifi_gpio12
