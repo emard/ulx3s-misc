@@ -8,7 +8,7 @@
 
 from machine import SPI, Pin
 from micropython import const
-from time import sleep_ms
+from time import sleep_ms, sleep_us
 
 class ch376:
   def __init__(self):
@@ -23,6 +23,13 @@ class ch376:
     self.led.off()
     sleep_ms(100)
 
+  def get_ic_ver(self) -> int:
+    self.led.on()
+    self.hwspi.write(bytearray([0x01]))
+    response = self.hwspi.read(1)[0]
+    self.led.off()
+    return response
+
   def check_exist(self,value:int) -> int:
     self.led.on()
     self.hwspi.write(bytearray([0x06,value]))
@@ -33,10 +40,13 @@ class ch376:
     else:
       return 0
 
-  def set_usb_mode(self,mode:int):
+  def set_usb_mode(self,mode:int) -> int:
     self.led.on()
     self.hwspi.write(bytearray([0x15,mode]))
+    sleep_us(10)
+    response = self.hwspi.read(1)[0]
     self.led.off()
+    return response
 
   def auto_setup(self):
     self.led.on()
@@ -44,10 +54,12 @@ class ch376:
     self.led.off()
 
   # sets remote address
-  def set_address(self,addr:int):
+  def set_address(self,addr:int) -> int:
     self.led.on()
     self.hwspi.write(bytearray([0x45,addr]))
+    response = self.hwspi.read(1)[0]
     self.led.off()
+    return response
 
   # sets our address
   def set_our_address(self,addr:int):
@@ -117,8 +129,39 @@ class ch376:
     self.led.off()
     return response
 
+  def start(self):
+    self.reset()
+    if self.check_exist(0xAF):
+      print("CHECK EXIST OK")
+    else:
+      print("CHECK EXIST FAIL")
+    print("IC ver=0x%02X" % self.get_ic_ver()) # my version is 0x43
+    self.set_usb_mode(5)  # host mode CH376 turns module LED ON
+    sleep_ms(50)
+    self.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
+    sleep_ms(20)
+    self.set_usb_mode(6)  # release from reset
+    self.set_usb_speed(2) # low speed 1.5 Mbps
+    self.auto_setup()
+    sleep_ms(400)
+    self.set_config(1) # turns ON USB mouse LED
+    #self.set_config(0) # verify that this turns OFF USB mouse LED
+  
+  def reading(self):
+    token = 1
+    i = 0
+    while True:
+      self.issue_token_x(token,0x69)
+      token ^= 0x80
+      sleep_ms(1)
+      d = self.rd_usb_data0()
+      if (i & 1023) == 0:
+        print(len(d),d)
+      i+=1
+
 def help():
   print("ch376.test()")
+
 
 def test():
   u=ch376()
@@ -127,19 +170,23 @@ def test():
     print("CHECK EXIST OK")
   else:
     print("CHECK EXIST FAIL")
-  u.set_usb_mode(5) # host mode CH376 turns module LED ON
-  sleep_ms(50)
-  u.set_usb_mode(7) # reset and host mode, mouse turns bottom LED ON
-  sleep_ms(20)
-  u.set_usb_mode(6) # release from reset
-  
-  u.set_usb_speed(2) # low speed 1.5 Mbps
-  u.auto_setup()
-
-  #u.set_usb_low_speed()
-  #u.set_address(1)
-  #u.set_our_address(1)
-  #u.set_config(1)
+  print("IC ver=0x%02X" % u.get_ic_ver()) # my version is 0x43
+  if True: # experimentally found
+    u.set_usb_mode(5)  # host mode CH376 turns module LED ON
+    sleep_ms(50)
+    u.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
+    sleep_ms(20)
+    u.set_usb_mode(6)  # release from reset
+    u.set_usb_speed(2) # low speed 1.5 Mbps
+    u.auto_setup()
+    sleep_ms(400)
+  else: # from albiero board example, doesn't work
+    u.set_usb_mode(7)
+    u.set_usb_mode(7)
+    u.set_usb_low_speed()
+    u.set_address(1)
+    u.set_our_address(1)
+    u.set_config(1)
   #print("stat %02X" % u.get_status())
   #print("stat %02X" % u.get_status())
   #u.wr_usb_data(bytearray([0x21,0x0B,0,0,0,0,0,0])) # BOOTP compatibility mode
@@ -149,8 +196,9 @@ def test():
 
   token = 0
   i = 0
+  return
   while True:
-    u.issue_token_x(token,0x19)
+    u.issue_token_x(token,0x69)
     sleep_ms(1)
     u.get_status()
     token ^= 0x80
@@ -159,4 +207,11 @@ def test():
       print(len(d),d)
     i+=1
 
-test()
+#test()
+
+#>>> import ch376
+#>>> u=ch376.ch376()
+#>>> u.start()
+# if enumeration is successful, then
+#>>> u.set_config(0) # turns off mouse LED
+#>>> u.set_config(1) # turns on mouse LED
