@@ -69,6 +69,17 @@ class ch376:
     self.led.off()
     return data
 
+  def rd_usb_data(self):
+    self.led.on()
+    self.hwspi.write(bytearray([0x28]))
+    len = self.hwspi.read(1)[0]
+    if len > 0:
+      data = self.hwspi.read(len)
+    else:
+      data = bytearray()
+    self.led.off()
+    return data
+
   def test_connect(self) -> int:
     self.led.on()
     self.hwspi.write(bytearray([0x16]))
@@ -86,18 +97,19 @@ def test():
     print("CHECK EXIST OK")
   else:
     print("CHECK EXIST FAIL")
-  u.set_usb_speed(2) # low speed 1.5 Mbps
   u.set_usb_mode(5) # host mode CH376 turns module LED ON
   sleep_ms(50)
-  #u.set_usb_mode(7) # reset and host mode, mouse turns bottom LED ON
-  #u.set_usb_mode(6)
+  u.set_usb_mode(7) # reset and host mode, mouse turns bottom LED ON
+  sleep_ms(20)
+  u.set_usb_mode(6) # release from reset
+  u.set_usb_speed(2) # low speed 1.5 Mbps
   #sleep_ms(100)
-  #u.auto_setup()
+  u.auto_setup()
   #u.set_address(1)
   #u.set_config(1)
-  print("%02X" % u.test_connect())
-  for i in range(5):
-    sleep_ms(50)
+  #print("%02X" % u.test_connect())
+  for i in range(10):
+    sleep_ms(1)
     print(u.rd_usb_data0())
 
 test()
