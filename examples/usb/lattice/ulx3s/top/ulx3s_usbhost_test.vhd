@@ -56,7 +56,7 @@ entity ulx3s_usbhost_test is
   usb_fpga_pu_dp, usb_fpga_pu_dn: inout std_logic; -- pull up for slave, down for host mode
 
   -- Digital Video (differential outputs)
-  --gpdi_dp, gpdi_dn: out std_logic_vector(3 downto 0);
+  gpdi_dp: out std_logic_vector(3 downto 0);
 
   -- Flash ROM (SPI0)
   --flash_miso   : in      std_logic;
@@ -100,7 +100,7 @@ architecture Behavioral of ulx3s_usbhost_test is
   signal us4_fpga_dp: std_logic; -- flat cable
   --alias us4_fpga_dp: std_logic is gp(20); -- direct
 
-  signal clk_200MHz, clk_100MHz, clk_89MHz, clk_60MHz, clk_48MHz, clk_12MHz, clk_7M5Hz, clk_6MHz: std_logic;
+  signal clk_200MHz, clk_125MHz, clk_100MHz, clk_89MHz, clk_60MHz, clk_48MHz, clk_12MHz, clk_7M5Hz, clk_6MHz: std_logic;
   signal clk_usb: std_logic; -- 48 MHz
   signal S_led: std_logic;
   signal S_usb_rst: std_logic;
@@ -112,6 +112,10 @@ architecture Behavioral of ulx3s_usbhost_test is
   signal S_oled: std_logic_vector(63 downto 0);
   signal S_valid: std_logic;
   signal R_byte0: std_logic_vector(7 downto 0);
+  signal clk_pixel, clk_shift: std_logic; -- 25,125 MHz
+  signal vga_hsync, vga_vsync, vga_blank: std_logic;
+  signal vga_r, vga_g, vga_b: std_logic_vector(7 downto 0);
+  signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
 begin
   g_single_pll: if true generate
   clk_single_pll: entity work.clk_25M_100M_7M5_12M_60M
@@ -142,8 +146,8 @@ begin
   port map
   (
       CLKI        =>  clk_25MHz,
-      CLKOP       =>  open, -- 125 MHz
-      CLKOS       =>  open, -- 25 MHz
+      CLKOP       =>  clk_shift, -- 125 MHz
+      CLKOS       =>  clk_pixel, -- 25 MHz
       CLKOS2      =>  clk_48MHz,
       CLKOS3      =>  clk_89MHz -- 89.28 MHz
   );
@@ -263,6 +267,54 @@ begin
       end if;
     end if;
   end process;
-  led <= R_byte0; -- report byte0 contains logitech mouse BTN state or keyboard SHIFT state
+  --led <= R_byte0; -- report byte0 contains logitech mouse BTN state or keyboard SHIFT state
+
+  vga_instance: entity work.vga
+  port map
+  (
+      clk_pixel => clk_pixel,
+      clk_pixel_ena => '1',
+      test_picture => '1',
+      red_byte => open,
+      green_byte => open,
+      blue_byte => open,
+      vga_r => vga_r,
+      vga_g => vga_g,
+      vga_b => vga_b,
+      vga_hsync => vga_hsync,
+      vga_vsync => vga_vsync,
+      vga_blank => vga_blank
+  );
+
+  vga2dvid_instance: entity work.vga2dvid
+  generic map
+  (
+    C_ddr => '1',
+    C_shift_clock_synchronizer => '0'
+  )
+  port map
+  (
+    clk_pixel => clk_pixel,
+    clk_shift => clk_shift,
+    in_red => vga_r,
+    in_green => vga_g,
+    in_blue => vga_b,
+    in_hsync => vga_hsync,
+    in_vsync => vga_vsync,
+    in_blank => vga_blank,
+
+    -- single-ended output ready for differential buffers
+    out_red   => dvid_red,
+    out_green => dvid_green,
+    out_blue  => dvid_blue,
+    out_clock => dvid_clock
+  );
+
+  -- vendor specific DDR modules
+  -- convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
+  ddr_clock: ODDRX1F port map (D0=>dvid_clock(0), D1=>dvid_clock(1), Q=>gpdi_dp(3), SCLK=>clk_shift, RST=>'0');
+  ddr_red:   ODDRX1F port map (D0=>dvid_red(0),   D1=>dvid_red(1),   Q=>gpdi_dp(2), SCLK=>clk_shift, RST=>'0');
+  ddr_green: ODDRX1F port map (D0=>dvid_green(0), D1=>dvid_green(1), Q=>gpdi_dp(1), SCLK=>clk_shift, RST=>'0');
+  ddr_blue:  ODDRX1F port map (D0=>dvid_blue(0),  D1=>dvid_blue(1),  Q=>gpdi_dp(0), SCLK=>clk_shift, RST=>'0');
 
 end Behavioral;

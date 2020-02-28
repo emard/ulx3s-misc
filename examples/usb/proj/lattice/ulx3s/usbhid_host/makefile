@@ -2,7 +2,7 @@
 PROJECT = usbhost_test
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 25
+FPGA_SIZE = 12
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
 FLASH_SPI = 4
@@ -10,7 +10,7 @@ FLASH_SPI = 4
 FLASH_CHIP = is25lp128f
 
 # ******* design files *******
-CONSTRAINTS = constraints/ulx3s_v20_se.lpf
+CONSTRAINTS = constraints/ulx3s_v20.lpf
 
 # usually all toplevels have the same top module name
 TOP_MODULE = ulx3s_usbhost_test

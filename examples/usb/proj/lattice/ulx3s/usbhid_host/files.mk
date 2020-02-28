@@ -13,6 +13,9 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
   ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_hex_decoder.vhd \
   ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_font_pack.vhd \
   ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_init_pack.vhd \
+  ../../../../../dvi/hdl/vga.vhd \
+  ../../../../../dvi/hdl/vga2dvid.vhd \
+  ../../../../../dvi/hdl/tmds_encoder.vhd \
 
 # not used yet
 #  ../../../../usbhid/report_decoded_pack_generic.vhd \
