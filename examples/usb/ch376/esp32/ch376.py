@@ -21,7 +21,7 @@ class ch376:
     self.led.on()
     self.hwspi.write(bytearray([0x05]))
     self.led.off()
-    sleep_ms(100)
+    sleep_ms(400)
 
   def get_ic_ver(self) -> int:
     self.led.on()
@@ -93,7 +93,8 @@ class ch376:
     self.led.on()
     self.hwspi.write(bytearray([0x27]))
     len = self.hwspi.read(1)[0]
-    if len > 0:
+    if len:
+      #len = 4 # FIXME
       data = self.hwspi.read(len)
     else:
       data = bytearray()
@@ -104,7 +105,7 @@ class ch376:
     self.led.on()
     self.hwspi.write(bytearray([0x28]))
     len = self.hwspi.read(1)[0]
-    if len > 0:
+    if len:
       data = self.hwspi.read(len)
     else:
       data = bytearray()
@@ -117,9 +118,16 @@ class ch376:
     self.hwspi.write(buffer)
     self.led.off()
 
+  # token alternate 0x00/0x80
+  # x: high 4 bits: endpoint, low 4 bits: operation 9=read
   def issue_token_x(self,token:int,x:int):
     self.led.on()
     self.hwspi.write(bytearray([0x4E,token,x]))
+    self.led.off()
+
+  def clr_stall(self,ep:int):
+    self.led.on()
+    self.hwspi.write(bytearray([0x41,ep]))
     self.led.off()
 
   def test_connect(self) -> int:
@@ -129,7 +137,8 @@ class ch376:
     self.led.off()
     return response
 
-  def start(self):
+  # enumerates but has some problem with reading
+  def start0(self):
     self.reset()
     if self.check_exist(0xAF):
       print("CHECK EXIST OK")
@@ -145,69 +154,76 @@ class ch376:
     self.auto_setup()
     sleep_ms(400)
     self.set_config(1) # turns ON USB mouse LED
+    sleep_ms(200)
+    #self.set_config(0) # verify that this turns OFF USB mouse LED
+    #sleep_ms(200)
+    #self.set_config(1) # turns ON USB mouse LED
+    #sleep_ms(200)
+
+  # enumerates and is better for reading
+  def start1(self):
+    self.reset()
+    if self.check_exist(0xAF):
+      print("CHECK EXIST OK")
+    else:
+      print("CHECK EXIST FAIL")
+    print("IC ver=0x%02X" % self.get_ic_ver()) # my version is 0x43
+    self.set_usb_mode(5)  # host mode CH376 turns module LED ON
+    sleep_ms(50)
+    self.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
+    sleep_ms(20)
+    self.set_usb_low_speed()
+    sleep_ms(100)
+    self.set_address(1)
+    sleep_ms(100)
+    self.set_our_address(1)
+    sleep_ms(100)
+    self.set_config(1)
+    sleep_ms(200)
     #self.set_config(0) # verify that this turns OFF USB mouse LED
   
   def reading(self):
-    token = 1
-    i = 0
+    token = 0
+
+    if False:
+    #for i in bytearray([0x06]):
+    #for i in bytearray([0x06,0x06,0x49,0x49,0x69,0x69,0x99,0x99]):
+      self.issue_token_x(token,i)
+      token^=0x80
+      #sleep_ms(1)
+      #print(self.get_status())
+      print(self.rd_usb_data0())
+      sleep_ms(1000)
+      #self.set_config(0) # verify that this turns OFF USB mouse LED
+      #sleep_ms(200)
+      #self.set_config(1) # turns ON USB mouse LED
+      #sleep_ms(200)
+
     while True:
-      self.issue_token_x(token,0x69)
-      token ^= 0x80
-      sleep_ms(1)
+      self.issue_token_x(token,0x19)
+      token^=0x80
+      #print(self.get_status())
       d = self.rd_usb_data0()
-      if (i & 1023) == 0:
+      if len(d) > 0:
         print(len(d),d)
-      i+=1
+      #self.clr_stall(0x81)
+      #sleep_ms(1000)
 
 def help():
   print("ch376.test()")
 
-
 def test():
   u=ch376()
-  u.reset()
-  if u.check_exist(0xAF):
-    print("CHECK EXIST OK")
-  else:
-    print("CHECK EXIST FAIL")
-  print("IC ver=0x%02X" % u.get_ic_ver()) # my version is 0x43
-  if True: # experimentally found
-    u.set_usb_mode(5)  # host mode CH376 turns module LED ON
-    sleep_ms(50)
-    u.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
-    sleep_ms(20)
-    u.set_usb_mode(6)  # release from reset
-    u.set_usb_speed(2) # low speed 1.5 Mbps
-    u.auto_setup()
-    sleep_ms(400)
-  else: # from albiero board example, doesn't work
-    u.set_usb_mode(7)
-    u.set_usb_mode(7)
-    u.set_usb_low_speed()
-    u.set_address(1)
-    u.set_our_address(1)
-    u.set_config(1)
-  #print("stat %02X" % u.get_status())
-  #print("stat %02X" % u.get_status())
-  #u.wr_usb_data(bytearray([0x21,0x0B,0,0,0,0,0,0])) # BOOTP compatibility mode
-  #u.issue_token_x(0x80,0x0D)
-  #sleep_ms(1)
-  #print("stat %02X" % u.get_status())
+  u.start0()
+  u.reading()
+  #sleep_ms(500)
+  #token=0
+  #u.issue_token_x(token,0x16); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
+  #u.issue_token_x(token,0x06); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
+  #u.issue_token_x(token,0x09); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
+  #u.issue_token_x(token,0x09); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
+  #u.issue_token_x(token,0x19); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
 
-  token = 0
-  i = 0
-  return
-  while True:
-    u.issue_token_x(token,0x69)
-    sleep_ms(1)
-    u.get_status()
-    token ^= 0x80
-    d = u.rd_usb_data0()
-    if (i & 1023) == 0:
-      print(len(d),d)
-    i+=1
-
-#test()
 
 #>>> import ch376
 #>>> u=ch376.ch376()
@@ -215,3 +231,18 @@ def test():
 # if enumeration is successful, then
 #>>> u.set_config(0) # turns off mouse LED
 #>>> u.set_config(1) # turns on mouse LED
+
+#u.start0()
+#CHECK EXIST OK
+#IC ver=0x43
+#>>> token=0
+#>>> u.issue_token_x(token,0x16); token^=0x80; u.rd_usb_data0()
+#bytearray(b'')
+#>>> u.issue_token_x(token,0x06); token^=0x80; u.rd_usb_data0()
+#bytearray(b'')
+#>>> u.issue_token_x(token,0x09); token^=0x80; u.rd_usb_data0()
+#bytearray(b'')
+#>>> u.issue_token_x(token,0x09); token^=0x80; u.rd_usb_data0()
+#bytearray(b'')
+#>>> u.issue_token_x(token,0x19); token^=0x80; u.rd_usb_data0()
+#b'\x00\x00\x01\x00'
