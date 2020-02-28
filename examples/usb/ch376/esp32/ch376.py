@@ -16,12 +16,18 @@ class ch376:
     self.led.off()
     self.spi_channel = const(1)
     self.hwspi=SPI(self.spi_channel, baudrate=6000000, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(16), mosi=Pin(4), miso=Pin(12))
+    self.busy=Pin(0, Pin.IN)
+
+  def wait(self):
+    while self.busy.value():
+      pass
   
   def reset(self):
     self.led.on()
     self.hwspi.write(bytearray([0x05]))
     self.led.off()
-    sleep_ms(400)
+    self.wait()
+
 
   def get_ic_ver(self) -> int:
     self.led.on()
@@ -94,7 +100,6 @@ class ch376:
     self.hwspi.write(bytearray([0x27]))
     len = self.hwspi.read(1)[0]
     if len:
-      #len = 4 # FIXME
       data = self.hwspi.read(len)
     else:
       data = bytearray()
@@ -150,11 +155,13 @@ class ch376:
     self.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
     sleep_ms(20)
     self.set_usb_mode(6)  # release from reset
+    self.wait()
     self.set_usb_speed(2) # low speed 1.5 Mbps
+    self.wait()
     self.auto_setup()
-    sleep_ms(400)
+    self.wait()
     self.set_config(1) # turns ON USB mouse LED
-    sleep_ms(200)
+    self.wait()
     #self.set_config(0) # verify that this turns OFF USB mouse LED
     #sleep_ms(200)
     #self.set_config(1) # turns ON USB mouse LED
@@ -169,17 +176,19 @@ class ch376:
       print("CHECK EXIST FAIL")
     print("IC ver=0x%02X" % self.get_ic_ver()) # my version is 0x43
     self.set_usb_mode(5)  # host mode CH376 turns module LED ON
-    sleep_ms(50)
+    self.wait()
     self.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
-    sleep_ms(20)
+    self.wait()
+    self.set_usb_mode(6)  # release from reset
+    self.wait()
     self.set_usb_low_speed()
-    sleep_ms(100)
+    self.wait()
     self.set_address(1)
-    sleep_ms(100)
+    self.wait()
     self.set_our_address(1)
-    sleep_ms(100)
+    self.wait()
     self.set_config(1)
-    sleep_ms(200)
+    self.wait()
     #self.set_config(0) # verify that this turns OFF USB mouse LED
   
   def reading(self):
@@ -187,13 +196,14 @@ class ch376:
 
     if False:
     #for i in bytearray([0x06]):
-    #for i in bytearray([0x06,0x06,0x49,0x49,0x69,0x69,0x99,0x99]):
+    #for i in bytearray([0x06,0x49,0x69,0x99]):
+      print("%02X" % i)
       self.issue_token_x(token,i)
       token^=0x80
-      #sleep_ms(1)
+      self.wait()
       #print(self.get_status())
       print(self.rd_usb_data0())
-      sleep_ms(1000)
+      self.wait()
       #self.set_config(0) # verify that this turns OFF USB mouse LED
       #sleep_ms(200)
       #self.set_config(1) # turns ON USB mouse LED
@@ -202,10 +212,12 @@ class ch376:
     while True:
       self.issue_token_x(token,0x19)
       token^=0x80
-      #print(self.get_status())
+      self.wait()
+      self.get_status()
       d = self.rd_usb_data0()
       if len(d) > 0:
         print(len(d),d)
+      self.wait()
       #self.clr_stall(0x81)
       #sleep_ms(1000)
 
