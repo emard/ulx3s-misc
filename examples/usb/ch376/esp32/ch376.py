@@ -28,7 +28,6 @@ class ch376:
     self.led.off()
     self.wait()
 
-
   def get_ic_ver(self) -> int:
     self.led.on()
     self.hwspi.write(bytearray([0x01]))
@@ -189,26 +188,9 @@ class ch376:
     self.wait()
     self.set_config(1)
     self.wait()
-    #self.set_config(0) # verify that this turns OFF USB mouse LED
   
   def reading(self):
     token = 0
-
-    if False:
-    #for i in bytearray([0x06]):
-    #for i in bytearray([0x06,0x49,0x69,0x99]):
-      print("%02X" % i)
-      self.issue_token_x(token,i)
-      token^=0x80
-      self.wait()
-      #print(self.get_status())
-      print(self.rd_usb_data0())
-      self.wait()
-      #self.set_config(0) # verify that this turns OFF USB mouse LED
-      #sleep_ms(200)
-      #self.set_config(1) # turns ON USB mouse LED
-      #sleep_ms(200)
-
     while True:
       self.issue_token_x(token,0x19)
       token^=0x80
@@ -218,8 +200,6 @@ class ch376:
       if len(d) > 0:
         print(len(d),d)
       self.wait()
-      #self.clr_stall(0x81)
-      #sleep_ms(1000)
 
 def help():
   print("ch376.test()")
@@ -228,33 +208,5 @@ def test():
   u=ch376()
   u.start0()
   u.reading()
-  #sleep_ms(500)
-  #token=0
-  #u.issue_token_x(token,0x16); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
-  #u.issue_token_x(token,0x06); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
-  #u.issue_token_x(token,0x09); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
-  #u.issue_token_x(token,0x09); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
-  #u.issue_token_x(token,0x19); sleep_ms(5); token^=0x80; print(u.rd_usb_data0()); sleep_ms(500)
 
-
-#>>> import ch376
-#>>> u=ch376.ch376()
-#>>> u.start()
-# if enumeration is successful, then
-#>>> u.set_config(0) # turns off mouse LED
-#>>> u.set_config(1) # turns on mouse LED
-
-#u.start0()
-#CHECK EXIST OK
-#IC ver=0x43
-#>>> token=0
-#>>> u.issue_token_x(token,0x16); token^=0x80; u.rd_usb_data0()
-#bytearray(b'')
-#>>> u.issue_token_x(token,0x06); token^=0x80; u.rd_usb_data0()
-#bytearray(b'')
-#>>> u.issue_token_x(token,0x09); token^=0x80; u.rd_usb_data0()
-#bytearray(b'')
-#>>> u.issue_token_x(token,0x09); token^=0x80; u.rd_usb_data0()
-#bytearray(b'')
-#>>> u.issue_token_x(token,0x19); token^=0x80; u.rd_usb_data0()
-#b'\x00\x00\x01\x00'
+test()
