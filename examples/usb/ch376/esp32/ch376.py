@@ -33,7 +33,7 @@ class ch376:
     self.hwspi.write(bytearray([0x01]))
     response = self.hwspi.read(1)[0]
     self.led.off()
-    return response
+    return response & 0x3F
 
   def check_exist(self,value:int) -> int:
     self.led.on()
