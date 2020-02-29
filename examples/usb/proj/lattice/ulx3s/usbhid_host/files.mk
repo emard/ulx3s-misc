@@ -16,6 +16,7 @@ VHDL_FILES = $(TOP_MODULE_FILE) \
   ../../../../../dvi/hdl/vga.vhd \
   ../../../../../dvi/hdl/vga2dvid.vhd \
   ../../../../../dvi/hdl/tmds_encoder.vhd \
+  ../../../../../hex/decoder/hex_decoder.vhd \
 
 # not used yet
 #  ../../../../usbhid/report_decoded_pack_generic.vhd \
@@ -25,3 +26,4 @@ VERILOG_FILES = \
   ../../../../usbhost/usbh_sie.v \
   ../../../../usbhost/usbh_crc5.v \
   ../../../../usbhost/usbh_crc16.v \
+  ../../../../../hex/decoder/hex_decoder_v.v \

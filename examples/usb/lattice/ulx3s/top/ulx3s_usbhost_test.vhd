@@ -113,6 +113,8 @@ architecture Behavioral of ulx3s_usbhost_test is
   signal S_valid: std_logic;
   signal R_byte0: std_logic_vector(7 downto 0);
   signal clk_pixel, clk_shift: std_logic; -- 25,125 MHz
+  signal beam_x, beam_rx, beam_y: std_logic_vector(9 downto 0);
+  signal color: std_logic_vector(15 downto 0);
   signal vga_hsync, vga_vsync, vga_blank: std_logic;
   signal vga_r, vga_g, vga_b: std_logic_vector(7 downto 0);
   signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
@@ -268,6 +270,26 @@ begin
     end if;
   end process;
   --led <= R_byte0; -- report byte0 contains logitech mouse BTN state or keyboard SHIFT state
+  beam_rx <= 636-beam_x; -- HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
+  hex_decoder_instance: entity work.hex_decoder
+  generic map
+  (
+    c_data_len   => S_oled'length,
+    c_row_bits   => 5 , -- 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
+    c_grid_6x8   => 1,  -- NOTE: TRELLIS needs -abc9 option to compile
+    c_font_file  => "hex_font.mem",
+    c_x_bits     => 8,
+    c_y_bits     => 4,
+    c_color_bits => 16
+  )
+  port map
+  (
+    clk   => clk_pixel,
+    data  => S_oled,
+    x     => beam_rx(9 downto 2),
+    y     => beam_y(5 downto 2),
+    color => color
+  );
 
   vga_instance: entity work.vga
   port map
@@ -275,16 +297,21 @@ begin
       clk_pixel => clk_pixel,
       clk_pixel_ena => '1',
       test_picture => '1',
+      beam_x => beam_x,
+      beam_y => beam_y,
       red_byte => open,
       green_byte => open,
       blue_byte => open,
-      vga_r => vga_r,
-      vga_g => vga_g,
-      vga_b => vga_b,
+      vga_r => open,
+      vga_g => open,
+      vga_b => open,
       vga_hsync => vga_hsync,
       vga_vsync => vga_vsync,
       vga_blank => vga_blank
   );
+  vga_r <= color(15 downto 11) & color(11) & color(11) & color(11);
+  vga_g <= color(10 downto  5) & color( 5) & color( 5);
+  vga_b <= color( 4 downto  0) & color( 0) & color( 0) & color( 0);
 
   vga2dvid_instance: entity work.vga2dvid
   generic map
