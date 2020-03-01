@@ -19,12 +19,17 @@ class ch376:
     self.hwspi=SPI(self.spi_channel, baudrate=6000000, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(16), mosi=Pin(4), miso=Pin(12))
     self.busy=Pin(0, Pin.IN)
     self.exist=0
+    self.reset_data01()
+
+  def reset_data01(self):
+    self.data01=bytearray(16) # track DATA0/DATA1 tokens for each endpoint
 
   def wait(self):
     while self.busy.value():
       pass
   
   def reset(self):
+    self.reset_data01()
     self.led.on()
     self.hwspi.write(bytearray([0x05]))
     self.led.off()
@@ -200,21 +205,12 @@ class ch376:
     #self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
     #self.wait
 
-  def reading(self):
-    token = 0
-    while True:
-      self.issue_token_x(token,0x19) # 0x19 -> 1:EP1 9:READ
-      token^=0x80
-      self.wait()
-      if self.get_status() != 0x14: # unplugged
-        return
-      d = self.rd_usb_data0()
+  def prhex(self,d):
       if len(d) > 0:
         print(len(d), end=":")
         for i in range(len(d)):
           print(" %02X" % d[i], end="")
         print("")
-      collect()
 
   def ctrl(self,type,request,value,index):
     self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,0,0]))
@@ -226,9 +222,14 @@ class ch376:
     self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,len(data)&0xFF,(len(data)>>8)&0xFF]))
     self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
     self.wait()
-    if len(data):
-      self.wr_usb_data(data)
-      self.issue_token_x(0x80,0x0D) # 0x0D -> 0:EP0 D:WRITE
+    token = 0x80
+    i = 0
+    while i < len(data):
+      self.wr_usb_data(data[i:i+8])
+      #self.prhex(data[i:i+8])
+      self.issue_token_x(token,0x0D) # 0x0D -> 0:EP0 D:WRITE
+      token ^= 0x80
+      i += 8
       self.wait()
 
   # data phase device to host
@@ -236,56 +237,30 @@ class ch376:
     self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,rdlen&0xFF,(rdlen>>8)&0xFF]))
     self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
     self.wait()
-    if rdlen:
-      self.get_status()
-      self.issue_token_x(0x80,0x09) # 0x09 -> 0:EP0 9:READ
+    data = bytearray()
+    token = 0x80
+    while rdlen > 0:
+      self.issue_token_x(token,0x09) # 0x09 -> 0:EP0 9:READ
+      token ^= 0x80
+      self.wait()
+      d = self.rd_usb_data0() # 8 bytes max
+      if len(d):
+        data += d
+        rdlen -= len(d)
+      else:
+        rdlen = 0
+    return data
+  
+  def ep_in(self,ep=1):
+      self.issue_token_x(self.data01[ep],(ep<<4)|9) # 0x19 -> 1:EP1 9:READ
+      self.data01[ep]^=0x80
       self.wait()
       return self.rd_usb_data0()
-    return bytearray()
 
-  # chatpad init
-  def cpi(self):
-    code = bytearray([1,2])
-    #code = bytearray([9,0])
-    self.ctrl(0x40,0xA9,0xA30C,0x4423)
-    self.ctrl(0x40,0xA9,0x2344,0x7F03)
-    self.ctrl(0x40,0xA9,0x5839,0x6832)
-    print(self.ctrlin(0xC0,0xA1,0,0xE416,2))
-    self.ctrlout(0x40,0xA1,0,0xE416,code)
-    print(self.ctrlin(0xC0,0xA1,0,0xE416,2))
-    for i in range(3):
-      self.ctrl(0x41,0,0x1F,2)
-      sleep_ms(50)
-      self.ctrl(0x41,0,0x1E,2)
-      sleep_ms(50)
-    self.ctrl(0x41,0,0x1B,2)
-    for i in range(3):
-      self.ctrl(0x41,0,0x1F,2)
-      sleep_ms(50)
-      self.ctrl(0x41,0,0x1E,2)
-      sleep_ms(50)
-
-  # chatpad read
-  def cpr(self,ep=6):
+  def reading(self,ep=1):
     token = 0
-    while True:
-      if token: # keepalive
-        self.ctrl(0x41,0,0x1F,2)
-      else:
-        self.ctrl(0x41,0,0x1E,2)
-      self.issue_token_x(token,(ep<<4)|0x9) # 9:READ
-      token^=0x80
-      self.wait()
-      #status = self.get_status()
-      #if status != 0x14: # unplugged
-      #  print("status 0x%02X" % status)
-      #  return
-      d = self.rd_usb_data0()
-      if len(d) > 0:
-        print(len(d), end=":")
-        for i in range(len(d)):
-          print(" %02X" % d[i], end="")
-        print("")
+    while self.get_status() == 0x14:
+      self.prhex(self.ep_in(ep))
       collect()
 
 def help():
@@ -295,6 +270,6 @@ def test():
   u=ch376()
   while True:
     u.start()
-    u.reading()
-
-#test()
+    u.reading(1)
+    
+test()
