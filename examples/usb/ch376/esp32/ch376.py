@@ -152,7 +152,7 @@ class ch376:
       self.exist+=1
       if self.check_exist(self.exist):
         break
-    print("CH376 v%d waits for hotplug of USB low-speed device" % self.get_ic_ver()) # my module is v3, albiero is v4
+    print("CH376 v%d waits for hotplug of USB low-speed HID device" % self.get_ic_ver()) # my module is v3, albiero is v4
     self.set_usb_mode(5)  # host mode: CH376 turns module LED ON
     hotplug = 0
     while hotplug != 1:
