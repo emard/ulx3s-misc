@@ -169,6 +169,15 @@ class ch376:
     self.wait()
     self.set_config(1) # turns ON USB mouse LED
     self.wait()
+    #self.wr_usb_data(bytearray([0x21,0x0B,0,0,0,0,0,0])) # BOOTP compatible mouse, no wheel
+    #self.issue_token_x(0,0x0D)
+    #self.wait
+    # HID request for device not to send reports if IDLE
+    # only when user presses something the report will be send
+    # some HID devices ignore this command and send idle reports anyway
+    #self.wr_usb_data(bytearray([0x21,0x0A,0,0,0,0,0,0])) # SET IDLE 0
+    #self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
+    #self.wait()
     #self.set_config(0) # verify that this turns OFF USB mouse LED
     #sleep_ms(200)
     #self.set_config(1) # turns ON USB mouse LED
@@ -177,7 +186,7 @@ class ch376:
   def reading(self):
     token = 0
     while True:
-      self.issue_token_x(token,0x19)
+      self.issue_token_x(token,0x19) # 0x19 -> 1:EP1 9:READ
       token^=0x80
       self.wait()
       if self.get_status() != 0x14: # unplugged
