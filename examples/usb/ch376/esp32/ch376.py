@@ -9,6 +9,7 @@
 from machine import SPI, Pin
 from micropython import const
 from time import sleep_ms, sleep_us
+from gc import collect
 
 class ch376:
   def __init__(self):
@@ -17,6 +18,7 @@ class ch376:
     self.spi_channel = const(1)
     self.hwspi=SPI(self.spi_channel, baudrate=6000000, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(16), mosi=Pin(4), miso=Pin(12))
     self.busy=Pin(0, Pin.IN)
+    self.exist=0
 
   def wait(self):
     while self.busy.value():
@@ -142,15 +144,21 @@ class ch376:
     return response
 
   # enumerates but has some problem with reading
-  def start0(self):
+  def start(self):
     self.reset()
-    if self.check_exist(0xAF):
-      print("CHECK EXIST OK")
-    else:
-      print("CHECK EXIST FAIL")
-    print("IC ver=0x%02X" % self.get_ic_ver()) # my version is 0x43
-    self.set_usb_mode(5)  # host mode CH376 turns module LED ON
-    sleep_ms(50)
+    self.wait()
+    while True:
+      sleep_ms(100)
+      self.exist+=1
+      if self.check_exist(self.exist):
+        break
+    print("CH376 v%d waits for hotplug of USB low-speed device" % self.get_ic_ver()) # my module is v3, albiero is v4
+    self.set_usb_mode(5)  # host mode: CH376 turns module LED ON
+    hotplug = 0
+    while hotplug != 1:
+      self.wait()
+      hotplug = self.get_status() & 3
+    print("hot-plugged")
     self.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
     sleep_ms(20)
     self.set_usb_mode(6)  # release from reset
@@ -166,47 +174,29 @@ class ch376:
     #self.set_config(1) # turns ON USB mouse LED
     #sleep_ms(200)
 
-  # enumerates and is better for reading
-  def start1(self):
-    self.reset()
-    if self.check_exist(0xAF):
-      print("CHECK EXIST OK")
-    else:
-      print("CHECK EXIST FAIL")
-    print("IC ver=0x%02X" % self.get_ic_ver()) # my version is 0x43
-    self.set_usb_mode(5)  # host mode CH376 turns module LED ON
-    self.wait()
-    self.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
-    self.wait()
-    self.set_usb_mode(6)  # release from reset
-    self.wait()
-    self.set_usb_low_speed()
-    self.wait()
-    self.set_address(1)
-    self.wait()
-    self.set_our_address(1)
-    self.wait()
-    self.set_config(1)
-    self.wait()
-  
   def reading(self):
     token = 0
     while True:
       self.issue_token_x(token,0x19)
       token^=0x80
       self.wait()
-      self.get_status()
+      if self.get_status() != 0x14: # unplugged
+        return
       d = self.rd_usb_data0()
       if len(d) > 0:
-        print(len(d),d)
-      self.wait()
+        print(len(d), end=":")
+        for i in range(len(d)):
+          print(" %02X" % d[i], end="")
+        print("")
+      collect()
 
 def help():
   print("ch376.test()")
 
 def test():
   u=ch376()
-  u.start0()
-  u.reading()
+  while True:
+    u.start()
+    u.reading()
 
 test()
