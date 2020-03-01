@@ -185,6 +185,11 @@ class ch376:
     self.wait()
     self.set_config(1) # turns ON USB mouse LED
     self.wait()
+    #self.set_config(0) # verify that this turns OFF USB mouse LED
+    #sleep_ms(200)
+    #self.set_config(1) # turns ON USB mouse LED
+    #sleep_ms(200)
+    #self.wait()
     #self.wr_usb_data(bytearray([0x21,0x0B,0,0,0,0,0,0])) # BOOTP compatible mouse, no wheel
     #self.issue_token_x(0,0x0D)
     #self.wait
@@ -193,11 +198,7 @@ class ch376:
     # some HID devices ignore this command and send idle reports anyway
     #self.wr_usb_data(bytearray([0x21,0x0A,0,0,0,0,0,0])) # SET IDLE 0
     #self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
-    #self.wait()
-    #self.set_config(0) # verify that this turns OFF USB mouse LED
-    #sleep_ms(200)
-    #self.set_config(1) # turns ON USB mouse LED
-    #sleep_ms(200)
+    #self.wait
 
   def reading(self):
     token = 0
@@ -215,6 +216,78 @@ class ch376:
         print("")
       collect()
 
+  def ctrl(self,type,request,value,index):
+    self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,0,0]))
+    self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
+    self.wait()
+
+  # data phase host to device
+  def ctrlout(self,type,request,value,index,data):
+    self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,len(data)&0xFF,(len(data)>>8)&0xFF]))
+    self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
+    self.wait()
+    if len(data):
+      self.wr_usb_data(data)
+      self.issue_token_x(0x80,0x0D) # 0x0D -> 0:EP0 D:WRITE
+      self.wait()
+
+  # data phase device to host
+  def ctrlin(self,type,request,value,index,rdlen):
+    self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,rdlen&0xFF,(rdlen>>8)&0xFF]))
+    self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
+    self.wait()
+    if rdlen:
+      self.get_status()
+      self.issue_token_x(0x80,0x09) # 0x09 -> 0:EP0 9:READ
+      self.wait()
+      return self.rd_usb_data0()
+    return bytearray()
+
+  # chatpad init
+  def cpi(self):
+    code = bytearray([1,2])
+    #code = bytearray([9,0])
+    self.ctrl(0x40,0xA9,0xA30C,0x4423)
+    self.ctrl(0x40,0xA9,0x2344,0x7F03)
+    self.ctrl(0x40,0xA9,0x5839,0x6832)
+    print(self.ctrlin(0xC0,0xA1,0,0xE416,2))
+    self.ctrlout(0x40,0xA1,0,0xE416,code)
+    print(self.ctrlin(0xC0,0xA1,0,0xE416,2))
+    for i in range(3):
+      self.ctrl(0x41,0,0x1F,2)
+      sleep_ms(50)
+      self.ctrl(0x41,0,0x1E,2)
+      sleep_ms(50)
+    self.ctrl(0x41,0,0x1B,2)
+    for i in range(3):
+      self.ctrl(0x41,0,0x1F,2)
+      sleep_ms(50)
+      self.ctrl(0x41,0,0x1E,2)
+      sleep_ms(50)
+
+  # chatpad read
+  def cpr(self,ep=6):
+    token = 0
+    while True:
+      if token: # keepalive
+        self.ctrl(0x41,0,0x1F,2)
+      else:
+        self.ctrl(0x41,0,0x1E,2)
+      self.issue_token_x(token,(ep<<4)|0x9) # 9:READ
+      token^=0x80
+      self.wait()
+      #status = self.get_status()
+      #if status != 0x14: # unplugged
+      #  print("status 0x%02X" % status)
+      #  return
+      d = self.rd_usb_data0()
+      if len(d) > 0:
+        print(len(d), end=":")
+        for i in range(len(d)):
+          print(" %02X" % d[i], end="")
+        print("")
+      collect()
+
 def help():
   print("ch376.test()")
 
@@ -224,4 +297,4 @@ def test():
     u.start()
     u.reading()
 
-test()
+#test()
