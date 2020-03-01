@@ -55,6 +55,28 @@ class ch376:
     self.led.off()
     return response
 
+  # works only during set_usb_mode(5)
+  # 0x44: no device
+  # 0x10: low-speed
+  # 0x20: full-speed
+  def get_dev_rate(self) -> int:
+    self.led.on()
+    self.hwspi.write(bytearray([0x0A,0x07]))
+    response = self.hwspi.read(1)[0]
+    self.led.off()
+    return response
+
+  # 0:full-speed 12Mbps, 2:low-speed 1.5 Mbps
+  def set_usb_speed(self,speed:int):
+    self.led.on()
+    self.hwspi.write(bytearray([0x04,speed]))
+    self.led.off()
+
+  def set_usb_low_speed(self):
+    self.led.on()
+    self.hwspi.write(bytearray([0x0B,0x17,0xD8]))
+    self.led.off()
+
   def auto_setup(self):
     self.led.on()
     self.hwspi.write(bytearray([0x4D]))
@@ -72,16 +94,6 @@ class ch376:
   def set_our_address(self,addr:int):
     self.led.on()
     self.hwspi.write(bytearray([0x13,addr]))
-    self.led.off()
-
-  def set_usb_speed(self,speed:int):
-    self.led.on()
-    self.hwspi.write(bytearray([0x04,speed]))
-    self.led.off()
-
-  def set_usb_low_speed(self):
-    self.led.on()
-    self.hwspi.write(bytearray([0x0B,0x17,0xD8]))
     self.led.off()
 
   def set_config(self,config:int):
@@ -152,18 +164,22 @@ class ch376:
       self.exist+=1
       if self.check_exist(self.exist):
         break
-    print("CH376 v%d waits for hotplug of USB low-speed HID device" % self.get_ic_ver()) # my module is v3, albiero is v4
+    print("CH376 v%d waits for hotplug of USB HID device" % self.get_ic_ver()) # my module is v3, albiero is v4
     self.set_usb_mode(5)  # host mode: CH376 turns module LED ON
-    hotplug = 0
-    while hotplug != 1:
+    hotplug = 0x44
+    while hotplug == 0x44:
       self.wait()
-      hotplug = self.get_status() & 3
-    print("hot-plugged")
+      hotplug = self.get_dev_rate()
     self.set_usb_mode(7)  # reset and host mode, mouse turns bottom LED ON
     sleep_ms(20)
     self.set_usb_mode(6)  # release from reset
     self.wait()
-    self.set_usb_speed(2) # low speed 1.5 Mbps
+    if hotplug == 0x10: # low-speed device
+      self.set_usb_speed(2) # 2:low-speed 1.5 Mbps
+      print("hot-plugged USB low-speed 1.5 Mbps device")
+    if hotplug == 0x20: # full-speed device
+      self.set_usb_speed(0) # 0:full-speed 12Mbps
+      print("hot-plugged USB full-speed 12 Mbps device")
     self.wait()
     self.auto_setup()
     self.wait()
