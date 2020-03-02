@@ -22,7 +22,8 @@ class ch376:
     self.reset_data01()
 
   def reset_data01(self):
-    self.data01=bytearray(16) # track DATA0/DATA1 tokens for each endpoint
+    self.data01in=bytearray(16) # track DATA0/DATA1 tokens for each endpoint
+    self.data01out=bytearray(16) # track DATA0/DATA1 tokens for each endpoint
 
   def wait(self):
     while self.busy.value():
@@ -250,12 +251,18 @@ class ch376:
       else:
         rdlen = 0
     return data
-  
+
   def ep_in(self,ep=1):
-      self.issue_token_x(self.data01[ep],(ep<<4)|9) # 0x19 -> 1:EP1 9:READ
-      self.data01[ep]^=0x80
+      self.issue_token_x(self.data01in[ep],(ep<<4)|9) # 0x19 -> 1:EP1 9:READ
+      self.data01in[ep]^=0x80
       self.wait()
       return self.rd_usb_data0()
+
+  def ep_out(self,data,ep=1):
+      self.wr_usb_data(data)
+      self.issue_token_x(self.data01out[ep],(ep<<4)|0xD) # 0x1D -> 1:EP1 D:WRITE
+      self.data01out[ep]^=0x80
+      self.wait()
 
   def reading(self,ep=1):
     token = 0
