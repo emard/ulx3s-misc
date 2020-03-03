@@ -139,7 +139,8 @@ class ch376:
   def wr_usb_data(self,buffer):
     self.led.on()
     self.hwspi.write(bytearray([0x2C,len(buffer)]))
-    self.hwspi.write(buffer)
+    if len(buffer):
+      self.hwspi.write(buffer)
     self.led.off()
 
   # token alternate 0x00/0x80
@@ -207,6 +208,7 @@ class ch376:
     #self.wait
 
   def prhex(self,d):
+    if d:
       if len(d) > 0:
         print(len(d), end=":")
         for i in range(len(d)):
@@ -215,33 +217,41 @@ class ch376:
 
   def ctrl(self,type,request,value,index):
     self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,0,0]))
-    self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
+    self.issue_token_x(0,0xD) # 0x0D -> 0:EP0 D:WRITE
+    self.wait()
+    self.wr_usb_data(bytearray())
+    self.issue_token_x(0x80,1) # 0:EP0 1:OUT status
     self.wait()
 
   # data phase host to device
   def ctrlout(self,type,request,value,index,data):
     self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,len(data)&0xFF,(len(data)>>8)&0xFF]))
-    self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
+    #print("data phase")
+    #sleep_ms(5000)
+    self.issue_token_x(0,0xD) # 0x0D -> 0:EP0 D:SETUP
     self.wait()
     token = 0x80
     i = 0
     while i < len(data):
       self.wr_usb_data(data[i:i+8])
       #self.prhex(data[i:i+8])
-      self.issue_token_x(token,0x0D) # 0x0D -> 0:EP0 D:WRITE
+      self.issue_token_x(token,1) # 0x01 -> 0:EP0 1:OUT
       token ^= 0x80
       i += 8
       self.wait()
+    self.issue_token_x(0x80,9) # 0:EP0 9:IN read status
+    self.wait()
+    return self.rd_usb_data0()
 
   # data phase device to host
   def ctrlin(self,type,request,value,index,rdlen):
     self.wr_usb_data(bytearray([type,request,value&0xFF,(value>>8)&0xFF,index&0xFF,(index>>8)&0xFF,rdlen&0xFF,(rdlen>>8)&0xFF]))
-    self.issue_token_x(0,0x0D) # 0x0D -> 0:EP0 D:WRITE
+    self.issue_token_x(0,0xD) # 0x0D -> 0:EP0 D:WRITE
     self.wait()
     data = bytearray()
     token = 0x80
     while rdlen > 0:
-      self.issue_token_x(token,0x09) # 0x09 -> 0:EP0 9:READ
+      self.issue_token_x(token,9) # 0x09 -> 0:EP0 9:IN
       token ^= 0x80
       self.wait()
       d = self.rd_usb_data0() # 8 bytes max
@@ -250,24 +260,28 @@ class ch376:
         rdlen -= len(d)
       else:
         rdlen = 0
+    self.wr_usb_data(bytearray())
+    self.issue_token_x(0x80,1) # 0:EP0 1:OUT status
+    self.wait()
     return data
 
-  def ep_in(self,ep=1):
+  def epin(self,ep=1):
       self.issue_token_x(self.data01in[ep],(ep<<4)|9) # 0x19 -> 1:EP1 9:READ
       self.data01in[ep]^=0x80
       self.wait()
       return self.rd_usb_data0()
 
-  def ep_out(self,data,ep=1):
+  def epout(self,data,ep=2):
       self.wr_usb_data(data)
-      self.issue_token_x(self.data01out[ep],(ep<<4)|0xD) # 0x1D -> 1:EP1 D:WRITE
+      self.issue_token_x(self.data01out[ep],(ep<<4)|1) # 0x11 -> 1:EP1 1:OUT
       self.data01out[ep]^=0x80
       self.wait()
 
   def reading(self,ep=1):
     token = 0
     while self.get_status() == 0x14:
-      self.prhex(self.ep_in(ep))
+      sleep_ms(10)
+      self.prhex(self.epin(ep))
       collect()
 
 def help():
@@ -278,5 +292,11 @@ def test():
   while True:
     u.start()
     u.reading(1)
-    
-test()
+
+def test2():
+  u=ch376()
+  u.start()
+  vib=bytearray([0x11,10,100,10,0,200,0])
+  u.prhex(u.ctrlout(0x21,9,0x200,0,vib))
+
+#test2()
