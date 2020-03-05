@@ -26,7 +26,7 @@ package usbh_setup_pack is
   constant C_setup_interval    : integer := 17; -- 2**n clocks 15:5.46 ms wait before sending next setup request
   constant C_report_interval   : integer := 16; -- 2**n clocks 15:5.46 ms wait before sending next request for report
   constant C_report_endpoint   : integer := 1;  -- default=1 endpoint which answers IN transfer with HID report
-  constant C_report_length     : integer := 8;  -- report buffer length: 4:M-BT58, 5:LX3, 8:keyboard, 20:XBOX360
+  constant C_report_length     : integer := 20; -- report buffer length: 4:M-BT58, 5:LX3, 8:keyboard, 20:XBOX360
 
   constant C_keepalive_setup   : std_logic := '1';  -- enable keepalive during setup
   constant C_keepalive_status  : std_logic := '1';  -- enable keepalive during setup status OUT 0-length
