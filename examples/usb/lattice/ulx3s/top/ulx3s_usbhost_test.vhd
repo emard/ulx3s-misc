@@ -8,6 +8,8 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 library ecp5u;
 use ecp5u.components.all;
 
+use work.usbh_setup_pack.all;
+
 entity ulx3s_usbhost_test is
   generic
   (
@@ -109,6 +111,7 @@ architecture Behavioral of ulx3s_usbhost_test is
   signal S_rxd: std_logic;
   signal S_rxdp, S_rxdn: std_logic;
   signal S_txdp, S_txdn, S_txoe: std_logic;
+  signal S_report: std_logic_vector(C_report_length*8-1 downto 0);
   signal S_oled: std_logic_vector(63 downto 0);
   signal S_valid: std_logic;
   signal R_byte0: std_logic_vector(7 downto 0);
