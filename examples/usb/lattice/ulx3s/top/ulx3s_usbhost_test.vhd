@@ -15,7 +15,7 @@ entity ulx3s_usbhost_test is
     C_us2: boolean := true;  -- onboard micro USB with OTG adapter
     C_us3: boolean := false; -- PMOD US3 at GP,GN 25,22,21
     C_us4: boolean := false; -- PMOD US4 at GP,GN 24,23,20
-    C_usb_full_speed: boolean := false -- false:6 MHz true:48 MHz
+    C_usb_speed: std_logic := '0' -- 0:6 MHz 1:48 MHz
   );
   port
   (
@@ -180,7 +180,13 @@ begin
   wifi_en <= '1';
   wifi_gpio0 <= R_rst_btn;
   
-  clk_usb <= clk_6MHz; -- 48MHz full speed, 6MHz low speed
+  G_low_speed: if C_usb_speed='0' generate
+  clk_usb <= clk_6MHz;
+  end generate;
+
+  G_full_speed: if C_usb_speed='1' generate
+  clk_usb <= clk_48MHz;
+  end generate;
 
   G_us2: if C_us2 generate
   usb_fpga_pu_dp <= '0';
@@ -188,7 +194,7 @@ begin
   us2_hid_host_inst: entity usbh_host_hid
   generic map
   (
-    C_usb_speed => '0' -- '0':Low-speed '1':Full-speed
+    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
   )
   port map
   (
@@ -197,7 +203,7 @@ begin
     usb_dif => usb_fpga_dp,    -- usb/us3/us4
     usb_dp  => usb_fpga_bd_dp, -- usb/us3/us4
     usb_dn  => usb_fpga_bd_dn, -- usb/us3/us4
-    hid_report => S_oled,
+    hid_report => S_report,
     hid_valid => S_valid
   );
   end generate;
@@ -209,7 +215,7 @@ begin
   us3_hid_host_inst: entity usbh_host_hid
   generic map
   (
-    C_usb_speed => '0' -- '0':Low-speed '1':Full-speed
+    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
   )
   port map
   (
@@ -218,7 +224,7 @@ begin
     usb_dif => us3_fpga_dp,    -- usb/us3/us4
     usb_dp  => us3_fpga_bd_dp, -- usb/us3/us4
     usb_dn  => us3_fpga_bd_dn, -- usb/us3/us4
-    hid_report => S_oled,
+    hid_report => S_report,
     hid_valid => S_valid
   );
   end generate;
@@ -230,7 +236,7 @@ begin
   us4_hid_host_inst: entity usbh_host_hid
   generic map
   (
-    C_usb_speed => '0' -- '0':Low-speed '1':Full-speed
+    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
   )
   port map
   (
@@ -239,10 +245,12 @@ begin
     usb_dif => us4_fpga_dp,    -- usb/us3/us4
     usb_dp  => us4_fpga_bd_dp, -- usb/us3/us4
     usb_dn  => us4_fpga_bd_dn, -- usb/us3/us4
-    hid_report => S_oled,
+    hid_report => S_report,
     hid_valid => S_valid
   );
   end generate;
+
+  S_oled <= S_report(S_oled'range);
 
   oled_inst: entity work.oled_hex_decoder
   generic map
