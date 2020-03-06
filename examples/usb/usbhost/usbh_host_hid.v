@@ -1,4 +1,4 @@
-// File /tmp/usbh_host_hid.vhd translated with vhd2vl v3.0 VHDL to Verilog RTL translator
+// File ../../../../usbhost/usbh_host_hid_convertible.vhd translated with vhd2vl v3.0 VHDL to Verilog RTL translator
 // vhd2vl settings:
 //  * Verilog Module Declaration Style: 2001
 
@@ -32,20 +32,19 @@
 
 module usbh_host_hid
 #(
-parameter C_setup_retry=4,
-parameter C_setup_interval=17,
-parameter C_report_interval=16,
-parameter C_report_endpoint=1,
-parameter C_report_length=20, // bytes
+parameter [31:0] C_setup_retry=4,
+parameter [31:0] C_setup_interval=17,
+parameter [31:0] C_report_interval=16,
+parameter [31:0] C_report_endpoint=1,
+parameter [31:0] C_report_length=20,
 parameter C_keepalive_setup=1'b1,
 parameter C_keepalive_status=1'b1,
 parameter C_keepalive_report=1'b1,
 parameter C_keepalive_type=1'b1,
-parameter C_keepalive_phase_bits=12,
-parameter C_keepalive_phase=4044,
-parameter C_setup_rom_len=16,
-parameter C_usb_speed=0
-// '0':6 MHz low speed '1':48 MHz full speed 
+parameter [31:0] C_keepalive_phase_bits=12,
+parameter [31:0] C_keepalive_phase=4044,
+parameter [31:0] C_setup_rom_len=16,
+parameter [31:0] C_usb_speed=0
 )
 (
 input wire clk,
@@ -59,6 +58,7 @@ output wire [C_report_length * 8 - 1:0] hid_report,
 output wire hid_valid
 );
 
+// '0':6 MHz low speed '1':48 MHz full speed 
 // main clock input
 // FPGA direct USB connector
 // differential or single-ended input
@@ -94,16 +94,10 @@ wire [7:0] S_DATAIN;
 wire [7:0] S_DATAOUT;
 wire S_BREAK;  // UTMI debug
 wire S_sync_err; wire S_bit_stuff_err; wire S_byte_err;
-reg [7:0] R_setup_rom_addr = 1'b0;
-reg [7:0] R_setup_rom_addr_acked = 1'b0;
+reg [7:0] R_setup_rom_addr = 1'b0; reg [7:0] R_setup_rom_addr_acked = 1'b0;
 
-reg [7:0] C_setup_rom[0:C_setup_rom_len-1];
-initial
-begin
-  $readmemh("setup_rom.mem", C_setup_rom);
-// 00 05 01 00 00 00 00 00
-// 00 09 01 00 00 00 00 00
-end
+reg [7:0] C_setup_rom[0:C_setup_rom_len-1];  // ( x"00", x"05", x"01", x"00", x"00", x"00", x"00", x"00", x"00", x"09", x"01", x"00", x"00", x"00", x"00", x"00" );
+initial $readmemh("setup_rom.mem", C_setup_rom);
 
 reg [2:0] R_setup_byte_counter = 1'b0;
 reg ctrlin;
@@ -159,9 +153,9 @@ reg R_hid_valid;
 reg R_crc_err;
 reg R_rx_done;
 
-  assign clk_usb = clk;
   generate if (C_usb_speed == 1) begin: G_full_speed
-    // 48 MHz
+      assign clk_usb = clk;
+    // 48 MHz with "usb_rx_phy_48MHz.vhd" or 60 MHz with "usb_rx_phy_60MHz.vhd"
     // transciever soft-core
     //usb_fpga_pu_dp <= '0'; -- D+ pulldown for USB host mode
     //usb_fpga_pu_dn <= '0'; -- D- pulldown for USB host mode
@@ -172,11 +166,12 @@ reg R_rx_done;
     // single-ended input reads D+
     assign S_rxdn = usb_dn;
     // single-ended input reads D-
-    assign usb_dp = S_txoe == 1'b0 ? S_txdp : 1'bz;
-    assign usb_dn = S_txoe == 1'b0 ? S_txdn : 1'bz;
+    assign usb_dp = S_txoe == 1'b0 ? S_txdp : 1'bZ;
+    assign usb_dn = S_txoe == 1'b0 ? S_txdn : 1'bZ;
   end
   endgenerate
   generate if (C_usb_speed == 0) begin: G_low_speed
+      assign clk_usb = clk;
     // 6 MHz
     // transciever soft-core
     // for low speed USB, here are swaped D+ and D-
@@ -189,18 +184,14 @@ reg R_rx_done;
     // single-ended input reads D- for low speed
     assign S_rxdn = usb_dp;
     // single-ended input reads D+ for low speed
-    assign usb_dp = S_txoe == 1'b0 ? S_txdn : 1'bz;
-    assign usb_dn = S_txoe == 1'b0 ? S_txdp : 1'bz;
+    assign usb_dp = S_txoe == 1'b0 ? S_txdn : 1'bZ;
+    assign usb_dn = S_txoe == 1'b0 ? S_txdp : 1'bZ;
   end
   endgenerate
   // USB1.1 PHY soft-core
   usb_phy
-//  #(
-//    .usb_rst_det(1'b1)
-//  )
-  E_usb11_phy
-  (
-    .clk(clk_usb),
+  E_usb11_phy(
+      .clk(clk_usb),
     // full speed: 48 MHz or 60 MHz, low speed: 6 MHz or 7.5 MHz
     .rst(1'b1),
     // 1-don't reset, 0-hold reset
@@ -237,8 +228,7 @@ reg R_rx_done;
     .txdn(S_txdn),
     // single-ended output to D-
     // 3-state control: 0-output, 1-input
-    .txoe(S_txoe)
-  );
+    .txoe(S_txoe));
 
   // address advance, retry logic, set_address accpetance
   assign S_transmission_over = rx_done_o == 1'b1 || (timeout_o == 1'b1 && R_timeout == 1'b0) ? 1'b1 : 1'b0;
@@ -696,9 +686,8 @@ reg R_rx_done;
   end
 
   // USB SIE-core
-  usbh_sie usb_sie_core
-  (
-    .clk_i(clk_usb),
+  usbh_sie_vhdl usb_sie_core(
+      .clk_i(clk_usb),
     // low speed: 6 MHz or 7.5 MHz, high speed: 48 MHz or 60 MHz
     .rst_i(rst_i),
     .start_i(start_i),
@@ -728,8 +717,7 @@ reg R_rx_done;
     .utmi_rxactive_i(S_RXACTIVE),
     .utmi_linectrl_o(S_LINECTRL),
     .utmi_data_o(S_DATAOUT),
-    .utmi_txvalid_o(S_TXVALID)
-  );
+    .utmi_txvalid_o(S_TXVALID));
 
   // B_report_reader: block
   always @(posedge clk_usb) begin
