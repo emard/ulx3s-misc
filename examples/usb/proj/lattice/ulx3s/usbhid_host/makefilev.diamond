@@ -15,7 +15,7 @@ CONSTRAINTS = constraints/ulx3s_v20.lpf
 # usually all toplevels have the same top module name
 TOP_MODULE = ulx3s_usbhost_test
 
-# various toplevels for building different f32c soc's
+# various toplevels for building different soc's
 TOP_MODULE_FILE = ../../../../lattice/ulx3s/top/ulx3s_usbhost_test.v
 
 include filesv.mk
