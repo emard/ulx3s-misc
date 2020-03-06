@@ -33,24 +33,24 @@ port
   rx_active: out std_logic;
   rx_error: out std_logic;
   valid: out std_logic;
-  data: out std_logic_vector
+  data: out std_logic_vector(7 downto 0)
 );
 end; -- entity
 
 architecture Behavioral of usb_rx_phy is
   constant C_PA_inc: unsigned(C_PA_bits-1 downto 0) := to_unsigned(2**(C_PA_bits-1)*C_clk_bit_hz/C_clk_input_hz,C_PA_bits); -- default PA increment
-  constant C_PA_phase: unsigned(C_PA_bits-2 downto 0) :=
-  (
-    C_PA_bits-2 => '0', -- 1/4
-    C_PA_bits-3 => '0', -- 1/8
-    C_PA_bits-4 => '0', -- 1/16
-    C_PA_bits-5 => '0', -- 1/32
-    others      => '1'
-  );
+--  constant C_PA_phase: unsigned(C_PA_bits-2 downto 0) :=
+--  (
+--    C_PA_bits-2 => '0', -- 1/4
+--    C_PA_bits-3 => '0', -- 1/8
+--    C_PA_bits-4 => '0', -- 1/16
+--    C_PA_bits-5 => '0', -- 1/32
+--    others      => '1'
+--  );
   constant C_PA_compensate: unsigned(C_PA_bits-2 downto 0) := C_PA_inc(C_PA_bits-2 downto 0)+C_PA_inc(C_PA_bits-2 downto 0)+C_PA_inc(C_PA_bits-2 downto 0);
-  constant C_PA_init: unsigned(C_PA_bits-2 downto 0) := C_PA_phase + C_PA_compensate;
-  constant C_valid_init: std_logic_vector(data'range) := (data'high => '1', others => '0'); -- adjusted (1 bit early) to split stream at byte boundary
-  constant C_idlecnt_init: std_logic_vector(6 downto 0) := (6 => '1', others => '0'); -- 6 data bits + 1 stuff bit
+  constant C_PA_init: unsigned(C_PA_bits-2 downto 0) := C_PA_compensate;
+  constant C_valid_init: std_logic_vector(data'range) := x"80"; -- (data'high => '1', others => '0'); -- adjusted (1 bit early) to split stream at byte boundary
+  constant C_idlecnt_init: std_logic_vector(6 downto 0) := "1000000"; -- (6 => '1', others => '0'); -- 6 data bits + 1 stuff bit
   signal R_PA: unsigned(C_PA_bits-1 downto 0);
   signal R_dif_shift: std_logic_vector(1 downto 0);
   signal R_clk_recovered_shift: std_logic_vector(1 downto 0);
@@ -61,10 +61,11 @@ architecture Behavioral of usb_rx_phy is
   signal R_valid: std_logic_vector(data'range) := C_valid_init;
   signal R_linestate, R_linestate_sync: std_logic_vector(1 downto 0);
   signal R_linestate_prev: std_logic_vector(1 downto 0);
-  signal R_idlecnt: std_logic_vector(C_idlecnt_init'range) := C_idlecnt_init;
+  signal R_idlecnt: std_logic_vector(6 downto 0) := C_idlecnt_init;
   signal R_preamble: std_logic; 
   signal R_rxactive: std_logic;
   signal R_rx_en: std_logic;
+    signal R_valid_prev: std_logic;
 begin
   process(clk)
   begin
@@ -182,9 +183,8 @@ begin
   rx_active <= R_frame; -- timing early
   rx_error <= '0';
 
-  B_valid_1clk: block
-    signal R_valid_prev: std_logic;
-  begin
+  --B_valid_1clk: block
+  --begin
     process(clk)
     begin
       if rising_edge(clk) then
@@ -194,5 +194,5 @@ begin
 --    valid <= '1' when R_valid_prev = '0' and R_valid(0) = '1' else '0'; -- single clk cycle
     valid <= R_valid(0) and not R_valid_prev; -- single clk cycle
 --    valid <= R_valid(0); -- spans several clk cycles
-  end block;
+  --end block;
 end; -- architecture
