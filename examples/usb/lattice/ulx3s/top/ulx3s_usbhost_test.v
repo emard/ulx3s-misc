@@ -268,7 +268,7 @@ wire [1:0] dvid_red; wire [1:0] dvid_green; wire [1:0] dvid_blue; wire [1:0] dvi
 
   assign beam_rx = 636 - beam_x;
   // HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
-  hex_decoder #(
+  hex_decoder_v #(
     .c_data_len(64),
     .c_row_bits(5),
     // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 

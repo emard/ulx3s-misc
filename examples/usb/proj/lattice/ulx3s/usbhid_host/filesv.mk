@@ -14,16 +14,16 @@ VHDL_FILES = \
   ../../../../usb11_phy_vhdl/usb_phy.vhd \
   ../../../../usb11_phy_vhdl/usb_rx_phy.vhd \
   ../../../../usb11_phy_vhdl/usb_tx_phy.vhd \
-  ../../../../usbhost/usbh_setup_pack.vhd \
-  ../../../../usbhost/usbh_sie_vhdl.vhd \
-  ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_hex_decoder.vhd \
-  ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_font_pack.vhd \
-  ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_init_pack.vhd \
   ../../../../../dvi/hdl/vga.vhd \
   ../../../../../dvi/hdl/vga2dvid.vhd \
   ../../../../../dvi/hdl/tmds_encoder.vhd \
-  ../../../../../hex/decoder/hex_decoder.vhd \
+#  ../../../../usbhost/usbh_sie_vhdl.vhd \
 #  ../../../../usbhost/usbh_host_hid.vhd \
+#  ../../../../usbhost/usbh_setup_pack.vhd \
+#  ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_hex_decoder.vhd \
+#  ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_font_pack.vhd \
+#  ../../../../../oled/hdl/ssd1331_hex_vhdl/oled_init_pack.vhd \
+#  ../../../../../hex/decoder/hex_decoder.vhd \
 
 # not used yet
 #  ../../../../usbhid/report_decoded_pack_generic.vhd \

@@ -685,8 +685,15 @@ reg R_rx_done;
     endcase
   end
 
+  wire [6:0] reverse_token_dev_i = {
+    token_dev_i[0], token_dev_i[1], token_dev_i[2], token_dev_i[3],
+    token_dev_i[4], token_dev_i[5], token_dev_i[6]
+  };
+  wire [3:0] reverse_token_ep_i = {
+    token_ep_i[0], token_ep_i[1], token_ep_i[2], token_ep_i[3]
+  };
   // USB SIE-core
-  usbh_sie_vhdl usb_sie_core(
+  usbh_sie usb_sie_core(
       .clk_i(clk_usb),
     // low speed: 6 MHz or 7.5 MHz, high speed: 48 MHz or 60 MHz
     .rst_i(rst_i),
@@ -695,8 +702,8 @@ reg R_rx_done;
     .sof_transfer_i(sof_transfer_i),
     .resp_expected_i(resp_expected_i),
     .token_pid_i(token_pid_i),
-    .token_dev_i(token_dev_i),
-    .token_ep_i(token_ep_i),
+    .token_dev_i(reverse_token_dev_i),
+    .token_ep_i(reverse_token_ep_i),
     .data_len_i(data_len_i),
     .data_idx_i(data_idx_i),
     .tx_data_i(tx_data_i),
