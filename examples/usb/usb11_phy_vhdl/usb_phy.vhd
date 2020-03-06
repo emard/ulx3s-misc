@@ -47,11 +47,11 @@ use ieee.std_logic_unsigned.all;
  
 entity usb_phy is
   generic (
-    usb_rst_det : boolean := true
+    usb_rst_det : std_logic := '1'
   );
   port (
     clk              : in  std_logic;  -- 48 MHz
-    rst              : in  std_logic;
+    rst              : in  std_logic;  -- active low
     phy_tx_mode      : in  std_logic;  -- HIGH level for differential io mode (else single-ended)
     usb_rst          : out std_logic;
     -- Transciever Interface
@@ -113,6 +113,7 @@ architecture RTL of usb_phy is
   signal rst_cnt        : std_logic_vector(4 downto 0);
   signal txoe_out       : std_logic;
   signal usb_rst_out    : std_logic := '0';
+  signal reset          : std_logic;
   
 begin
  
@@ -148,10 +149,11 @@ begin
 --======================================================================================--
   -- RX Phy and DPLL                                                                    --
 --======================================================================================--
+  reset <= not rst;
   E_rx_phy_emard: entity work.usb_rx_phy
   port map (
     clk        => clk,
-    reset      => not rst,
+    reset      => reset,
     clk_recovered_edge => fs_ce,
     -- Transciever Interface
     usb_dif    => rxd,
@@ -171,7 +173,7 @@ begin
   -- Generate an USB Reset if we see SE0 for at least 2.5uS                             --
 --======================================================================================--
  
-  usb_rst_g : if usb_rst_det generate
+  usb_rst_g : if usb_rst_det='1' generate
     p_rst_cnt: process (clk, rst)
     begin
       if rst ='0' then
