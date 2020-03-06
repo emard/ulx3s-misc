@@ -1,8 +1,8 @@
 VERILOG_FILES = $(TOP_MODULE_FILE) \
+  ../../../../../hex/decoder/hex_decoder_v.v \
   ../../../../usbhost/usbh_sie.v \
   ../../../../usbhost/usbh_crc5.v \
   ../../../../usbhost/usbh_crc16.v \
-  ../../../../../hex/decoder/hex_decoder_v.v \
   ../../../../usbhost/usbh_host_hid.v \
 
 VHDL_FILES = \
