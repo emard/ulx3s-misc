@@ -55,11 +55,10 @@ inout wire [27:0] gp,
 inout wire [27:0] gn,
 */
 input wire usb_fpga_dp,
-//input wire usb_fpga_dn,
 inout wire usb_fpga_bd_dp,
 inout wire usb_fpga_bd_dn,
-inout wire usb_fpga_pu_dp,
-inout wire usb_fpga_pu_dn,
+output wire usb_fpga_pu_dp,
+output wire usb_fpga_pu_dn,
 output wire [3:0] gpdi_dp,
 output wire shutdown
 );
