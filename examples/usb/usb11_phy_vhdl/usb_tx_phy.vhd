@@ -208,7 +208,7 @@ BEGIN
       IF tx_ip_sync ='0' THEN
         sd_raw_o <= '0';
       ELSE
-        sd_raw_o <= hold_reg_d(CONV_INTEGER(UNSIGNED(bit_cnt(2 downto 0))));
+        sd_raw_o <= hold_reg_d(CONV_INTEGER(bit_cnt(2 downto 0)));
       END IF;
     END IF;
   END PROCESS;
@@ -366,7 +366,7 @@ BEGIN
       state <= IDLE_STATE;
     ELSIF rising_edge(clk) THEN
       IF any_eop_state = '0' THEN
-        CASE (state) IS
+        CASE state IS
           WHEN IDLE_STATE => IF TxValid_i ='1' THEN
                                R_LineCtrl_i <= LineCtrl_i;
                                R_long_i <= DataOut_i(0);
