@@ -174,7 +174,7 @@ begin
 --======================================================================================--
  
   usb_rst_g : if usb_rst_det='1' generate
-    p_rst_cnt: process (clk, rst)
+    p_rst_cnt: process (clk)
     begin
       if rst ='0' then
         rst_cnt <= (others => '0');

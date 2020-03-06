@@ -77,9 +77,9 @@ ENTITY usb_tx_phy is
     TxReady_o        : OUT STD_LOGIC
   );
 END usb_tx_phy;
- 
+
 ARCHITECTURE RTL of usb_tx_phy is
- 
+
   SIGNAL hold_reg           : STD_LOGIC_VECTOR(7 DOWNTO 0);
   SIGNAL ld_data            : STD_LOGIC;
   SIGNAL ld_data_d          : STD_LOGIC;
@@ -106,7 +106,7 @@ ARCHITECTURE RTL of usb_tx_phy is
   SIGNAL tx_ip_sync         : STD_LOGIC;
   SIGNAL txoe_r1, txoe_r2   : STD_LOGIC;
   SIGNAL S_long             : STD_LOGIC;
- 
+
   CONSTANT IDLE_STATE       : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0000";
   CONSTANT SOP_STATE        : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0001";
   CONSTANT DATA_STATE       : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0010";
@@ -117,14 +117,14 @@ ARCHITECTURE RTL of usb_tx_phy is
   CONSTANT EOP3_STATE       : STD_LOGIC_VECTOR(3 DOWNTO 0) := "1011";
   CONSTANT EOP4_STATE       : STD_LOGIC_VECTOR(3 DOWNTO 0) := "1100";
   CONSTANT EOP5_STATE       : STD_LOGIC_VECTOR(3 DOWNTO 0) := "1101";
- 
+
 BEGIN
- 
+
 --======================================================================================--
   -- Misc Logic                                                                         --
 --======================================================================================--
- 
-  p_TxReady_o: PROCESS (clk, rst)
+
+  p_TxReady_o: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       TxReady_o <= '0';
@@ -144,7 +144,7 @@ BEGIN
   -- Transmit in progress indicator                                                     --
 --======================================================================================--
 
-  p_tx_ip: PROCESS (clk, rst)
+  p_tx_ip: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       tx_ip <= '0';
@@ -157,7 +157,7 @@ BEGIN
     END IF;
   END PROCESS;
 
-  p_tx_ip_sync: PROCESS (clk, rst)
+  p_tx_ip_sync: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       tx_ip_sync <= '0';
@@ -172,7 +172,7 @@ BEGIN
   -- packet END and then gets re-asserted as a new packet starts.
   -- We might not see this because we are still transmitting.
   -- data_xmit should solve those cases ...
-  p_data_xmit: PROCESS (clk, rst)
+  p_data_xmit: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       data_xmit <= '0';
@@ -189,8 +189,9 @@ BEGIN
   -- Shift Register                                                                     --
 --======================================================================================--
 
-  p_bit_cnt: PROCESS (clk, rst)
+  p_bit_cnt: PROCESS (clk)
   BEGIN
+    --IF rising_edge(clk) THEN
     IF rst ='0' THEN
       bit_cnt <= (others => '0');
     ELSIF rising_edge(clk) THEN
@@ -200,6 +201,7 @@ BEGIN
         bit_cnt <= bit_cnt + 1;
       END IF;
     END IF;
+    --END IF;
   END PROCESS;
 
   p_sd_raw_o: PROCESS (clk)
@@ -213,7 +215,7 @@ BEGIN
     END IF;
   END PROCESS;
 
-  p_sft_done: PROCESS (clk, rst)
+  p_sft_done: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       sft_done   <= '0';
@@ -231,7 +233,7 @@ BEGIN
   sft_done_e <= sft_done AND NOT sft_done_r;
 
   -- Out Data Hold Register
-  p_hold_reg: PROCESS (clk, rst)
+  p_hold_reg: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
         hold_reg   <= X"00";
@@ -250,7 +252,7 @@ BEGIN
   -- Bit Stuffer                                                                        --
 --======================================================================================--
  
-  p_one_cnt: PROCESS (clk, rst)
+  p_one_cnt: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       one_cnt <= "000";
@@ -269,7 +271,7 @@ BEGIN
  
   stuff   <= '1' WHEN one_cnt = "110" ELSE '0';
  
-  p_sd_bs_o: PROCESS (clk, rst)
+  p_sd_bs_o: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       sd_bs_o <= '0';
@@ -292,7 +294,7 @@ BEGIN
   -- NRZI Encoder                                                                       --
 --======================================================================================--
  
-  p_sd_nrzi_o: PROCESS (clk, rst)
+  p_sd_nrzi_o: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       sd_nrzi_o <= '1';
@@ -317,7 +319,7 @@ BEGIN
   -- Output Enable Logic                                                                --
 --======================================================================================--
  
-  p_txoe: PROCESS (clk, rst)
+  p_txoe: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       txoe_r1 <= '0';
@@ -336,7 +338,7 @@ BEGIN
   -- Output Registers                                                                   --
 --======================================================================================--
  
-  p_txdpn: PROCESS (clk, rst)
+  p_txdpn: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       txdp <= '1';
@@ -360,7 +362,7 @@ BEGIN
  
   any_eop_state <= state(3);
  
-  p_state: PROCESS (clk, rst)
+  p_state: PROCESS (clk)
   BEGIN
     IF rst ='0' THEN
       state <= IDLE_STATE;

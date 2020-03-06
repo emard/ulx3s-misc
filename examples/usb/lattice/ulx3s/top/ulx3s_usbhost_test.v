@@ -131,24 +131,27 @@ wire [7:0] vga_r; wire [7:0] vga_g; wire [7:0] vga_b;
 wire [1:0] dvid_red; wire [1:0] dvid_green; wire [1:0] dvid_blue; wire [1:0] dvid_clock;
 
   //  g_single_pll: if true generate
+/*
   clk_25M_100M_7M5_12M_60M clk_single_pll(
     .CLKI(clk_25mhz),
     .CLKOP(clk_100MHz),
     .CLKOS(clk_7M5Hz),
     .CLKOS2(clk_12MHz),
     .CLKOS3(clk_60MHz));
+*/
 
   //  end generate;
   //  g_single_pll1: if true generate
   clk_25_125_68_6_25 clk_single_pll1(
-    .CLKI(clk_25mhz),
-    .CLKOP(/* open */),
-    .CLKOS(/* open */),
-    .CLKOS2(clk_6MHz),
-    .CLKOS3(/* open */));
+    .clk25_i(clk_25mhz),
+    .clk125_o(clk_shift),
+    .clk68_o(/* open */),
+    .clk6_o(clk_6MHz),
+    .clk25_o(clk_pixel));
 
   //  end generate;
   //  g_single_pll2: if true generate
+  /*
   clk_25_125_25_48_89 clk_single_pll2(
     .CLKI(clk_25mhz),
     .CLKOP(clk_shift),
@@ -157,6 +160,7 @@ wire [1:0] dvid_red; wire [1:0] dvid_green; wire [1:0] dvid_blue; wire [1:0] dvi
     // 25 MHz
     .CLKOS2(clk_48MHz),
     .CLKOS3(clk_89MHz));
+  */
 
   //  end generate;
   //  g_double_pll: if false generate
