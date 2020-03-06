@@ -396,7 +396,7 @@ BEGIN
         END CASE;
       ELSE
         IF fs_ce ='1' THEN
-          IF state = EOP5_state THEN
+          IF state = EOP5_STATE THEN
             state <= WAIT_STATE;
           ELSE
             state <= unsigned(state) + 1;
