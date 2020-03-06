@@ -153,10 +153,10 @@ architecture Behavioral of usbh_host_hid is
 
   -- USB1.1 PHY soft-core
   usb11_phy: entity work.usb_phy
-  generic map
-  (
-    usb_rst_det => true
-  )
+  --generic map
+  --(
+  --  usb_rst_det => true
+  --)
   port map
   (
     clk => clk_usb, -- full speed: 48 MHz or 60 MHz, low speed: 6 MHz or 7.5 MHz
