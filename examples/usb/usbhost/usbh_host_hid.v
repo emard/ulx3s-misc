@@ -32,19 +32,19 @@
 
 module usbh_host_hid
 #(
-parameter [31:0] C_setup_retry=4,
-parameter [31:0] C_setup_interval=17,
-parameter [31:0] C_report_interval=16,
-parameter [31:0] C_report_endpoint=1,
-parameter [31:0] C_report_length=20,
+parameter C_setup_retry=4,
+parameter C_setup_interval=17,
+parameter C_report_interval=16,
+parameter C_report_endpoint=1,
+parameter C_report_length=20,
 parameter C_keepalive_setup=1'b1,
 parameter C_keepalive_status=1'b1,
 parameter C_keepalive_report=1'b1,
 parameter C_keepalive_type=1'b1,
-parameter [31:0] C_keepalive_phase_bits=12,
-parameter [31:0] C_keepalive_phase=4044,
-parameter [31:0] C_setup_rom_len=16,
-parameter [31:0] C_usb_speed=0
+parameter C_keepalive_phase_bits=12,
+parameter C_keepalive_phase=4044,
+parameter C_setup_rom_len=16,
+parameter C_usb_speed=0
 )
 (
 input wire clk,
