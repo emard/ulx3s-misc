@@ -27,22 +27,25 @@
 module ulx3s_usbhost_test
 (
 input wire clk_25mhz,
+/*
 output wire ftdi_rxd,
 input wire ftdi_txd,
 inout wire ftdi_ndtr,
 inout wire ftdi_ndsr,
 inout wire ftdi_nrts,
 inout wire ftdi_txden,
-output wire wifi_rxd,
-input wire wifi_txd,
+*/
+//output wire wifi_rxd,
+//input wire wifi_txd,
 inout wire wifi_en,
 inout wire wifi_gpio0,
-inout wire wifi_gpio2,
-inout wire wifi_gpio15,
-inout wire wifi_gpio16,
+//inout wire wifi_gpio2,
+//inout wire wifi_gpio15,
+//inout wire wifi_gpio16,
 output wire [7:0] led,
 input wire [6:0] btn,
-input wire [1:4] sw,
+//input wire [1:4] sw,
+/*
 output wire oled_csn,
 output wire oled_clk,
 output wire oled_mosi,
@@ -50,8 +53,9 @@ output wire oled_dc,
 output wire oled_resn,
 inout wire [27:0] gp,
 inout wire [27:0] gn,
+*/
 input wire usb_fpga_dp,
-input wire usb_fpga_dn,
+//input wire usb_fpga_dn,
 inout wire usb_fpga_bd_dp,
 inout wire usb_fpga_bd_dn,
 inout wire usb_fpga_pu_dp,
@@ -129,6 +133,8 @@ wire [15:0] color;
 wire vga_hsync; wire vga_vsync; wire vga_blank;
 wire [7:0] vga_r; wire [7:0] vga_g; wire [7:0] vga_b;
 wire [1:0] dvid_red; wire [1:0] dvid_green; wire [1:0] dvid_blue; wire [1:0] dvid_clock;
+
+assign shutdown = 0;
 
   //  g_single_pll: if true generate
 /*
