@@ -2,7 +2,7 @@
 PROJECT = usbhost_test
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 25
+FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -19,7 +19,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 CONSTRAINTS = constraints/ulx3s_v20.lpf
 TOP_MODULE = ulx3s_usbhost_test
-TOP_MODULE_FILE = ../../../../lattice/ulx3s/top/ulx3s_usbhost_test.v
+TOP_MODULE_FILE = ../../../../lattice/ulx3s/top/$(TOP_MODULE).v
 
 CLK0_NAME = clk_25_125_68_6_25
 CLK0_FILE_NAME = ../../../../lattice/ulx3s/clocks/$(CLK0_NAME).v
