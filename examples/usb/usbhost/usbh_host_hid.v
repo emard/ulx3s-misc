@@ -262,7 +262,7 @@ reg R_rx_done;
             else begin
               // failed, rewind to unacknowledged setup and retry
               R_setup_rom_addr <= R_setup_rom_addr_acked;
-              if(R_retry[(C_setup_retry)] == 1'b0) begin
+              if(R_retry[C_setup_retry] == 1'b0) begin
                 R_retry <= R_retry + 1;
               end
             end
@@ -282,7 +282,7 @@ reg R_rx_done;
         if(S_transmission_over == 1'b1) begin
           // multiple timeouts at waiting for response will detach
           if(timeout_o == 1'b1 && R_timeout == 1'b0) begin
-            if(R_retry[(C_setup_retry)] == 1'b0) begin
+            if(R_retry[C_setup_retry] == 1'b0) begin
               R_retry <= R_retry + 1;
             end
           end
@@ -308,7 +308,7 @@ reg R_rx_done;
             else begin
               // failed, rewind to unacknowledged setup and retry
               R_setup_rom_addr <= R_setup_rom_addr_acked;
-              if(R_retry[(C_setup_retry)] == 1'b0) begin
+              if(R_retry[C_setup_retry] == 1'b0) begin
                 R_retry <= R_retry + 1;
               end
             end
@@ -316,7 +316,7 @@ reg R_rx_done;
           default : begin
             // x"69"
             if(timeout_o == 1'b1 && R_timeout == 1'b0) begin
-              if(R_retry[(C_setup_retry)] == 1'b0) begin
+              if(R_retry[C_setup_retry] == 1'b0) begin
                 R_retry <= R_retry + 1;
               end
             end
@@ -441,7 +441,7 @@ reg R_rx_done;
       if(idle_o == 1'b1) begin
         if(R_slow[C_setup_interval] == 1'b0) begin
           R_slow <= R_slow + 1;
-          if(R_retry[(C_setup_retry)] == 1'b1) begin
+          if(R_retry[C_setup_retry] == 1'b1) begin
             R_reset_accepted <= 1'b1;
             R_state <= C_STATE_DETACHED;
           end
@@ -543,7 +543,7 @@ reg R_rx_done;
           //              R_packet_counter <= R_packet_counter + 1;
           resp_expected_i <= 1'b1;
           start_i <= 1'b1;
-          if(R_reset_pending == 1'b1 || S_LINESTATE == 2'b00 || R_retry[(C_setup_retry)] == 1'b1) begin
+          if(R_reset_pending == 1'b1 || S_LINESTATE == 2'b00 || R_retry[C_setup_retry] == 1'b1) begin
             R_reset_accepted <= 1'b1;
             R_state <= C_STATE_DETACHED;
           end
@@ -559,7 +559,7 @@ reg R_rx_done;
       if(idle_o == 1'b1) begin
         if(R_slow[C_setup_interval] == 1'b0) begin
           R_slow <= R_slow + 1;
-          if(R_retry[(C_setup_retry)] == 1'b1) begin
+          if(R_retry[C_setup_retry] == 1'b1) begin
             R_reset_accepted <= 1'b1;
             R_state <= C_STATE_DETACHED;
           end
@@ -691,7 +691,7 @@ reg R_rx_done;
   };
   // USB SIE-core
   usbh_sie usb_sie_core(
-    .clk_i(clk_usb), // low speed: 6 MHz, high speed: 48 MHz
+    .clk_i(clk_usb), // low speed: 6 MHz, full speed: 48 MHz
     .rst_i(bus_reset),
     .start_i(start_i),
     .in_transfer_i(in_transfer_i),
