@@ -52,6 +52,7 @@ input wire usb_dif,
 inout wire usb_dp,
 inout wire usb_dn,
 input wire bus_reset,
+output wire [7:0] led,
 output wire [15:0] rx_count,
 output wire rx_done,
 output wire [C_report_length * 8 - 1:0] hid_report,
@@ -113,7 +114,6 @@ reg [C_setup_retry:0] R_retry;
 reg [17:0] R_slow = 1'b0;  // 2**17 clocks = 22 ms interval at 6 MHz
 reg R_reset_pending;
 reg R_reset_accepted;  // sie wires
-wire rst_i;
 reg start_i = 1'b0;
 reg in_transfer_i = 1'b0;
 reg sof_transfer_i = 1'b0;
@@ -154,7 +154,7 @@ reg R_crc_err;
 reg R_rx_done;
 
   generate if (C_usb_speed == 1) begin: G_full_speed
-      assign clk_usb = clk;
+    assign clk_usb = clk;
     // 48 MHz with "usb_rx_phy_48MHz.vhd" or 60 MHz with "usb_rx_phy_60MHz.vhd"
     // transciever soft-core
     //usb_fpga_pu_dp <= '0'; -- D+ pulldown for USB host mode
@@ -171,7 +171,7 @@ reg R_rx_done;
   end
   endgenerate
   generate if (C_usb_speed == 0) begin: G_low_speed
-      assign clk_usb = clk;
+    assign clk_usb = clk;
     // 6 MHz
     // transciever soft-core
     // for low speed USB, here are swaped D+ and D-
@@ -188,12 +188,13 @@ reg R_rx_done;
     assign usb_dn = S_txoe == 1'b0 ? S_txdp : 1'bZ;
   end
   endgenerate
+  assign led = {R_state};
   // USB1.1 PHY soft-core
   usb_phy
   E_usb11_phy(
-      .clk(clk_usb),
+    .clk(clk_usb),
     // full speed: 48 MHz or 60 MHz, low speed: 6 MHz or 7.5 MHz
-    .rst(1'b1),
+    .rst(~bus_reset),
     // 1-don't reset, 0-hold reset
     .phy_tx_mode(1'b1),
     // 1-differential, 0-single-ended
@@ -694,9 +695,9 @@ reg R_rx_done;
   };
   // USB SIE-core
   usbh_sie usb_sie_core(
-      .clk_i(clk_usb),
+    .clk_i(clk_usb),
     // low speed: 6 MHz or 7.5 MHz, high speed: 48 MHz or 60 MHz
-    .rst_i(rst_i),
+    .rst_i(bus_reset),
     .start_i(start_i),
     .in_transfer_i(in_transfer_i),
     .sof_transfer_i(sof_transfer_i),
