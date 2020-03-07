@@ -116,9 +116,6 @@ parameter C_usb_speed=1'b0;
 //alias us4_fpga_dp: std_logic is gp(20); -- direct
 wire clk_200MHz; wire clk_125MHz; wire clk_100MHz; wire clk_89MHz; wire clk_60MHz; wire clk_48MHz; wire clk_12MHz; wire clk_7M5Hz; wire clk_6MHz;
 wire clk_usb;  // 48 MHz
-wire S_led;
-wire S_usb_rst;
-wire R_rst_btn;
 wire R_phy_txmode;
 wire S_rxd;
 wire S_rxdp; wire S_rxdn;
@@ -189,7 +186,7 @@ assign shutdown = 0;
   //ftdi_rxd <= wifi_txd;
   //wifi_rxd <= ftdi_txd;
   assign wifi_en = 1'b1;
-  assign wifi_gpio0 = R_rst_btn;
+  assign wifi_gpio0 = btn[0];
   generate if (C_usb_speed == 1'b0) begin: G_low_speed
       assign clk_usb = clk_6MHz;
   end
@@ -209,7 +206,7 @@ assign shutdown = 0;
   us2_hid_host_inst(
     .clk(clk_usb),
     // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-    .bus_reset(1'b0),
+    .bus_reset(~btn[0]),
     .usb_dif(usb_fpga_dp),
     // usb/us3/us4
     .usb_dp(usb_fpga_bd_dp),
@@ -288,14 +285,14 @@ assign shutdown = 0;
     .c_y_bits(4),
     .c_color_bits(16))
   hex_decoder_instance(
-      .clk(clk_pixel),
+    .clk(clk_pixel),
     .data(S_oled),
     .x(beam_rx[9:2]),
     .y(beam_y[5:2]),
     .color(color));
 
   vga vga_instance(
-      .clk_pixel(clk_pixel),
+    .clk_pixel(clk_pixel),
     .clk_pixel_ena(1'b1),
     .test_picture(1'b1),
     .beam_x(beam_x),
@@ -314,10 +311,10 @@ assign shutdown = 0;
   assign vga_g = {color[10:5],color[5],color[5]};
   assign vga_b = {color[4:0],color[0],color[0],color[0]};
   vga2dvid #(
-      .C_ddr(1'b1),
+    .C_ddr(1'b1),
     .C_shift_clock_synchronizer(1'b0))
   vga2dvid_instance(
-      .clk_pixel(clk_pixel),
+    .clk_pixel(clk_pixel),
     .clk_shift(clk_shift),
     .in_red(vga_r),
     .in_green(vga_g),
@@ -334,28 +331,28 @@ assign shutdown = 0;
   // vendor specific DDR modules
   // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
   ODDRX1F ddr_clock(
-      .D0(dvid_clock[0]),
+    .D0(dvid_clock[0]),
     .D1(dvid_clock[1]),
     .Q(gpdi_dp[3]),
     .SCLK(clk_shift),
     .RST(1'b0));
 
   ODDRX1F ddr_red(
-      .D0(dvid_red[0]),
+    .D0(dvid_red[0]),
     .D1(dvid_red[1]),
     .Q(gpdi_dp[2]),
     .SCLK(clk_shift),
     .RST(1'b0));
 
   ODDRX1F ddr_green(
-      .D0(dvid_green[0]),
+    .D0(dvid_green[0]),
     .D1(dvid_green[1]),
     .Q(gpdi_dp[1]),
     .SCLK(clk_shift),
     .RST(1'b0));
 
   ODDRX1F ddr_blue(
-      .D0(dvid_blue[0]),
+    .D0(dvid_blue[0]),
     .D1(dvid_blue[1]),
     .Q(gpdi_dp[0]),
     .SCLK(clk_shift),
