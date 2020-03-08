@@ -208,7 +208,7 @@ assign shutdown = 0;
     // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
     .bus_reset(~btn[0]),
     .led(led), // debug output
-    .usb_dif(usb_fpga_dp),
+    .usb_dif(usb_fpga_bd_dp), // FIXME differential input usb_fpga_dp not working for trellis
     // usb/us3/us4
     .usb_dp(usb_fpga_bd_dp),
     // usb/us3/us4
