@@ -77,11 +77,6 @@ wire S_rxd;
 wire S_rxdp; wire S_rxdn;
 wire S_txdp; wire S_txdn; wire S_txoe;
 wire [63:0] S_oled;
-wire [2:0] S_dsctyp;
-wire S_DATABUS16_8;
-wire S_RESET;
-wire [1:0] S_XCVRSELECT;
-wire [1:0] S_OPMODE;
 wire [1:0] S_LINESTATE;
 wire S_LINECTRL;
 wire S_TXVALID;
@@ -111,7 +106,8 @@ parameter C_STATE_DATA = 2'b11;
 reg [C_setup_retry:0] R_retry;
 reg [17:0] R_slow = 0;  // 2**17 clocks = 22 ms interval at 6 MHz
 reg R_reset_pending;
-reg R_reset_accepted;  // sie wires
+reg R_reset_accepted;
+// sie wires
 reg start_i = 1'b0;
 reg in_transfer_i = 1'b0;
 reg sof_transfer_i = 1'b0;
@@ -186,7 +182,8 @@ reg R_rx_done;
     assign usb_dn = S_txoe == 1'b0 ? S_txdp : 1'bZ;
   end
   endgenerate
-  assign led = {R_state};
+  reg R_txover_debug = 1'b1;
+  assign led = {R_reset_pending, R_txover_debug, R_setup_rom_addr_acked[3], S_LINESTATE, R_state};
   // USB1.1 PHY soft-core
   usb_phy
   E_usb11_phy(
@@ -237,6 +234,7 @@ reg R_rx_done;
       R_setup_byte_counter <= 3'd0;
       R_retry <= 0;
       R_reset_pending <= 1'b0;
+      R_txover_debug <= 1'b0;
     end
     else begin
       if(bus_reset == 1'b1) begin
@@ -250,6 +248,7 @@ reg R_rx_done;
       end
       C_STATE_SETUP : begin
         if(S_transmission_over == 1'b1) begin
+          R_txover_debug <= 1'b1;
           // decide to continue with next setup or to retry
           case(token_pid_i)
           8'h2D : begin
@@ -752,7 +751,7 @@ reg R_rx_done;
 
   genvar i;
   generate for (i=0; i <= C_report_length - 1; i = i + 1) begin: G_report
-      assign hid_report[i * 8 + 7 -: 7 + 1] = R_report_buf[i];
+      assign hid_report[i*8+7:i*8] = R_report_buf[i];
   end
   endgenerate
   assign hid_valid = R_hid_valid;
