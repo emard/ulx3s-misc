@@ -156,8 +156,8 @@ assign shutdown = 0;
     .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
     .bus_reset(~btn[0]),
     .led(led), // debug output
-    .usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
-    //.usb_dif(usb_fpga_dp),
+    //.usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
+    .usb_dif(usb_fpga_dp),
     .usb_dp(usb_fpga_bd_dp),
     .usb_dn(usb_fpga_bd_dn),
     .hid_report(S_report),
