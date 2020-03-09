@@ -43,6 +43,7 @@ parameter C_keepalive_report=1'b1,
 parameter C_keepalive_type=1'b1,
 parameter C_keepalive_phase_bits=12,
 parameter C_keepalive_phase=4044,
+parameter C_setup_rom_file="usbh_setup_rom.mem",
 parameter C_setup_rom_len=16,
 parameter C_usb_speed=0
 )
@@ -91,7 +92,7 @@ wire S_sync_err; wire S_bit_stuff_err; wire S_byte_err;
 reg [7:0] R_setup_rom_addr = 1'b0; reg [7:0] R_setup_rom_addr_acked = 1'b0;
 
 reg [7:0] C_setup_rom[0:C_setup_rom_len-1];  // ( x"00", x"05", x"01", x"00", x"00", x"00", x"00", x"00", x"00", x"09", x"01", x"00", x"00", x"00", x"00", x"00" );
-initial $readmemh("setup_rom.mem", C_setup_rom);
+initial $readmemh(C_setup_rom_file, C_setup_rom);
 
 reg [2:0] R_setup_byte_counter = 1'b0;
 reg ctrlin;
