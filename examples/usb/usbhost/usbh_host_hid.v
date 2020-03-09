@@ -321,10 +321,10 @@ reg R_rx_done;
             end
             else begin
               if(rx_done_o == 1'b1) begin
-                R_retry <= 0;
                 R_stored_response <= response_o;
                 if(response_o == 8'h4B) begin
-                  // SIE quirk: set address resturns 4B = PID_DATA1 instead of D2
+                  R_retry <= 0;
+                  // SIE quirk: set address returns 4B = PID_DATA1 instead of D2
                   R_dev_address_confirmed <= R_dev_address_requested;
                 end
               end
