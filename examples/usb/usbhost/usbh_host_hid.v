@@ -45,33 +45,20 @@ parameter C_keepalive_phase_bits=12,
 parameter C_keepalive_phase=4044,
 parameter C_setup_rom_file="usbh_setup_rom.mem",
 parameter C_setup_rom_len=16,
-parameter C_usb_speed=0
+parameter C_usb_speed=0 // '0':6 MHz low speed '1':48 MHz full speed
 )
 (
-input wire clk,
-input wire usb_dif,
-inout wire usb_dp,
+input wire clk, // main clock input
+input wire usb_dif, // differential or single-ended input
+inout wire usb_dp, // single ended bidirectional
 inout wire usb_dn,
-input wire bus_reset,
-output wire [7:0] led,
-output wire [15:0] rx_count,
-output wire rx_done,
-output wire [C_report_length * 8 - 1:0] hid_report,
+input wire bus_reset, // force bus reset and setup (similar to re-plugging USB device)
+output wire [7:0] led, // HID debugging
+output wire [15:0] rx_count, // rx response length
+output wire rx_done, // rx done
+output wire [C_report_length * 8 - 1:0] hid_report, // HID report (filtered with expected length)
 output wire hid_valid
 );
-
-// '0':6 MHz low speed '1':48 MHz full speed 
-// main clock input
-// FPGA direct USB connector
-// differential or single-ended input
-// single ended bidirectional
-// force bus reset and setup (similar to re-plugging USB device)
-// HID debugging
-// rx response length
-// rx done
-// HID report (filtered with expected length)
-
-
 
 wire clk_usb;  // 48 or 60 MHz
 wire S_rxd;
