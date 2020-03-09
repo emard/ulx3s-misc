@@ -94,21 +94,15 @@ module top_audio
       .lrck(lrck)
     );
     
-    assign gp[0] = 1'b1;         // FLT
-    assign gp[1] = 1'b1;         // DMP
-    assign gp[2] = 1'b0;         // SCL
-    assign gp[3] = bck;          // BCK
-    assign gp[4] = din;          // DIN
-    assign gp[5] = lrck;         // LCK
-    assign gp[6] = i2s_fmt;      // FMT 0=i2s
+    assign gp[0] = lrck;         // LCK
+    assign gp[1] = din;          // DIN
+    assign gp[2] = bck;          // BCK
+    assign gp[3] = 1'b0;         // SCL
 
-    assign gn[0] = 1'b1;         // FLT
-    assign gn[1] = 1'b1;         // DMP
-    assign gn[2] = 1'b0;         // SCL
-    assign gn[3] = bck;          // BCK
-    assign gn[4] = din;          // DIN
-    assign gn[5] = lrck;         // LCK
-    assign gn[6] = i2s_fmt;      // FMT 0=i2s
+    assign gn[0] = lrck;         // LCK
+    assign gn[1] = din;          // DIN
+    assign gn[2] = bck;          // BCK
+    assign gn[3] = 1'b0;         // SCL
 
     assign gp[7]  = i2s_fmt;     // FMT 0=i2s
     assign gp[8]  = lrck;        // LCK
