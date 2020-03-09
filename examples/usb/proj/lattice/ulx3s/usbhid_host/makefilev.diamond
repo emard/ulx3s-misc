@@ -18,7 +18,7 @@ TOP_MODULE = ulx3s_usbhost_test
 # various toplevels for building different soc's
 TOP_MODULE_FILE = ../../../../lattice/ulx3s/top/ulx3s_usbhost_test.v
 
-CLK0_NAME = clk_25_125_68_6_25
+CLK0_NAME = clk_25_125_48_6_25
 CLK0_FILE_NAME = ../../../../lattice/ulx3s/clocks/$(CLK0_NAME).v
 CLK0_OPTIONS = \
   --module=$(CLK0_NAME) \
@@ -26,8 +26,8 @@ CLK0_OPTIONS = \
   --clkin=25 \
   --clkout0_name=clk125_o \
   --clkout0=125 \
-  --clkout1_name=clk68_o \
-  --clkout1=68 \
+  --clkout1_name=clk48_o \
+  --clkout1=48 \
   --clkout2_name=clk6_o \
   --clkout2=6 \
   --clkout3_name=clk25_o \

@@ -22,9 +22,16 @@
 
 // (c)EMARD
 // License=BSD
-// no timescale needed
 
 module ulx3s_usbhost_test
+#(
+parameter C_usb_speed=1'b0, // 0:6 MHz USB1.0, 1:48 MHz USB1.1
+parameter C_report_length = 20,
+// enable only one US2/US3/US4 (currently only US2 supported)
+parameter C_us2=1,
+parameter C_us3=0,
+parameter C_us4=0
+)
 (
 input wire clk_25mhz,
 /*
@@ -63,13 +70,6 @@ output wire [3:0] gpdi_dp,
 output wire shutdown
 );
 
-parameter C_report_length = 20;
-// enable only one US2/US3/US4
-parameter [31:0] C_us2=1;
-parameter [31:0] C_us3=0;
-parameter [31:0] C_us4=0;
-parameter C_usb_speed=1'b0;
-// 0:6 MHz 1:48 MHz
 // main clock input from 25MHz clock source
 // UART0 (FTDI USB slave serial)
 // FTDI additional signaling
@@ -83,19 +83,6 @@ parameter C_usb_speed=1'b0;
 // only for single-ended input
 // single ended bidirectional
 // pull up for slave, down for host mode
-// Digital Video (differential outputs)
-// Flash ROM (SPI0)
-//flash_miso   : in      std_logic;
-//flash_mosi   : out     std_logic;
-//flash_clk    : out     std_logic;
-//flash_csn    : out     std_logic;
-// SD card (SPI1)
-//sd_d: inout std_logic_vector(3 downto 0) := (others => 'Z');
-//sd_clk, sd_cmd: inout std_logic := 'Z';
-//sd_cdn, sd_wp: inout std_logic := 'Z'; -- not connected
-// SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
-
-
 
 // PMOD with US3 and US4
 // ULX3S pins up and flat cable: swap GP/GN and invert differential input
@@ -114,8 +101,10 @@ parameter C_usb_speed=1'b0;
 //  alias us4_fpga_n_dp: std_logic is gp(20); -- flat cable
 //  signal us4_fpga_dp: std_logic; -- flat cable
 //alias us4_fpga_dp: std_logic is gp(20); -- direct
-wire clk_200MHz; wire clk_125MHz; wire clk_100MHz; wire clk_89MHz; wire clk_60MHz; wire clk_48MHz; wire clk_12MHz; wire clk_7M5Hz; wire clk_6MHz;
-wire clk_usb;  // 48 MHz
+
+wire clk_125MHz, clk_25MHz; // video
+wire clk_48MHz, clk_6MHz; // usb
+wire clk_usb;  // 6 MHz USB1.0 or 48 MHz USB1.1
 wire R_phy_txmode;
 wire S_rxd;
 wire S_rxdp; wire S_rxdn;
@@ -132,57 +121,15 @@ wire [1:0] dvid_red; wire [1:0] dvid_green; wire [1:0] dvid_blue; wire [1:0] dvi
 
 assign shutdown = 0;
 
-  //  g_single_pll: if true generate
-/*
-  clk_25M_100M_7M5_12M_60M clk_single_pll(
-    .CLKI(clk_25mhz),
-    .CLKOP(clk_100MHz),
-    .CLKOS(clk_7M5Hz),
-    .CLKOS2(clk_12MHz),
-    .CLKOS3(clk_60MHz));
-*/
-
-  //  end generate;
-  //  g_single_pll1: if true generate
-  clk_25_125_68_6_25 clk_single_pll1(
+  clk_25_125_48_6_25 clk_single_pll1
+  (
     .clk25_i(clk_25mhz),
     .clk125_o(clk_shift),
-    .clk68_o(/* open */),
+    .clk48_o(clk_48MHz),
     .clk6_o(clk_6MHz),
-    .clk25_o(clk_pixel));
+    .clk25_o(clk_pixel)
+  );
 
-  //  end generate;
-  //  g_single_pll2: if true generate
-  /*
-  clk_25_125_25_48_89 clk_single_pll2(
-    .CLKI(clk_25mhz),
-    .CLKOP(clk_shift),
-    // 125 MHz
-    .CLKOS(clk_pixel),
-    // 25 MHz
-    .CLKOS2(clk_48MHz),
-    .CLKOS3(clk_89MHz));
-  */
-
-  //  end generate;
-  //  g_double_pll: if false generate
-  //  clk_double_pll1: entity work.clk_25M_200M
-  //  port map
-  //  (
-  //      CLKI        =>  clk_25MHz,
-  //      CLKOP       =>  clk_200MHz
-  //  );
-  //  clk_double_pll2: entity work.clk_200M_60M_48M_12M_7M5
-  //  port map
-  //  (
-  //      CLKI        =>  clk_200MHz,
-  //      CLKOP       =>  clk_60MHz,
-  //      CLKOS       =>  clk_48MHz,
-  //      CLKOS2      =>  clk_12MHz,
-  //      CLKOS3      =>  clk_7M5Hz
-  //  );
-  //  end generate;
-  // TX/RX passthru
   //ftdi_rxd <= wifi_txd;
   //wifi_rxd <= ftdi_txd;
   assign wifi_en = 1'b1;
@@ -200,24 +147,22 @@ assign shutdown = 0;
   assign usb_fpga_pu_dn = 1'b0;
   usbh_host_hid
   #(
-    // '0':Low-speed '1':Full-speed
-    .C_usb_speed(C_usb_speed)
+    .C_usb_speed(C_usb_speed) // '0':Low-speed '1':Full-speed
   )
-  us2_hid_host_inst(
-    .clk(clk_usb),
-    // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+  us2_hid_host_inst
+  (
+    .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
     .bus_reset(~btn[0]),
     .led(led), // debug output
-    .usb_dif(usb_fpga_dp), // NOTE usb_fpga_bd_dp for trellis < 2020-03-08
-    // usb/us3/us4
+    .usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
+    //.usb_dif(usb_fpga_dp),
     .usb_dp(usb_fpga_bd_dp),
-    // usb/us3/us4
     .usb_dn(usb_fpga_bd_dn),
-    // usb/us3/us4
     .hid_report(S_report),
-    .hid_valid(S_valid));
+    .hid_valid(S_valid)
+  );
+  //  end generate; // US2
 
-  //  end generate;
   //  G_us3: if C_us3 generate
   //  us3_fpga_pu_dp <= '0';
   //  us3_fpga_pu_dn <= '0';
@@ -358,6 +303,5 @@ assign shutdown = 0;
     .Q(gpdi_dp[0]),
     .SCLK(clk_shift),
     .RST(1'b0));
-
 
 endmodule
