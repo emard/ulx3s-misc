@@ -231,10 +231,6 @@ begin
   clk_usb <= clk_48MHz; -- 48 MHz with "usb_rx_phy_48MHz.vhd" or 60 MHz with "usb_rx_phy_60MHz.vhd"
   -- USB1.1 PHY soft-core
   usb11_phy: entity work.usb_phy
-  generic map
-  (
-    usb_rst_det => true
-  )
   port map
   (
     clk => clk_usb, -- 48 MHz or 60 MHz
