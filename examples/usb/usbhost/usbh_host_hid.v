@@ -328,6 +328,8 @@ reg R_rx_done;
                   // SIE quirk: set address returns 4B = PID_DATA1 instead of D2
                   R_dev_address_confirmed <= R_dev_address_requested;
                 end
+                else // set address failed
+                  R_retry[C_setup_retry] <= 1'b1; // goto STATE_DETACHED
               end
             end
           end
