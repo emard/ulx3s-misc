@@ -22,9 +22,16 @@
 
 // (c)EMARD
 // License=BSD
-// no timescale needed
 
 module ulx3s_usbhost_test
+#(
+parameter C_usb_speed=1'b0, // 0:6 MHz USB1.0, 1:48 MHz USB1.1
+parameter C_report_length = 20,
+// enable only one US2/US3/US4 (currently only US2 supported)
+parameter C_us2=1,
+parameter C_us3=0,
+parameter C_us4=0
+)
 (
 input wire clk_25mhz,
 /*
@@ -45,32 +52,24 @@ inout wire wifi_gpio0,
 output wire [7:0] led,
 input wire [6:0] btn,
 //input wire [1:4] sw,
-/*
 output wire oled_csn,
 output wire oled_clk,
 output wire oled_mosi,
 output wire oled_dc,
 output wire oled_resn,
+/*
 inout wire [27:0] gp,
 inout wire [27:0] gn,
 */
 input wire usb_fpga_dp,
-//input wire usb_fpga_dn,
 inout wire usb_fpga_bd_dp,
 inout wire usb_fpga_bd_dn,
-inout wire usb_fpga_pu_dp,
-inout wire usb_fpga_pu_dn,
+output wire usb_fpga_pu_dp,
+output wire usb_fpga_pu_dn,
 output wire [3:0] gpdi_dp,
 output wire shutdown
 );
 
-parameter C_report_length = 20;
-// enable only one US2/US3/US4
-parameter [31:0] C_us2=1;
-parameter [31:0] C_us3=0;
-parameter [31:0] C_us4=0;
-parameter C_usb_speed=1'b0;
-// 0:6 MHz 1:48 MHz
 // main clock input from 25MHz clock source
 // UART0 (FTDI USB slave serial)
 // FTDI additional signaling
@@ -84,19 +83,6 @@ parameter C_usb_speed=1'b0;
 // only for single-ended input
 // single ended bidirectional
 // pull up for slave, down for host mode
-// Digital Video (differential outputs)
-// Flash ROM (SPI0)
-//flash_miso   : in      std_logic;
-//flash_mosi   : out     std_logic;
-//flash_clk    : out     std_logic;
-//flash_csn    : out     std_logic;
-// SD card (SPI1)
-//sd_d: inout std_logic_vector(3 downto 0) := (others => 'Z');
-//sd_clk, sd_cmd: inout std_logic := 'Z';
-//sd_cdn, sd_wp: inout std_logic := 'Z'; -- not connected
-// SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
-
-
 
 // PMOD with US3 and US4
 // ULX3S pins up and flat cable: swap GP/GN and invert differential input
@@ -115,11 +101,10 @@ parameter C_usb_speed=1'b0;
 //  alias us4_fpga_n_dp: std_logic is gp(20); -- flat cable
 //  signal us4_fpga_dp: std_logic; -- flat cable
 //alias us4_fpga_dp: std_logic is gp(20); -- direct
-wire clk_200MHz; wire clk_125MHz; wire clk_100MHz; wire clk_89MHz; wire clk_60MHz; wire clk_48MHz; wire clk_12MHz; wire clk_7M5Hz; wire clk_6MHz;
-wire clk_usb;  // 48 MHz
-wire S_led;
-wire S_usb_rst;
-wire R_rst_btn;
+
+wire clk_125MHz, clk_25MHz; // video
+wire clk_48MHz, clk_6MHz; // usb
+wire clk_usb;  // 6 MHz USB1.0 or 48 MHz USB1.1
 wire R_phy_txmode;
 wire S_rxd;
 wire S_rxdp; wire S_rxdn;
@@ -136,61 +121,21 @@ wire [1:0] dvid_red; wire [1:0] dvid_green; wire [1:0] dvid_blue; wire [1:0] dvi
 
 assign shutdown = 0;
 
-  //  g_single_pll: if true generate
-/*
-  clk_25M_100M_7M5_12M_60M clk_single_pll(
-    .CLKI(clk_25mhz),
-    .CLKOP(clk_100MHz),
-    .CLKOS(clk_7M5Hz),
-    .CLKOS2(clk_12MHz),
-    .CLKOS3(clk_60MHz));
-*/
-
-  //  end generate;
-  //  g_single_pll1: if true generate
-  clk_25_125_68_6_25 clk_single_pll1(
+  clk_25_125_48_6_25 clk_single_pll1
+  (
     .clk25_i(clk_25mhz),
-    .clk125_o(clk_shift),
-    .clk68_o(/* open */),
+    .clk125_o(clk_125MHz),
+    .clk48_o(clk_48MHz),
     .clk6_o(clk_6MHz),
-    .clk25_o(clk_pixel));
+    .clk25_o(clk_25MHz)
+  );
+  assign clk_shift = clk_125MHz;
+  assign clk_pixel = clk_25MHz;
 
-  //  end generate;
-  //  g_single_pll2: if true generate
-  /*
-  clk_25_125_25_48_89 clk_single_pll2(
-    .CLKI(clk_25mhz),
-    .CLKOP(clk_shift),
-    // 125 MHz
-    .CLKOS(clk_pixel),
-    // 25 MHz
-    .CLKOS2(clk_48MHz),
-    .CLKOS3(clk_89MHz));
-  */
-
-  //  end generate;
-  //  g_double_pll: if false generate
-  //  clk_double_pll1: entity work.clk_25M_200M
-  //  port map
-  //  (
-  //      CLKI        =>  clk_25MHz,
-  //      CLKOP       =>  clk_200MHz
-  //  );
-  //  clk_double_pll2: entity work.clk_200M_60M_48M_12M_7M5
-  //  port map
-  //  (
-  //      CLKI        =>  clk_200MHz,
-  //      CLKOP       =>  clk_60MHz,
-  //      CLKOS       =>  clk_48MHz,
-  //      CLKOS2      =>  clk_12MHz,
-  //      CLKOS3      =>  clk_7M5Hz
-  //  );
-  //  end generate;
-  // TX/RX passthru
   //ftdi_rxd <= wifi_txd;
   //wifi_rxd <= ftdi_txd;
   assign wifi_en = 1'b1;
-  assign wifi_gpio0 = R_rst_btn;
+  assign wifi_gpio0 = btn[0];
   generate if (C_usb_speed == 1'b0) begin: G_low_speed
       assign clk_usb = clk_6MHz;
   end
@@ -204,23 +149,22 @@ assign shutdown = 0;
   assign usb_fpga_pu_dn = 1'b0;
   usbh_host_hid
   #(
-    // '0':Low-speed '1':Full-speed
-    .C_usb_speed(C_usb_speed)
+    .C_usb_speed(C_usb_speed) // '0':Low-speed '1':Full-speed
   )
-  us2_hid_host_inst(
-    .clk(clk_usb),
-    // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-    .bus_reset(1'b0),
+  us2_hid_host_inst
+  (
+    .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+    .bus_reset(~btn[0]),
+    .led(led), // debug output
+    //.usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
     .usb_dif(usb_fpga_dp),
-    // usb/us3/us4
     .usb_dp(usb_fpga_bd_dp),
-    // usb/us3/us4
     .usb_dn(usb_fpga_bd_dn),
-    // usb/us3/us4
     .hid_report(S_report),
-    .hid_valid(S_valid));
+    .hid_valid(S_valid)
+  );
+  //  end generate; // US2
 
-  //  end generate;
   //  G_us3: if C_us3 generate
   //  us3_fpga_pu_dp <= '0';
   //  us3_fpga_pu_dn <= '0';
@@ -264,39 +208,75 @@ assign shutdown = 0;
 
   assign S_oled = S_report[63:0];
 
-//  oled_hex_decoder #(
-//      .C_data_len(64))
-//  oled_inst(
-//      .clk(clk_6MHz),
-//    .en(1'b1),
-//    .data(S_oled[63:0]),
-//    .spi_resn(oled_resn),
-//    .spi_clk(oled_clk),
-//    .spi_csn(oled_csn),
-//    .spi_dc(oled_dc),
-//    .spi_mosi(oled_mosi));
+  wire  [6:0] disp_x;
+  wire  [5:0] disp_y;
+  wire [15:0] disp_color;
+  hex_decoder_v
+  #(
+    .c_data_len(64),
+    .c_font_file("hex_font.mem"),
+    .c_grid_6x8(1),
+    .c_color_bits(16)
+  )
+  hex_decoder_oled_inst
+  (
+    .clk(clk_25MHz),
+    .data(S_oled),
+    .x(disp_x),
+    .y(disp_y),
+    .color(disp_color)
+  );
+  lcd_video
+  #(
+    .c_init_file("ssd1331_linit_xflip_16bit.mem"),
+    .c_init_size(90),
+    .c_reset_us(1000),
+    .c_clk_phase(0),
+    .c_clk_polarity(1),
+    .c_x_size(96),
+    .c_y_size(64),
+    .c_color_bits(16),
+    .c_clk_mhz(25)
+  )
+  lcd_video_inst
+  (
+    .clk(clk_25MHz),
+    .reset(~btn[0]),
+    .x(disp_x),
+    .y(disp_y),
+    .color(disp_color),
+    .spi_csn(oled_csn),
+    .spi_clk(oled_clk),
+    .spi_mosi(oled_mosi),
+    .spi_dc(oled_dc),
+    .spi_resn(oled_resn)
+  );
 
   assign beam_rx = 636 - beam_x;
   // HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
-  hex_decoder_v #(
+  hex_decoder_v
+  #(
     .c_data_len(64),
-    .c_row_bits(5),
-    // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
-    .c_grid_6x8(1),
-    // NOTE: TRELLIS needs -abc9 option to compile
+    .c_row_bits(5), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
+    .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
     .c_x_bits(8),
     .c_y_bits(4),
-    .c_color_bits(16))
-  hex_decoder_instance(
-      .clk(clk_pixel),
+    .c_color_bits(16)
+  )
+  hex_decoder_dvi_instance
+  (
+    .clk(clk_pixel),
     .data(S_oled),
     .x(beam_rx[9:2]),
     .y(beam_y[5:2]),
-    .color(color));
+    .color(color)
+  );
 
-  vga vga_instance(
-      .clk_pixel(clk_pixel),
+  vga
+  vga_instance
+  (
+    .clk_pixel(clk_pixel),
     .clk_pixel_ena(1'b1),
     .test_picture(1'b1),
     .beam_x(beam_x),
@@ -309,16 +289,20 @@ assign shutdown = 0;
     .vga_b(/* open */),
     .vga_hsync(vga_hsync),
     .vga_vsync(vga_vsync),
-    .vga_blank(vga_blank));
+    .vga_blank(vga_blank)
+  );
 
   assign vga_r = {color[15:11],color[11],color[11],color[11]};
   assign vga_g = {color[10:5],color[5],color[5]};
   assign vga_b = {color[4:0],color[0],color[0],color[0]};
-  vga2dvid #(
-      .C_ddr(1'b1),
-    .C_shift_clock_synchronizer(1'b0))
-  vga2dvid_instance(
-      .clk_pixel(clk_pixel),
+  vga2dvid
+  #(
+    .C_ddr(1'b1),
+    .C_shift_clock_synchronizer(1'b0)
+  )
+  vga2dvid_instance
+  (
+    .clk_pixel(clk_pixel),
     .clk_shift(clk_shift),
     .in_red(vga_r),
     .in_green(vga_g),
@@ -330,37 +314,37 @@ assign shutdown = 0;
     .out_red(dvid_red),
     .out_green(dvid_green),
     .out_blue(dvid_blue),
-    .out_clock(dvid_clock));
+    .out_clock(dvid_clock)
+  );
 
   // vendor specific DDR modules
   // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
   ODDRX1F ddr_clock(
-      .D0(dvid_clock[0]),
+    .D0(dvid_clock[0]),
     .D1(dvid_clock[1]),
     .Q(gpdi_dp[3]),
     .SCLK(clk_shift),
     .RST(1'b0));
 
   ODDRX1F ddr_red(
-      .D0(dvid_red[0]),
+    .D0(dvid_red[0]),
     .D1(dvid_red[1]),
     .Q(gpdi_dp[2]),
     .SCLK(clk_shift),
     .RST(1'b0));
 
   ODDRX1F ddr_green(
-      .D0(dvid_green[0]),
+    .D0(dvid_green[0]),
     .D1(dvid_green[1]),
     .Q(gpdi_dp[1]),
     .SCLK(clk_shift),
     .RST(1'b0));
 
   ODDRX1F ddr_blue(
-      .D0(dvid_blue[0]),
+    .D0(dvid_blue[0]),
     .D1(dvid_blue[1]),
     .Q(gpdi_dp[0]),
     .SCLK(clk_shift),
     .RST(1'b0));
-
 
 endmodule

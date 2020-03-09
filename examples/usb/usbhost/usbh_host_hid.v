@@ -32,57 +32,39 @@
 
 module usbh_host_hid
 #(
-parameter [31:0] C_setup_retry=4,
-parameter [31:0] C_setup_interval=17,
-parameter [31:0] C_report_interval=16,
-parameter [31:0] C_report_endpoint=1,
-parameter [31:0] C_report_length=20,
+parameter C_setup_retry=4,
+parameter C_setup_interval=17,
+parameter C_report_interval=16,
+parameter C_report_endpoint=1,
+parameter C_report_length=20,
 parameter C_keepalive_setup=1'b1,
 parameter C_keepalive_status=1'b1,
 parameter C_keepalive_report=1'b1,
 parameter C_keepalive_type=1'b1,
-parameter [31:0] C_keepalive_phase_bits=12,
-parameter [31:0] C_keepalive_phase=4044,
-parameter [31:0] C_setup_rom_len=16,
-parameter [31:0] C_usb_speed=0
+parameter C_keepalive_phase_bits=12,
+parameter C_keepalive_phase=4044,
+parameter C_setup_rom_file="usbh_setup_rom.mem",
+parameter C_setup_rom_len=16,
+parameter C_usb_speed=0 // '0':6 MHz low speed '1':48 MHz full speed
 )
 (
-input wire clk,
-input wire usb_dif,
-inout wire usb_dp,
+input wire clk, // main clock input
+input wire usb_dif, // differential or single-ended input
+inout wire usb_dp, // single ended bidirectional
 inout wire usb_dn,
-input wire bus_reset,
-output wire [15:0] rx_count,
-output wire rx_done,
-output wire [C_report_length * 8 - 1:0] hid_report,
+input wire bus_reset, // force bus reset and setup (similar to re-plugging USB device)
+output wire [7:0] led, // HID debugging
+output wire [15:0] rx_count, // rx response length
+output wire rx_done, // rx done
+output wire [C_report_length * 8 - 1:0] hid_report, // HID report (filtered with expected length)
 output wire hid_valid
 );
 
-// '0':6 MHz low speed '1':48 MHz full speed 
-// main clock input
-// FPGA direct USB connector
-// differential or single-ended input
-// single ended bidirectional
-// force bus reset and setup (similar to re-plugging USB device)
-// HID debugging
-// rx response length
-// rx done
-// HID report (filtered with expected length)
-
-
-
 wire clk_usb;  // 48 or 60 MHz
-wire S_led;
-wire S_usb_rst;
 wire S_rxd;
 wire S_rxdp; wire S_rxdn;
 wire S_txdp; wire S_txdn; wire S_txoe;
 wire [63:0] S_oled;
-wire [2:0] S_dsctyp;
-wire S_DATABUS16_8;
-wire S_RESET;
-wire [1:0] S_XCVRSELECT;
-wire [1:0] S_OPMODE;
 wire [1:0] S_LINESTATE;
 wire S_LINECTRL;
 wire S_TXVALID;
@@ -97,7 +79,7 @@ wire S_sync_err; wire S_bit_stuff_err; wire S_byte_err;
 reg [7:0] R_setup_rom_addr = 1'b0; reg [7:0] R_setup_rom_addr_acked = 1'b0;
 
 reg [7:0] C_setup_rom[0:C_setup_rom_len-1];  // ( x"00", x"05", x"01", x"00", x"00", x"00", x"00", x"00", x"00", x"09", x"01", x"00", x"00", x"00", x"00", x"00" );
-initial $readmemh("setup_rom.mem", C_setup_rom);
+initial $readmemh(C_setup_rom_file, C_setup_rom);
 
 reg [2:0] R_setup_byte_counter = 1'b0;
 reg ctrlin;
@@ -110,18 +92,18 @@ parameter C_STATE_SETUP = 2'b01;
 parameter C_STATE_REPORT = 2'b10;
 parameter C_STATE_DATA = 2'b11;
 reg [C_setup_retry:0] R_retry;
-reg [17:0] R_slow = 1'b0;  // 2**17 clocks = 22 ms interval at 6 MHz
+reg [17:0] R_slow = 0;  // 2**17 clocks = 22 ms interval at 6 MHz
 reg R_reset_pending;
-reg R_reset_accepted;  // sie wires
-wire rst_i;
+reg R_reset_accepted;
+// sie wires
 reg start_i = 1'b0;
 reg in_transfer_i = 1'b0;
 reg sof_transfer_i = 1'b0;
 reg resp_expected_i = 1'b0;
-reg [7:0] token_pid_i = 1'b0;
-reg [6:0] token_dev_i = 1'b0;
-reg [3:0] token_ep_i = 1'b0;
-reg [15:0] data_len_i = 1'b0;
+reg [7:0] token_pid_i = 0;
+reg [6:0] token_dev_i = 0;
+reg [3:0] token_ep_i = 0;
+reg [15:0] data_len_i = 0;
 reg data_idx_i = 1'b0;
 wire [7:0] tx_data_i;
 wire ack_o;
@@ -154,7 +136,7 @@ reg R_crc_err;
 reg R_rx_done;
 
   generate if (C_usb_speed == 1) begin: G_full_speed
-      assign clk_usb = clk;
+    assign clk_usb = clk;
     // 48 MHz with "usb_rx_phy_48MHz.vhd" or 60 MHz with "usb_rx_phy_60MHz.vhd"
     // transciever soft-core
     //usb_fpga_pu_dp <= '0'; -- D+ pulldown for USB host mode
@@ -171,13 +153,13 @@ reg R_rx_done;
   end
   endgenerate
   generate if (C_usb_speed == 0) begin: G_low_speed
-      assign clk_usb = clk;
+    assign clk_usb = clk;
     // 6 MHz
     // transciever soft-core
     // for low speed USB, here are swaped D+ and D-
     //usb_fpga_pu_dp <= '0'; -- D+ pulldown for USB host mode
     //usb_fpga_pu_dn <= '0'; -- D- pulldown for USB host mode
-    assign S_rxd =  ~usb_dif;
+    assign S_rxd = ~usb_dif;
     // differential input reads inverted D+ for low speed
     //S_rxd <= not usb_dp; -- single-ended input reads D+ may work as well
     assign S_rxdp = usb_dn;
@@ -188,17 +170,17 @@ reg R_rx_done;
     assign usb_dn = S_txoe == 1'b0 ? S_txdp : 1'bZ;
   end
   endgenerate
+  reg R_txover_debug = 1'b1;
+  assign led = {R_reset_pending, R_txover_debug, R_setup_rom_addr_acked[3], S_LINESTATE, R_state};
   // USB1.1 PHY soft-core
   usb_phy
   E_usb11_phy(
-      .clk(clk_usb),
+    .clk(clk_usb),
     // full speed: 48 MHz or 60 MHz, low speed: 6 MHz or 7.5 MHz
-    .rst(1'b1),
+    .rst(~bus_reset),
     // 1-don't reset, 0-hold reset
     .phy_tx_mode(1'b1),
     // 1-differential, 0-single-ended
-    .usb_rst(S_usb_rst),
-    // USB host requests reset, sending signal to usb-serial core
     // UTMI interface to usb-serial core
     .LineCtrl_i(S_LINECTRL),
     .TxValid_i(S_TXVALID),
@@ -235,11 +217,12 @@ reg R_rx_done;
   always @(posedge clk_usb) begin
     R_timeout <= timeout_o;
     if(R_reset_accepted == 1'b1) begin
-      R_setup_rom_addr <= {8{1'b0}};
-      R_setup_rom_addr_acked <= {8{1'b0}};
-      R_setup_byte_counter <= {3{1'b0}};
-      R_retry <= {(((C_setup_retry))-((0))+1){1'b0}};
+      R_setup_rom_addr <= 8'd0;
+      R_setup_rom_addr_acked <= 8'd0;
+      R_setup_byte_counter <= 3'd0;
+      R_retry <= 0;
       R_reset_pending <= 1'b0;
+      R_txover_debug <= 1'b0;
     end
     else begin
       if(bus_reset == 1'b1) begin
@@ -248,11 +231,12 @@ reg R_rx_done;
       case(R_state)
       C_STATE_DETACHED : begin
         // start from unitialized device
-        R_dev_address_confirmed <= {7{1'b0}};
-        R_retry <= {(((C_setup_retry))-((0))+1){1'b0}};
+        R_dev_address_confirmed <= 7'd0;
+        R_retry <= 0;
       end
       C_STATE_SETUP : begin
         if(S_transmission_over == 1'b1) begin
+          R_txover_debug <= 1'b1;
           // decide to continue with next setup or to retry
           case(token_pid_i)
           8'h2D : begin
@@ -260,12 +244,12 @@ reg R_rx_done;
               // ACK to SETUP
               // continue with next setup
               R_setup_rom_addr_acked <= R_setup_rom_addr;
-              R_retry <= {(((C_setup_retry))-((0))+1){1'b0}};
+              R_retry <= 0;
             end
             else begin
               // failed, rewind to unacknowledged setup and retry
               R_setup_rom_addr <= R_setup_rom_addr_acked;
-              if(R_retry[(C_setup_retry)] == 1'b0) begin
+              if(R_retry[C_setup_retry] == 1'b0) begin
                 R_retry <= R_retry + 1;
               end
             end
@@ -285,13 +269,13 @@ reg R_rx_done;
         if(S_transmission_over == 1'b1) begin
           // multiple timeouts at waiting for response will detach
           if(timeout_o == 1'b1 && R_timeout == 1'b0) begin
-            if(R_retry[(C_setup_retry)] == 1'b0) begin
+            if(R_retry[C_setup_retry] == 1'b0) begin
               R_retry <= R_retry + 1;
             end
           end
           else begin
             if(rx_done_o == 1'b1) begin
-              R_retry <= {(((C_setup_retry))-((0))+1){1'b0}};
+              R_retry <= 0;
             end
           end
         end
@@ -306,12 +290,12 @@ reg R_rx_done;
               R_stored_response <= response_o;
               // continue with next setup
               R_setup_rom_addr_acked <= R_setup_rom_addr;
-              R_retry <= {(((C_setup_retry))-((0))+1){1'b0}};
+              R_retry <= 0;
             end
             else begin
               // failed, rewind to unacknowledged setup and retry
               R_setup_rom_addr <= R_setup_rom_addr_acked;
-              if(R_retry[(C_setup_retry)] == 1'b0) begin
+              if(R_retry[C_setup_retry] == 1'b0) begin
                 R_retry <= R_retry + 1;
               end
             end
@@ -319,18 +303,20 @@ reg R_rx_done;
           default : begin
             // x"69"
             if(timeout_o == 1'b1 && R_timeout == 1'b0) begin
-              if(R_retry[(C_setup_retry)] == 1'b0) begin
+              if(R_retry[C_setup_retry] == 1'b0) begin
                 R_retry <= R_retry + 1;
               end
             end
             else begin
               if(rx_done_o == 1'b1) begin
-                R_retry <= {(((C_setup_retry))-((0))+1){1'b0}};
                 R_stored_response <= response_o;
+                // SIE quirk: set address returns 4B = PID_DATA1 instead of D2
                 if(response_o == 8'h4B) begin
-                  // SIE quirk: set address resturns 4B = PID_DATA1 instead of D2
+                  R_retry <= 0;
                   R_dev_address_confirmed <= R_dev_address_requested;
                 end
+                else // set address failed
+                  R_retry <= R_retry + 1;
               end
             end
           end
@@ -357,7 +343,7 @@ reg R_rx_done;
   always @(posedge clk_usb) begin
     case(R_state)
     C_STATE_DETACHED : begin
-      R_dev_address_requested <= {7{1'b0}};
+      R_dev_address_requested <= 7'd0;
       R_set_address_found <= 1'b0;
       R_wLength <= 16'h0000;
     end
@@ -418,25 +404,25 @@ reg R_rx_done;
           R_slow <= R_slow + 1;
         end
         else begin
-          R_slow <= {18{1'b0}};
+          R_slow <= 18'd0;
           sof_transfer_i <= 1'b1;
           // transfer SOF or linectrl
           in_transfer_i <= 1'b1;
           // 0:SOF, 1:linectrl
           token_pid_i[1:0] <= 2'b11;
           // linectrl: bus reset
-          token_dev_i <= {7{1'b0}};
+          token_dev_i <= 7'd0;
           // after reset device address will be 0
           resp_expected_i <= 1'b0;
           ctrlin <= 1'b0;
           start_i <= 1'b1;
-          R_packet_counter <= {16{1'b0}};
+          R_packet_counter <= 16'h0000;
           R_state <= C_STATE_SETUP;
         end
       end
       else begin
         start_i <= 1'b0;
-        R_slow <= {18{1'b0}};
+        R_slow <= 18'd0;
       end
     end
     C_STATE_SETUP : begin
@@ -444,7 +430,7 @@ reg R_rx_done;
       if(idle_o == 1'b1) begin
         if(R_slow[C_setup_interval] == 1'b0) begin
           R_slow <= R_slow + 1;
-          if(R_retry[(C_setup_retry)] == 1'b1) begin
+          if(R_retry[C_setup_retry] == 1'b1) begin
             R_reset_accepted <= 1'b1;
             R_state <= C_STATE_DETACHED;
           end
@@ -466,7 +452,7 @@ reg R_rx_done;
         end
         else begin
           // time passed, send next setup packet or read status or read response
-          R_slow <= {18{1'b0}};
+          R_slow <= 18'd0;
           sof_transfer_i <= 1'b0;
           token_ep_i <= 4'h0;
           resp_expected_i <= 1'b1;
@@ -532,7 +518,7 @@ reg R_rx_done;
           end
         end
         else begin
-          R_slow <= {18{1'b0}};
+          R_slow <= 18'd0;
           // HOST: < SYNC ><  IN  ><ADR0>EP1 CRC5
           // D+ ___-_-_-_---_--___-_-_-_-__-_-_--________
           // D- ---_-_-_-___-__---_-_-_-_--_-_-__--__----
@@ -546,7 +532,7 @@ reg R_rx_done;
           //              R_packet_counter <= R_packet_counter + 1;
           resp_expected_i <= 1'b1;
           start_i <= 1'b1;
-          if(R_reset_pending == 1'b1 || S_LINESTATE == 2'b00 || R_retry[(C_setup_retry)] == 1'b1) begin
+          if(R_reset_pending == 1'b1 || S_LINESTATE == 2'b00 || R_retry[C_setup_retry] == 1'b1) begin
             R_reset_accepted <= 1'b1;
             R_state <= C_STATE_DETACHED;
           end
@@ -562,7 +548,7 @@ reg R_rx_done;
       if(idle_o == 1'b1) begin
         if(R_slow[C_setup_interval] == 1'b0) begin
           R_slow <= R_slow + 1;
-          if(R_retry[(C_setup_retry)] == 1'b1) begin
+          if(R_retry[C_setup_retry] == 1'b1) begin
             R_reset_accepted <= 1'b1;
             R_state <= C_STATE_DETACHED;
           end
@@ -584,7 +570,7 @@ reg R_rx_done;
         end
         else begin
           // time to send request
-          R_slow <= {18{1'b0}};
+          R_slow <= 18'd0;
           sof_transfer_i <= 1'b0;
           in_transfer_i <= ctrlin;
           if(ctrlin == 1'b1) begin
@@ -598,14 +584,14 @@ reg R_rx_done;
           token_ep_i <= 4'h0;
           resp_expected_i <= 1'b1;
           if(R_bytes_remaining != 16'h0000) begin
-            if(R_bytes_remaining[(15):3] != {12'h000,1'b0}) begin
+            if(R_bytes_remaining[15:3] != 13'd0) begin
               // 8 or more remaining bytes
               data_len_i <= 16'h0008;
               // transmit 8 bytes in a packet
             end
             else begin
               // less than 8 remaining
-              data_len_i <= {12'h000,1'b0,R_bytes_remaining[2:0]};
+              data_len_i <= {13'd0,R_bytes_remaining[2:0]};
               // transmit remaining bytes (less than 8)
             end
           end
@@ -616,7 +602,7 @@ reg R_rx_done;
             if(R_stored_response == 8'h4B || R_stored_response == 8'hC3) begin
               // SIE quirk: 4B is returned for 0-len packet instead of D2 ACK
               R_advance_data <= 1'b1;
-              if(R_bytes_remaining[(15):3] == {12'h000,1'b0}) begin
+              if(R_bytes_remaining[15:3] == 13'd0) begin
                 ctrlin <= 1'b0;
                 if(datastatus == 1'b0) begin
                   R_state <= C_STATE_SETUP;
@@ -663,9 +649,9 @@ reg R_rx_done;
       // counts bytes required for DATA state, then exit
       if(R_advance_data == 1'b1) begin
         if(R_bytes_remaining != 16'h0000) begin
-          if(R_bytes_remaining[(15):3] != {12'h000,1'b0}) begin
+          if(R_bytes_remaining[15:3] != 13'd0) begin
             // 8 or more remaining bytes
-            R_bytes_remaining[(15):3] <= R_bytes_remaining[(15):3] - 1;
+            R_bytes_remaining[15:3] <= R_bytes_remaining[15:3] - 1;
           end
           else begin
             // less than 8 remaining
@@ -694,9 +680,8 @@ reg R_rx_done;
   };
   // USB SIE-core
   usbh_sie usb_sie_core(
-      .clk_i(clk_usb),
-    // low speed: 6 MHz or 7.5 MHz, high speed: 48 MHz or 60 MHz
-    .rst_i(rst_i),
+    .clk_i(clk_usb), // low speed: 6 MHz, full speed: 48 MHz
+    .rst_i(bus_reset),
     .start_i(start_i),
     .in_transfer_i(in_transfer_i),
     .sof_transfer_i(sof_transfer_i),
@@ -756,7 +741,7 @@ reg R_rx_done;
 
   genvar i;
   generate for (i=0; i <= C_report_length - 1; i = i + 1) begin: G_report
-      assign hid_report[i * 8 + 7 -: 7 + 1] = R_report_buf[i];
+      assign hid_report[i*8+7:i*8] = R_report_buf[i];
   end
   endgenerate
   assign hid_valid = R_hid_valid;
