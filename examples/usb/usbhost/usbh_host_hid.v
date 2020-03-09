@@ -310,13 +310,13 @@ reg R_rx_done;
             else begin
               if(rx_done_o == 1'b1) begin
                 R_stored_response <= response_o;
+                // SIE quirk: set address returns 4B = PID_DATA1 instead of D2
                 if(response_o == 8'h4B) begin
                   R_retry <= 0;
-                  // SIE quirk: set address returns 4B = PID_DATA1 instead of D2
                   R_dev_address_confirmed <= R_dev_address_requested;
                 end
                 else // set address failed
-                  R_retry[C_setup_retry] <= 1'b1; // goto STATE_DETACHED
+                  R_retry <= R_retry + 1;
               end
             end
           end
