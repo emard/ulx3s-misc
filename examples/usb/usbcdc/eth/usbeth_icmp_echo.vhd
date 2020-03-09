@@ -115,10 +115,6 @@ architecture Behavioral of usbeth_icmp_echo is
 begin
   -- USB1.1 PHY soft-core
   usb11_phy: entity work.usb_phy
-  generic map
-  (
-    usb_rst_det => true
-  )
   port map
   (
     clk => clk_usb, -- 48 MHz or 60 MHz
@@ -139,7 +135,7 @@ begin
     bit_stuff_err_o => S_bit_stuff_err,
     byte_err_o => S_byte_err,
     -- transciever interface to hardware
-    rxd => S_rxd, -- differential input from D+
+    rxd  => S_rxd,  -- differential or single-ended input from D+
     rxdp => S_rxdp, -- single-ended input from D+
     rxdn => S_rxdn, -- single-ended input from D-
     txdp => S_txdp, -- single-ended output to D+
