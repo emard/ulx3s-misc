@@ -52,12 +52,12 @@ inout wire wifi_gpio0,
 output wire [7:0] led,
 input wire [6:0] btn,
 //input wire [1:4] sw,
-/*
 output wire oled_csn,
 output wire oled_clk,
 output wire oled_mosi,
 output wire oled_dc,
 output wire oled_resn,
+/*
 inout wire [27:0] gp,
 inout wire [27:0] gn,
 */
@@ -124,11 +124,13 @@ assign shutdown = 0;
   clk_25_125_48_6_25 clk_single_pll1
   (
     .clk25_i(clk_25mhz),
-    .clk125_o(clk_shift),
+    .clk125_o(clk_125MHz),
     .clk48_o(clk_48MHz),
     .clk6_o(clk_6MHz),
-    .clk25_o(clk_pixel)
+    .clk25_o(clk_25MHz)
   );
+  assign clk_shift = clk_125MHz;
+  assign clk_pixel = clk_25MHz;
 
   //ftdi_rxd <= wifi_txd;
   //wifi_rxd <= ftdi_txd;
@@ -206,38 +208,74 @@ assign shutdown = 0;
 
   assign S_oled = S_report[63:0];
 
-//  oled_hex_decoder #(
-//      .C_data_len(64))
-//  oled_inst(
-//      .clk(clk_6MHz),
-//    .en(1'b1),
-//    .data(S_oled[63:0]),
-//    .spi_resn(oled_resn),
-//    .spi_clk(oled_clk),
-//    .spi_csn(oled_csn),
-//    .spi_dc(oled_dc),
-//    .spi_mosi(oled_mosi));
+  wire  [6:0] disp_x;
+  wire  [5:0] disp_y;
+  wire [15:0] disp_color;
+  hex_decoder_v
+  #(
+    .c_data_len(64),
+    .c_font_file("hex_font.mem"),
+    .c_grid_6x8(1),
+    .c_color_bits(16)
+  )
+  hex_decoder_oled_inst
+  (
+    .clk(clk_25MHz),
+    .data(S_oled),
+    .x(disp_x),
+    .y(disp_y),
+    .color(disp_color)
+  );
+  lcd_video
+  #(
+    .c_init_file("ssd1331_linit_xflip_16bit.mem"),
+    .c_init_size(90),
+    .c_reset_us(1000),
+    .c_clk_phase(0),
+    .c_clk_polarity(1),
+    .c_x_size(96),
+    .c_y_size(64),
+    .c_color_bits(16),
+    .c_clk_mhz(25)
+  )
+  lcd_video_inst
+  (
+    .clk(clk_25MHz),
+    .reset(~btn[0]),
+    .x(disp_x),
+    .y(disp_y),
+    .color(disp_color),
+    .spi_csn(oled_csn),
+    .spi_clk(oled_clk),
+    .spi_mosi(oled_mosi),
+    .spi_dc(oled_dc),
+    .spi_resn(oled_resn)
+  );
 
   assign beam_rx = 636 - beam_x;
   // HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
-  hex_decoder_v #(
+  hex_decoder_v
+  #(
     .c_data_len(64),
-    .c_row_bits(5),
-    // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
-    .c_grid_6x8(1),
-    // NOTE: TRELLIS needs -abc9 option to compile
+    .c_row_bits(5), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
+    .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
     .c_x_bits(8),
     .c_y_bits(4),
-    .c_color_bits(16))
-  hex_decoder_instance(
+    .c_color_bits(16)
+  )
+  hex_decoder_dvi_instance
+  (
     .clk(clk_pixel),
     .data(S_oled),
     .x(beam_rx[9:2]),
     .y(beam_y[5:2]),
-    .color(color));
+    .color(color)
+  );
 
-  vga vga_instance(
+  vga
+  vga_instance
+  (
     .clk_pixel(clk_pixel),
     .clk_pixel_ena(1'b1),
     .test_picture(1'b1),
@@ -251,15 +289,19 @@ assign shutdown = 0;
     .vga_b(/* open */),
     .vga_hsync(vga_hsync),
     .vga_vsync(vga_vsync),
-    .vga_blank(vga_blank));
+    .vga_blank(vga_blank)
+  );
 
   assign vga_r = {color[15:11],color[11],color[11],color[11]};
   assign vga_g = {color[10:5],color[5],color[5]};
   assign vga_b = {color[4:0],color[0],color[0],color[0]};
-  vga2dvid #(
+  vga2dvid
+  #(
     .C_ddr(1'b1),
-    .C_shift_clock_synchronizer(1'b0))
-  vga2dvid_instance(
+    .C_shift_clock_synchronizer(1'b0)
+  )
+  vga2dvid_instance
+  (
     .clk_pixel(clk_pixel),
     .clk_shift(clk_shift),
     .in_red(vga_r),
@@ -272,7 +314,8 @@ assign shutdown = 0;
     .out_red(dvid_red),
     .out_green(dvid_green),
     .out_blue(dvid_blue),
-    .out_clock(dvid_clock));
+    .out_clock(dvid_clock)
+  );
 
   // vendor specific DDR modules
   // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
