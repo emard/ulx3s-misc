@@ -2,7 +2,7 @@
 # https://github.com/SymbiFlow/prjtrellis
 TRELLIS ?= /mt/scratch/tmp/openfpga/prjtrellis
 # https://github.com/ldoolitt/vhd2vl
-VHDL2VL ?= /mt/scratch/tmp/openfpga/vhd2vl/src/vhd2vl
+VHDL2VL ?= vhd2vl
 # https://github.com/YosysHQ/yosys
 YOSYS ?= yosys
 # https://github.com/YosysHQ/nextpnr
