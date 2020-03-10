@@ -394,14 +394,14 @@ reg R_rx_done;
 
   reg [10:0] R_sof_counter;
   always @(posedge clk_usb) begin
-    if(start_i == 1'b1 && sof_transfer == 1'b1 && token_pid_i[3:0] == 4'h5)
+    if(start_i == 1'b1 && sof_transfer_i == 1'b1 && token_pid_i[3:0] == 4'h5)
       R_sof_counter <= R_sof_counter + 1;
   end
-  wire [6:0] sof_dev = {
+  wire [6:0] S_sof_dev = {
     R_sof_counter[4], R_sof_counter[5], R_sof_counter[6], R_sof_counter[7],
     R_sof_counter[8], R_sof_counter[9], R_sof_counter[10]
   };
-  wire [3:0] sof_ep = {
+  wire [3:0] S_sof_ep = {
     R_sof_counter[0], R_sof_counter[1], R_sof_counter[2], R_sof_counter[3]
   };
 
@@ -461,8 +461,8 @@ reg R_rx_done;
             else
             begin
               token_pid_i <= 8'hA5;
-              token_dev_i <= sof_dev;
-              token_ep_i  <= sof_ep;
+              token_dev_i <= S_sof_dev;
+              token_ep_i  <= S_sof_ep;
               data_len_i  <= 16'h0000;
             end
             // linectrl: keepalive
@@ -536,8 +536,8 @@ reg R_rx_done;
             else
             begin
               token_pid_i <= 8'hA5;
-              token_dev_i <= sof_dev;
-              token_ep_i  <= sof_ep;
+              token_dev_i <= S_sof_dev;
+              token_ep_i  <= S_sof_ep;
               data_len_i  <= 16'h0000;
             end
             // linectrl: keepalive
@@ -595,8 +595,8 @@ reg R_rx_done;
             else
             begin
               token_pid_i <= 8'hA5;
-              token_dev_i <= sof_dev;
-              token_ep_i  <= sof_ep;
+              token_dev_i <= S_sof_dev;
+              token_ep_i  <= S_sof_ep;
               data_len_i  <= 16'h0000;
             end
             // linectrl: keepalive
