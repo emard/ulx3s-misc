@@ -40,9 +40,10 @@ parameter C_report_length=20,
 parameter C_keepalive_setup=1'b1,
 parameter C_keepalive_status=1'b1,
 parameter C_keepalive_report=1'b1,
-parameter C_keepalive_type=1'b1,
 parameter C_keepalive_phase_bits=12,
-parameter C_keepalive_phase=4044,
+// some full-speed devices accept KEEPALIVE (LUT saving)
+parameter C_keepalive_phase=4044, // 4044: KEEPALIVE low speed, 2048: SOF full speed
+parameter C_keepalive_type=1'b1, // 1:KEEPALIVE low speed, 0:SOF full speed
 parameter C_setup_rom_file="usbh_setup_rom.mem",
 parameter C_setup_rom_len=16,
 parameter C_usb_speed=0 // '0':6 MHz low speed '1':48 MHz full speed
@@ -211,6 +212,7 @@ reg R_rx_done;
     // single-ended output to D-
     // 3-state control: 0-output, 1-input
     .txoe(S_txoe));
+
 
   // address advance, retry logic, set_address accpetance
   assign S_transmission_over = rx_done_o == 1'b1 || (timeout_o == 1'b1 && R_timeout == 1'b0) ? 1'b1 : 1'b0;
@@ -390,6 +392,19 @@ reg R_rx_done;
     endcase
   end
 
+  reg [10:0] R_sof_counter;
+  always @(posedge clk_usb) begin
+    if(start_i == 1'b1 && sof_transfer == 1'b1 && token_pid_i[3:0] == 4'h5)
+      R_sof_counter <= R_sof_counter + 1;
+  end
+  wire [6:0] sof_dev = {
+    R_sof_counter[4], R_sof_counter[5], R_sof_counter[6], R_sof_counter[7],
+    R_sof_counter[8], R_sof_counter[9], R_sof_counter[10]
+  };
+  wire [3:0] sof_ep = {
+    R_sof_counter[0], R_sof_counter[1], R_sof_counter[2], R_sof_counter[3]
+  };
+
   assign S_expected_response = data_idx_i == 1'b1 ? 8'h4B : 8'hC3;
   always @(posedge clk_usb) begin
     R_advance_data <= 1'b0;
@@ -441,7 +456,15 @@ reg R_rx_done;
             // transfer SOF or linectrl
             in_transfer_i <= C_keepalive_type;
             // 0:SOF, 1:linectrl
-            token_pid_i[1:0] <= 2'b00;
+            if(C_keepalive_type)
+              token_pid_i[1:0] <= 2'b00;
+            else
+            begin
+              token_pid_i <= 8'hA5;
+              token_dev_i <= sof_dev;
+              token_ep_i  <= sof_ep;
+              data_len_i  <= 16'h0000;
+            end
             // linectrl: keepalive
             resp_expected_i <= 1'b0;
             start_i <= 1'b1;
@@ -508,7 +531,15 @@ reg R_rx_done;
             // transfer SOF or linectrl
             in_transfer_i <= C_keepalive_type;
             // 0:SOF, 1:linectrl
-            token_pid_i[1:0] <= 2'b00;
+            if(C_keepalive_type)
+              token_pid_i[1:0] <= 2'b00;
+            else
+            begin
+              token_pid_i <= 8'hA5;
+              token_dev_i <= sof_dev;
+              token_ep_i  <= sof_ep;
+              data_len_i  <= 16'h0000;
+            end
             // linectrl: keepalive
             resp_expected_i <= 1'b0;
             start_i <= 1'b1;
@@ -559,7 +590,15 @@ reg R_rx_done;
             // transfer SOF or linectrl
             in_transfer_i <= C_keepalive_type;
             // 0:SOF, 1:linectrl
-            token_pid_i[1:0] <= 2'b00;
+            if(C_keepalive_type)
+              token_pid_i[1:0] <= 2'b00;
+            else
+            begin
+              token_pid_i <= 8'hA5;
+              token_dev_i <= sof_dev;
+              token_ep_i  <= sof_ep;
+              data_len_i  <= 16'h0000;
+            end
             // linectrl: keepalive
             resp_expected_i <= 1'b0;
             start_i <= 1'b1;
