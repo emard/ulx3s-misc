@@ -40,8 +40,8 @@ parameter C_report_length=20,
 parameter C_keepalive_setup=1'b1,
 parameter C_keepalive_status=1'b1,
 parameter C_keepalive_report=1'b1,
-parameter C_keepalive_phase_bits=12,
-// some full-speed devices accept KEEPALIVE (LUT saving)
+parameter C_keepalive_phase_bits=12, // 12:low speed, 15:full speed
+// FIXME SOF doesn't work, but some full-speed devices accept KEEPALIVE
 parameter C_keepalive_phase=4044, // 4044: KEEPALIVE low speed, 2048: SOF full speed
 parameter C_keepalive_type=1'b1, // 1:KEEPALIVE low speed, 0:SOF full speed
 parameter C_setup_rom_file="usbh_setup_rom.mem",
@@ -393,17 +393,9 @@ reg R_rx_done;
   end
 
   reg [10:0] R_sof_counter;
-  always @(posedge clk_usb) begin
-    if(start_i == 1'b1 && sof_transfer_i == 1'b1 && token_pid_i[3:0] == 4'h5)
-      R_sof_counter <= R_sof_counter + 1;
-  end
-  wire [6:0] S_sof_dev = {
-    R_sof_counter[4], R_sof_counter[5], R_sof_counter[6], R_sof_counter[7],
-    R_sof_counter[8], R_sof_counter[9], R_sof_counter[10]
-  };
-  wire [3:0] S_sof_ep = {
-    R_sof_counter[0], R_sof_counter[1], R_sof_counter[2], R_sof_counter[3]
-  };
+  // FIXME not sure how to map counter to dev and ep
+  wire [6:0] S_sof_dev = R_sof_counter[10:4];
+  wire [3:0] S_sof_ep  = R_sof_counter[3:0];
 
   assign S_expected_response = data_idx_i == 1'b1 ? 8'h4B : 8'hC3;
   always @(posedge clk_usb) begin
@@ -432,6 +424,7 @@ reg R_rx_done;
           ctrlin <= 1'b0;
           start_i <= 1'b1;
           R_packet_counter <= 16'h0000;
+          R_sof_counter <= 11'd0;
           R_state <= C_STATE_SETUP;
         end
       end
@@ -464,6 +457,7 @@ reg R_rx_done;
               token_dev_i <= S_sof_dev;
               token_ep_i  <= S_sof_ep;
               data_len_i  <= 16'h0000;
+              R_sof_counter <= R_sof_counter + 1;
             end
             // linectrl: keepalive
             resp_expected_i <= 1'b0;
@@ -539,6 +533,7 @@ reg R_rx_done;
               token_dev_i <= S_sof_dev;
               token_ep_i  <= S_sof_ep;
               data_len_i  <= 16'h0000;
+              R_sof_counter <= R_sof_counter + 1;
             end
             // linectrl: keepalive
             resp_expected_i <= 1'b0;
@@ -598,6 +593,7 @@ reg R_rx_done;
               token_dev_i <= S_sof_dev;
               token_ep_i  <= S_sof_ep;
               data_len_i  <= 16'h0000;
+              R_sof_counter <= R_sof_counter + 1;
             end
             // linectrl: keepalive
             resp_expected_i <= 1'b0;
