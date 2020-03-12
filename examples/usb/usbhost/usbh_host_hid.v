@@ -442,7 +442,7 @@ reg R_rx_done;
             R_reset_accepted <= 1'b1;
             R_state <= C_STATE_DETACHED;
           end
-          if(R_slow[C_keepalive_phase_bits - 1:0] == C_keepalive_phase && C_keepalive_setup == 1'b1) begin
+          if(R_slow[C_keepalive_phase_bits-1:0] == C_keepalive_phase && C_keepalive_setup == 1'b1) begin
             // keepalive: first at 0.35 ms, then every 0.68 ms
             // keepalive signal
             sof_transfer_i <= 1'b1;
@@ -518,7 +518,7 @@ reg R_rx_done;
       if(idle_o == 1'b1) begin
         if(R_slow[C_report_interval] == 1'b0) begin
           R_slow <= R_slow + 1;
-          if(R_slow[C_keepalive_phase_bits - 1:0] == C_keepalive_phase && C_keepalive_report == 1'b1) begin
+          if(R_slow[C_keepalive_phase_bits-1:0] == C_keepalive_phase && C_keepalive_report == 1'b1) begin
             // keepalive: first at 0.35 ms, then every 0.68 ms
             // keepalive signal
             sof_transfer_i <= 1'b1;
@@ -578,7 +578,7 @@ reg R_rx_done;
             R_reset_accepted <= 1'b1;
             R_state <= C_STATE_DETACHED;
           end
-          if(R_slow[C_keepalive_phase_bits - 1:0] == C_keepalive_phase && C_keepalive_status == 1'b1) begin
+          if(R_slow[C_keepalive_phase_bits-1:0] == C_keepalive_phase && C_keepalive_status == 1'b1) begin
             // keepalive: first at 0.35 ms, then every 0.68 ms
             // keepalive signal
             sof_transfer_i <= 1'b1;
