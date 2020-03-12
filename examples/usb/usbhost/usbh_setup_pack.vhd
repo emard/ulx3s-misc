@@ -31,8 +31,9 @@ package usbh_setup_pack is
   constant C_keepalive_setup   : std_logic := '1';  -- enable keepalive during setup
   constant C_keepalive_status  : std_logic := '1';  -- enable keepalive during setup status OUT 0-length
   constant C_keepalive_report  : std_logic := '1';  -- enable keepalive during report IN
-  constant C_keepalive_type    : std_logic := '1';  -- '0':SOF-packet '1':SE0-pulse
-  constant C_keepalive_phase   : std_logic_vector(11 downto 0) := x"FCC"; -- near the end of 0.68 ms interval x"FCC" is max what currently works
+  constant C_keepalive_type    : std_logic := '1';  -- '0':SOF-packet (full speed) '1':SE0-pulse (low speed)
+  constant C_keepalive_phase   : std_logic_vector(11 downto 0) := x"7C0"; -- near half 0.68 ms interval (at low speed). max x"FCC"
+  --constant C_keepalive_phase   : std_logic_vector(14 downto 0) := "111" & x"7C0"; -- near half 0.68 ms interval (at full speed)
 
   type T_setup_rom is array(natural range <>) of std_logic_vector(7 downto 0);
   constant C_setup_rom: T_setup_rom :=
