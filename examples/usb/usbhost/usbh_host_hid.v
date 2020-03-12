@@ -40,12 +40,17 @@ parameter C_report_length=20,
 parameter C_keepalive_setup=1'b1,
 parameter C_keepalive_status=1'b1,
 parameter C_keepalive_report=1'b1,
-parameter C_keepalive_phase_bits=12, // 12:low speed, 15:full speed
-// FIXME SOF doesn't work, but some full-speed devices accept KEEPALIVE
-parameter C_keepalive_phase=4044, // 4044: KEEPALIVE low speed, 2048: SOF full speed
-parameter C_keepalive_type=1'b1, // 1:KEEPALIVE low speed, 0:SOF full speed
+parameter C_keepalive_phase_bits=12, // keepalive/sof frequency 12:low speed, 15:full speed
+// NOTE: C_keepalive_phase_bits=12 at C_usb_speed=0 ( 6 MHz)
+//    or C_keepalive_phase_bits=15 at C_usb_speed=1 (48 MHz)
+//  will send keepalive/SOF every 0.68 ms
+// USB standard requires keepalive < 1 ms but SOF every 1 ms +-1%
+// so far all full-speed devices tested accept SOF at 0.68 ms rate
+parameter C_keepalive_phase=2048, // 4044:KEEPALIVE low speed, 2048:low/full speed good for both
+parameter C_keepalive_type=1'b1, // 1:KEEPALIVE low speed (may work for full speed, LUT saver), 0:SOF full speed
 parameter C_setup_rom_file="usbh_setup_rom.mem",
 parameter C_setup_rom_len=16,
+// FIXME: For C_usb_speed=1 reset timing is 4x shorter than required by USB standard
 parameter C_usb_speed=0 // '0':6 MHz low speed '1':48 MHz full speed
 )
 (
@@ -471,9 +476,9 @@ reg R_rx_done;
           // time passed, send next setup packet or read status or read response
           R_slow <= 18'd0;
           sof_transfer_i <= 1'b0;
+          token_dev_i <= R_dev_address_confirmed;
           token_ep_i <= 4'h0;
           resp_expected_i <= 1'b1;
-          token_dev_i <= R_dev_address_confirmed;
           if(R_setup_rom_addr == C_setup_rom_len) begin
             data_len_i <= 16'h0000;
             start_i <= 1'b0;
@@ -553,6 +558,8 @@ reg R_rx_done;
           sof_transfer_i <= 1'b0;
           in_transfer_i <= 1'b1;
           token_pid_i <= 8'h69;
+          if(C_keepalive_type == 1'b0)
+            token_dev_i <= R_dev_address_confirmed;
           token_ep_i <= C_report_endpoint;
           data_idx_i <= 1'b0;
           //              R_packet_counter <= R_packet_counter + 1;
@@ -616,6 +623,8 @@ reg R_rx_done;
             token_pid_i <= 8'hE1;
             // E1=OUT
           end
+          if(C_keepalive_type == 1'b0)
+            token_dev_i <= R_dev_address_confirmed;
           token_ep_i <= 4'h0;
           resp_expected_i <= 1'b1;
           if(R_bytes_remaining != 16'h0000) begin
