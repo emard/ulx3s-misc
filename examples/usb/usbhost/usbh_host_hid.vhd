@@ -87,6 +87,11 @@ architecture Behavioral of usbh_host_hid is
   signal R_reset_pending: std_logic;
   signal R_reset_accepted : std_logic;
 
+  constant C_sof_pid: std_logic_vector(7 downto 0) := x"A5";
+  signal R_sof_counter: std_logic_vector(10 downto 0);
+  signal S_sof_dev: std_logic_vector(6 downto 0);
+  signal S_sof_ep: std_logic_vector(3 downto 0);
+
   -- sie wires
   signal  rst_i             :  std_logic;
   signal  start_i           :  std_logic := '0';
@@ -375,7 +380,15 @@ architecture Behavioral of usbh_host_hid is
                 -- keepalive signal
                 sof_transfer_i  <= '1';   -- transfer SOF or linectrl
                 in_transfer_i   <= C_keepalive_type;   -- 0:SOF, 1:linectrl
-                token_pid_i(1 downto 0) <= "00"; -- linectrl: keepalive
+                if C_keepalive_type = '1' then
+                  token_pid_i(1 downto 0) <= "00"; -- linectrl: keepalive
+                else
+                  token_pid_i <= C_sof_pid;
+                  token_dev_i <= S_sof_dev;
+                  token_ep_i  <= S_sof_ep;
+                  data_len_i  <= (others => '0');
+                  R_sof_counter <= R_sof_counter + 1;
+                end if;
                 resp_expected_i <= '0';
                 start_i         <= '1';
               else
@@ -384,9 +397,9 @@ architecture Behavioral of usbh_host_hid is
             else -- time passed, send next setup packet or read status or read response
               R_slow <= (others => '0');
               sof_transfer_i  <= '0';
+              token_dev_i     <= R_dev_address_confirmed;
               token_ep_i      <= x"0";
               resp_expected_i <= '1';
-              token_dev_i <= R_dev_address_confirmed;
               if R_setup_rom_addr = C_setup_rom_len then
                 data_len_i <= x"0000";
                 start_i <= '0';
@@ -425,7 +438,15 @@ architecture Behavioral of usbh_host_hid is
                 -- keepalive signal
                 sof_transfer_i  <= '1';   -- transfer SOF or linectrl
                 in_transfer_i   <= C_keepalive_type;   -- 0:SOF, 1:linectrl
-                token_pid_i(1 downto 0) <= "00"; -- linectrl: keepalive
+                if C_keepalive_type = '1' then
+                  token_pid_i(1 downto 0) <= "00"; -- linectrl: keepalive
+                else
+                  token_pid_i <= C_sof_pid;
+                  token_dev_i <= S_sof_dev;
+                  token_ep_i  <= S_sof_ep;
+                  data_len_i  <= (others => '0');
+                  R_sof_counter <= R_sof_counter + 1;
+                end if;
                 resp_expected_i <= '0';
                 start_i         <= '1';
               else
@@ -441,6 +462,9 @@ architecture Behavioral of usbh_host_hid is
               sof_transfer_i  <= '0';
               in_transfer_i   <= '1';
               token_pid_i     <= x"69";
+              if C_keepalive_type = '0' then
+                token_dev_i   <= R_dev_address_confirmed;
+              end if;
               token_ep_i      <= std_logic_vector(to_unsigned(C_report_endpoint,token_ep_i'length));
               data_idx_i      <= '0';
 --              R_packet_counter <= R_packet_counter + 1;
@@ -466,7 +490,15 @@ architecture Behavioral of usbh_host_hid is
                 -- keepalive signal
                 sof_transfer_i  <= '1';   -- transfer SOF or linectrl
                 in_transfer_i   <= C_keepalive_type;   -- 0:SOF, 1:linectrl
-                token_pid_i(1 downto 0) <= "00"; -- linectrl: keepalive
+                if C_keepalive_type = '1' then
+                  token_pid_i(1 downto 0) <= "00"; -- linectrl: keepalive
+                else
+                  token_pid_i <= C_sof_pid;
+                  token_dev_i <= S_sof_dev;
+                  token_ep_i  <= S_sof_ep;
+                  data_len_i  <= (others => '0');
+                  R_sof_counter <= R_sof_counter + 1;
+                end if;
                 resp_expected_i <= '0';
                 start_i         <= '1';
               else
@@ -480,6 +512,9 @@ architecture Behavioral of usbh_host_hid is
                 token_pid_i     <= x"69"; -- 69=IN
               else
                 token_pid_i     <= x"E1"; -- E1=OUT
+              end if;
+              if C_keepalive_type = '0' then
+                token_dev_i     <= R_dev_address_confirmed;
               end if;
               token_ep_i      <= x"0";
               resp_expected_i <= '1';
