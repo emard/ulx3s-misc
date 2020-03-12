@@ -279,7 +279,7 @@ architecture Behavioral of usbh_host_hid is
                         R_retry <= (others => '0');
                         R_dev_address_confirmed <= R_dev_address_requested;
                       else -- set address failed
-                        R_retry <= R_retry + '1';
+                        R_retry <= R_retry + 1;
                       end if;
                     end if;
                   end if;
@@ -341,6 +341,10 @@ architecture Behavioral of usbh_host_hid is
   end process;
   end block;
 
+  -- NOTE: not sure is this bit order correct
+  S_sof_dev <= R_sof_counter(10 downto 4); -- 7 bits
+  S_sof_ep  <= R_sof_counter( 3 downto 0); -- 4 bits
+
   S_expected_response <= x"4B" when data_idx_i = '1' else x"C3";
   process(clk_usb)
   begin
@@ -361,7 +365,8 @@ architecture Behavioral of usbh_host_hid is
               resp_expected_i <= '0';
               ctrlin          <= '0';
               start_i         <= '1';
-              R_packet_counter <= (others => '0');
+              R_packet_counter<= (others => '0');
+              R_sof_counter   <= (others => '0');
               R_state <= C_STATE_SETUP;
             end if;
           else
