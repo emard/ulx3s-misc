@@ -28,6 +28,7 @@ module ulx3s_usbhost_test
 parameter C_usb_speed=1'b0, // 0:6 MHz USB1.0, 1:48 MHz USB1.1
 parameter C_report_length = 20,
 // enable only one US2/US3/US4 (currently only US2 supported)
+parameter C_display="SSD1331", // "SSD1331", "ST7789"
 parameter C_us2=1,
 parameter C_us3=0,
 parameter C_us4=0
@@ -156,8 +157,8 @@ assign shutdown = 0;
     .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
     .bus_reset(~btn[0]),
     .led(led), // debug output
-    //.usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
-    .usb_dif(usb_fpga_dp),
+    .usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
+    //.usb_dif(usb_fpga_dp),
     .usb_dp(usb_fpga_bd_dp),
     .usb_dn(usb_fpga_bd_dn),
     .hid_report(S_report),
@@ -208,6 +209,9 @@ assign shutdown = 0;
 
   assign S_oled = S_report[63:0];
 
+  generate
+  if(C_display == "SSD1331")
+  begin
   wire  [6:0] disp_x;
   wire  [5:0] disp_y;
   wire [15:0] disp_color;
@@ -215,6 +219,7 @@ assign shutdown = 0;
   #(
     .c_data_len(64),
     .c_font_file("hex_font.mem"),
+    .c_row_bits(4),
     .c_grid_6x8(1),
     .c_color_bits(16)
   )
@@ -251,6 +256,49 @@ assign shutdown = 0;
     .spi_dc(oled_dc),
     .spi_resn(oled_resn)
   );
+  end
+  if(C_display == "ST7789")
+  begin
+  wire  [7:0] disp_x;
+  wire  [7:0] disp_y;
+  wire [15:0] disp_color;
+  hex_decoder_v
+  #(
+    .c_data_len(64),
+    .c_font_file("hex_font.mem"),
+    .c_row_bits(4),
+    .c_grid_6x8(1),
+    .c_color_bits(16)
+  )
+  hex_decoder_oled_inst
+  (
+    .clk(clk_125MHz),
+    .data(S_oled),
+    .x(disp_x[7:1]),
+    .y(disp_y[7:1]),
+    .color(disp_color)
+  );
+  lcd_video
+  #(
+    .c_init_file("st7789_linit_xflip.mem"),
+    .c_init_size(38),
+    .c_clk_mhz(125)
+  )
+  lcd_video_inst
+  (
+    .clk(clk_125MHz),
+    .reset(~btn[0]),
+    .x(disp_x),
+    .y(disp_y),
+    .color(disp_color),
+    .spi_csn(oled_csn),
+    .spi_clk(oled_clk),
+    .spi_mosi(oled_mosi),
+    .spi_dc(oled_dc),
+    .spi_resn(oled_resn)
+  );
+  end
+  endgenerate
 
   assign beam_rx = 636 - beam_x;
   // HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
