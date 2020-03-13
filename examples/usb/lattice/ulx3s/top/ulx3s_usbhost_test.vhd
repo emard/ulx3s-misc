@@ -13,11 +13,11 @@ use work.usbh_setup_pack.all;
 entity ulx3s_usbhost_test is
   generic
   (
+    C_usb_speed: std_logic := '0'; -- 0:6 MHz 1:48 MHz
     -- enable only one US2/US3/US4
     C_us2: boolean := true;  -- onboard micro USB with OTG adapter
     C_us3: boolean := false; -- PMOD US3 at GP,GN 25,22,21
-    C_us4: boolean := false; -- PMOD US4 at GP,GN 24,23,20
-    C_usb_speed: std_logic := '0' -- 0:6 MHz 1:48 MHz
+    C_us4: boolean := false  -- PMOD US4 at GP,GN 24,23,20
   );
   port
   (
