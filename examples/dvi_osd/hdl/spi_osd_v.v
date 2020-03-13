@@ -35,6 +35,7 @@ module spi_osd_v
     reg  [7:0] ram_do;
     spirw_slave_v
     #(
+        .c_addr_bits($bits(ram_addr)),
         .c_sclk_capable_pin(1'b0)
     )
     spirw_slave_inst
