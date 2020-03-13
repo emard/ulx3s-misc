@@ -10,6 +10,7 @@
 
 module spirw_slave_v
 #(
+  parameter c_addr_bits = 16,
   parameter c_sclk_capable_pin = 0 //, // 0-sclk is generic pin, 1-sclk is clock capable pin
 )
 (
@@ -18,17 +19,18 @@ module spirw_slave_v
   inout  wire miso, // 3-state line, active when csn=0
   // BRAM interface
   output wire rd, wr,
-  output wire [15:0] addr,
+  output wire [c_addr_bits-1:0] addr,
   input  wire [7:0] data_in,
   output wire [7:0] data_out
 );
-  reg [16:0] R_raddr;
+  reg [c_addr_bits:0] R_raddr;
   //reg [8-1:0] R_MISO;
   //reg [8-1:0] R_MOSI;
   reg [8-1:0] R_byte;
   reg R_request_read;
   reg R_request_write;
-  reg [5:0] R_bit_count;
+  localparam c_count_bits=$clog2(c_addr_bits+8)+1;
+  reg [c_count_bits-1:0] R_bit_count;
   generate
     if(c_sclk_capable_pin)
     begin
@@ -39,7 +41,7 @@ module spirw_slave_v
         begin
           R_request_read <= 1'b0;
           R_request_write <= 1'b0;
-          R_bit_count <= 6'd23; // 24 bits = 3 bytes to read cmd/addr, then data
+          R_bit_count <= c_addr_bits+7; // 24 bits = 3 bytes to read cmd/addr, then data
         end
         else // csn == 0
           begin
@@ -47,22 +49,22 @@ module spirw_slave_v
               R_byte <= data_in;
             else
               R_byte <= { R_byte[8-2:0], mosi };
-            if(R_bit_count[5] == 1'b0) // first 3 bytes
+            if(R_bit_count[c_count_bits-1] == 1'b0) // first 3 bytes
             begin
-              R_raddr <= { R_raddr[15:0], mosi };
+              R_raddr <= { R_raddr[c_addr_bits-1:0], mosi };
               R_bit_count <= R_bit_count - 1;
             end
             else // after first 3 bytes
             begin
               if(R_bit_count[3:0] == 4'd7) // first bit in new byte, increment address from 5th SPI byte on
-                R_raddr[15:0] <= R_raddr[15:0] + 1;
+                R_raddr[c_addr_bits-1:0] <= R_raddr[c_addr_bits-1:0] + 1;
               if(R_bit_count[2:0] == 3'd1)
-                R_request_read <= R_raddr[16];
+                R_request_read <= R_raddr[c_addr_bits];
               else
                 R_request_read <= 1'b0;
               if(R_bit_count[2:0] == 3'd0) // last bit in byte
               begin
-                if(R_raddr[16] == 1'b0)
+                if(R_raddr[c_addr_bits] == 1'b0)
                   R_request_write <= 1'b1; // write
                 R_bit_count[3] <= 1'b0; // allow to inc address from 5th SPI byte on
               end
@@ -90,7 +92,7 @@ module spirw_slave_v
         begin
           R_request_read <= 1'b0;
           R_request_write <= 1'b0;
-          R_bit_count <= 6'd23; // 24 bits = 3 bytes to read cmd/addr, then data
+          R_bit_count <= c_addr_bits+7; // 24 bits = 3 bytes to read cmd/addr, then data
         end
         else // csn == 0
         begin
@@ -100,22 +102,22 @@ module spirw_slave_v
               R_byte <= data_in;
             else
               R_byte <= { R_byte[8-2:0], mosi };
-            if(R_bit_count[5] == 1'b0) // first 3 bytes
+            if(R_bit_count[c_count_bits-1] == 1'b0) // first 3 bytes
             begin
-              R_raddr <= { R_raddr[15:0], R_mosi };
+              R_raddr <= { R_raddr[c_addr_bits-1:0], R_mosi };
               R_bit_count <= R_bit_count - 1;
             end
             else // after first 3 bytes
             begin
               if(R_bit_count[3:0] == 4'd7) // first bit in new byte, increment address from 5th SPI byte on
-                R_raddr[15:0] <= R_raddr[15:0] + 1;
+                R_raddr[c_addr_bits-1:0] <= R_raddr[c_addr_bits-1:0] + 1;
               if(R_bit_count[2:0] == 3'd1)
-                R_request_read <= R_raddr[16];
+                R_request_read <= R_raddr[c_addr_bits];
               else
                 R_request_read <= 1'b0;
               if(R_bit_count[2:0] == 3'd0) // last bit in byte
               begin
-                if(R_raddr[16] == 1'b0)
+                if(R_raddr[c_addr_bits] == 1'b0)
                   R_request_write <= 1'b1; // write
                 R_bit_count[3] <= 1'b0; // allow to inc address from 5th SPI byte on
               end
@@ -130,7 +132,7 @@ module spirw_slave_v
   endgenerate
   assign rd   = R_request_read;
   assign wr   = R_request_write;
-  assign addr = R_raddr[15:0];
+  assign addr = R_raddr[c_addr_bits-1:0];
   assign miso = csn ? 1'bz : R_byte[8-1];
   assign data_out = R_byte;
 endmodule
