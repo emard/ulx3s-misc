@@ -26,7 +26,7 @@
 module ulx3s_usbhost_test
 #(
 parameter C_usb_speed=1'b0, // 0:6 MHz USB1.0, 1:48 MHz USB1.1
-parameter C_report_length = 20,
+parameter C_report_bytes = 20, // 8:usual gamepad, 20:xbox360
 // enable only one US2/US3/US4 (currently only US2 supported)
 parameter C_display="SSD1331", // "SSD1331", "ST7789"
 parameter C_us2=1,
@@ -106,12 +106,8 @@ output wire shutdown
 wire clk_125MHz, clk_25MHz; // video
 wire clk_48MHz, clk_6MHz; // usb
 wire clk_usb;  // 6 MHz USB1.0 or 48 MHz USB1.1
-wire R_phy_txmode;
-wire S_rxd;
-wire S_rxdp; wire S_rxdn;
-wire S_txdp; wire S_txdn; wire S_txoe;
-wire [C_report_length * 8 - 1:0] S_report;
-wire [63:0] S_oled;
+wire [C_report_bytes*8-1:0] S_report;
+wire [127:0] S_oled;
 wire S_valid;
 wire clk_pixel; wire clk_shift;  // 25,125 MHz
 wire [9:0] beam_x; wire [9:0] beam_rx; wire [9:0] beam_y;
@@ -207,7 +203,7 @@ assign shutdown = 0;
   //  );
   //  end generate;
 
-  assign S_oled = S_report[63:0];
+  assign S_oled = S_report[127:0];
 
   generate
   if(C_display == "SSD1331")
@@ -217,7 +213,7 @@ assign shutdown = 0;
   wire [15:0] disp_color;
   hex_decoder_v
   #(
-    .c_data_len(64),
+    .c_data_len(128),
     .c_font_file("hex_font.mem"),
     .c_row_bits(4),
     .c_grid_6x8(1),
@@ -264,7 +260,7 @@ assign shutdown = 0;
   wire [15:0] disp_color;
   hex_decoder_v
   #(
-    .c_data_len(64),
+    .c_data_len(128),
     .c_font_file("hex_font.mem"),
     .c_row_bits(4),
     .c_grid_6x8(1),
@@ -304,8 +300,8 @@ assign shutdown = 0;
   // HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
   hex_decoder_v
   #(
-    .c_data_len(64),
-    .c_row_bits(5), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
+    .c_data_len(128),
+    .c_row_bits(4), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256
     .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
     .c_x_bits(8),
