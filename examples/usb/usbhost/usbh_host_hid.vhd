@@ -19,7 +19,8 @@ use work.usbh_setup_pack.all;
 entity usbh_host_hid is
   generic
   (
-    C_usb_speed: std_logic := '1' -- '0':6 MHz low speed '1':48 MHz full speed 
+    C_usb_speed: std_logic := '0'; -- '0':6 MHz low speed '1':48 MHz full speed
+    C_report_length_strict: std_logic := '0'
   );
   port
   (
@@ -635,7 +636,10 @@ architecture Behavioral of usbh_host_hid is
     signal R_hid_valid: std_logic;
     signal R_crc_err: std_logic;
     signal R_rx_done: std_logic;
+    signal S_report_length_ok: boolean;
   begin
+    S_report_length_ok <= R_rx_count = std_logic_vector(to_unsigned(C_report_length,rx_count_o'length)) when C_report_length_strict = '1'
+                     else R_rx_count /= x"0000"; -- more flexible, but noise at darfon
     process(clk_usb)
     begin
       if rising_edge(clk_usb) then
@@ -656,8 +660,7 @@ architecture Behavioral of usbh_host_hid is
         -- at falling edge of rx_done it should not accumulate any crc error
         if R_rx_done = '1' and rx_done_o = '0' and R_crc_err = '0' and timeout_o = '0'
         and R_state = C_STATE_REPORT
-        -- and R_rx_count = std_logic_vector(to_unsigned(C_report_length,rx_count_o'length)) -- strict
-        and R_rx_count /= x"0000" -- more flexible
+        and S_report_length_ok
         then
           R_hid_valid <= '1';
         else
