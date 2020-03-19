@@ -33,6 +33,9 @@
 //-----------------------------------------------------------------
  
 module usbh_sie
+#(
+     parameter       c_crc_complex = 0 // 0:simple CRC compare always LUT saver, 1:CRC compare with and-mask at end of packet
+)
 (
     // Inputs
      input           clk_i
@@ -165,10 +168,15 @@ wire rx_resp_timeout_w = (last_tx_time_q >= RX_TIMEOUT) & wait_resp_q;
 wire tx_ifs_ready_w    = (last_tx_time_q >= TX_IFS);
  
 // CRC16 error on received data
-wire crc_error_w = (state_q == STATE_RX_DATA) && !rx_active_w && in_transfer_q        &&
-                   (status_response_q == PID_DATA0 || status_response_q == PID_DATA1) &&
-                   (crc_sum_q != 16'hB001);
- 
+wire crc_error_w;
+generate
+  if(c_crc_complex)
+    assign crc_error_w = (state_q == STATE_RX_DATA) && !rx_active_w && in_transfer_q        &&
+                         (status_response_q == PID_DATA0 || status_response_q == PID_DATA1) &&
+                         (crc_sum_q != 16'hB001); // complex for host, incomplete packet won't have CRC error
+  else
+    assign crc_error_w =  crc_sum_q != 16'hB001; // simple for host, incomplete packet will have CRC error
+endgenerate
 //-----------------------------------------------------------------
 // State Machine
 //-----------------------------------------------------------------
