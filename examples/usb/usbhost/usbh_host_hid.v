@@ -36,7 +36,8 @@ parameter C_setup_retry=4,
 parameter C_setup_interval=17,
 parameter C_report_interval=16,
 parameter C_report_endpoint=1,
-parameter C_report_length=20,
+parameter C_report_length=20, // bytes
+parameter C_report_length_strict=0, // 0:accept length>0, 1:require exact length
 parameter C_keepalive_setup=1'b1,
 parameter C_keepalive_status=1'b1,
 parameter C_keepalive_report=1'b1,
@@ -756,6 +757,7 @@ reg R_rx_done;
     .utmi_txvalid_o(S_TXVALID));
 
   // B_report_reader: block
+  wire S_report_length_ok = C_report_length_strict ? R_rx_count == C_report_length : R_rx_count != 0;
   always @(posedge clk_usb) begin
     R_rx_count <= rx_count_o;
     // to offload routing (apart from this, "rx_count_o" could be used directly)
@@ -774,8 +776,7 @@ reg R_rx_done;
       end
     end
     // at falling edge of rx_done it should not accumulate any crc error
-    // and R_rx_count = std_logic_vector(to_unsigned(C_report_length,rx_count_o'length)) -- strict
-    if(R_rx_done == 1'b1 && rx_done_o == 1'b0 && R_crc_err == 1'b0 && timeout_o == 1'b0 && R_state == C_STATE_REPORT && R_rx_count != 16'h0000) begin
+    if(R_rx_done == 1'b1 && rx_done_o == 1'b0 && R_crc_err == 1'b0 && timeout_o == 1'b0 && R_state == C_STATE_REPORT && S_report_length_ok) begin
       R_hid_valid <= 1'b1;
     end
     else begin
