@@ -167,14 +167,15 @@ wire rx_resp_timeout_w = (last_tx_time_q >= RX_TIMEOUT) & wait_resp_q;
 // Tx - Tx IFS timeout
 wire tx_ifs_ready_w    = (last_tx_time_q >= TX_IFS);
 
-wire status_response_data_w = (status_response_q == PID_DATA0 || status_response_q == PID_DATA1);
- 
+//wire status_response_allow_w = (status_response_q == PID_DATA0 || status_response_q == PID_DATA1); // DATA0 or DATA1 received, respond with ACK
+wire status_response_allow_w = (status_response_q != PID_NAK); // NAK received, don't respond with ACK, works same as above. less LUTs
+
 // CRC16 error on received data
 wire crc_error_w;
 generate
   if(c_crc_complex)
     assign crc_error_w = (state_q == STATE_RX_DATA) && !rx_active_w && in_transfer_q &&
-                         status_response_data_w &&
+                         status_response_allow_w &&
                          (crc_sum_q != 16'hB001); // USB1.0 and USB1.1 complex for host, incomplete packet won't have CRC error
   else
     assign crc_error_w =  crc_sum_q != 16'hB001; // USB1.0 simple for host, incomplete packet will have CRC error
@@ -334,11 +335,8 @@ begin
             // Receive complete
             if (~rx_active_w)
             begin
-                // Send ACK but incoming data had CRC error, do not ACK
-                if (crc_error_w && send_ack_q && status_response_data_w)
-                    next_state_r = STATE_IDLE;
-                // Send an ACK response without CPU interaction?
-                else if (send_ack_q && status_response_data_w)
+                // Send ACK if incoming data have CRC OK
+                if (send_ack_q && status_response_allow_w && !crc_error_w)
                     next_state_r = STATE_TX_WAIT;
                 else
                     next_state_r = STATE_IDLE;
@@ -695,7 +693,7 @@ begin
                else if (!rx_active_w)
                begin
                     // If some data received, check CRC
-                    if (crc_error_w && status_response_data_w)
+                    if (crc_error_w && status_response_allow_w)
                         status_crc_err_q   <= 1'b1;
                     else
                         status_crc_err_q   <= 1'b0;
