@@ -146,6 +146,8 @@ assign shutdown = 0;
   assign usb_fpga_pu_dn = 1'b0;
   usbh_host_hid
   #(
+    .C_report_length(C_report_bytes),
+    .C_report_length_strict(0),
     .C_usb_speed(C_usb_speed) // '0':Low-speed '1':Full-speed
   )
   us2_hid_host_inst
@@ -203,7 +205,9 @@ assign shutdown = 0;
   //  );
   //  end generate;
 
-  assign S_oled = S_report[127:0];
+  always @(posedge clk_usb)
+    if(S_valid)
+      S_oled[127:0] <= S_report[127:0];
 
   generate
   if(C_display == "SSD1331")
