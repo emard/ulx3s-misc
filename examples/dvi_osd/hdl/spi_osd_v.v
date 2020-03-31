@@ -25,7 +25,7 @@ module spi_osd_v
   output wire o_hsync, o_vsync, o_blank
 );
 
-    reg [7:0] tile_map [0:c_chars_x*c_chars_y-1]; // tile memory (character map)
+    reg [8:0] tile_map [0:c_chars_x*c_chars_y-1]; // tile memory (character map)
     initial
       $readmemh(c_char_file, tile_map);
 
@@ -53,7 +53,7 @@ module spi_osd_v
     always @(posedge clk_pixel)
     begin
       if(ram_wr)
-        tile_map[ram_addr] <= ram_di; // write to 0x0000-0x1000 writes chars to OSD
+        tile_map[ram_addr] <= {ram_addr[15],ram_di}; // write to 0x0000-0x1000 writes chars to OSD
       //ram_do <= tile_map[ram_addr];
     end
 
@@ -69,8 +69,9 @@ module spi_osd_v
     initial
       $readmemh(c_font_file, font);
     reg [7:0] data_out;
+    wire [11:0] tileaddr = (osd_y >> 4) * c_chars_x + (osd_x >> 3);
     always @(posedge clk_pixel)
-      data_out[7:0] <= font[{ tile_map[(osd_y >> 4) * c_chars_x + (osd_x >> 3)], osd_y[3:0] }];
+      data_out[7:0] <= font[{tile_map[tileaddr], osd_y[3:0]}] ^ {8{tile_map[tileaddr][8]}};
     wire [7:0] data_out_align = {data_out[0], data_out[7:1]};
     wire osd_pixel = data_out_align[7-osd_x[2:0]];
 
