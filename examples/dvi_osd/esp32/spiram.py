@@ -81,10 +81,12 @@ def test():
   
   # demonstrates writing multiple bytes, some text
   s.led.on()
-  # two separate writes can be also joined in one bytearray but this way is
-  # more readable as python code
-  s.hwspi.write(bytearray([0,11,20])) # sets address
-  s.hwspi.write(bytearray("ESP%d MICROPYTHON WAS HERE" % (32))) # writes content
+  s.hwspi.write(bytearray([0,0x80|11,20])) # sets address with 0x80 for inverted video
+  s.hwspi.write(bytearray("ESP32")) # writes content
+  s.led.off()
+  s.led.on()
+  s.hwspi.write(bytearray([0,11,25])) # sets address for normal video
+  s.hwspi.write(bytearray(" MICROPYTHON WAS HERE")) # writes content
   s.led.off()
 
 # debug to manually write and read 4 bytes
