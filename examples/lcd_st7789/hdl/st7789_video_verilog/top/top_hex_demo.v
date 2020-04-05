@@ -70,7 +70,7 @@ module top_hex_demo
       if(next_pixel)
         R_color <= color;
 
-    wire oled_res;
+    wire w_oled_csn;
     lcd_video
     #(
         .c_clk_mhz(125),
@@ -91,8 +91,8 @@ module top_hex_demo
         .spi_mosi(oled_mosi),
         .spi_dc(oled_dc),
         .spi_resn(oled_resn),
-        .spi_csn(oled_csn),
+        .spi_csn(w_oled_csn),
     );
-    // assign oled_csn = 1; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
+    assign oled_csn = w_oled_csn | btn[1]; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
 
 endmodule
