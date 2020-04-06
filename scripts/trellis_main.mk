@@ -1,6 +1,7 @@
 # ******* project, board and chip name *******
 PROJECT ?= project
 BOARD ?= board
+FPGA_PREFIX ?=
 FPGA_SIZE ?= 12
 FPGA_CHIP ?= lfe5u-$(FPGA_SIZE)f
 FPGA_PACKAGE ?= CABGA381
@@ -50,10 +51,10 @@ ifeq ($(FPGA_CHIP), lfe5u-85f)
 endif
 
 ifeq ($(FPGA_SIZE), 12)
-  FPGA_K=25
+  FPGA_K=$(FPGA_PREFIX)25
   IDCODE_CHIPID=--idcode $(CHIP_ID)
 else
-  FPGA_K=$(FPGA_SIZE)
+  FPGA_K=$(FPGA_PREFIX)$(FPGA_SIZE)
   IDCODE_CHIPID=
 endif
 
