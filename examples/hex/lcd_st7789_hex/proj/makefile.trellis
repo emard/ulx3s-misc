@@ -1,6 +1,8 @@
 # ******* project, board and chip name *******
 PROJECT = st7789_hex
 BOARD = ulx3s
+# leave empty, um-, um5g-
+FPGA_PREFIX =
 # 12 25 45 85
 FPGA_SIZE = 12
 
