@@ -43,22 +43,23 @@ assign ftdi_rxd = wifi_txd;
 // Bitstream uploaded over JTAG is too late, it won't enter
 // SPI mode. In that case, hardwire WR=RD=GND CS=A0=+3.3V
 // assign to 0/1 or use 1'bz as input and FPGA pull-down/pull-up
-assign gn[21]   = 0; // CH376_WR;
-assign gn[22]   = 0; // CH376_RD;
-assign gn[23]   = 1; // CH376_CS;
-assign gn[24]   = 1; // CH376_A0;
+
+assign gp[21]   = 0; // CH376_WR;
+assign gp[22]   = 0; // CH376_RD;
+assign gp[23]   = 1; // CH376_CS;
+assign gp[24]   = 1; // CH376_A0;
 
 wire spi_csn, spi_clk, spi_mosi, spi_miso, spi_int, spi_busy;
 
-assign gp[26]   = spi_csn;
-assign gp[25]   = 1'bz;
-assign spi_busy = gp[25];
-assign gp[24]   = spi_clk;
-assign gp[23]   = spi_mosi;
-assign gp[22]   = 1'bz;
-assign spi_miso = gp[22];
-assign gp[25]   = 1'bz;
-assign spi_int  = gn[25];
+assign gn[26]   = spi_csn;
+assign gn[25]   = 1'bz;
+assign spi_busy = gn[25];
+assign gn[24]   = spi_clk;
+assign gn[23]   = spi_mosi;
+assign gn[22]   = 1'bz;
+assign spi_miso = gn[22];
+assign gn[25]   = 1'bz;
+assign spi_int  = gp[25];
 
 assign spi_csn  = ~wifi_gpio5;
 assign spi_clk  =  wifi_gpio16;
