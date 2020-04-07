@@ -2,7 +2,7 @@
 PROJECT = st7789_hex
 BOARD = ulx3s
 # leave empty, um-, um5g-
-FPGA_PREFIX =
+# FPGA_PREFIX = um5g-
 # 12 25 45 85
 FPGA_SIZE = 12
 
