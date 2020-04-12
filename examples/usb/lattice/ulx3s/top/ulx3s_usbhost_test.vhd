@@ -14,6 +14,7 @@ entity ulx3s_usbhost_test is
   generic
   (
     C_usb_speed: std_logic := '0'; -- 0:6 MHz 1:48 MHz
+    C_report_length_strict: std_logic := '0'; -- require exact report length
     -- enable only one US2/US3/US4
     C_us2: boolean := true;  -- onboard micro USB with OTG adapter
     C_us3: boolean := false; -- PMOD US3 at GP,GN 25,22,21
@@ -82,25 +83,25 @@ architecture Behavioral of ulx3s_usbhost_test is
   -- ULX3S pins up and flat cable: swap GP/GN and invert differential input
   -- ULX3S direct or pins down and flat cable: don't swap GP/GN, normal differential input
 
-  alias us3_fpga_bd_dp: std_logic is gn(25);
-  alias us3_fpga_bd_dn: std_logic is gp(25);
+  alias us3_fpga_bd_dp: std_logic is gp(25);
+  alias us3_fpga_bd_dn: std_logic is gn(25);
 
-  alias us4_fpga_bd_dp: std_logic is gn(24);
-  alias us4_fpga_bd_dn: std_logic is gp(24);
-  
-  alias us4_fpga_pu_dp: std_logic is gn(23);
-  alias us4_fpga_pu_dn: std_logic is gp(23);
-  
-  alias us3_fpga_pu_dp: std_logic is gn(22);
-  alias us3_fpga_pu_dn: std_logic is gp(22);
+  alias us3_fpga_pu_dp: std_logic is gp(22);
+  alias us3_fpga_pu_dn: std_logic is gn(22);
 
-  alias us3_fpga_n_dp: std_logic is gp(21); -- flat cable
-  signal us3_fpga_dp: std_logic; -- flat cable
-  --alias us3_fpga_dp: std_logic is gp(21); -- direct
+  --alias us3_fpga_n_dp: std_logic is gp(21); -- flat cable
+  --signal us3_fpga_dp: std_logic; -- flat cable
+  alias us3_fpga_dp: std_logic is gp(21); -- direct
 
-  alias us4_fpga_n_dp: std_logic is gp(20); -- flat cable
-  signal us4_fpga_dp: std_logic; -- flat cable
-  --alias us4_fpga_dp: std_logic is gp(20); -- direct
+  alias us4_fpga_bd_dp: std_logic is gp(24);
+  alias us4_fpga_bd_dn: std_logic is gn(24);
+
+  alias us4_fpga_pu_dp: std_logic is gp(23);
+  alias us4_fpga_pu_dn: std_logic is gn(23);
+
+  --alias us4_fpga_n_dp: std_logic is gp(20); -- flat cable
+  --signal us4_fpga_dp: std_logic; -- flat cable
+  alias us4_fpga_dp: std_logic is gp(20); -- direct
 
   signal clk_200MHz, clk_125MHz, clk_100MHz, clk_89MHz, clk_60MHz, clk_48MHz, clk_12MHz, clk_7M5Hz, clk_6MHz: std_logic;
   signal clk_usb: std_logic; -- 48 MHz
@@ -197,6 +198,7 @@ begin
   us2_hid_host_inst: entity usbh_host_hid
   generic map
   (
+    C_report_length_strict => C_report_length_strict,
     C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
   )
   port map
@@ -210,14 +212,15 @@ begin
     hid_valid => S_valid
   );
   end generate;
-  
+
   G_us3: if C_us3 generate
   us3_fpga_pu_dp <= '0';
   us3_fpga_pu_dn <= '0';
-  us3_fpga_dp <= not us3_fpga_n_dp; -- flat cable
+  --us3_fpga_dp <= not us3_fpga_n_dp; -- flat cable
   us3_hid_host_inst: entity usbh_host_hid
   generic map
   (
+    C_report_length_strict => C_report_length_strict,
     C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
   )
   port map
@@ -235,10 +238,11 @@ begin
   G_us4: if C_us4 generate
   us4_fpga_pu_dp <= '0';
   us4_fpga_pu_dn <= '0';
-  us4_fpga_dp <= not us4_fpga_n_dp; -- flat cable
+  --us4_fpga_dp <= not us4_fpga_n_dp; -- flat cable
   us4_hid_host_inst: entity usbh_host_hid
   generic map
   (
+    C_report_length_strict => C_report_length_strict,
     C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
   )
   port map
@@ -253,7 +257,14 @@ begin
   );
   end generate;
 
-  S_oled <= S_report(S_oled'range);
+  process(clk_usb)
+  begin
+    if rising_edge(clk_usb) then
+      if S_valid = '1' then
+        S_oled <= S_report(S_oled'range);
+      end if;
+    end if;
+  end process;
 
   oled_inst: entity work.oled_hex_decoder
   generic map
