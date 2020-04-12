@@ -112,6 +112,12 @@ begin
   decoded.hat_left <= S_hat_left;
   decoded.hat_right <= S_hat_right;
 
+  -- analog stick
+  decoded.lstick_x <= S_lstick_x;
+  decoded.lstick_y <= S_lstick_y;
+  decoded.rstick_x <= S_rstick_x;
+  decoded.rstick_y <= S_rstick_y;
+  
   -- analog stick to digital decoders
   decoded.lstick_left  <= '1' when S_lstick_x(7 downto 6) = "00" else '0';
   decoded.lstick_right <= '1' when S_lstick_x(7 downto 6) = "11" else '0';
