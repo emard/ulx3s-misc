@@ -1,37 +1,15 @@
-// File /home/guest/tmp/ulx3s_usbhost_test.vhd translated with vhd2vl v3.0 VHDL to Verilog RTL translator
-// vhd2vl settings:
-//  * Verilog Module Declaration Style: 2001
-
-// vhd2vl is Free (libre) Software:
-//   Copyright (C) 2001 Vincenzo Liguori - Ocean Logic Pty Ltd
-//     http://www.ocean-logic.com
-//   Modifications Copyright (C) 2006 Mark Gonzales - PMC Sierra Inc
-//   Modifications (C) 2010 Shankar Giri
-//   Modifications Copyright (C) 2002-2017 Larry Doolittle
-//     http://doolittle.icarus.com/~larry/vhd2vl/
-//   Modifications (C) 2017 Rodrigo A. Melo
-//
-//   vhd2vl comes with ABSOLUTELY NO WARRANTY.  Always check the resulting
-//   Verilog for correctness, ideally with a formal verification tool.
-//
-//   You are welcome to redistribute vhd2vl under certain conditions.
-//   See the license (GPLv2) file included with the source for details.
-
-// The result of translation follows.  Its copyright status should be
-// considered unchanged from the original VHDL.
-
-// (c)EMARD
-// License=BSD
+// AUTHOR=EMARD
+// LICENSE=BSD
 
 module ulx3s_usbhost_test
 #(
 parameter C_usb_speed=1'b0, // 0:6 MHz USB1.0, 1:48 MHz USB1.1
 parameter C_report_bytes = 20, // 8:usual gamepad, 20:xbox360
-// enable only one US2/US3/US4 (currently only US2 supported)
-parameter C_display="SSD1331", // "SSD1331", "ST7789"
-parameter C_us2=1,
-parameter C_us3=0,
-parameter C_us4=0
+parameter C_display="ST7789", // "SSD1331", "ST7789"
+// enable ports: 1:enabled, 0:disabled
+parameter C_us2=1, 
+parameter C_us3=1,
+parameter C_us4=1
 )
 (
 input wire clk_25mhz,
@@ -58,10 +36,10 @@ output wire oled_clk,
 output wire oled_mosi,
 output wire oled_dc,
 output wire oled_resn,
-/*
+
 inout wire [27:0] gp,
 inout wire [27:0] gn,
-*/
+
 input wire usb_fpga_dp,
 inout wire usb_fpga_bd_dp,
 inout wire usb_fpga_bd_dn,
@@ -71,44 +49,16 @@ output wire [3:0] gpdi_dp,
 output wire shutdown
 );
 
-// main clock input from 25MHz clock source
-// UART0 (FTDI USB slave serial)
-// FTDI additional signaling
-// UART1 (WiFi serial)
-// WiFi additional signaling
-// '0' will disable wifi by default
-// Onboard blinky
-// GPIO (some are shared with wifi and adc)
-// FPGA direct USB connector
-// differential or single-ended input
-// only for single-ended input
-// single ended bidirectional
-// pull up for slave, down for host mode
-
 // PMOD with US3 and US4
-// ULX3S pins up and flat cable: swap GP/GN and invert differential input
 // ULX3S direct or pins down and flat cable: don't swap GP/GN, normal differential input
-//  alias us3_fpga_bd_dp: std_logic is gn(25);
-//  alias us3_fpga_bd_dn: std_logic is gp(25);
-//  alias us4_fpga_bd_dp: std_logic is gn(24);
-//  alias us4_fpga_bd_dn: std_logic is gp(24);
-//  alias us4_fpga_pu_dp: std_logic is gn(23);
-//  alias us4_fpga_pu_dn: std_logic is gp(23);
-//  alias us3_fpga_pu_dp: std_logic is gn(22);
-//  alias us3_fpga_pu_dn: std_logic is gp(22);
-//  alias us3_fpga_n_dp: std_logic is gp(21); -- flat cable
-//  signal us3_fpga_dp: std_logic; -- flat cable
-//alias us3_fpga_dp: std_logic is gp(21); -- direct
-//  alias us4_fpga_n_dp: std_logic is gp(20); -- flat cable
-//  signal us4_fpga_dp: std_logic; -- flat cable
-//alias us4_fpga_dp: std_logic is gp(20); -- direct
+// ULX3S pins up and flat cable: swap GP/GN and invert differential input
 
 wire clk_125MHz, clk_25MHz; // video
 wire clk_48MHz, clk_6MHz; // usb
 wire clk_usb;  // 6 MHz USB1.0 or 48 MHz USB1.1
-wire [C_report_bytes*8-1:0] S_report;
-wire [127:0] S_oled;
-wire S_valid;
+wire [C_report_bytes*8-1:0] S_report[0:2];
+wire [255:0] S_oled;
+wire [2:0] S_valid;
 wire clk_pixel; wire clk_shift;  // 25,125 MHz
 wire [9:0] beam_x; wire [9:0] beam_rx; wire [9:0] beam_y;
 wire [15:0] color;
@@ -141,73 +91,91 @@ assign shutdown = 0;
       assign clk_usb = clk_48MHz;
   end
   endgenerate
-  //  G_us2: if C_us2=1 generate
-  assign usb_fpga_pu_dp = 1'b0;
-  assign usb_fpga_pu_dn = 1'b0;
-  usbh_host_hid
-  #(
-    .C_report_length(C_report_bytes),
-    .C_report_length_strict(0),
-    .C_usb_speed(C_usb_speed) // '0':Low-speed '1':Full-speed
-  )
-  us2_hid_host_inst
-  (
-    .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-    .bus_reset(~btn[0]),
-    .led(led), // debug output
-    .usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
-    //.usb_dif(usb_fpga_dp),
-    .usb_dp(usb_fpga_bd_dp),
-    .usb_dn(usb_fpga_bd_dn),
-    .hid_report(S_report),
-    .hid_valid(S_valid)
-  );
-  //  end generate; // US2
 
-  //  G_us3: if C_us3 generate
-  //  us3_fpga_pu_dp <= '0';
-  //  us3_fpga_pu_dn <= '0';
-  //  us3_fpga_dp <= not us3_fpga_n_dp; -- flat cable
-  //  us3_hid_host_inst: entity usbh_host_hid
-  //  generic map
-  //  (
-  //    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
-  //  )
-  //  port map
-  //  (
-  //    clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-  //    bus_reset => '0',
-  //    usb_dif => us3_fpga_dp,    -- usb/us3/us4
-  //    usb_dp  => us3_fpga_bd_dp, -- usb/us3/us4
-  //    usb_dn  => us3_fpga_bd_dn, -- usb/us3/us4
-  //    hid_report => S_report,
-  //    hid_valid => S_valid
-  //  );
-  //  end generate;
-  //  G_us4: if C_us4 generate
-  //  us4_fpga_pu_dp <= '0';
-  //  us4_fpga_pu_dn <= '0';
-  //  us4_fpga_dp <= not us4_fpga_n_dp; -- flat cable
-  //  us4_hid_host_inst: entity usbh_host_hid
-  //  generic map
-  //  (
-  //    C_usb_speed => C_usb_speed -- '0':Low-speed '1':Full-speed
-  //  )
-  //  port map
-  //  (
-  //    clk => clk_usb, -- 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-  //    bus_reset => '0',
-  //    usb_dif => us4_fpga_dp,    -- usb/us3/us4
-  //    usb_dp  => us4_fpga_bd_dp, -- usb/us3/us4
-  //    usb_dn  => us4_fpga_bd_dn, -- usb/us3/us4
-  //    hid_report => S_report,
-  //    hid_valid => S_valid
-  //  );
-  //  end generate;
+  generate
+    if(C_us2==1)
+    begin
+      assign usb_fpga_pu_dp = 1'b0;
+      assign usb_fpga_pu_dn = 1'b0;
+      usbh_host_hid
+      #(
+        .C_report_length(C_report_bytes),
+        .C_report_length_strict(0),
+        .C_usb_speed(C_usb_speed) // '0':Low-speed '1':Full-speed
+      )
+      us2_hid_host_inst
+      (
+        .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+        .bus_reset(~btn[0]),
+        .led(led), // debug output
+        //.usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
+        .usb_dif(usb_fpga_dp),
+        .usb_dp(usb_fpga_bd_dp),
+        .usb_dn(usb_fpga_bd_dn),
+        .hid_report(S_report[0]),
+        .hid_valid(S_valid[0])
+      );
+      always @(posedge clk_usb)
+        if(S_valid[0])
+          S_oled[63:0] <= S_report[0][63:0];
+    end
+  endgenerate // US2
 
-  always @(posedge clk_usb)
-    if(S_valid)
-      S_oled[127:0] <= S_report[127:0];
+  generate
+    if(C_us3==1)
+    begin
+      assign gp[23] = 1'b0; // pull down
+      assign gn[23] = 1'b0; // pull down
+      usbh_host_hid
+      #(
+        .C_report_length(C_report_bytes),
+        .C_report_length_strict(0),
+        .C_usb_speed(C_usb_speed) // '0':Low-speed '1':Full-speed
+      )
+      us3_hid_host_inst
+      (
+        .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+        .bus_reset(~btn[0]),
+        .led(), // debug output
+        .usb_dif(gp[21]),
+        .usb_dp(gp[25]),
+        .usb_dn(gn[25]),
+        .hid_report(S_report[1]),
+        .hid_valid(S_valid[1])
+      );
+      always @(posedge clk_usb)
+        if(S_valid[1])
+          S_oled[127:64] <= S_report[1][63:0];
+    end
+  endgenerate // US3
+
+  generate
+    if(C_us4==1)
+    begin
+      assign gp[22] = 1'b0; // pull down
+      assign gn[22] = 1'b0; // pull down
+      usbh_host_hid
+      #(
+        .C_report_length(C_report_bytes),
+        .C_report_length_strict(0),
+        .C_usb_speed(C_usb_speed) // '0':Low-speed '1':Full-speed
+      )
+      us4_hid_host_inst
+      (
+        .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
+        .bus_reset(~btn[0]),
+        .led(), // debug output
+        .usb_dif(gp[20]),
+        .usb_dp(gp[24]),
+        .usb_dn(gn[24]),
+        .hid_report(S_report[2]),
+        .hid_valid(S_valid[2])
+      );
+      always @(posedge clk_usb)
+        if(S_valid[2])
+          S_oled[191:128] <= S_report[2][63:0];
+    end
+  endgenerate // US3
 
   generate
   if(C_display == "SSD1331")
@@ -217,10 +185,12 @@ assign shutdown = 0;
   wire [15:0] disp_color;
   hex_decoder_v
   #(
-    .c_data_len(128),
+    .c_data_len($bits(S_oled)),
     .c_font_file("hex_font.mem"),
     .c_row_bits(4),
     .c_grid_6x8(1),
+    //.c_x_bits(7),
+    //.c_y_bits(6),
     .c_color_bits(16)
   )
   hex_decoder_oled_inst
@@ -264,10 +234,12 @@ assign shutdown = 0;
   wire [15:0] disp_color;
   hex_decoder_v
   #(
-    .c_data_len(128),
+    .c_data_len($bits(S_oled)),
     .c_font_file("hex_font.mem"),
     .c_row_bits(4),
     .c_grid_6x8(1),
+    //.c_x_bits(8),
+    //.c_y_bits(8),
     .c_color_bits(16)
   )
   hex_decoder_oled_inst
@@ -278,6 +250,7 @@ assign shutdown = 0;
     .y(disp_y[7:1]),
     .color(disp_color)
   );
+  wire spi_csn;
   lcd_video
   #(
     .c_init_file("st7789_linit_xflip.mem"),
@@ -291,25 +264,26 @@ assign shutdown = 0;
     .x(disp_x),
     .y(disp_y),
     .color(disp_color),
-    .spi_csn(oled_csn),
+    .spi_csn(spi_csn),
     .spi_clk(oled_clk),
     .spi_mosi(oled_mosi),
     .spi_dc(oled_dc),
     .spi_resn(oled_resn)
   );
   end
+  assign oled_csn = spi_csn | ~btn[1];
   endgenerate
 
   assign beam_rx = 636 - beam_x;
   // HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
   hex_decoder_v
   #(
-    .c_data_len(128),
+    .c_data_len($bits(S_oled)),
     .c_row_bits(4), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256
     .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
     .c_x_bits(8),
-    .c_y_bits(4),
+    .c_y_bits(5),
     .c_color_bits(16)
   )
   hex_decoder_dvi_instance
@@ -317,7 +291,7 @@ assign shutdown = 0;
     .clk(clk_pixel),
     .data(S_oled),
     .x(beam_rx[9:2]),
-    .y(beam_y[5:2]),
+    .y(beam_y[6:2]),
     .color(color)
   );
 
