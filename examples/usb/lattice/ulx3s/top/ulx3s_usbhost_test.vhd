@@ -16,9 +16,9 @@ entity ulx3s_usbhost_test is
     C_usb_speed: std_logic := '0'; -- 0:6 MHz 1:48 MHz
     C_report_length_strict: std_logic := '0'; -- require exact report length
     -- enable only one US2/US3/US4
-    C_us2: boolean := true;  -- onboard micro USB with OTG adapter
-    C_us3: boolean := false; -- PMOD US3 at GP,GN 25,22,21
-    C_us4: boolean := false  -- PMOD US4 at GP,GN 24,23,20
+    C_us2: boolean := true; -- onboard micro USB with OTG adapter
+    C_us3: boolean := true; -- PMOD US3 at GP,GN 25,22,21
+    C_us4: boolean := true  -- PMOD US4 at GP,GN 24,23,20
   );
   port
   (
@@ -112,10 +112,9 @@ architecture Behavioral of ulx3s_usbhost_test is
   signal S_rxd: std_logic;
   signal S_rxdp, S_rxdn: std_logic;
   signal S_txdp, S_txdn, S_txoe: std_logic;
-  signal S_report: std_logic_vector(C_report_length*8-1 downto 0);
-  signal S_oled: std_logic_vector(63 downto 0);
-  signal S_valid: std_logic;
-  signal R_byte0: std_logic_vector(7 downto 0);
+  signal S_report0, S_report1, S_report2: std_logic_vector(C_report_length*8-1 downto 0);
+  signal S_valid: std_logic_vector(2 downto 0);
+  signal S_disp: std_logic_vector(255 downto 0);
   signal clk_pixel, clk_shift: std_logic; -- 25,125 MHz
   signal beam_x, beam_rx, beam_y: std_logic_vector(9 downto 0);
   signal color: std_logic_vector(15 downto 0);
@@ -208,9 +207,17 @@ begin
     usb_dif => usb_fpga_dp,    -- usb/us3/us4
     usb_dp  => usb_fpga_bd_dp, -- usb/us3/us4
     usb_dn  => usb_fpga_bd_dn, -- usb/us3/us4
-    hid_report => S_report,
-    hid_valid => S_valid
+    hid_report => S_report0,
+    hid_valid => S_valid(0)
   );
+  process(clk_usb)
+  begin
+    if rising_edge(clk_usb) then
+      if S_valid(0) = '1' then
+        S_disp(63 downto 0) <= S_report0(63 downto 0);
+      end if;
+    end if;
+  end process;
   end generate;
 
   G_us3: if C_us3 generate
@@ -230,9 +237,17 @@ begin
     usb_dif => us3_fpga_dp,    -- usb/us3/us4
     usb_dp  => us3_fpga_bd_dp, -- usb/us3/us4
     usb_dn  => us3_fpga_bd_dn, -- usb/us3/us4
-    hid_report => S_report,
-    hid_valid => S_valid
+    hid_report => S_report1,
+    hid_valid => S_valid(1)
   );
+  process(clk_usb)
+  begin
+    if rising_edge(clk_usb) then
+      if S_valid(1) = '1' then
+        S_disp(127 downto 64) <= S_report1(63 downto 0);
+      end if;
+    end if;
+  end process;
   end generate;
 
   G_us4: if C_us4 generate
@@ -252,30 +267,30 @@ begin
     usb_dif => us4_fpga_dp,    -- usb/us3/us4
     usb_dp  => us4_fpga_bd_dp, -- usb/us3/us4
     usb_dn  => us4_fpga_bd_dn, -- usb/us3/us4
-    hid_report => S_report,
-    hid_valid => S_valid
+    hid_report => S_report2,
+    hid_valid => S_valid(2)
   );
-  end generate;
-
   process(clk_usb)
   begin
     if rising_edge(clk_usb) then
-      if S_valid = '1' then
-        S_oled <= S_report(S_oled'range);
+      if S_valid(2) = '1' then
+        S_disp(191 downto 128) <= S_report2(63 downto 0);
       end if;
     end if;
   end process;
+  end generate;
+
 
   oled_inst: entity work.oled_hex_decoder
   generic map
   (
-    C_data_len => S_oled'length
+    C_data_len => S_disp'length
   )
   port map
   (
     clk => clk_6MHz,
     en => '1',
-    data => S_oled(63 downto 0),
+    data => S_disp,
     spi_resn => oled_resn,
     spi_clk => oled_clk,
     spi_csn => oled_csn,
@@ -283,33 +298,24 @@ begin
     spi_mosi => oled_mosi
   );
   
-  process(clk_6MHz)
-  begin
-    if rising_edge(clk_6MHz) then
-      if S_valid = '1' then
-        R_byte0 <= S_oled(7 downto 0);
-      end if;
-    end if;
-  end process;
-  --led <= R_byte0; -- report byte0 contains logitech mouse BTN state or keyboard SHIFT state
   beam_rx <= 636-beam_x; -- HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
   hex_decoder_instance: entity work.hex_decoder
   generic map
   (
-    c_data_len   => S_oled'length,
-    c_row_bits   => 5 , -- 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
+    c_data_len   => S_disp'length,
+    c_row_bits   => 4 , -- 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
     c_grid_6x8   => 1,  -- NOTE: TRELLIS needs -abc9 option to compile
     c_font_file  => "hex_font.mem",
     c_x_bits     => 8,
-    c_y_bits     => 4,
+    c_y_bits     => 5,
     c_color_bits => 16
   )
   port map
   (
     clk   => clk_pixel,
-    data  => S_oled,
+    data  => S_disp,
     x     => beam_rx(9 downto 2),
-    y     => beam_y(5 downto 2),
+    y     => beam_y(6 downto 2),
     color => color
   );
 
