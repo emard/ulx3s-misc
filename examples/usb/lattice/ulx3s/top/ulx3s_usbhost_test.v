@@ -6,6 +6,7 @@ module ulx3s_usbhost_test
 parameter C_usb_speed=1'b0, // 0:6 MHz USB1.0, 1:48 MHz USB1.1
 parameter C_report_bytes = 20, // 8:usual gamepad, 20:xbox360
 parameter C_display="ST7789", // "SSD1331", "ST7789"
+parameter C_disp_bits=256,
 // enable ports: 1:enabled, 0:disabled
 parameter C_us2=1, 
 parameter C_us3=1,
@@ -57,7 +58,7 @@ wire clk_125MHz, clk_25MHz; // video
 wire clk_48MHz, clk_6MHz; // usb
 wire clk_usb;  // 6 MHz USB1.0 or 48 MHz USB1.1
 wire [C_report_bytes*8-1:0] S_report[0:2];
-wire [255:0] S_oled;
+reg  [C_disp_bits-1:0] R_disp;
 wire [2:0] S_valid;
 wire clk_pixel; wire clk_shift;  // 25,125 MHz
 wire [9:0] beam_x; wire [9:0] beam_rx; wire [9:0] beam_y;
@@ -117,7 +118,7 @@ assign shutdown = 0;
       );
       always @(posedge clk_usb)
         if(S_valid[0])
-          S_oled[63:0] <= S_report[0][63:0];
+          R_disp[63:0] <= S_report[0][63:0];
     end
   endgenerate // US2
 
@@ -145,7 +146,7 @@ assign shutdown = 0;
       );
       always @(posedge clk_usb)
         if(S_valid[1])
-          S_oled[127:64] <= S_report[1][63:0];
+          R_disp[127:64] <= S_report[1][63:0];
     end
   endgenerate // US3
 
@@ -173,7 +174,7 @@ assign shutdown = 0;
       );
       always @(posedge clk_usb)
         if(S_valid[2])
-          S_oled[191:128] <= S_report[2][63:0];
+          R_disp[191:128] <= S_report[2][63:0];
     end
   endgenerate // US3
 
@@ -185,7 +186,7 @@ assign shutdown = 0;
   wire [15:0] disp_color;
   hex_decoder_v
   #(
-    .c_data_len($bits(S_oled)),
+    .c_data_len(C_disp_bits),
     .c_font_file("hex_font.mem"),
     .c_row_bits(4),
     .c_grid_6x8(1),
@@ -196,7 +197,7 @@ assign shutdown = 0;
   hex_decoder_oled_inst
   (
     .clk(clk_25MHz),
-    .data(S_oled),
+    .data(R_disp),
     .x(disp_x),
     .y(disp_y),
     .color(disp_color)
@@ -234,7 +235,7 @@ assign shutdown = 0;
   wire [15:0] disp_color;
   hex_decoder_v
   #(
-    .c_data_len($bits(S_oled)),
+    .c_data_len(C_disp_bits),
     .c_font_file("hex_font.mem"),
     .c_row_bits(4),
     .c_grid_6x8(1),
@@ -245,7 +246,7 @@ assign shutdown = 0;
   hex_decoder_oled_inst
   (
     .clk(clk_125MHz),
-    .data(S_oled),
+    .data(R_disp),
     .x(disp_x[7:1]),
     .y(disp_y[7:1]),
     .color(disp_color)
@@ -270,15 +271,15 @@ assign shutdown = 0;
     .spi_dc(oled_dc),
     .spi_resn(oled_resn)
   );
-  end
   assign oled_csn = spi_csn | ~btn[1];
+  end
   endgenerate
 
   assign beam_rx = 636 - beam_x;
   // HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
   hex_decoder_v
   #(
-    .c_data_len($bits(S_oled)),
+    .c_data_len(C_disp_bits),
     .c_row_bits(4), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256
     .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
@@ -289,7 +290,7 @@ assign shutdown = 0;
   hex_decoder_dvi_instance
   (
     .clk(clk_pixel),
-    .data(S_oled),
+    .data(R_disp),
     .x(beam_rx[9:2]),
     .y(beam_y[6:2]),
     .color(color)
