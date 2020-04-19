@@ -18,7 +18,8 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../../../../../constraints/ulx3s_v20.lpf
+#CONSTRAINTS = ../../../../../../constraints/ulx3s_v20.lpf
+CONSTRAINTS = constraints/ulx3s_v20.lpf
 TOP_MODULE = top_hex_480x272
 TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
 
