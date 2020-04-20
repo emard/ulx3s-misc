@@ -44,6 +44,7 @@ module top_hex_480x272
 
     // *** begin ULX3S-TO-ADC CONNECTION PINOUT ***
     assign gn[27] = adc_reset;
+    assign gp[27] = adc_convstn;
     assign gp[26] = adc_rdn;
     assign gn[26] = adc_csn;
     assign gn[17] = 1'bz;
