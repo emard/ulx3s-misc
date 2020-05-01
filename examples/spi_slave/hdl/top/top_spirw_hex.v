@@ -45,6 +45,7 @@ module top_spirw_hex
     wire [7:0] ram_di, ram_do;
     spirw_slave_v
     #(
+//        .c_addr_bits(16),
         .c_sclk_capable_pin(1'b0)
     )
     spirw_slave_v_inst
@@ -78,11 +79,17 @@ module top_spirw_hex
     assign S_display[31:24] = ram[1];
     assign S_display[39:32] = ram[2];
     
-    wire [6:0] x;
-    wire [5:0] y;
+    wire [7:0] x;
+    wire [7:0] y;
     wire next_pixel;
-    wire [7:0] color;
 
+    parameter C_color_bits = 16; // 8 for ssd1331, 16 for st7789
+
+    wire [C_color_bits-1:0] color;
+
+    generate
+      if(0)
+      begin // ssd1331 only
     hex_decoder
     #(
         .C_data_len(C_display_bits),
@@ -101,7 +108,7 @@ module top_spirw_hex
 
     oled_video
     #(
-        .C_init_file("oled_init_xflip.mem")
+        .c_init_file("oled_init_xflip.mem")
     )
     oled_video_inst
     (
@@ -110,10 +117,68 @@ module top_spirw_hex
         .y(y),
         .next_pixel(next_pixel),
         .color(color),
-        .oled_csn(oled_csn),
-        .oled_clk(oled_clk),
-        .oled_mosi(oled_mosi),
-        .oled_dc(oled_dc),
-        .oled_resn(oled_resn)
+        .spi_csn(oled_csn),
+        .spi_clk(oled_clk),
+        .spi_mosi(oled_mosi),
+        .spi_dc(oled_dc),
+        .spi_resn(oled_resn)
     );
+      end
+      if(1)
+      begin // lcd st7789 universal, can drive others
+    hex_decoder_v
+    #(
+        .c_data_len(C_display_bits),
+        .c_row_bits(4),
+        .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
+        .c_font_file("hex_font.mem"),
+	.c_color_bits(C_color_bits)
+    )
+    hex_decoder_v_inst
+    (
+        .clk(clk),
+        //.en(1'b1),
+        .data(S_display),
+        .x(x[7:1]),
+        .y(y[7:1]),
+        //.next_pixel(next_pixel),
+        .color(color)
+    );
+
+    // allow large combinatorial logic
+    // to calculate color(x,y)
+    wire next_pixel;
+    reg [C_color_bits-1:0] R_color;
+    always @(posedge clk)
+      //if(next_pixel)
+        R_color <= color;
+
+    wire w_oled_csn;
+    lcd_video
+    #(
+        .c_clk_mhz(12),
+        .c_init_file("st7789_linit_xflip.mem"),
+        .c_clk_phase(0),
+        .c_clk_polarity(1),
+        .c_init_size(38)
+    )
+    lcd_video_inst
+    (
+        .clk(clk),
+        .reset(~btn[0]),
+        .x(x),
+        .y(y),
+        .next_pixel(next_pixel),
+        .color(R_color),
+        .spi_clk(oled_clk),
+        .spi_mosi(oled_mosi),
+        .spi_dc(oled_dc),
+        .spi_resn(oled_resn),
+        .spi_csn(w_oled_csn)
+    );
+    assign oled_csn = w_oled_csn | btn[1]; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
+
+      end
+    endgenerate
+
 endmodule

@@ -29,12 +29,15 @@ TOP_MODULE_FILE = ../../../spi_slave/hdl/top/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../spi_slave/hdl/spirw_slave_v.v \
+  ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v \
+  ../../../hex/decoder/hex_decoder_v.v \
   ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
   ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v \
   ../../../oled/hdl/ssd1331_term_verilog/pll.v \
 
 VHDL_FILES = \
-  ../../../spi_slave/hdl/spirw_slave.vhd
+  ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video_vhd.vhd \
+  ../../../spi_slave/hdl/spirw_slave.vhd \
 
 SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/trellis_path.mk
