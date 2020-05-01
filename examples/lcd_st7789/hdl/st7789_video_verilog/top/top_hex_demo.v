@@ -91,7 +91,7 @@ module top_hex_demo
         .spi_mosi(oled_mosi),
         .spi_dc(oled_dc),
         .spi_resn(oled_resn),
-        .spi_csn(w_oled_csn),
+        .spi_csn(w_oled_csn)
     );
     assign oled_csn = w_oled_csn | btn[1]; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
 
