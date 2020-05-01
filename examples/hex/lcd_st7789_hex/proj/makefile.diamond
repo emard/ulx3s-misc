@@ -49,6 +49,8 @@ VERILOG_FILES = \
 
 VHDL_FILES = \
   ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video_vhd.vhd \
+  ../../../hex/decoder/hex_decoder.vhd \
+
 
 SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/trellis_path.mk
