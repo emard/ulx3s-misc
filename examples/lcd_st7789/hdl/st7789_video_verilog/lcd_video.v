@@ -33,7 +33,7 @@ module lcd_video #(
   output reg  next_pixel, // 1 when x/y changes
 
   output wire spi_csn,
-  output wire spi_clk, // for SSD1331 invert spi_clk
+  output wire spi_clk,
   output wire spi_mosi,
   output wire spi_dc,
   output wire spi_resn
