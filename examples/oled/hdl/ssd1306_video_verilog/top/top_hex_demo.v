@@ -4,13 +4,13 @@ module top_hex_demo
     input  wire [6:0] btn,
     output wire [7:0] led,
     inout  wire [27:0] gp, gn,
-    /*
+
     output wire oled_csn,
     output wire oled_clk,
     output wire oled_mosi,
     output wire oled_dc,
     output wire oled_resn,
-    */
+
     output wire wifi_gpio0
 );
     assign wifi_gpio0 = btn[0];
@@ -52,12 +52,13 @@ module top_hex_demo
 
 // we can use either lcd or oled video driver
 // oled driver core and init is shorter
+wire spi_clk,spi_mosi,spi_csn,spi_dc;
 generate
-if(0)  // driver type 0-oled 1-lcd (both should work)
+if(1)  // driver type 0-oled 1-lcd (both should work)
 begin
     lcd_video
     #(
-        .c_init_file("ssd1306_linit_xflip.mem"),
+        .c_init_file("ssd1306_linit_yflip.mem"),
         .c_init_size(64),
         .c_reset_us(1000),
         .c_clk_phase(0),
@@ -73,10 +74,10 @@ begin
         .x(x),
         .y(y),
         .color(color),
-        .spi_clk(gp[0]),
-        .spi_mosi(gp[1]),
-        .spi_csn(gp[2]),
-        .spi_dc(gp[3])
+        .spi_clk(spi_clk),
+        .spi_mosi(spi_mosi),
+        .spi_csn(spi_csn),
+        .spi_dc(spi_dc)
     );
 end
 else
@@ -96,12 +97,24 @@ begin
         .x(x),
         .y(y),
         .color({color,1'b0}), // expand 7 to 8 bits
-        .spi_clk(gp[0]),
-        .spi_mosi(gp[1]),
-        .spi_csn(gp[2]),
-        .spi_dc(gp[3])
+        .spi_clk(spi_clk),
+        .spi_mosi(spi_mosi),
+        .spi_csn(spi_csn),
+        .spi_dc(spi_dc)
     );
 end
 endgenerate
+
+assign oled_clk  = spi_clk;
+assign oled_mosi = spi_mosi;
+assign oled_csn  = spi_csn;
+assign oled_dc   = spi_dc;
+assign oled_res  = btn[1];
+
+assign gp[0] = spi_clk;
+assign gp[1] = spi_mosi;
+assign gp[2] = spi_csn;
+assign gp[3] = spi_dc;
+
 
 endmodule
