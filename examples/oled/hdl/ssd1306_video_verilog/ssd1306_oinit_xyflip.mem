@@ -1,90 +1,57 @@
-// init for SSD1306 OLED amd lcd_video.v
+// SSD1306 init for oled-only driver, UNTESTED
+// same sequence is for spi and i2c
 // This file must be in the directory from where
 // the verilog compiler is running.
 // The path to this file is not relative to the
 // verilog source that needs to include this file.
 // Use symlink (ln -s orig copy) or copy (cp orig copy).
-// 64 bytes follow:
-// after reset, delay 2^10 us = 1ms before sending commands
-80
-0A
+// 31 bytes follow:
 // SSD1306_DISPLAYOFF
 AE
-00
 // SSD1306_SETDISPLAYCLOCKDIV
 D5
-00
 F0
-00
 // SSD1306_SETMULTIPLEX
 A8
-00
 3F
-00
 // SSD1306_SETDISPLAYOFFSET
 D3
 00
-00
-00
 // SSD1306_SETSTARTLINE
 40
-00
 // SSD1306_CHARGEPUMP
 8D
-00
 14
-00
 // SSD1306_MEMORYMODE
 20
 00
-00
-00
 // SSD1306_SEGREMAP A0/A1
 A0
-00
-// SSD1306_COMSCANINC C0/C8
-C8
-00
+// SSD1306_COMSCANDEC C0/C8
+C0
 // SSD1306_SETCOMPINS
 DA
-00
 12
-00
 // SSD1306_SETCONTRAST
 81
-00
 CF
-00
 // SSD1306_SETPRECHARGE
 D9
-00
 F1
-00
 // SSD1306_SETVCOMDESELECT
 D8
-00
 40
-00
 // SSD1306_DISPLAYALLON_RESUME
 A4
-00
 // SSD1306_NORMALDISPLAY
 A6
-00
 // SSD1306_DISPLAYON
 AF
-00
 // set column address
 21
 00
-00
-00
 7F
-00
 // set page address
 22
 00
-00
-00
 07
-00

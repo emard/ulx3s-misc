@@ -58,7 +58,7 @@ if(1)  // driver type 0-oled 1-lcd (both should work)
 begin
     lcd_video
     #(
-        .c_init_file("ssd1306_linit_yflip.mem"),
+        .c_init_file("ssd1306_linit_xflip.mem"),
         .c_init_size(64),
         .c_reset_us(1000),
         .c_clk_phase(0),
