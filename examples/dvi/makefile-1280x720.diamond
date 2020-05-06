@@ -11,7 +11,7 @@ FLASH_SPI = 4
 FLASH_CHIP = is25lp128f
 
 # ******* design files *******
-CONSTRAINTS = ../../constraints/ulx3s_v20_segpdi.lpf
+CONSTRAINTS = ../../constraints/ulx3s_v20_extgpdi.lpf
 TOP_MODULE = top_vgatest_1280x720
 TOP_MODULE_FILE = hdl/$(TOP_MODULE).v
 

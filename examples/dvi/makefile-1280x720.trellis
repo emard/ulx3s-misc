@@ -5,7 +5,7 @@ BOARD = ulx3s
 FPGA_SIZE = 12
 
 # ******* design files *******
-CONSTRAINTS = ../../constraints/ulx3s_v20_segpdi.lpf
+CONSTRAINTS = ../../constraints/ulx3s_v20_extgpdi.lpf
 TOP_MODULE = top_vgatest_1280x720
 TOP_MODULE_FILE = hdl/$(TOP_MODULE).v
 
