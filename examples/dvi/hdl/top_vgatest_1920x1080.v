@@ -1,10 +1,11 @@
 module top_vgatest_1920x1080
 (
-  input clk_25mhz,
-  input [6:0] btn,
-  output [7:0] led,
-  output [3:0] gpdi_dp, gpdi_dn,
-  output wifi_gpio0
+  input         clk_25mhz,
+  input   [6:0] btn,
+  output  [7:0] led,
+  output  [3:0] gpdi_dp,
+  output [27:0] gp,
+  output        wifi_gpio0
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
 
@@ -95,6 +96,7 @@ module top_vgatest_1920x1080
     );
 
     // output TMDS SDR/DDR data to fake differential lanes
+    /*
     fake_differential
     #(
       .C_ddr(C_ddr)
@@ -109,5 +111,21 @@ module top_vgatest_1920x1080
       .out_p(gpdi_dp),
       .out_n(gpdi_dn)
     );
+    */
+
+  // vendor specific DDR modules
+  // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
+  // onboard GPDI
+
+  ODDRX1F ddr0_clock (.D0(tmds[3][0]), .D1(tmds[3][1]), .Q(gpdi_dp[3]), .SCLK(clk_shift), .RST(0));
+  ODDRX1F ddr0_red   (.D0(tmds[2][0]), .D1(tmds[2][1]), .Q(gpdi_dp[2]), .SCLK(clk_shift), .RST(0));
+  ODDRX1F ddr0_green (.D0(tmds[1][0]), .D1(tmds[1][1]), .Q(gpdi_dp[1]), .SCLK(clk_shift), .RST(0));
+  ODDRX1F ddr0_blue  (.D0(tmds[0][0]), .D1(tmds[0][1]), .Q(gpdi_dp[0]), .SCLK(clk_shift), .RST(0));
+
+  // external GPDI
+  ODDRX1F ddr1_clock (.D0(tmds[3][0]), .D1(tmds[3][1]), .Q(gp[12]), .SCLK(clk_shift), .RST(0));
+  ODDRX1F ddr1_red   (.D0(tmds[2][0]), .D1(tmds[2][1]), .Q(gp[11]), .SCLK(clk_shift), .RST(0));
+  ODDRX1F ddr1_green (.D0(tmds[1][0]), .D1(tmds[1][1]), .Q(gp[10]), .SCLK(clk_shift), .RST(0));
+  ODDRX1F ddr1_blue  (.D0(tmds[0][0]), .D1(tmds[0][1]), .Q(gp[ 9]), .SCLK(clk_shift), .RST(0));
 
 endmodule

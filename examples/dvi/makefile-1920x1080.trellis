@@ -17,7 +17,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../constraints/ulx3s_v20_segpdi.lpf
+CONSTRAINTS = ../../constraints/ulx3s_v20_extgpdi.lpf
 TOP_MODULE = top_vgatest_1920x1080
 TOP_MODULE_FILE = hdl/$(TOP_MODULE).v
 
@@ -45,7 +45,7 @@ VHDL_FILES = \
   hdl/tmds_encoder.vhd
 
 # synthesis options
-#YOSYS_OPTIONS = -noccu2
+YOSYS_OPTIONS = -abc9
 NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../scripts
