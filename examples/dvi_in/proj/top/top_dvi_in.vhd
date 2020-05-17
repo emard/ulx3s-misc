@@ -145,11 +145,6 @@ begin
              edid_debug => open
     );
     
-    --gpdi_dp(3) <= fin_clock(0);
-    gpdi_dp(2) <= fin_red(0);
-    --gpdi_dp(1) <= fin_green(0);
-    --gpdi_dp(0) <= fin_blue(0);
-
     -- deserialize tmds_p to parallel 10-bit
     -- clk_pixel and clk_shift must be phase aligned with tmds_p(3) clock
     tmds_deserializer_inst: entity work.tmds_deserializer
@@ -170,7 +165,7 @@ begin
       clk_x5 => clk_shift,
       reset => '0',
       data => des_red,
-      serial => open -- gpdi_dp(2)
+      serial => gpdi_dp(2)
     );
 
     tmds_serializer_green_inst: entity work.serialiser_10_to_1
@@ -228,7 +223,7 @@ begin
       out_clock => fin_clock
     );
     --gpdi_dp(3) <= fin_clock(0);
-    gpdi_dp(2) <= fin_red(0);
+    --gpdi_dp(2) <= fin_red(0);
     --gpdi_dp(1) <= fin_green(0);
     --gpdi_dp(0) <= fin_blue(0);
 
