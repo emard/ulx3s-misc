@@ -41,26 +41,15 @@ Port
 end;
 
 architecture Behavioral of top_dvi_in is
-    component ILVDS
-      port (A, AN: in std_logic; Z: out std_logic);
-    end component;
-
-    signal clk_100, locked, locked1 : std_logic;
-    signal clk_250, clk_125, clk_25: std_logic; -- to video generator
+    signal clk_100, locked: std_logic;
     signal clk_pixel, clk_shift: std_logic;
-    signal debug, blink : std_logic_vector(7 downto 0);
+    signal reset_pll, reset_pll_blink: std_logic;
     signal reset: std_logic;
-    signal rec_blank, rec_hsync, rec_vsync, test_blank, test_hsync, test_vsync: std_logic;
-    signal rec_red, rec_green, rec_blue, test_red, test_green, test_blue: std_logic_vector(7 downto 0);
-    signal outp_red, outp_green, outp_blue: std_logic_vector(9 downto 0); -- TMDS encoded 10-bit
+    signal phasesel: std_logic_vector(1 downto 0);
     signal des_red, des_green, des_blue: std_logic_vector(9 downto 0); -- deserialized 10-bit TMDS
-    signal rdes_red, rdes_green, rdes_blue: std_logic_vector(9 downto 0); -- deserialized 10-bit TMDS
     signal vga_red, vga_green, vga_blue: std_logic_vector(7 downto 0); -- 8-bit RGB color decoded
-    signal rvga_red, rvga_green, rvga_blue: std_logic_vector(7 downto 0); -- 8-bit RGB color decoded
     signal vga_hsync, vga_vsync, vga_blank: std_logic; -- frame control
     signal fin_clock, fin_red, fin_green, fin_blue: std_logic_vector(1 downto 0); -- VGA back to final TMDS
-    signal tmds_p, tmds_n: std_logic_vector(3 downto 0); -- internally generated TMDS
-    signal reset_pll,reset_pll_blink: std_logic;
 begin
   --  led <= rec_red;
     wifi_gpio0 <= btn(0);
@@ -82,14 +71,21 @@ begin
     clk_video_inst: entity work.clk_25_dvi_in_vhd
     port map
     (
-      clki      => gpa(12), -- take tmds clock as input
-      --clki      => clk_25mhz, -- onobard clock
-      clk_sys   => clk_100,
-      clk_pixel => clk_pixel,
-      clk_shift => clk_shift,
-      locked    => locked,
-      reset     => reset_pll
+      clki         => gpa(12), -- take tmds clock as input
+      --clki       => clk_25mhz, -- onobard clock
+      clk_sys      => clk_100,
+      clk_pixel    => clk_pixel,
+      clk_shift    => clk_shift,
+      phasesel     => phasesel,   -- output2 "10"-clk_pixel, output1 "01"-clk_shift
+      phasedir     => '0',
+      phasestep    => btn(1), -- need debounce
+      phaseloadreg => btn(2), -- need debounce
+      locked       => locked,
+      reset        => reset_pll
     );
+    
+    -- hold btn3 for fine selection
+    phasesel <= "01" when btn(3)='1' else "10";
 
     -- Used for reseting PLL block
     blink_clock_recovery_inst: entity work.blink
@@ -119,26 +115,26 @@ begin
     led(7) <= locked;
     led(5) <= '0';
     -- H-V sync ready for output
-    led(4) <= rec_hsync;
-    led(3) <= rec_vsync;
+    led(4) <= vga_hsync;
+    led(3) <= vga_vsync;
     -- blue color data
-    led(2 downto 0) <= rec_blue(2 downto 0);
+    led(2 downto 0) <= vga_blue(2 downto 0);
 
     -- Output to VGA PMOD - UPPER LEFT 
-    gnb(0) <= rec_vsync;
-    gpb(0) <= rec_hsync;
-    gnb(1) <= rec_red(7);
-    gpb(1) <= rec_red(6);
-    gnb(2) <= rec_red(5);
-    gpb(2) <= rec_green(7);
-    gnb(3) <= rec_green(6);
-    gpb(3) <= rec_green(5);
-    gnb(4) <= rec_blue(7);
-    gpb(4) <= rec_blue(6);
-    gnb(5) <= rec_blue(5);
-    gpb(5) <= rec_red(4);
-    gnb(6) <= rec_green(4);
-    gpb(6) <= rec_blue(4);
+    gnb(0) <= vga_vsync;
+    gpb(0) <= vga_hsync;
+    gnb(1) <= vga_red(7);
+    gpb(1) <= vga_red(6);
+    gnb(2) <= vga_red(5);
+    gpb(2) <= vga_green(7);
+    gnb(3) <= vga_green(6);
+    gpb(3) <= vga_green(5);
+    gnb(4) <= vga_blue(7);
+    gpb(4) <= vga_blue(6);
+    gnb(5) <= vga_blue(5);
+    gpb(5) <= vga_red(4);
+    gnb(6) <= vga_green(4);
+    gpb(6) <= vga_blue(4);
 
     i_edid_rom: entity work.edid_rom
     port map

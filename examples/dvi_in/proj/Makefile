@@ -33,9 +33,14 @@ CLK0_OPTIONS = \
   --clkin_name=clki         --clkin=25    \
   --clkout0_name=clk_shift0 --clkout0=250 \
   --clkout1_name=clk_shift  --clkout1=250  --phase1=0 \
-  --clkout2_name=clk_pixel  --clkout2=25   --phase2=90 \
+  --clkout2_name=clk_pixel  --clkout2=25   --phase2=0 \
   --clkout3_name=clk_sys    --clkout3=100 \
-  --reset
+  --reset --dynamic
+
+# phase2 0 15 30 60 90 some picture bad R
+# phase2 120 150 no picture
+# phase2 180 210 240 270 some picture bad R
+# phase2 300 330 no picture
 
 VERILOG_FILES = \
   $(CLK0_FILE_NAME) \
