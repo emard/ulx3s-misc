@@ -2,13 +2,13 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
--- LED7 clock lock
--- LED6 clock present should blink
--- LED5 hsync should pwm light 1/4 intensity
--- LED4 vsync should pwm light very dim
--- LED2 red   delay end of range
--- LED1 green delay end of range
--- LED0 blue  delay end of range
+-- LED7 GPDI clock lock (should be ON constantly)
+-- LED6 GPDI clock present (should blink)
+-- LED5 hsync should pwm light fast, 1/4 intensity
+-- LED4 vsync should pwm light 60Hz, very dim
+-- LED2 red   delay end of range (initially OFF)
+-- LED1 green delay end of range (intiially OFF)
+-- LED0 blue  delay end of range (initially OFF)
 
 -- if hsync/vsync are not as above,
 -- BTN1 delay direction (hold like shift key)
@@ -17,6 +17,11 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 -- BTN5 green delay
 -- BTN6 blue delay, press several times until hsync/vsync LEDs light properly
 
+-- pressing BTN4-6 without BTN1 increases delay,
+-- it is equivalent to PLL phase in positive direction
+-- pressing BTN4-6 with BTN1 decreases delay
+-- it is equivalent to PLL phase in negative direction
+-- full range of delay covers PLL phase range of about 100 deg
 
 library ecp5u;
 use ecp5u.components.all;
