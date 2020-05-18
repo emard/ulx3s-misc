@@ -65,6 +65,7 @@ architecture Behavioral of top_dvi_in is
     signal reset_pll, reset_pll_blink: std_logic;
     signal reset: std_logic;
     signal phasesel: std_logic_vector(1 downto 0);
+    signal input_delayed: std_logic_vector(3 downto 0);
     signal tmds_c_i, tmds_r_i, tmds_g_i, tmds_b_i : std_logic_vector(c_bits-1 downto 0);
     signal tmds_c_o, tmds_r_o, tmds_g_o, tmds_b_o : std_logic_vector(c_bits-1 downto 0);
     signal des_red, des_green, des_blue: std_logic_vector(9 downto 0); -- deserialized 10-bit TMDS
@@ -99,7 +100,7 @@ begin
       clk_shift    => clk_shift,
       phasesel     => phasesel,   -- output2 "10"-clk_pixel, output1 "01"-clk_shift
       phasedir     => '0',
-      phasestep    => btn(1), -- need debounce
+      phasestep    => '0',    -- need debounce
       phaseloadreg => btn(2), -- need debounce
       locked       => locked,
       reset        => reset_pll
@@ -134,12 +135,11 @@ begin
 
     -- PLL locked if on
     led(7) <= locked;
-    led(5) <= '0';
     -- H-V sync ready for output
-    led(4) <= vga_hsync;
-    led(3) <= vga_vsync;
+    led(5) <= vga_hsync;
+    led(4) <= vga_vsync;
     -- blue color data
-    led(2 downto 0) <= vga_blue(2 downto 0);
+    --led(2 downto 0) <= vga_blue(2 downto 0);
 
     g_vga_out: if c_vga_out = 1 generate
       -- Output to VGA PMOD - UPPER LEFT 
@@ -167,23 +167,32 @@ begin
              sdat_raw   => gpb(8),
              edid_debug => open
     );
-    
+
+    -- BTN:
+    -- DIR RESET       CLK
+    --           GREEN RED BLUE
+    g_delay: for i in 0 to 2 generate
+      input_delay : DELAYF
+      port map (A => gpa(9+i), Z => input_delayed(i), LOADN => not btn(2), MOVE => btn(6-i), DIRECTION => btn(1), CFLAG => led(i));
+    end generate;
+    input_delayed(3) <= gpa(12); -- no delay for clock. PLL controls phase shift instead of delay
+
     g_sdr_in: if c_bits = 1 generate
-      tmds_c_i(0) <= gpa(12);
-      tmds_r_i(0) <= gpa(11);
-      tmds_g_i(0) <= gpa(10);
-      tmds_b_i(0) <= gpa(9);
+      tmds_c_i(0) <= input_delayed(3);
+      tmds_r_i(0) <= input_delayed(2);
+      tmds_g_i(0) <= input_delayed(1);
+      tmds_b_i(0) <= input_delayed(0);
     end generate;
 
     g_ddr_in: if c_bits = 2 generate
     input_clock : IDDRX1F
-    port map (D => gpa(12), Q0 => tmds_c_i(0), Q1 => tmds_c_i(1), SCLK => clk_shift, RST => '0');
+    port map (D => input_delayed(3), Q0 => tmds_c_i(0), Q1 => tmds_c_i(1), SCLK => clk_shift, RST => '0');
     input_red   : IDDRX1F
-    port map (D => gpa(11), Q0 => tmds_r_i(0), Q1 => tmds_r_i(1), SCLK => clk_shift, RST => '0');
+    port map (D => input_delayed(2), Q0 => tmds_r_i(0), Q1 => tmds_r_i(1), SCLK => clk_shift, RST => '0');
     input_green : IDDRX1F
-    port map (D => gpa(10), Q0 => tmds_g_i(0), Q1 => tmds_g_i(1), SCLK => clk_shift, RST => '0');
+    port map (D => input_delayed(1), Q0 => tmds_g_i(0), Q1 => tmds_g_i(1), SCLK => clk_shift, RST => '0');
     input_blue  : IDDRX1F
-    port map (D => gpa(9),  Q0 => tmds_b_i(0), Q1 => tmds_b_i(1), SCLK => clk_shift, RST => '0');
+    port map (D => input_delayed(0), Q0 => tmds_b_i(0), Q1 => tmds_b_i(1), SCLK => clk_shift, RST => '0');
     end generate;
 
     -- deserialize tmds_p to parallel 10-bit
