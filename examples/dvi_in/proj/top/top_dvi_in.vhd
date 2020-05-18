@@ -2,6 +2,22 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
+-- LED7 clock lock
+-- LED6 clock present should blink
+-- LED5 hsync should pwm light 1/4 intensity
+-- LED4 vsync should pwm light very dim
+-- LED2 red   delay end of range
+-- LED1 green delay end of range
+-- LED0 blue  delay end of range
+
+-- if hsync/vsync are not as above,
+-- BTN1 delay direction (hold like shift key)
+-- BTN2 delay reset
+-- BTN4 red delay
+-- BTN5 green delay
+-- BTN6 blue delay, press several times until hsync/vsync LEDs light properly
+
+
 library ecp5u;
 use ecp5u.components.all;
 
@@ -96,8 +112,8 @@ begin
       clki         => gpa(12), -- take tmds clock as input
       --clki       => clk_25mhz, -- onobard clock
       clk_sys      => clk_100,
-      clk_pixel    => clk_pixel,
-      clk_shift    => clk_shift,
+      clk_pixel    => clk_pixel,  --  25 MHz phase 60 deg
+      clk_shift    => clk_shift,  -- 125 MHz phase 60 deg
       phasesel     => phasesel,   -- output2 "10"-clk_pixel, output1 "01"-clk_shift
       phasedir     => '0',
       phasestep    => '0',    -- need debounce
