@@ -31,8 +31,8 @@ CLK0_FILE_NAME = ../../dvi/clocks/$(CLK0_NAME).v
 CLK0_OPTIONS = \
   --module=$(CLK0_NAME) \
   --clkin_name=clki         --clkin=25    \
-  --clkout0_name=clk_shift0 --clkout0=250 \
-  --clkout1_name=clk_shift  --clkout1=250  --phase1=0 \
+  --clkout0_name=clk_shift0 --clkout0=125 \
+  --clkout1_name=clk_shift  --clkout1=125  --phase1=0 \
   --clkout2_name=clk_pixel  --clkout2=25   --phase2=0 \
   --clkout3_name=clk_sys    --clkout3=100 \
   --reset --dynamic
@@ -52,6 +52,7 @@ VHDL_FILES = \
   ../hdl/edid_rom.vhd \
   ../hdl/tmds_deserializer.vhd \
   ../hdl/serialiser_10_to_1.vhd \
+  ../hdl/serialiser_10_to_x.vhd \
   ../hdl/dvi2vga.vhd \
   ../hdl/tmds_dekoder.vhd \
   ../../dvi/hdl/vga2dvid.vhd \
