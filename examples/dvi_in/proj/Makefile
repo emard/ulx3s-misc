@@ -37,8 +37,6 @@ CLK0_OPTIONS = \
   --clkout3_name=clk_sys    --clkout3=100 \
   --reset --dynamic
 
-VERILOG_FILES = \
-  $(CLK0_FILE_NAME) \
 
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
@@ -51,6 +49,13 @@ VHDL_FILES = \
   ../hdl/tmds_dekoder.vhd \
   ../../dvi/hdl/vga2dvid.vhd \
   ../../dvi/hdl/tmds_encoder.vhd \
+  ../../lcd_st7789/hdl/st7789_video_verilog/lcd_video_vhd.vhd \
+  ../../hex/decoder/hex_decoder.vhd \
+
+VERILOG_FILES = \
+  $(CLK0_FILE_NAME) \
+  ../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v \
+  ../../hex/decoder/hex_decoder_v.v \
 
 
 SCRIPTS = ../../../scripts

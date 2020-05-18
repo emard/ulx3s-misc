@@ -43,17 +43,23 @@ Port
   sw            : in    std_logic_vector(3 downto 0);
   btn           : in    std_logic_vector(6 downto 0);
         
-  wifi_gpio0: out  std_logic;
+  wifi_gpio0    : out  std_logic;
+
+  oled_csn,
+  oled_clk,
+  oled_mosi,
+  oled_dc,
+  oled_resn     : out std_logic;
 
   -- Digital Video monitor output
   -- picture to be analyzed will be displayed here
-  gpdi_dp, gpdi_dn: out std_logic_vector(3 downto 0);
+  gpdi_dp       : out std_logic_vector(3 downto 0);
 
   -- control lines as input with pullups to activate hotplug autodetection
   -- to enable hotplug, gpdi_ethn capacitor should be bypassed by 470 ohm resistor
   -- it's a C closest to the DIP switch
   gpdi_ethp, gpdi_ethn: inout std_logic;
-  gpdi_cec: in std_logic;
+  gpdi_cec      : in std_logic;
 
   -- i2c shared for digital video and RTC
   gpdi_scl: in std_logic;
@@ -95,12 +101,15 @@ architecture Behavioral of top_dvi_in is
     signal vga_red, vga_green, vga_blue: std_logic_vector(7 downto 0); -- 8-bit RGB color decoded
     signal vga_hsync, vga_vsync, vga_blank: std_logic; -- frame control
     signal fin_clock, fin_red, fin_green, fin_blue: std_logic_vector(1 downto 0); -- VGA back to final TMDS
+    signal R_btn_prev, R_btn_latch, R_btn: std_logic_vector(6 downto 0);
+    signal R_btn_debounce: std_logic_vector(19 downto 0);
+    signal S_delay_limit: std_logic_vector(3 downto 0);
 begin
   --  led <= rec_red;
-    wifi_gpio0 <= btn(0);
-    gpdi_ethn <= '1' when btn(0) = '1' else '0';
-    gn13 <= '1' when btn(0) = '1' else '0'; -- eth- hotplug
-    reset <= not btn(0);
+    wifi_gpio0 <= R_btn(0);
+    gpdi_ethn <= '1' when R_btn(0) = '1' else '0';
+    gn13 <= '1' when R_btn(0) = '1' else '0'; -- eth- hotplug
+    reset <= not R_btn(0);
 --  If pll is not locked connect blink to PLL block     
     reset_pll <= reset when locked = '1' else reset_pll_blink;
 
@@ -122,15 +131,15 @@ begin
       clk_pixel    => clk_pixel,  --  25 MHz phase 60 deg
       clk_shift    => clk_shift,  -- 125 MHz phase 60 deg
       phasesel     => phasesel,   -- output2 "10"-clk_pixel, output1 "01"-clk_shift
-      phasedir     => btn(1),
-      phasestep    => btn(3), -- need debounce
+      phasedir     => R_btn(1),
+      phasestep    => R_btn(3), -- need debounce
       phaseloadreg => '0',    -- need debounce
       locked       => locked,
       reset        => reset_pll
     );
     
     -- hold btn3 for fine selection
-    phasesel <= "01" when btn(2)='1' else "10";
+    phasesel <= "01" when R_btn(2)='1' else "10";
     --phasesel <= "10"; -- adjust clk_pixel
     --phasesel <= "01"; -- adjust clk_shift
 
@@ -193,12 +202,30 @@ begin
              edid_debug => open
     );
 
+    -- BTN tracker
+    process(clk_25mhz)
+    begin
+        if rising_edge(clk_25mhz) then
+          R_btn_latch <= btn;
+          if R_btn /= R_btn_latch and R_btn_debounce(R_btn_debounce'high) = '1' then
+            R_btn_debounce <= (others => '0');
+            R_btn <= R_btn_latch;
+          else
+            if R_btn_debounce(R_btn_debounce'high) = '0' then
+              R_btn_debounce <= R_btn_debounce + 1;
+            end if;
+          end if;
+          R_btn_prev <= R_btn;
+        end if;
+    end process;
+
     -- BTN:
     -- DIR RESET       CLK
     --           GREEN RED BLUE
     g_delay: for i in 0 to 2 generate
       input_delay : DELAYF
-      port map (A => gpa(9+i), Z => input_delayed(i), LOADN => btn(0), MOVE => btn(6-i), DIRECTION => btn(1), CFLAG => led(i));
+      port map (A => gpa(9+i), Z => input_delayed(i), LOADN => R_btn(0), MOVE => R_btn(6-i), DIRECTION => R_btn(1), CFLAG => S_delay_limit(i));
+      led(i) <= S_delay_limit(i);
     end generate;
     input_delayed(3) <= gpa(12); -- no delay for clock. PLL controls phase shift instead of delay
 
@@ -303,6 +330,124 @@ begin
       port map (D0 => tmds_b_o(0), D1 => tmds_b_o(1), Q => gpdi_dp(0), SCLK => clk_shift, RST => '0');
     end generate;
     end generate;
+    
+    b_hex_lcd: block
+      constant c_color_bits: natural := 16;
+      signal x,y: std_logic_vector(7 downto 0);
+      signal color, R_color: std_logic_vector(c_color_bits-1 downto 0);
+      signal R_display: std_logic_vector(127 downto 0);
+      signal w_oled_csn: std_logic;
+      signal next_pixel: std_logic;
+    begin
+      -- counter tracker for 3 DELAY lines
+      g_delay_tracker: for i in 0 to 2 generate
+      process(clk_25mhz)
+      begin
+        if rising_edge(clk_25mhz) then
+          if reset = '1' then
+            R_display(6+8*i downto 8*i) <= (others => '0');
+          else
+            if R_btn_prev /= R_btn then
+              if R_btn(6-i)='1' then
+                if R_btn(1)='1' then -- going reverse
+                  if S_delay_limit(i)='1' then
+                    R_display(6+8*i downto 8*i) <= (others => '0');
+                  else
+                    R_display(6+8*i downto 8*i) <= R_display(6+8*i downto 8*i)-1;
+                  end if;
+                else -- going forward
+                  if S_delay_limit(i)='1' then
+                    R_display(6+8*i downto 8*i) <= (others => '1');
+                  else
+                    R_display(6+8*i downto 8*i) <= R_display(6+8*i downto 8*i)+1;
+                  end if;
+                end if;
+              end if;
+            end if;
+          end if;
+        end if;
+      end process;
+      end generate;
+      -- counter tracker for 2 PLL channels
+      g_pll_tracker: for i in 0 to 1 generate
+      process(clk_25mhz)
+      begin
+        if rising_edge(clk_25mhz) then
+          if reset = '1' then
+            R_display(6+8*i+24 downto 8*i+24) <= (others => '0');
+          else
+            if R_btn_prev /= R_btn then
+              if R_btn(3)='1' and ((i=0 and R_btn(2)='0') or (i=1 and R_btn(2)='1')) then
+                if R_btn(1)='1' then -- going reverse
+                    R_display(6+8*i+24 downto 8*i+24) <= R_display(6+8*i+24 downto 8*i+24)-1;
+                else -- going forward
+                    R_display(6+8*i+24 downto 8*i+24) <= R_display(6+8*i+24 downto 8*i+24)+1;
+                end if;
+              end if;
+            end if;
+          end if;
+        end if;
+      end process;
+      end generate;
+    
+      hex_decoder_inst: entity work.hex_decoder
+      generic map
+      (
+        c_data_len   => 128,
+        c_row_bits   => 4,
+        c_grid_6x8   => 1,
+        c_font_file  => "hex_font.mem",
+        c_color_bits => c_color_bits
+      )
+      port map
+      (
+        clk  => clk_25mhz,
+        data => R_display,
+        x => x(7 downto 1),
+        y => y(7 downto 1),
+        color => color
+      );
+
+      -- allow large combinatorial logic
+      -- to calculate color(x,y)
+      process(clk_25mhz)
+      begin
+        if rising_edge(clk_25mhz) then
+          if next_pixel = '1' then
+            R_color <= color;
+          end if;
+        end if;
+      end process;
+      
+      lcd_video_inst: entity work.lcd_video_vhd
+      generic map
+      (
+        c_clk_mhz      => 25,
+        c_init_file    => "st7789_linit_xflip.mem",
+        c_init_size    => 38,
+        c_clk_phase    => 0,
+        c_clk_polarity => 1
+      )
+      port map
+      (
+        clk            => clk_25mhz,
+        clk_pixel_ena  => '1',
+        reset          => reset,
+        x              => x,
+        y              => y,
+        blank          => '0',
+        hsync          => '1',
+        vsync          => '1',
+        next_pixel     => next_pixel,
+        color          => R_color,
+        spi_clk        => oled_clk,
+        spi_mosi       => oled_mosi,
+        spi_dc         => oled_dc,
+        spi_resn       => oled_resn,
+        spi_csn        => w_oled_csn
+      );
+      oled_csn <= '1';
+    end block;
 
     -- parallel 10-bit TMDS to 8-bit RGB VGA converter
     dvi2vga_inst: entity work.dvi2vga
