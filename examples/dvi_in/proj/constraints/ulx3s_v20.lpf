@@ -3,11 +3,11 @@ BLOCK ASYNCPATHS;
 ## ULX3S v2.x.x and v3.0.x
 
 
-FREQUENCY PORT "clk_pixel" 25.000000 MHz ;
-USE PRIMARY PURE NET "clk_pixel";
-FREQUENCY PORT "clk_shift" 250.000000 MHz ;
-USE PRIMARY PURE NET "clk_shift";
-REGION "REGION_BLOCK" "R9C16D" 60 60 DEVSIZE;
+#FREQUENCY PORT "clk_pixel" 25.000000 MHz ;
+#USE PRIMARY PURE NET "clk_pixel";
+#FREQUENCY PORT "clk_shift" 250.000000 MHz ;
+#USE PRIMARY PURE NET "clk_shift";
+#REGION "REGION_BLOCK" "R9C16D" 60 60 DEVSIZE;
 
 # The clock "usb" and "gpdi" sheet
 LOCATE COMP "clk_25mhz" SITE "G2";
