@@ -11,8 +11,9 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 -- LED0 blue  delay end of range (initially OFF)
 
 -- if hsync/vsync are not as above,
+-- BTN0 hotplug, reset delay and PLL
 -- BTN1 delay direction (hold like shift key)
--- BTN2 delay reset
+-- BTN2 not pressed - adjust clk_pixel, pressed - clk_shift
 -- BTN3 PLL phase shift
 -- BTN4 red delay
 -- BTN5 green delay
@@ -101,7 +102,7 @@ begin
     gn13 <= '1' when btn(0) = '1' else '0'; -- eth- hotplug
     reset <= not btn(0);
 --  If pll is not locked connect blink to PLL block     
-    reset_pll <= '0' when locked = '1' else reset_pll_blink;
+    reset_pll <= reset when locked = '1' else reset_pll_blink;
 
     
     -- connect output to monitor Second PMOD on RIGHT BOTTOM
@@ -121,7 +122,7 @@ begin
       clk_pixel    => clk_pixel,  --  25 MHz phase 60 deg
       clk_shift    => clk_shift,  -- 125 MHz phase 60 deg
       phasesel     => phasesel,   -- output2 "10"-clk_pixel, output1 "01"-clk_shift
-      phasedir     => btn(1), -- need debounce
+      phasedir     => btn(1),
       phasestep    => btn(3), -- need debounce
       phaseloadreg => '0',    -- need debounce
       locked       => locked,
@@ -129,9 +130,9 @@ begin
     );
     
     -- hold btn3 for fine selection
-    -- phasesel <= "01" when btn(3)='1' else "10";
+    phasesel <= "01" when btn(2)='1' else "10";
     --phasesel <= "10"; -- adjust clk_pixel
-    phasesel <= "01"; -- adjust clk_shift
+    --phasesel <= "01"; -- adjust clk_shift
 
     -- Used for reseting PLL block
     blink_clock_recovery_inst: entity work.blink
@@ -197,7 +198,7 @@ begin
     --           GREEN RED BLUE
     g_delay: for i in 0 to 2 generate
       input_delay : DELAYF
-      port map (A => gpa(9+i), Z => input_delayed(i), LOADN => not btn(2), MOVE => btn(6-i), DIRECTION => btn(1), CFLAG => led(i));
+      port map (A => gpa(9+i), Z => input_delayed(i), LOADN => btn(0), MOVE => btn(6-i), DIRECTION => btn(1), CFLAG => led(i));
     end generate;
     input_delayed(3) <= gpa(12); -- no delay for clock. PLL controls phase shift instead of delay
 
