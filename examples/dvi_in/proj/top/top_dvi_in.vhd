@@ -8,7 +8,9 @@ use ecp5u.components.all;
 entity top_dvi_in is
 generic
 (
-  c_bits        : natural := 2 -- 1:SDR 250 MHz, 2:DDR 125 MHz
+  c_dvi2vga_bypass : natural := 0; -- 0: thru VGA, 1: 10-bit bypass
+  c_vga_out        : natural := 0; -- 0: no, 1:yes
+  c_bits           : natural := 2 -- 1:SDR 250 MHz, 2:DDR 125 MHz
 );
 Port
 ( 
@@ -139,21 +141,23 @@ begin
     -- blue color data
     led(2 downto 0) <= vga_blue(2 downto 0);
 
-    -- Output to VGA PMOD - UPPER LEFT 
-    gnb(0) <= vga_vsync;
-    gpb(0) <= vga_hsync;
-    gnb(1) <= vga_red(7);
-    gpb(1) <= vga_red(6);
-    gnb(2) <= vga_red(5);
-    gpb(2) <= vga_green(7);
-    gnb(3) <= vga_green(6);
-    gpb(3) <= vga_green(5);
-    gnb(4) <= vga_blue(7);
-    gpb(4) <= vga_blue(6);
-    gnb(5) <= vga_blue(5);
-    gpb(5) <= vga_red(4);
-    gnb(6) <= vga_green(4);
-    gpb(6) <= vga_blue(4);
+    g_vga_out: if c_vga_out = 1 generate
+      -- Output to VGA PMOD - UPPER LEFT 
+      gnb(0) <= vga_vsync;
+      gpb(0) <= vga_hsync;
+      gnb(1) <= vga_red(7);
+      gpb(1) <= vga_red(6);
+      gnb(2) <= vga_red(5);
+      gpb(2) <= vga_green(7);
+      gnb(3) <= vga_green(6);
+      gpb(3) <= vga_green(5);
+      gnb(4) <= vga_blue(7);
+      gpb(4) <= vga_blue(6);
+      gnb(5) <= vga_blue(5);
+      gpb(5) <= vga_red(4);
+      gnb(6) <= vga_green(4);
+      gpb(6) <= vga_blue(4);
+    end generate;
 
     i_edid_rom: entity work.edid_rom
     port map
@@ -188,7 +192,7 @@ begin
     generic map
     (
       c_input_bits  => c_bits,
-      c_latch_phase => -2
+      c_latch_phase => 0
     )
     port map
     (
@@ -245,6 +249,7 @@ begin
       serial => tmds_b_o
     );
 
+    g_yes_bypass: if c_dvi2vga_bypass = 1 generate
     g_sdr_out: if c_bits = 1 generate
       gpdi_dp(3) <= clk_pixel;
       gpdi_dp(2) <= tmds_r_o(0);
@@ -262,6 +267,7 @@ begin
       port map (D0 => tmds_g_o(0), D1 => tmds_g_o(1), Q => gpdi_dp(1), SCLK => clk_shift, RST => '0');
       output_blue  : ODDRX1F
       port map (D0 => tmds_b_o(0), D1 => tmds_b_o(1), Q => gpdi_dp(0), SCLK => clk_shift, RST => '0');
+    end generate;
     end generate;
 
     -- parallel 10-bit TMDS to 8-bit RGB VGA converter
@@ -281,6 +287,10 @@ begin
     );
     -- VGA back to DVI-D
     vga2dvid_inst: entity work.vga2dvid
+    generic map
+    (
+      c_ddr     => '1' -- '0' for c_bits=1, '1' for c_bits=2
+    )
     port map
     (
       clk_pixel => clk_pixel,
@@ -296,9 +306,26 @@ begin
       out_blue  => fin_blue,
       out_clock => fin_clock
     );
-    --gpdi_dp(3) <= fin_clock(0);
-    --gpdi_dp(2) <= fin_red(0);
-    --gpdi_dp(1) <= fin_green(0);
-    --gpdi_dp(0) <= fin_blue(0);
+
+    g_not_bypass: if c_dvi2vga_bypass = 0 generate
+    g_sdr_out: if c_bits = 1 generate
+      gpdi_dp(3) <= clk_pixel;
+      gpdi_dp(2) <= fin_red(0);
+      gpdi_dp(1) <= fin_green(0);
+      gpdi_dp(0) <= fin_blue(0);
+    end generate;
+
+    g_ddr_out: if c_bits = 2 generate
+      --gpdi_dp(3) <= clk_pixel;
+      output_clock : ODDRX1F
+      port map (D0 => fin_clock(0), D1 => fin_clock(1), Q => gpdi_dp(3), SCLK => clk_shift, RST => '0');
+      output_red   : ODDRX1F
+      port map (D0 => fin_red(0),   D1 => fin_red(1),   Q => gpdi_dp(2), SCLK => clk_shift, RST => '0');
+      output_green : ODDRX1F
+      port map (D0 => fin_green(0), D1 => fin_green(1), Q => gpdi_dp(1), SCLK => clk_shift, RST => '0');
+      output_blue  : ODDRX1F
+      port map (D0 => fin_blue(0),  D1 => fin_blue(1),  Q => gpdi_dp(0), SCLK => clk_shift, RST => '0');
+    end generate;
+    end generate;
 
 end Behavioral;

@@ -51,7 +51,6 @@ VHDL_FILES = \
   ../../dvi/hdl/blink.vhd \
   ../hdl/edid_rom.vhd \
   ../hdl/tmds_deserializer.vhd \
-  ../hdl/serialiser_10_to_1.vhd \
   ../hdl/serialiser_10_to_x.vhd \
   ../hdl/dvi2vga.vhd \
   ../hdl/tmds_dekoder.vhd \
