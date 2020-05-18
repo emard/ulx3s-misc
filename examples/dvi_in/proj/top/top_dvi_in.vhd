@@ -8,9 +8,9 @@ use ecp5u.components.all;
 entity top_dvi_in is
 generic
 (
-  c_dvi2vga_bypass : natural := 0; -- 0: thru VGA, 1: 10-bit bypass
-  c_vga_out        : natural := 0; -- 0: no, 1:yes
-  c_bits           : natural := 2 -- 1:SDR 250 MHz, 2:DDR 125 MHz
+  c_dvi2vga_bypass : natural := 0; -- 0:GPDI->VGA->GPDI, 1: 10-bit bypass
+  c_vga_out        : natural := 0; -- 1:NO, 1:YES
+  c_bits           : natural := 2  -- 1:SDR 250 MHz, 2:DDR 125 MHz
 );
 Port
 ( 
