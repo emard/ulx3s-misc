@@ -13,6 +13,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 -- if hsync/vsync are not as above,
 -- BTN1 delay direction (hold like shift key)
 -- BTN2 delay reset
+-- BTN3 PLL phase shift
 -- BTN4 red delay
 -- BTN5 green delay
 -- BTN6 blue delay, press several times until hsync/vsync LEDs light properly
@@ -120,15 +121,17 @@ begin
       clk_pixel    => clk_pixel,  --  25 MHz phase 60 deg
       clk_shift    => clk_shift,  -- 125 MHz phase 60 deg
       phasesel     => phasesel,   -- output2 "10"-clk_pixel, output1 "01"-clk_shift
-      phasedir     => '0',
-      phasestep    => '0',    -- need debounce
-      phaseloadreg => btn(2), -- need debounce
+      phasedir     => btn(1), -- need debounce
+      phasestep    => btn(3), -- need debounce
+      phaseloadreg => '0',    -- need debounce
       locked       => locked,
       reset        => reset_pll
     );
     
     -- hold btn3 for fine selection
-    phasesel <= "01" when btn(3)='1' else "10";
+    -- phasesel <= "01" when btn(3)='1' else "10";
+    --phasesel <= "10"; -- adjust clk_pixel
+    phasesel <= "01"; -- adjust clk_shift
 
     -- Used for reseting PLL block
     blink_clock_recovery_inst: entity work.blink

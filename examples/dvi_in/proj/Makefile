@@ -32,8 +32,8 @@ CLK0_OPTIONS = \
   --module=$(CLK0_NAME) \
   --clkin_name=clki         --clkin=25    \
   --clkout0_name=clk_shift0 --clkout0=125 \
-  --clkout1_name=clk_shift  --clkout1=125  --phase1=60 \
-  --clkout2_name=clk_pixel  --clkout2=25   --phase2=60 \
+  --clkout1_name=clk_shift  --clkout1=125  --phase1=0 \
+  --clkout2_name=clk_pixel  --clkout2=25   --phase2=0 \
   --clkout3_name=clk_sys    --clkout3=100 \
   --reset --dynamic
 
