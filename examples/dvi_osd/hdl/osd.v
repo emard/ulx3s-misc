@@ -125,9 +125,6 @@ module osd
       R_vsync <= i_vsync;
       R_blank <= i_blank;
     end
-
-
-
   end
 
   assign o_osd_x = R_osd_x;
