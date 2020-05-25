@@ -2,9 +2,9 @@
 -- License=BSD
 
 -- parametric ECP5 PLL generator
--- in ghdl log
--- search for "clocks_actual"
 -- to see actual frequencies and phase shifts
+-- trellis log/stdout : search for "MHz", "Derived", "frequency"
+-- diamond log/*.mrp  : search for "MHz", "Frequency", "Phase"
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -348,41 +348,4 @@ begin
   clk_o(2) <= clkos2_t;
   clk_o(3) <= clkos3_t;
 
---  reporting_clocks_actual: entity work.clocks_actual
---  generic map
---  (
---      in_hz  => params.result.in_hz,
---    out0_hz  => params.result.out0_hz,
---    out0_deg => 0,
---    out1_hz  => params.result.out1_hz,
---    out1_deg => params.result.out1_deg,
---    out2_hz  => params.result.out2_hz,
---    out2_deg => params.result.out2_deg,
---    out3_hz  => params.result.out3_hz,
---    out3_deg => params.result.out3_deg
---  );
 end mix;
-
--- report parameter values, empty module
-
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-
-entity clocks_actual is
-  generic
-  (
-      in_hz  : natural := 0;
-    out0_hz  : natural := 0;
-    out0_deg : natural := 0;
-    out1_hz  : natural := 0;
-    out1_deg : natural := 0;
-    out2_hz  : natural := 0;
-    out2_deg : natural := 0;
-    out3_hz  : natural := 0;
-    out3_deg : natural := 0
-  );
-end;
-architecture reporting of clocks_actual is
-begin
-end reporting;
