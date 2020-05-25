@@ -27,12 +27,12 @@ begin
     (
         in_hz  =>  25000000,
       out0_hz  => 250000000,
-      out1_hz  => 125000000,
-      out1_deg =>        45,
+      out1_hz  => 250000000,
+      out1_deg =>        90,
       out2_hz  => 125000000,
-      out2_deg =>        90,
+      out2_deg =>       180,
       out3_hz  =>  25000000,
-      out3_deg =>       180
+      out3_deg =>       270
     )
     port map
     (
