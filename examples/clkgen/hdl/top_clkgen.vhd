@@ -8,7 +8,7 @@ use ieee.std_logic_unsigned.all;
 entity top_clkgen is
   generic
   (
-    bits: integer := 24
+    bits: integer := 27
   );
   port
   (
@@ -18,9 +18,10 @@ entity top_clkgen is
 end;
 
 architecture mix of top_clkgen is
-    signal R_blink: std_logic_vector(bits-1 downto 0);
+    type T_blink is array (0 to 3) of std_logic_vector(bits-1 downto 0);
+    signal R_blink: T_blink;
     signal clocks: std_logic_vector(3 downto 0);
-    alias  clk: std_logic is clocks(3);
+    --alias  clk: std_logic is clocks(3);
 begin
     clkgen_inst: entity work.clkgen
     generic map
@@ -40,11 +41,17 @@ begin
       clk_o => clocks
     );
 
-    process(clk)
-    begin
-      if rising_edge(clk) then
-        R_blink <= R_blink+1;
-      end if;
-    end process;
-    led <= R_blink(R_blink'high downto R_blink'high-7);
+    G_blinks: for i in 0 to 3
+    generate
+      process(clocks(i))
+      begin
+        if rising_edge(clocks(i)) then
+          R_blink(i) <= R_blink(i)+1;
+        end if;
+        led(2*i+1 downto 2*i) <= R_blink(i)(bits-1 downto bits-2);
+      end process;
+    end generate;
+    
+
+    -- led <= R_blink(R_blink'high downto R_blink'high-7);
 end mix;
