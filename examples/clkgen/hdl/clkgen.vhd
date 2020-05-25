@@ -149,7 +149,7 @@ architecture mix of clkgen is
                 or (natural(fout*1.0e6)=out0_hz and abs(natural(fvco)-600) < abs(natural(params.fvco)-600))
                 then
                   error := abs(natural(fout*1.0e6)-out0_hz);
-                  cphase := natural(fvco/fout*(out0_deg+180)/360.0); -- 180 must be added because of hardwaare, diamond does the same
+                  cphase := natural(fvco/fout*real(out0_deg+180)/360.0); -- 180 must be added because of hardwaare, diamond does the same
                   params.refclk_div     := input_div;
                   params.feedback_div   := feedback_div;
                   params.output_div     := output_div;
