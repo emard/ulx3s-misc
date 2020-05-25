@@ -42,7 +42,6 @@ entity clkgen is
 end;
 
 architecture mix of clkgen is
-  --signal R_blink: std_logic_vector(bits-1 downto 0);
   type T_clocks is record
     in_hz    : natural;
     out0_hz  : natural;
@@ -126,7 +125,6 @@ architecture mix of clkgen is
       variable div: natural;
       variable freq: real;
       variable ns_shift: real;
-      --variable phase_count: real;
       variable phase_count_x8: natural;
       variable cphase, fphase: natural;
       variable ns_actual, phase_shift: real;
@@ -184,7 +182,6 @@ architecture mix of clkgen is
         params.secondary(channel).cphase      := cphase;
         params.secondary(channel).fphase      := fphase;
       end loop;
-      --result := request;
       params.result.in_hz    := request.in_hz;
       params.result.out0_hz  := natural(params.fout*1.0e6);
       params.result.out0_deg := 0; -- FIXME
