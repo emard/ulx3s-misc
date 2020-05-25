@@ -123,6 +123,7 @@ architecture mix of clkgen is
       variable div: natural;
       variable freq: real;
       variable ns_shift: real;
+      --variable phase_count: real;
       variable phase_count_x8: natural;
       variable cphase, fphase: natural;
       variable ns_actual, phase_shift: real;
@@ -154,7 +155,7 @@ architecture mix of clkgen is
                   params.fout_string    := Hz2MHz_str(integer(fout*1.0e6));
                   params.fout           := fout;
                   params.fvco           := fvco;
-                  params.primary_cphase := natural(floor(fvco/fout*0.5));
+                  params.primary_cphase := natural(fvco/fout*0.5);
                 end if;
               end if;
             end loop;
@@ -165,17 +166,17 @@ architecture mix of clkgen is
       for channel in 1 to 3 loop
         div  := natural(params.fvco/sfreq(channel));
         freq := params.fvco/real(div);
-        ns_shift := 1.0/(freq * 1.0e6) * sphase(channel) / 360.0;
-        phase_count_x8 := natural(ns_shift * (params.fvco*1.0e6) * 8.0);
+        ns_shift := 0.5/(params.fout*1.0e6)*real(div-1) + 1.0/(freq*1.0e6) * sphase(channel) / 360.0;
+        phase_count_x8 := natural(ns_shift * (params.fvco * 1.0e6) * 8.0);
         cphase := phase_count_x8 / 8;
         fphase := phase_count_x8 mod 8;
-        ns_actual := 1.0/(params.fvco * 1.0e6) * (real(cphase) + real(fphase)/8.0);
-        phase_shift := 360.0 * ns_actual/ (1.0/(sfreq(channel) * 1.0e6));
+        ns_actual := 1.0/(params.fvco * 1.0e6) * real(phase_count_x8) / 8.0;
+        phase_shift := 360.0 * ns_actual / (1.0/(freq * 1.0e6));
         params.secondary(channel).div         := div;
         params.secondary(channel).freq_string := Hz2MHz_str(integer(freq * 1.0e6));
         params.secondary(channel).freq        := freq;
         params.secondary(channel).phase       := phase_shift;
-        params.secondary(channel).cphase      := cphase + params.primary_cphase;
+        params.secondary(channel).cphase      := cphase;
         params.secondary(channel).fphase      := fphase;
       end loop;
       --result := request;
@@ -267,23 +268,25 @@ architecture mix of clkgen is
   attribute FREQUENCY_PIN_CLKOS  : string;
   attribute FREQUENCY_PIN_CLKOS2 : string;
   attribute FREQUENCY_PIN_CLKOS3 : string;
-  attribute FREQUENCY_PIN_CLKI   of PLLInst_0 : label is params.fin_string;
-  attribute FREQUENCY_PIN_CLKOP  of PLLInst_0 : label is params.fout_string;
-  attribute FREQUENCY_PIN_CLKOS  of PLLInst_0 : label is params.secondary(1).freq_string;
-  attribute FREQUENCY_PIN_CLKOS2 of PLLInst_0 : label is params.secondary(2).freq_string;
-  attribute FREQUENCY_PIN_CLKOS3 of PLLInst_0 : label is params.secondary(3).freq_string;
+  attribute FREQUENCY_PIN_CLKI   of PLL_inst : label is params.fin_string;
+  attribute FREQUENCY_PIN_CLKOP  of PLL_inst : label is params.fout_string;
+  attribute FREQUENCY_PIN_CLKOS  of PLL_inst : label is params.secondary(1).freq_string;
+  attribute FREQUENCY_PIN_CLKOS2 of PLL_inst : label is params.secondary(2).freq_string;
+  attribute FREQUENCY_PIN_CLKOS3 of PLL_inst : label is params.secondary(3).freq_string;
 
---  attribute ICP_CURRENT  : string;
---  attribute LPF_RESISTOR : string;
---  attribute ICP_CURRENT  of PLLInst_0 : label is "12";
---  attribute LPF_RESISTOR of PLLInst_0 : label is "8";
+  attribute ICP_CURRENT  : string;
+  attribute LPF_RESISTOR : string;
+  attribute ICP_CURRENT  of PLL_inst : label is "12";
+  attribute LPF_RESISTOR of PLL_inst : label is "8";
 
---  attribute syn_keep : boolean;
---  attribute NGD_DRC_MASK : integer;
---  attribute NGD_DRC_MASK of Structure : architecture is 1;
+  attribute syn_keep : boolean;
+  attribute NGD_DRC_MASK : integer;
+  attribute NGD_DRC_MASK of mix : architecture is 1;
 begin
+  G_dynamic: if dynamic_en /= 0 generate
   phasesel_hw <= phasesel-1;
-  PLLInst_0: EHXPLLL
+  end generate;
+  PLL_inst: EHXPLLL
   generic map
   (
     CLKI_DIV        =>  params.refclk_div,
@@ -306,20 +309,20 @@ begin
 
     OUTDIVIDER_MUXC => "DIVC",
     CLKOS2_ENABLE   => "ENABLED",
-    CLKOS2_DIV      => params.secondary(2).div,
-    CLKOS2_CPHASE   => params.secondary(2).cphase,
-    CLKOS2_FPHASE   => params.secondary(2).fphase,
+    CLKOS2_DIV      =>  params.secondary(2).div,
+    CLKOS2_CPHASE   =>  params.secondary(2).cphase,
+    CLKOS2_FPHASE   =>  params.secondary(2).fphase,
 
     OUTDIVIDER_MUXD => "DIVD",
     CLKOS3_ENABLE   => "ENABLED",
-    CLKOS3_DIV      => params.secondary(3).div,
-    CLKOS3_CPHASE   => params.secondary(3).cphase,
-    CLKOS3_FPHASE   => params.secondary(3).fphase,
+    CLKOS3_DIV      =>  params.secondary(3).div,
+    CLKOS3_CPHASE   =>  params.secondary(3).cphase,
+    CLKOS3_FPHASE   =>  params.secondary(3).fphase,
 
     INTFB_WAKE      => "DISABLED",
-    PLLRST_ENA      => enabled_str(reset_en),
-    STDBY_ENABLE    => enabled_str(standby_en),
-    DPHASE_SOURCE   => enabled_str(dynamic_en),
+    PLLRST_ENA      =>  enabled_str(reset_en),
+    STDBY_ENABLE    =>  enabled_str(standby_en),
+    DPHASE_SOURCE   =>  enabled_str(dynamic_en),
     PLL_LOCK_MODE   =>  0
   )
   port map
