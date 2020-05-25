@@ -16,6 +16,7 @@ entity clkgen is
   (
     in_hz        : natural := 25000000;
     out0_hz      : natural := 25000000;
+    out0_deg     : natural :=        0; -- keep 0
     out1_hz      : natural := 25000000;
     out1_deg     : natural :=        0;
     out2_hz      : natural := 25000000;
@@ -45,6 +46,7 @@ architecture mix of clkgen is
   type T_clocks is record
     in_hz    : natural;
     out0_hz  : natural;
+    out0_deg : natural;
     out1_hz  : natural;
     out1_deg : natural;
     out2_hz  : natural;
@@ -76,6 +78,7 @@ architecture mix of clkgen is
     fout           : real;
     fvco           : real;
     primary_cphase : natural;
+    primary_fphase : natural;
     secondary      : A_secondary;
   end record T_params;
 
@@ -148,6 +151,7 @@ architecture mix of clkgen is
                 or (natural(fout*1.0e6)=out0_hz and abs(natural(fvco)-600) < abs(natural(params.fvco)-600))
                 then
                   error := abs(natural(fout*1.0e6)-out0_hz);
+                  cphase := natural(fvco/fout*(out0_deg+180)/360.0); -- 180 must be added because of hardwaare, diamond does the same
                   params.refclk_div     := input_div;
                   params.feedback_div   := feedback_div;
                   params.output_div     := output_div;
@@ -155,7 +159,8 @@ architecture mix of clkgen is
                   params.fout_string    := Hz2MHz_str(integer(fout*1.0e6));
                   params.fout           := fout;
                   params.fvco           := fvco;
-                  params.primary_cphase := natural(fvco/fout*0.5);
+                  params.primary_cphase := cphase;
+                  params.primary_fphase := 0;
                 end if;
               end if;
             end loop;
@@ -182,6 +187,7 @@ architecture mix of clkgen is
       --result := request;
       params.result.in_hz    := request.in_hz;
       params.result.out0_hz  := natural(params.fout*1.0e6);
+      params.result.out0_deg := 0; -- FIXME
       params.result.out1_hz  := natural(params.secondary(1).freq*1.0e6);
       params.result.out1_deg := natural(params.secondary(1).phase);
       params.result.out2_hz  := natural(params.secondary(2).freq*1.0e6);
@@ -195,6 +201,7 @@ architecture mix of clkgen is
   (
     in_hz    => in_hz,
     out0_hz  => out0_hz,
+    out0_deg => out0_deg,
     out1_hz  => out1_hz,
     out1_deg => out1_deg,
     out2_hz  => out2_hz,
@@ -297,7 +304,7 @@ begin
     CLKOP_ENABLE    => "ENABLED",
     CLKOP_DIV       =>  params.output_div,
     CLKOP_CPHASE    =>  params.primary_cphase,
-    CLKOP_FPHASE    =>  0, 
+    CLKOP_FPHASE    =>  params.primary_fphase,
 --  CLKOP_TRIM_DELAY=>  0, CLKOP_TRIM_POL=> "FALLING", 
 
     OUTDIVIDER_MUXB => "DIVB",
