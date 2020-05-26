@@ -114,6 +114,8 @@ architecture mix of clkgen is
       constant VCO_OPTIMAL: natural := (VCO_MIN+VCO_MAX)/2;
       variable params: T_params;
       variable input_div, feedback_div, output_div: natural;
+      variable input_div_min,  input_div_max  : natural;
+      variable output_div_min, output_div_max : natural;
       variable fpfd: natural;
       variable fout: natural;
       variable fvco: natural := 0;
@@ -133,14 +135,28 @@ architecture mix of clkgen is
       sfreq(3)  := request.out3_hz;
       sphase(3) := request.out3_deg;
       -- generate primary output
-      -- search all combinations 128*80*128=1.3e6 to find the best match
-      for input_div in 1 to 128 loop
-        fpfd := in_hz / input_div;
-        if fpfd >= PFD_MIN and fpfd <= PFD_MAX then
+      -- search 128*80*128=1.3e6 combination space to find the best match
+      -- loop over allowed MIN/MAX range only
+      input_div_min := in_hz/PFD_MAX;
+      if input_div_min < 1 then
+        input_div_min := 1;
+      end if;
+      input_div_max := in_hz/PFD_MIN;
+      if input_div_max > 128 then
+        input_div_max := 128;
+      end if;
+      for input_div in input_div_min to input_div_max loop
+          fpfd := in_hz / input_div;
           for feedback_div in 1 to 80 loop
-            for output_div in 1 to 128 loop
-              fvco := fpfd/1024 * feedback_div * output_div; -- /1024 to avoid overflow
-              if fvco >= VCO_MIN/1024 and fvco <= VCO_MAX/1024 then
+            output_div_min := VCO_MIN/feedback_div/fpfd;
+            if output_div_min < 1 then
+              output_div_min := 1;
+            end if;
+            output_div_max := VCO_MAX/feedback_div/fpfd;
+            if output_div_max > 128 then
+              output_div_max := 128;
+            end if;
+            for output_div in output_div_min to output_div_max loop
                 fvco := fpfd * feedback_div * output_div;
                 fout := fvco / output_div;
                 if abs(fout-out0_hz) < error -- prefer least error
@@ -162,10 +178,8 @@ architecture mix of clkgen is
                   params.primary_cphase := phase_count_x8 / 8;
                   params.primary_fphase := phase_count_x8 mod 8;
                 end if;
-              end if;
             end loop;
           end loop;
-        end if;
       end loop;
       -- generate secondary outputs
       for channel in 1 to 3 loop
