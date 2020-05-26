@@ -46,7 +46,7 @@ begin
       out1_hz    => natural( 10.0e6), -- clk_pixel
       out1_deg   =>           0,
       out2_hz    => natural( 70.0e6), -- clk_shift
-      out2_deg   =>          45,
+      out2_deg   =>          60,
       out3_hz    => natural( 70.0e6),
       out3_deg   =>           0,
       dynamic_en =>           1
@@ -55,7 +55,7 @@ begin
     (
       clk_i        => gp_i(12),
       clk_o        => clocks,
-      phasesel     => "10", -- 2:clk_shift
+      phasesel     => "01", -- "10"=2:clk_shift "01"=1:clk_pixel
       phasedir     => R_btn(1),
       phasestep    => R_btn(3),
       phaseloadreg => '0',
@@ -100,8 +100,8 @@ begin
     --end generate;
     --input_delayed(3) <= gp_i(12); -- no delay for clock. PLL controls phase shift instead of delay
 
-    gn(7 downto 0) <= (others => '0');
-    gp(7 downto 0) <= (others => '0');
+    --gn(7 downto 0) <= (others => '0');
+    --gp(7 downto 0) <= (others => '0');
     gn(8) <= '1'; -- normally PWM
     
     G_read_bits: for i in 0 to 3 generate
@@ -109,18 +109,36 @@ begin
     begin
       if rising_edge(clk_shift)
       then
-        R_lvds(i) <= gp_i(9+i) & R_lvds(i)(6 downto 1);
+        R_lvds(i) <= gp_i(9+i) & R_lvds(i)(6 downto 1); -- normally this should be it
+        --R_lvds(i) <= R_lvds(i)(5 downto 0) & gp_i(9+i);
       end if;
     end process;
     process(clk_pixel)
     begin
-      if rising_edge(clk_shift)
+      if rising_edge(clk_pixel)
       then
         R_pixel(i) <= R_lvds(i);
       end if;
     end process;
-    gp_o(3+i) <= R_lvds(i)(0);
     end generate;
+    --gp_o(3) <= R_lvds(0)(0); -- red
+    --gp_o(4) <= R_lvds(1)(0); -- green
+    --gp_o(5) <= R_lvds(2)(0); -- blue and sync
+    --gp_o(6) <= R_lvds(3)(0); -- clock
+
+    vga2lvds_inst: entity work.vga2lvds
+    port map
+    (
+      clk_pixel => clk_pixel,
+      clk_shift => clk_shift,
+      in_red    => (others => '0'),
+      in_green  => (others => '0'),
+      in_blue   => R_pixel(2)(3)&R_pixel(2)(4)&R_pixel(2)(5)&R_pixel(2)(6)&R_pixel(1)(0)&R_pixel(1)(1)&"00",
+      in_hsync  => R_pixel(2)(2),
+      in_vsync  => R_pixel(2)(1),
+      in_blank  => not R_pixel(2)(0),
+      out_lvds  => gp_o(6 downto 3)
+    );
 
 
 end mix;
