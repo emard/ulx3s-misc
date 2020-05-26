@@ -9,7 +9,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
-use ieee.math_real.all; -- floor()
 
 entity clkgen is
   generic
@@ -57,15 +56,14 @@ architecture mix of clkgen is
   type T_secondary is record
     div            : natural;
     freq_string    : string(0 to 9);
-    freq           : real;
-    phase          : real;
+    freq           : natural;
+    phase          : natural;
     cphase         : natural;
     fphase         : natural;
   end record T_secondary;
   type A_secondary is array(1 to 3) of T_secondary;
-  
-  type T_sfreq  is array(1 to 3) of real;
-  type T_sphase is array(1 to 3) of real;
+
+  type A_srequest is array(1 to 3) of natural;
 
   type T_params is record
     result         : T_clocks;
@@ -74,8 +72,8 @@ architecture mix of clkgen is
     output_div     : natural;
     fin_string     : string(0 to 9);
     fout_string    : string(0 to 9);
-    fout           : real;
-    fvco           : real;
+    fout           : natural;
+    fvco           : natural;
     primary_cphase : natural;
     primary_fphase : natural;
     secondary      : A_secondary;
@@ -113,52 +111,56 @@ architecture mix of clkgen is
       constant PFD_MAX: natural := 400000000;
       constant VCO_MIN: natural := 400000000;
       constant VCO_MAX: natural := 800000000;
+      constant VCO_OPTIMAL: natural := (VCO_MIN+VCO_MAX)/2;
       variable params: T_params;
       variable input_div, feedback_div, output_div: natural;
       variable fpfd: natural;
-      variable fout: real;
-      variable fvco: real;
+      variable fout: natural;
+      variable fvco: natural := 0;
       variable error: natural := 999999999;
       variable result: T_clocks;
-      variable sfreq: T_sfreq;
-      variable sphase: T_sphase;
+      variable sfreq, sphase: A_srequest;
       variable div: natural;
-      variable freq: real;
-      variable ns_shift: real;
+      variable freq: natural;
       variable phase_count_x8: natural;
       variable cphase, fphase: natural;
-      variable ns_actual, phase_shift: real;
+      variable phase_shift: natural;
     begin
-      sfreq(1)  := real(request.out1_hz)/1.0e6;
-      sphase(1) := real(request.out1_deg);
-      sfreq(2)  := real(request.out2_hz)/1.0e6;
-      sphase(2) := real(request.out2_deg);
-      sfreq(3)  := real(request.out3_hz)/1.0e6;
-      sphase(3) := real(request.out3_deg);
-      params.fvco := real(error);
+      sfreq(1)  := request.out1_hz;
+      sphase(1) := request.out1_deg;
+      sfreq(2)  := request.out2_hz;
+      sphase(2) := request.out2_deg;
+      sfreq(3)  := request.out3_hz;
+      sphase(3) := request.out3_deg;
       -- generate primary output
+      -- search all combinations 128*80*128=1.3e6 to find the best match
       for input_div in 1 to 128 loop
         fpfd := in_hz / input_div;
         if fpfd >= PFD_MIN and fpfd <= PFD_MAX then
           for feedback_div in 1 to 80 loop
             for output_div in 1 to 128 loop
-              fvco := real(fpfd)/1.0e6 * real(feedback_div * output_div);
-              if fvco >= real(VCO_MIN/1000000) and fvco <= real(VCO_MAX/1000000) then
-                fout := fvco / real(output_div);
-                if abs(natural(fout*1.0e6)-out0_hz) < error
-                or (natural(fout*1.0e6)=out0_hz and abs(natural(fvco)-600) < abs(natural(params.fvco)-600))
+              fvco := fpfd/1024 * feedback_div * output_div; -- /1024 to avoid overflow
+              if fvco >= VCO_MIN/1024 and fvco <= VCO_MAX/1024 then
+                fvco := fpfd * feedback_div * output_div;
+                fout := fvco / output_div;
+                if abs(fout-out0_hz) < error -- prefer least error
+                or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
                 then
-                  error := abs(natural(fout*1.0e6)-out0_hz);
-                  cphase := natural(fvco/fout*real(out0_deg+180)/360.0); -- 180 must be added because of hardwaare, diamond does the same
+                  error  := abs(fout-out0_hz);
+                  -- 180 must be added because of hardware, diamond does the same
+                  phase_count_x8        := output_div*(out0_deg+180)/360*8;
+                  if phase_count_x8 > 1023 then -- we have problem
+                    phase_count_x8 := phase_count_x8 mod (output_div*8); -- wraparound 360 deg
+                  end if;
                   params.refclk_div     := input_div;
                   params.feedback_div   := feedback_div;
                   params.output_div     := output_div;
                   params.fin_string     := Hz2MHz_str(in_hz);
-                  params.fout_string    := Hz2MHz_str(integer(fout*1.0e6));
+                  params.fout_string    := Hz2MHz_str(fout);
                   params.fout           := fout;
                   params.fvco           := fvco;
-                  params.primary_cphase := cphase;
-                  params.primary_fphase := 0;
+                  params.primary_cphase := phase_count_x8 / 8;
+                  params.primary_fphase := phase_count_x8 mod 8;
                 end if;
               end if;
             end loop;
@@ -167,29 +169,32 @@ architecture mix of clkgen is
       end loop;
       -- generate secondary outputs
       for channel in 1 to 3 loop
-        div  := natural(params.fvco/sfreq(channel));
-        freq := params.fvco/real(div);
-        ns_shift := 0.5/(params.fout*1.0e6)*real(div-1) + 1.0/(freq*1.0e6) * sphase(channel) / 360.0;
-        phase_count_x8 := natural(ns_shift * (params.fvco * 1.0e6) * 8.0);
+        div  := params.fvco/sfreq(channel);
+        freq := params.fvco/div;
+        -- compensation for phase shift from divider hardware + requested phase shift
+        phase_count_x8 := 4*(div-1)*params.output_div + 8*div*sphase(channel)/360;
+        --phase_count_x8 := 4*(div-1)*(params.output_div-1) + 8*div*sphase(channel)/360; -- FIXME in some cases this fits 0 phase
+        if phase_count_x8 > 1023 then -- we have problem
+          phase_count_x8 := phase_count_x8 mod (div*8); -- wraparound 360 deg
+        end if;
         cphase := phase_count_x8 / 8;
         fphase := phase_count_x8 mod 8;
-        ns_actual := 1.0/(params.fvco * 1.0e6) * real(phase_count_x8) / 8.0;
-        phase_shift := 360.0 * ns_actual / (1.0/(freq * 1.0e6));
+        phase_shift := 8*div*sphase(channel)/360 * 360 / (8*div); -- reported phase shift
         params.secondary(channel).div         := div;
-        params.secondary(channel).freq_string := Hz2MHz_str(integer(freq * 1.0e6));
+        params.secondary(channel).freq_string := Hz2MHz_str(freq);
         params.secondary(channel).freq        := freq;
         params.secondary(channel).phase       := phase_shift;
         params.secondary(channel).cphase      := cphase;
         params.secondary(channel).fphase      := fphase;
       end loop;
       params.result.in_hz    := request.in_hz;
-      params.result.out0_hz  := natural(params.fout*1.0e6);
+      params.result.out0_hz  := natural(params.fout);
       params.result.out0_deg := 0; -- FIXME
-      params.result.out1_hz  := natural(params.secondary(1).freq*1.0e6);
+      params.result.out1_hz  := natural(params.secondary(1).freq);
       params.result.out1_deg := natural(params.secondary(1).phase);
-      params.result.out2_hz  := natural(params.secondary(2).freq*1.0e6);
+      params.result.out2_hz  := natural(params.secondary(2).freq);
       params.result.out2_deg := natural(params.secondary(2).phase);
-      params.result.out3_hz  := natural(params.secondary(3).freq*1.0e6);
+      params.result.out3_hz  := natural(params.secondary(3).freq);
       params.result.out3_deg := natural(params.secondary(3).phase);
       return params;
     end F_ecp5pll;
