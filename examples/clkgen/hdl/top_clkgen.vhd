@@ -26,12 +26,12 @@ begin
     generic map
     (
         in_hz  => natural( 25.0e6),
-      out0_hz  => natural(250.0e6),
-      out1_hz  => natural(250.0e6),
+      out0_hz  => natural(112.5e6),
+      out1_hz  => natural( 80.3e6),
       out1_deg =>          90,
-      out2_hz  => natural(125.0e6),
+      out2_hz  => natural( 56.2e6),
       out2_deg =>         180,
-      out3_hz  => natural( 25.0e6),
+      out3_hz  => natural(  6.0e6),
       out3_deg =>         270
     )
     port map
