@@ -109,8 +109,7 @@ begin
     begin
       if rising_edge(clk_shift)
       then
-        R_lvds(i) <= gp_i(9+i) & R_lvds(i)(6 downto 1); -- normally this should be it
-        --R_lvds(i) <= R_lvds(i)(5 downto 0) & gp_i(9+i);
+        R_lvds(i) <= gp_i(9+i) & R_lvds(i)(6 downto 1);
       end if;
     end process;
     process(clk_pixel)
@@ -131,14 +130,14 @@ begin
     (
       clk_pixel => clk_pixel,
       clk_shift => clk_shift,
-      in_red    => (others => '0'),
-      in_green  => (others => '0'),
+      --in_red    => R_pixel(0)(1)&R_pixel(0)(2)&R_pixel(0)(3)&R_pixel(0)(4)&R_pixel(0)(5)&R_pixel(0)(6)&"00",
+      in_red    => (others => '0'), -- red OFF (hardware bug with red channel)
+      in_green  => R_pixel(1)(2)&R_pixel(1)(3)&R_pixel(1)(4)&R_pixel(1)(5)&R_pixel(1)(6)&R_pixel(0)(1)&"00",
       in_blue   => R_pixel(2)(3)&R_pixel(2)(4)&R_pixel(2)(5)&R_pixel(2)(6)&R_pixel(1)(0)&R_pixel(1)(1)&"00",
       in_hsync  => R_pixel(2)(2),
       in_vsync  => R_pixel(2)(1),
       in_blank  => not R_pixel(2)(0),
       out_lvds  => gp_o(6 downto 3)
     );
-
 
 end mix;
