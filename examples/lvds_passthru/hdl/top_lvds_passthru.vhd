@@ -39,7 +39,7 @@ begin
     )
     port map
     (
-      clk_i => clk_25mhz,
+      clk_i => gp_i(12),
       clk_o => clocks,
       locked => led(7)
     );
