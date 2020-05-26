@@ -1,1 +1,1 @@
-makefile.trellis
+makefile.diamond
