@@ -27,11 +27,11 @@ begin
     clkgen_inst: entity work.clkgen
     generic map
     (
-        in_hz  => natural(112.5e6),
-      out0_hz  => natural(400.00e6),
-      out1_hz  => natural( 50.0e6),
+        in_hz  => natural( 25.0e6),
+      out0_hz  => natural( 20.0e6),
+      out1_hz  => natural( 20.0e6),
       out1_deg =>          90,
-      out2_hz  => natural( 60.0e6),
+      out2_hz  => natural( 20.0e6),
       out2_deg =>         180,
       out3_hz  => natural(  6.0e6),
       out3_deg =>         300
@@ -39,10 +39,11 @@ begin
     port map
     (
       clk_i => clk_25mhz,
-      clk_o => clocks
+      clk_o => clocks,
+      locked => led(7)
     );
 
-    G_blinks: for i in 0 to 3
+    G_blinks: for i in 0 to 2
     generate
       process(clocks(i))
       begin
@@ -55,5 +56,4 @@ begin
 
     gp_o(6 downto 3) <= gp_i(12 downto 9);
 
-    -- led <= R_blink(R_blink'high downto R_blink'high-7);
 end mix;
