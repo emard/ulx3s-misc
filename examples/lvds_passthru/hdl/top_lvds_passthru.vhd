@@ -13,7 +13,8 @@ entity top_lvds_passthru is
   port
   (
     clk_25mhz : in  std_logic;  -- main clock input from 25MHz clock source
-    gn        : out std_logic_vector(8 downto 8);
+    gp        : out std_logic_vector(8 downto 0);
+    gn        : out std_logic_vector(8 downto 0);
     gp_i      : in  std_logic_vector(12 downto 9);
     gp_o      : out std_logic_vector(6 downto 3);
     led       : out std_logic_vector(7 downto 0)
@@ -55,6 +56,8 @@ begin
       end process;
     end generate;
 
+    gn(7 downto 0) <= (others => '0');
+    gp(7 downto 0) <= (others => '0');
     gn(8) <= '1'; -- normally PWM
     gp_o(6 downto 3) <= gp_i(12 downto 9);
 
