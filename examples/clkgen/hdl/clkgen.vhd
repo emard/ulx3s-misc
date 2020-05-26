@@ -4,7 +4,7 @@
 -- parametric ECP5 PLL generator
 -- to see actual frequencies and phase shifts
 -- trellis log/stdout : search for "MHz", "Derived", "frequency"
--- diamond log/*.mrp  : search for "MHz", "Frequency", "Phase"
+-- diamond log/*.mrp  : search for "MHz", "Frequency", "Phase", "Desired"
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -122,6 +122,7 @@ architecture mix of clkgen is
       variable sfreq, sphase: A_srequest;
       variable div: natural;
       variable freq: natural;
+      variable phase_compensation: natural;
       variable phase_count_x8: natural;
       variable cphase, fphase: natural;
       variable phase_shift: natural;
@@ -147,8 +148,9 @@ architecture mix of clkgen is
                 or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
                 then
                   error  := abs(fout-out0_hz);
+                  phase_compensation    := (output_div+1)/2*8-8;
                   -- 180 must be added because of hardware, diamond does the same
-                  phase_count_x8        := output_div*(out0_deg+180)/360*8;
+                  phase_count_x8        := phase_compensation + output_div*(out0_deg+180)/360*8;
                   if phase_count_x8 > 1023 then -- we have problem
                     phase_count_x8 := phase_count_x8 mod (output_div*8); -- wraparound 360 deg
                   end if;
@@ -171,9 +173,8 @@ architecture mix of clkgen is
       for channel in 1 to 3 loop
         div  := params.fvco/sfreq(channel);
         freq := params.fvco/div;
-        -- compensation for phase shift from divider hardware + requested phase shift
-        phase_count_x8 := 4*(div-1)*params.output_div + 8*div*sphase(channel)/360;
-        --phase_count_x8 := 4*(div-1)*(params.output_div-1) + 8*div*sphase(channel)/360; -- FIXME in some cases this fits 0 phase
+        phase_compensation := div*8-8;
+        phase_count_x8 := phase_compensation + 8*div*sphase(channel)/360;
         if phase_count_x8 > 1023 then -- we have problem
           phase_count_x8 := phase_count_x8 mod (div*8); -- wraparound 360 deg
         end if;
