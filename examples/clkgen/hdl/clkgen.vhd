@@ -124,7 +124,6 @@ architecture mix of clkgen is
       variable freq: natural;
       variable phase_compensation: natural;
       variable phase_count_x8: natural;
-      variable cphase, fphase: natural;
       variable phase_shift: natural;
     begin
       sfreq(1)  := request.out1_hz;
@@ -148,10 +147,9 @@ architecture mix of clkgen is
                 or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
                 then
                   error  := abs(fout-out0_hz);
-                  phase_compensation    := (output_div+1)/2*8-8;
-                  -- 180 must be added because of hardware, diamond does the same
-                  phase_count_x8        := phase_compensation + output_div*(out0_deg+180)/360*8;
-                  if phase_count_x8 > 1023 then -- we have problem
+                  phase_compensation    := (output_div+1)/2*8-8+output_div/2*8; -- output_div/2*8 = 180 deg shift
+                  phase_count_x8        := phase_compensation + 8*output_div*out0_deg/360;
+                  if phase_count_x8 > 1023 then
                     phase_count_x8 := phase_count_x8 mod (output_div*8); -- wraparound 360 deg
                   end if;
                   params.refclk_div     := input_div;
@@ -175,18 +173,16 @@ architecture mix of clkgen is
         freq := params.fvco/div;
         phase_compensation := div*8-8;
         phase_count_x8 := phase_compensation + 8*div*sphase(channel)/360;
-        if phase_count_x8 > 1023 then -- we have problem
+        if phase_count_x8 > 1023 then
           phase_count_x8 := phase_count_x8 mod (div*8); -- wraparound 360 deg
         end if;
-        cphase := phase_count_x8 / 8;
-        fphase := phase_count_x8 mod 8;
         phase_shift := 8*div*sphase(channel)/360 * 360 / (8*div); -- reported phase shift
         params.secondary(channel).div         := div;
         params.secondary(channel).freq_string := Hz2MHz_str(freq);
         params.secondary(channel).freq        := freq;
         params.secondary(channel).phase       := phase_shift;
-        params.secondary(channel).cphase      := cphase;
-        params.secondary(channel).fphase      := fphase;
+        params.secondary(channel).cphase      := phase_count_x8 / 8;
+        params.secondary(channel).fphase      := phase_count_x8 mod 8;
       end loop;
       params.result.in_hz    := request.in_hz;
       params.result.out0_hz  := natural(params.fout);
