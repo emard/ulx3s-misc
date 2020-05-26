@@ -27,6 +27,7 @@ end;
 
 architecture mix of top_lvds_passthru is
     type T_blink is array (0 to 3) of std_logic_vector(bits-1 downto 0);
+    type T_pixel is array (3 downto 0) of std_logic_vector(6 downto 0);
     signal R_blink: T_blink;
     signal clocks: std_logic_vector(3 downto 0);
     alias clk_pixel: std_logic is clocks(1);
@@ -35,14 +36,14 @@ architecture mix of top_lvds_passthru is
     signal R_btn_debounce: std_logic_vector(19 downto 0);
     signal input_delayed: std_logic_vector(3 downto 0);
     signal S_delay_limit: std_logic_vector(3 downto 0);
-    signal R_lvds: std_logic_vector(3 downto 0);
+    signal R_lvds, R_pixel: T_pixel;
 begin
     clkgen_inst: entity work.clkgen
     generic map
     (
         in_hz    => natural( 10.0e6),
       out0_hz    => natural( 70.0e6),
-      out1_hz    => natural( 10.0e6),
+      out1_hz    => natural( 10.0e6), -- clk_pixel
       out1_deg   =>           0,
       out2_hz    => natural( 70.0e6), -- clk_shift
       out2_deg   =>          45,
@@ -103,14 +104,23 @@ begin
     gp(7 downto 0) <= (others => '0');
     gn(8) <= '1'; -- normally PWM
     
+    G_read_bits: for i in 0 to 3 generate
     process(clk_shift)
     begin
       if rising_edge(clk_shift)
       then
-        R_lvds(3 downto 0) <= gp_i(12 downto 9);
+        R_lvds(i) <= gp_i(9+i) & R_lvds(i)(6 downto 1);
       end if;
     end process;
-    
-    gp_o(6 downto 3) <= R_lvds(3 downto 0);
+    process(clk_pixel)
+    begin
+      if rising_edge(clk_shift)
+      then
+        R_pixel(i) <= R_lvds(i);
+      end if;
+    end process;
+    gp_o(3+i) <= R_lvds(i)(0);
+    end generate;
+
 
 end mix;
