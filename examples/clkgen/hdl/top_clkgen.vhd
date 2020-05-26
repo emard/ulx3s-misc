@@ -21,19 +21,18 @@ architecture mix of top_clkgen is
     type T_blink is array (0 to 3) of std_logic_vector(bits-1 downto 0);
     signal R_blink: T_blink;
     signal clocks: std_logic_vector(3 downto 0);
-    --alias  clk: std_logic is clocks(3);
 begin
     clkgen_inst: entity work.clkgen
     generic map
     (
-        in_hz  =>  25000000,
-      out0_hz  => 250000000,
-      out1_hz  => 250000000,
-      out1_deg =>        90,
-      out2_hz  => 125000000,
-      out2_deg =>       180,
-      out3_hz  =>  25000000,
-      out3_deg =>       270
+        in_hz  => natural( 25.0e6),
+      out0_hz  => natural(250.0e6),
+      out1_hz  => natural(250.0e6),
+      out1_deg =>          90,
+      out2_hz  => natural(125.0e6),
+      out2_deg =>         180,
+      out3_hz  => natural( 25.0e6),
+      out3_deg =>         270
     )
     port map
     (
