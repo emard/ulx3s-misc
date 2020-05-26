@@ -146,40 +146,40 @@ architecture mix of clkgen is
         input_div_max := 128;
       end if;
       for input_div in input_div_min to input_div_max loop
-          fpfd := in_hz / input_div;
-          for feedback_div in 1 to 80 loop
-            output_div_min := VCO_MIN/feedback_div/fpfd;
-            if output_div_min < 1 then
-              output_div_min := 1;
+        fpfd := in_hz / input_div;
+        for feedback_div in 1 to 80 loop
+          output_div_min := VCO_MIN/feedback_div/fpfd;
+          if output_div_min < 1 then
+            output_div_min := 1;
+          end if;
+          output_div_max := VCO_MAX/feedback_div/fpfd;
+          if output_div_max > 128 then
+            output_div_max := 128;
+          end if;
+          for output_div in output_div_min to output_div_max loop
+            fvco := fpfd * feedback_div * output_div;
+            fout := fvco / output_div;
+            if abs(fout-out0_hz) < error -- prefer least error
+            or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
+            then
+              error  := abs(fout-out0_hz);
+              phase_compensation    := (output_div+1)/2*8-8+output_div/2*8; -- output_div/2*8 = 180 deg shift
+              phase_count_x8        := phase_compensation + 8*output_div*out0_deg/360;
+              if phase_count_x8 > 1023 then
+                phase_count_x8 := phase_count_x8 mod (output_div*8); -- wraparound 360 deg
+              end if;
+              params.refclk_div     := input_div;
+              params.feedback_div   := feedback_div;
+              params.output_div     := output_div;
+              params.fin_string     := Hz2MHz_str(in_hz);
+              params.fout_string    := Hz2MHz_str(fout);
+              params.fout           := fout;
+              params.fvco           := fvco;
+              params.primary_cphase := phase_count_x8 / 8;
+              params.primary_fphase := phase_count_x8 mod 8;
             end if;
-            output_div_max := VCO_MAX/feedback_div/fpfd;
-            if output_div_max > 128 then
-              output_div_max := 128;
-            end if;
-            for output_div in output_div_min to output_div_max loop
-                fvco := fpfd * feedback_div * output_div;
-                fout := fvco / output_div;
-                if abs(fout-out0_hz) < error -- prefer least error
-                or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
-                then
-                  error  := abs(fout-out0_hz);
-                  phase_compensation    := (output_div+1)/2*8-8+output_div/2*8; -- output_div/2*8 = 180 deg shift
-                  phase_count_x8        := phase_compensation + 8*output_div*out0_deg/360;
-                  if phase_count_x8 > 1023 then
-                    phase_count_x8 := phase_count_x8 mod (output_div*8); -- wraparound 360 deg
-                  end if;
-                  params.refclk_div     := input_div;
-                  params.feedback_div   := feedback_div;
-                  params.output_div     := output_div;
-                  params.fin_string     := Hz2MHz_str(in_hz);
-                  params.fout_string    := Hz2MHz_str(fout);
-                  params.fout           := fout;
-                  params.fvco           := fvco;
-                  params.primary_cphase := phase_count_x8 / 8;
-                  params.primary_fphase := phase_count_x8 mod 8;
-                end if;
-            end loop;
           end loop;
+        end loop;
       end loop;
       -- generate secondary outputs
       for channel in 1 to 3 loop
