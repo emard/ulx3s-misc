@@ -46,7 +46,7 @@ begin
       out1_hz    => natural( 10.0e6), -- clk_pixel
       out1_deg   =>           0,
       out2_hz    => natural( 70.0e6), -- clk_shift
-      out2_deg   =>          60,
+      out2_deg   =>         100,      -- 100 is ok, 40-150
       out3_hz    => natural( 70.0e6),
       out3_deg   =>           0,
       dynamic_en =>           1
