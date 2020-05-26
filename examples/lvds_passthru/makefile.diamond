@@ -31,6 +31,7 @@ VERILOG_FILES =
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
   ../clkgen/hdl/clkgen.vhd \
+  ../lvds/hdl/vga2lvds.vhd
 
 SCRIPTS = ../../scripts
 include $(SCRIPTS)/trellis_path.mk
