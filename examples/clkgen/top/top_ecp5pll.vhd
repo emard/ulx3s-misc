@@ -5,7 +5,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity top_clkgen is
+entity top_ecp5pll is
   generic
   (
     bits: integer := 27
@@ -17,22 +17,19 @@ entity top_clkgen is
   );
 end;
 
-architecture mix of top_clkgen is
+architecture mix of top_ecp5pll is
     type T_blink is array (0 to 3) of std_logic_vector(bits-1 downto 0);
     signal R_blink: T_blink;
     signal clocks: std_logic_vector(3 downto 0);
 begin
-    clkgen_inst: entity work.clkgen
+    clkgen_inst: entity work.ecp5pll
     generic map
     (
-        in_hz  => natural( 25.0e6),
-      out0_hz  => natural( 40.0e6),
-      out1_hz  => natural( 50.0e6),
-      out1_deg =>          90,
-      out2_hz  => natural( 60.0e6),
-      out2_deg =>         180,
-      out3_hz  => natural(  6.0e6),
-      out3_deg =>         300
+        in_Hz => natural( 25.0e6),
+      out0_Hz => natural( 40.0e6),
+      out1_Hz => natural( 50.0e6), out1_deg =>  90,
+      out2_Hz => natural( 60.0e6), out2_deg => 180,
+      out3_Hz => natural(  6.0e6), out3_deg => 300
     )
     port map
     (
@@ -50,7 +47,5 @@ begin
         led(2*i+1 downto 2*i) <= R_blink(i)(bits-1 downto bits-2);
       end process;
     end generate;
-    
 
-    -- led <= R_blink(R_blink'high downto R_blink'high-7);
 end mix;

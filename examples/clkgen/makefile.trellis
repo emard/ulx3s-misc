@@ -1,8 +1,8 @@
 # ******* project, board and chip name *******
-PROJECT = clkgen
+PROJECT = ecp5pll
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -18,13 +18,13 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 # ******* design files *******
 CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
-TOP_MODULE = top_clkgen
-TOP_MODULE_FILE = hdl/$(TOP_MODULE).vhd
+TOP_MODULE = top_ecp5pll
+TOP_MODULE_FILE = top/$(TOP_MODULE).vhd
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 GHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  hdl/clkgen.vhd \
+  hdl/ecp5pll.vhd \
 
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail

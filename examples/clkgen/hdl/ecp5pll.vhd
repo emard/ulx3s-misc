@@ -10,7 +10,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity clkgen is
+entity ecp5pll is
   generic
   (
     in_hz        : natural := 25000000;
@@ -40,7 +40,7 @@ entity clkgen is
   );
 end;
 
-architecture mix of clkgen is
+architecture mix of ecp5pll is
   type T_clocks is record
     in_hz    : natural;
     out0_hz  : natural;
