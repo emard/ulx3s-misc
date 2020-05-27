@@ -27,25 +27,14 @@ CONSTRAINTS = constraints/ulx3s_v20.lpf
 TOP_MODULE = top_hex_480x272
 TOP_MODULE_FILE = ../../../hdl/top/$(TOP_MODULE).v
 
-CLK0_NAME = clk_25_175_25
-CLK0_FILE_NAME = ../../../hdl/top/$(CLK0_NAME).v
-CLK0_OPTIONS = \
-  --module=$(CLK0_NAME) \
-  --clkin_name=clk25_i \
-  --clkin=25 \
-  --clkout0_name=clk175_o \
-  --clkout0=175 \
-  --clkout1_name=clk25_o \
-  --clkout1=25
-
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  $(CLK0_FILE_NAME) \
   ../../../../../hex/decoder/hex_decoder_v.v \
 
 VHDL_FILES = \
   ../../../../../dvi/hdl/vga.vhd \
-  ../../../../../lvds/hdl/vga2lvds.vhd
+  ../../../../../lvds/hdl/vga2lvds.vhd \
+  ../../../../../ecp5pll/hdl/ecp5pll.vhd
 
 SCRIPTS = ../../../../../../scripts
 

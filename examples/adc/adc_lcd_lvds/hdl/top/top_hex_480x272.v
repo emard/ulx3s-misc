@@ -12,20 +12,27 @@ module top_hex_480x272
     // wifi_gpio0=1 keeps board from rebooting
     // hold btn0 to let ESP32 take control over the board
     assign wifi_gpio0 = btn[0];
+    
+    localparam C_pixel_clock_MHz = 10;
 
     // clock generator
-    wire clk_175MHz, clk_25MHz, clk_locked;
-    clk_25_175_25
-    clock_instance
+    wire clk_locked;
+    wire [3:0] clocks;
+    ecp5pll
+    #(
+      .in_hz(25000000),
+      .out0_hz(C_pixel_clock_MHz * 7000000),
+      .out1_hz(C_pixel_clock_MHz * 1000000)
+    )
+    clk_lvds
     (
-      .clk25_i(clk_25mhz),
-      .clk175_o(clk_175MHz),
-      .clk25_o(clk_25MHz),
+      .clk_i(clk_25mhz),
+      .clk_o(clocks),
       .locked(clk_locked)
     );
-    
-    wire clk_pixel = clk_25MHz;
-    wire clk_shift = clk_175MHz;
+
+    wire clk_shift = clocks[0];
+    wire clk_pixel = clocks[1];
     
     reg [2:0] areg; // 0-7 ADC register
     reg [c_counter_bits-1:0] counter;
