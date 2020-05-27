@@ -24,7 +24,9 @@ TOP_MODULE_FILE = hdl/$(TOP_MODULE).vhd
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 GHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  ../clkgen/hdl/clkgen.vhd \
+  ../ecp5pll/hdl/ecp5pll.vhd \
+  ../lvds/hdl/vga2lvds.vhd \
+  ../lvds/hdl/lvds2vga.vhd \
 
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail --lpf-allow-unconstrained

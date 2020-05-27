@@ -5,8 +5,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-library ecp5u;
-use ecp5u.components.all;
+--library ecp5u;
+--use ecp5u.components.all;
 
 entity top_lvds_passthru is
   generic
