@@ -30,8 +30,8 @@ VERILOG_FILES =
 
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  ../clkgen/hdl/clkgen.vhd \
-  ../lvds/hdl/vga2lvds_new.vhd \
+  ../ecp5pll/hdl/ecp5pll.vhd \
+  ../lvds/hdl/vga2lvds.vhd \
   ../lvds/hdl/lvds2vga.vhd \
 
 

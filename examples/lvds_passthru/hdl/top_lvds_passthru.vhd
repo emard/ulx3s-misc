@@ -40,17 +40,14 @@ architecture mix of top_lvds_passthru is
     signal vga_r, vga_g, vga_b: std_logic_vector(5 downto 0);
     signal vga_hsync, vga_vsync, vga_de: std_logic;
 begin
-    clkgen_inst: entity work.clkgen
+    clkgen_inst: entity work.ecp5pll
     generic map
     (
-        in_hz    => natural( 10.0e6),
-      out0_hz    => natural( 70.0e6),
-      out1_hz    => natural( 10.0e6), -- clk_pixel
-      out1_deg   =>           0,      -- 0-30, 340-359
-      out2_hz    => natural( 70.0e6), -- clk_shift
-      out2_deg   =>         100,      -- 100 is ok, 40-150
-      out3_hz    => natural( 70.0e6),
-      out3_deg   =>           0,
+        in_Hz    => natural( 10.0e6),
+      out0_Hz    => natural( 70.0e6),
+      out1_Hz    => natural( 10.0e6), out1_deg =>   0, -- clk_pixel   0, 0-30 340-359
+      out2_Hz    => natural( 70.0e6), out2_deg => 100, -- clk_shift 100, 40-150
+      out3_Hz    => natural( 70.0e6),
       dynamic_en =>           1
     )
     port map
@@ -108,8 +105,8 @@ begin
     (
       clk_pixel => clk_pixel,
       clk_shift => clk_shift,
-      --r_i     => vga_r,
-      r_i     => (others => '0'), -- red OFF (hardware bug with red channel)
+      r_i     => vga_r,
+      --r_i     => (others => '0'), -- red OFF (hardware bug with red channel)
       g_i     => vga_g,
       b_i     => vga_b,
       hsync_i => vga_hsync,
