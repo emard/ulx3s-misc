@@ -37,6 +37,8 @@ architecture mix of top_lvds_passthru is
     signal input_delayed: std_logic_vector(3 downto 0);
     signal S_delay_limit: std_logic_vector(3 downto 0);
     signal R_lvds, R_pixel: T_pixel;
+    signal vga_r, vga_g, vga_b: std_logic_vector(5 downto 0);
+    signal vga_hsync, vga_vsync, vga_de: std_logic;
 begin
     clkgen_inst: entity work.clkgen
     generic map
@@ -90,54 +92,51 @@ begin
         end if;
     end process;
 
-    -- BTN:
-    -- DIR RESET       CLK
-    --           GREEN RED BLUE
-    --g_delay: for i in 0 to 2 generate
-    --  input_delay : DELAYF
-    --  port map (A => gp_i(9+i), Z => input_delayed(i), LOADN => R_btn(0), MOVE => R_btn(6-i), DIRECTION => R_btn(1), CFLAG => S_delay_limit(i));
-    --  led(i) <= S_delay_limit(i);
-    --end generate;
-    --input_delayed(3) <= gp_i(12); -- no delay for clock. PLL controls phase shift instead of delay
-
-    --gn(7 downto 0) <= (others => '0');
-    --gp(7 downto 0) <= (others => '0');
     gn(8) <= '1'; -- normally PWM
     
-    G_read_bits: for i in 0 to 3 generate
-    process(clk_shift)
-    begin
-      if rising_edge(clk_shift)
-      then
-        R_lvds(i) <= gp_i(9+i) & R_lvds(i)(6 downto 1);
-      end if;
-    end process;
-    process(clk_pixel)
-    begin
-      if rising_edge(clk_pixel)
-      then
-        R_pixel(i) <= R_lvds(i);
-      end if;
-    end process;
-    end generate;
+--    G_read_bits: for i in 0 to 3 generate
+--    process(clk_shift)
+--    begin
+--      if rising_edge(clk_shift)
+--      then
+--        R_lvds(i) <= gp_i(9+i) & R_lvds(i)(6 downto 1);
+--      end if;
+--    end process;
+--    process(clk_pixel)
+--    begin
+--      if rising_edge(clk_pixel)
+--      then
+--        R_pixel(i) <= R_lvds(i);
+--      end if;
+--    end process;
+--    end generate;
     --gp_o(3) <= R_lvds(0)(0); -- red
     --gp_o(4) <= R_lvds(1)(0); -- green
     --gp_o(5) <= R_lvds(2)(0); -- blue and sync
     --gp_o(6) <= R_lvds(3)(0); -- clock
+
+    lvds2vga_inst: entity work.lvds2vga
+    port map
+    (
+      clk_pixel => clk_pixel, clk_shift => clk_shift,
+      lvds_i => gp_i(12 downto 9), -- cbgr
+      r_o => vga_r, g_o => vga_g, b_o => vga_b,
+      hsync_o => vga_hsync, vsync_o => vga_vsync, de_o => vga_de
+    );
 
     vga2lvds_inst: entity work.vga2lvds
     port map
     (
       clk_pixel => clk_pixel,
       clk_shift => clk_shift,
-      --in_red    => R_pixel(0)(1)&R_pixel(0)(2)&R_pixel(0)(3)&R_pixel(0)(4)&R_pixel(0)(5)&R_pixel(0)(6)&"00",
-      in_red    => (others => '0'), -- red OFF (hardware bug with red channel)
-      in_green  => R_pixel(1)(2)&R_pixel(1)(3)&R_pixel(1)(4)&R_pixel(1)(5)&R_pixel(1)(6)&R_pixel(0)(1)&"00",
-      in_blue   => R_pixel(2)(3)&R_pixel(2)(4)&R_pixel(2)(5)&R_pixel(2)(6)&R_pixel(1)(0)&R_pixel(1)(1)&"00",
-      in_hsync  => R_pixel(2)(2),
-      in_vsync  => R_pixel(2)(1),
-      in_blank  => not R_pixel(2)(0),
-      out_lvds  => gp_o(6 downto 3)
+      --r_i    => vga_r;
+      r_i     => (others => '0'), -- red OFF (hardware bug with red channel)
+      g_i     => vga_g,
+      b_i     => vga_b,
+      hsync_i => vga_hsync,
+      vsync_i => vga_vsync,
+      de_i    => vga_de,
+      lvds_o  => gp_o(6 downto 3)
     );
 
 end mix;
