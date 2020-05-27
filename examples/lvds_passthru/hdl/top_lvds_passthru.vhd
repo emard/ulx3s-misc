@@ -93,27 +93,6 @@ begin
     end process;
 
     gn(8) <= '1'; -- normally PWM
-    
---    G_read_bits: for i in 0 to 3 generate
---    process(clk_shift)
---    begin
---      if rising_edge(clk_shift)
---      then
---        R_lvds(i) <= gp_i(9+i) & R_lvds(i)(6 downto 1);
---      end if;
---    end process;
---    process(clk_pixel)
---    begin
---      if rising_edge(clk_pixel)
---      then
---        R_pixel(i) <= R_lvds(i);
---      end if;
---    end process;
---    end generate;
-    --gp_o(3) <= R_lvds(0)(0); -- red
-    --gp_o(4) <= R_lvds(1)(0); -- green
-    --gp_o(5) <= R_lvds(2)(0); -- blue and sync
-    --gp_o(6) <= R_lvds(3)(0); -- clock
 
     lvds2vga_inst: entity work.lvds2vga
     port map
@@ -129,7 +108,7 @@ begin
     (
       clk_pixel => clk_pixel,
       clk_shift => clk_shift,
-      --r_i    => vga_r;
+      --r_i     => vga_r,
       r_i     => (others => '0'), -- red OFF (hardware bug with red channel)
       g_i     => vga_g,
       b_i     => vga_b,
