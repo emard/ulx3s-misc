@@ -1,5 +1,5 @@
 # ******* project, board and chip name *******
-PROJECT = ps2mouse_oled
+PROJECT = adc_lcd_lvds
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12

@@ -122,10 +122,10 @@ module top_hex_480x272
     );
 
     // VGA signal generator
-    wire [7:0] vga_r, vga_g, vga_b;
-    assign vga_r = {color[15:11],color[11],color[11],color[11]};
-    assign vga_g = {color[10:5],color[5],color[5]};
-    assign vga_b = {color[4:0],color[0],color[0],color[0]};
+    wire [5:0] vga_r, vga_g, vga_b;
+    assign vga_r = {color[15:11],color[11]};
+    assign vga_g = {color[10:5]};
+    assign vga_b = {color[4:0],color[0]};
     wire vga_hsync, vga_vsync, vga_blank;
     vga
     #(
@@ -160,13 +160,13 @@ module top_hex_480x272
     (
       .clk_pixel(clk_pixel),
       .clk_shift(clk_shift),
-      .in_red(vga_r),
-      .in_green(vga_g),
-      .in_blue(vga_b),
-      .in_hsync(vga_hsync),
-      .in_vsync(vga_vsync),
-      .in_blank(vga_blank),
-      .out_lvds(lvds)
+      .r_i(vga_r),
+      .g_i(vga_g),
+      .b_i(vga_b),
+      .hsync_i(vga_hsync),
+      .vsync_i(vga_vsync),
+      .de_i(~vga_blank),
+      .lvds_o(lvds)
     );
     
     assign gp[6:3] =  lvds;
