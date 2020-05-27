@@ -28,7 +28,7 @@ begin
   begin
     if rising_edge(clk_shift) then
       if bit_counter = "110" then -- 6
-        bit_counter <= 0; -- after 6 comes 0
+        bit_counter <= (others => '0'); -- after 6 comes 0
       else
         if R_clk_pixel = "10" and clk_data(5 downto 4) /= "10" then -- clock synchronizer
           clk_data <= clk_data(5 downto 0) & clk_data(6); -- left shift clock (slow it down by 1 cycle)
