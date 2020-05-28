@@ -120,7 +120,7 @@ VHDL_TO_VERILOG_FILES = $(VHDL_FILES:.vhd=.v)
 
 $(PROJECT).json: $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)
 	$(YOSYS) \
-	-p "read -vlog2k $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)" \
+	-p "read -sv $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)" \
 	-p "hierarchy -top ${TOP_MODULE}" \
 	-p "synth_ecp5 ${YOSYS_OPTIONS} -json ${PROJECT}.json"
 
