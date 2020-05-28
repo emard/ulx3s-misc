@@ -48,15 +48,11 @@ module ecp5pll
     integer feedback_div;
     integer fpfd, fvco, fout;
     integer error;
-    integer phase_compensation;
-    integer phase_count_x8;
-    integer phase_shift;
+    integer params_fvco;
 
-    integer params_refclk_div       ;
-    integer params_feedback_div     ;
-    integer params_output_div       ;
-    integer params_primary_phase_x8 ;
-    integer params_fvco             ;
+    integer params_refclk_div;
+    integer params_feedback_div;
+    integer params_output_div;
 
     params_fvco = 0;
     error = 999999999;
@@ -85,14 +81,10 @@ module ecp5pll
           || (fout==out0_hz && abs(fvco-VCO_OPTIMAL) < abs(params_fvco-VCO_OPTIMAL)) )
           begin
             error                   = abs(fout-out0_hz);
-            phase_compensation      = (output_div+1)/2*8-8+output_div/2*8; // output_div/2*8 = 180 deg shift
-            phase_count_x8          = phase_compensation + 8*output_div*out0_deg/360;
-            if(phase_count_x8 > 1023)
-              phase_count_x8 = phase_count_x8 % (output_div*8); // wraparound 360 deg
             params_refclk_div       = input_div;
             params_feedback_div     = feedback_div;
             params_output_div       = output_div;
-            params_primary_phase_x8 = phase_count_x8;
+            //params_primary_phase_x8 = phase_count_x8;
             params_fvco             = fvco;
           end
         end
@@ -105,21 +97,35 @@ module ecp5pll
       F_ecp5pll = params_feedback_div;
     if(x==2)
       F_ecp5pll = params_output_div;
-    if(x==3)
-      F_ecp5pll = params_primary_phase_x8;
+  endfunction
+
+  function integer F_primary_phase(input integer output_div, deg);
+    integer phase_compensation;
+    integer phase_count_x8;
+
+    phase_compensation = (output_div+1)/2*8-8+output_div/2*8; // output_div/2*8 = 180 deg shift
+    phase_count_x8     = phase_compensation + 8*output_div*deg/360;
+    if(phase_count_x8 > 1023)
+      phase_count_x8 = phase_count_x8 % (output_div*8); // wraparound 360 deg
+    F_primary_phase = phase_count_x8;
   endfunction
 
   // FIXME it is inefficient to call F_ecp5pll multiple times
   localparam params_refclk_div       = F_ecp5pll(0);
   localparam params_feedback_div     = F_ecp5pll(1);
   localparam params_output_div       = F_ecp5pll(2);
-  localparam params_primary_phase_x8 = F_ecp5pll(3);
-  localparam params_primary_cphase   = params_primary_phase_x8 / 8;
-  localparam params_primary_fphase   = params_primary_phase_x8 % 8;
   localparam params_fout             = in_hz / params_refclk_div * params_feedback_div;
   localparam params_fvco             = params_fout * params_output_div;
 
-  function integer F_secondary(input integer sfreq, sphase, x);
+  localparam params_primary_phase_x8 = F_ecp5pll(3);
+  localparam params_primary_cphase   = F_primary_phase(params_output_div, out0_deg) / 8;
+  localparam params_primary_fphase   = F_primary_phase(params_output_div, out0_deg) % 8;
+
+  function integer F_secondary_divisor(input integer sfreq);
+    F_secondary_divisor = params_fvco/sfreq;
+  endfunction
+
+  function integer F_secondary_phase(input integer sfreq, sphase);
     integer div, freq;
     integer phase_compensation, phase_count_x8;
 
@@ -130,27 +136,25 @@ module ecp5pll
     if(phase_count_x8 > 1023)
       phase_count_x8 = phase_count_x8 % (div*8); // wraparound 360 deg
 
-    if(x==0)
-      F_secondary = div;
-    if(x==1)
-      F_secondary = phase_count_x8;
+    F_secondary_phase = phase_count_x8;
   endfunction
 
-  localparam params_secondary1_div      = F_secondary(out1_hz, out1_deg, 0);
-  localparam params_secondary1_cphase   = F_secondary(out1_hz, out1_deg, 1) / 8;
-  localparam params_secondary1_fphase   = F_secondary(out1_hz, out1_deg, 1) % 8;
-  localparam params_secondary2_div      = F_secondary(out2_hz, out2_deg, 0);
-  localparam params_secondary2_cphase   = F_secondary(out2_hz, out2_deg, 1) / 8;
-  localparam params_secondary2_fphase   = F_secondary(out2_hz, out2_deg, 1) % 8;
-  localparam params_secondary3_div      = F_secondary(out3_hz, out3_deg, 0);
-  localparam params_secondary3_cphase   = F_secondary(out3_hz, out3_deg, 1) / 8;
-  localparam params_secondary3_fphase   = F_secondary(out3_hz, out3_deg, 1) % 8;
+  localparam params_secondary1_div      = F_secondary_divisor(out1_hz);
+  localparam params_secondary1_cphase   = F_secondary_phase  (out1_hz, out1_deg) / 8;
+  localparam params_secondary1_fphase   = F_secondary_phase  (out1_hz, out1_deg) % 8;
+  localparam params_secondary2_div      = F_secondary_divisor(out2_hz);
+  localparam params_secondary2_cphase   = F_secondary_phase  (out2_hz, out2_deg) / 8;
+  localparam params_secondary2_fphase   = F_secondary_phase  (out2_hz, out2_deg) % 8;
+  localparam params_secondary3_div      = F_secondary_divisor(out3_hz);
+  localparam params_secondary3_cphase   = F_secondary_phase  (out3_hz, out3_deg) / 8;
+  localparam params_secondary3_fphase   = F_secondary_phase  (out3_hz, out3_deg) % 8;
 
   wire [1:0] PHASESEL_HW = phasesel-1;
   wire CLKOP; // internal
 
-  // TODO: frequencies in MHz passed as "attributes"
-  // should appear in diamond *.mrp file like "Output Clock(P) Frequency (MHz):"
+  // TODO: frequencies in MHz if passed as "attributes"
+  // will appear in diamond *.mrp file like "Output Clock(P) Frequency (MHz):"
+  // but I don't know how to pass string parameters for this:
   // (* FREQUENCY_PIN_CLKI="025.000000" *)
   // (* FREQUENCY_PIN_CLKOP="023.345678" *)
   // (* FREQUENCY_PIN_CLKOS="034.234567" *)
