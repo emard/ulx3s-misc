@@ -157,8 +157,8 @@ architecture mix of ecp5pll is
             output_div_max := 128;
           end if;
           for output_div in output_div_min to output_div_max loop
-            fvco := fpfd * feedback_div * output_div;
-            fout := fvco / output_div;
+            fout := fpfd * feedback_div;
+            fvco := fout * output_div;
             if abs(fout-out0_hz) < error -- prefer least error
             or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
             then
