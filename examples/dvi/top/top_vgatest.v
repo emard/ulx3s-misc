@@ -7,7 +7,9 @@ module top_vgatest
   // 3: 1024x768  @60Hz
   // 4: 1280x1024 @60Hz
   // 5: 1920x1080 @30Hz
-  parameter C_mode = 0,
+  // 6: 1920x1080 @50Hz
+  // 7: 1920x1200 @50Hz
+  parameter C_mode = 7,
   parameter C_ddr  = 1 // 0:SDR 1:DDR
 )
 (
@@ -15,12 +17,20 @@ module top_vgatest
   input  [6:0] btn,
   output [7:0] led,
   output [3:0] gpdi_dp,
+  output       user_programn,
   output       wifi_gpio0
 );
 
   // wifi_gpio0=1 keeps board from rebooting
   // hold btn0 to let ESP32 take control over the board
   assign wifi_gpio0 = btn[0];
+
+  // press BTN0 to exit this bitstream
+  reg [19:0] R_delay_reload = 0;
+  always @(posedge clk_25mhz)
+    if(R_delay_reload[19]==0)
+      R_delay_reload <= R_delay_reload+1;
+  assign user_programn = btn[0] | ~R_delay_reload[19];
 
   // clock generator
   wire clk_locked;
@@ -76,7 +86,6 @@ module top_vgatest
       // VGA signal generator
       vga
       #(
-        // https://github.com/Xilinx/embeddedsw/blob/master/XilinxProcessorIPLib/drivers/video_common/src/xvidc_timings_table.c
         .C_resolution_x(720),
         .C_hsync_front_porch(12),
         .C_hsync_pulse(64),
@@ -118,7 +127,6 @@ module top_vgatest
       // VGA signal generator
       vga
       #(
-        // https://github.com/Xilinx/embeddedsw/blob/master/XilinxProcessorIPLib/drivers/video_common/src/xvidc_timings_table.c
         .C_resolution_x(800),
         .C_hsync_front_porch(32),
         .C_hsync_pulse(80),
@@ -242,7 +250,6 @@ module top_vgatest
       // VGA signal generator
       vga
       #(
-        // https://github.com/Xilinx/embeddedsw/blob/master/XilinxProcessorIPLib/drivers/video_common/src/xvidc_timings_table.c
         .C_resolution_x(1920),
         .C_hsync_front_porch(88),
         .C_hsync_pulse(44),
@@ -253,6 +260,88 @@ module top_vgatest
         .C_vsync_pulse(5),
         //.C_vsync_back_porch(36), // as specified by xvidc_timings
         .C_vsync_back_porch(46), // our adjustment for 75 MHz pixel clock
+        .C_bits_x(12),
+        .C_bits_y(11)
+      )
+      vga_instance
+      (
+        .clk_pixel(clk_pixel),
+        .clk_pixel_ena(1'b1),
+        .test_picture(1'b1), // enable test picture generation
+        .vga_r(vga_r),
+        .vga_g(vga_g),
+        .vga_b(vga_b),
+        .vga_hsync(vga_hsync),
+        .vga_vsync(vga_vsync),
+        .vga_blank(vga_blank)
+      );
+    end
+    if(C_mode == 6) // 1920x1080@50Hz
+    begin
+      ecp5pll
+      #(
+          .in_hz( 25000000),
+        .out0_hz(540000000*(C_ddr?1:2)), // overclock
+        .out1_hz(108000000)
+      )
+      ecp5pll_inst
+      (
+        .clk_i(clk_25mhz),
+        .clk_o(clocks),
+        .locked(clk_locked)
+      );
+      // VGA signal generator
+      vga
+      #(
+        .C_resolution_x(1920),
+        .C_hsync_front_porch(4),
+        .C_hsync_pulse(4),
+        .C_hsync_back_porch(21), // 21-22
+        .C_resolution_y(1080),
+        .C_vsync_front_porch(4),
+        .C_vsync_pulse(4),
+        .C_vsync_back_porch(21), // 21-22
+        .C_bits_x(12),
+        .C_bits_y(11)
+      )
+      vga_instance
+      (
+        .clk_pixel(clk_pixel),
+        .clk_pixel_ena(1'b1),
+        .test_picture(1'b1), // enable test picture generation
+        .vga_r(vga_r),
+        .vga_g(vga_g),
+        .vga_b(vga_b),
+        .vga_hsync(vga_hsync),
+        .vga_vsync(vga_vsync),
+        .vga_blank(vga_blank)
+      );
+    end
+    if(C_mode == 7) // 1920x1200@50Hz
+    begin
+      ecp5pll
+      #(
+          .in_hz( 25000000),
+        .out0_hz(600000000*(C_ddr?1:2)), // overclock
+        .out1_hz(120000000)
+      )
+      ecp5pll_inst
+      (
+        .clk_i(clk_25mhz),
+        .clk_o(clocks),
+        .locked(clk_locked)
+      );
+      // VGA signal generator
+      vga
+      #(
+        .C_resolution_x(1920),
+        .C_hsync_front_porch(12),
+        .C_hsync_pulse(12),
+        .C_hsync_back_porch(12),
+        .C_resolution_y(1200),
+        .C_vsync_front_porch(4),
+        .C_vsync_pulse(4),
+        .C_vsync_back_porch(16),
         .C_bits_x(12),
         .C_bits_y(11)
       )
@@ -294,7 +383,7 @@ module top_vgatest
   vga2dvid
   #(
     .C_ddr(C_ddr?1'b1:1'b0),
-    .C_shift_clock_synchronizer(1'b1)
+    .C_shift_clock_synchronizer(1'b0)
   )
   vga2dvid_instance
   (
@@ -339,4 +428,5 @@ module top_vgatest
   ODDRX1F ddr1_green (.D0(tmds[1][0]), .D1(tmds[1][1]), .Q(gp[10]), .SCLK(clk_shift), .RST(0));
   ODDRX1F ddr1_blue  (.D0(tmds[0][0]), .D1(tmds[0][1]), .Q(gp[ 9]), .SCLK(clk_shift), .RST(0));
 */
+
 endmodule
