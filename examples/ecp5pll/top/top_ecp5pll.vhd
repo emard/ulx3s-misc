@@ -8,7 +8,7 @@ use ieee.std_logic_unsigned.all;
 entity top_ecp5pll is
   generic
   (
-    bits: integer := 27
+    bits: integer := 26
   );
   port
   (

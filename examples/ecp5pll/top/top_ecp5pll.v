@@ -1,4 +1,7 @@
 module top_ecp5pll
+#(
+  parameter    bits = 26
+)
 (
   input        clk_25mhz,
   input  [6:0] btn,
@@ -22,7 +25,6 @@ module top_ecp5pll
     .clk_o(clocks)
   );
 
-  localparam bits = 27;  
   generate
     genvar i;
     for(i = 0; i < 4; i=i+1)
