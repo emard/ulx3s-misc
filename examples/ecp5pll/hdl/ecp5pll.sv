@@ -38,10 +38,6 @@ module ecp5pll
   localparam VCO_MAX = 800000000;
   localparam VCO_OPTIMAL = (VCO_MIN+VCO_MAX)/2;
 
-  function enabled_str(input integer en);
-    enabled_str = en == 0 ? "DISABLED" : "ENABLED";
-  endfunction
-
   function integer abs(input integer x);
     abs = x > 0 ? x : -x;
   endfunction
@@ -150,7 +146,7 @@ module ecp5pll
   localparam params_secondary3_cphase   = F_secondary(out3_hz, out3_deg, 1) / 8;
   localparam params_secondary3_fphase   = F_secondary(out3_hz, out3_deg, 1) % 8;
 
-  wire [1:0] phasesel_hw = phasesel-1;
+  wire [1:0] PHASESEL_HW = phasesel-1;
   wire CLKOP; // internal
 
   // TODO: frequencies in MHz passed as "attributes"
@@ -192,9 +188,9 @@ module ecp5pll
     .CLKOS3_FPHASE(params_secondary3_fphase),
 
     .INTFB_WAKE   ("DISABLED"),
-    .STDBY_ENABLE (enabled_str(standby_en)),
-    .PLLRST_ENA   (enabled_str(reset_en)),
-    .DPHASE_SOURCE(enabled_str(dynamic_en)),
+    .STDBY_ENABLE (standby_en ? "ENABLED" : "DISABLED"),
+    .PLLRST_ENA   (standby_en ? "ENABLED" : "DISABLED"),
+    .DPHASE_SOURCE(standby_en ? "ENABLED" : "DISABLED"),
     .PLL_LOCK_MODE(0)
   )
   pll_inst
@@ -208,13 +204,16 @@ module ecp5pll
     .CLKOS3(clk_o[3]),
     .CLKFB(CLKOP),
     .CLKINTFB(),
-    .PHASESEL1(phasesel_hw[1]),
-    .PHASESEL0(phasesel_hw[0]),
+    .PHASESEL1(PHASESEL_HW[1]),
+    .PHASESEL0(PHASESEL_HW[0]),
     .PHASEDIR(phasedir),
     .PHASESTEP(phasestep),
     .PHASELOADREG(phaseloadreg),
     .PLLWAKESYNC(1'b0),
     .ENCLKOP(1'b0),
+    .ENCLKOS(1'b0),
+    .ENCLKOS2(1'b0),
+    .ENCLKOS3(1'b0),
     .LOCK(locked)
   );
   assign clk_o[0] = CLKOP;
