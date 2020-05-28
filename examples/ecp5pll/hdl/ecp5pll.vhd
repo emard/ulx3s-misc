@@ -1,7 +1,7 @@
 -- (c)EMARD
 -- License=BSD
 
--- parametric ECP5 PLL generator
+-- parametric ECP5 PLL generator in VHDL
 -- to see actual frequencies and phase shifts
 -- trellis log/stdout : search for "MHz", "Derived", "frequency"
 -- diamond log/*.mrp  : search for "MHz", "Frequency", "Phase", "Desired"
@@ -128,6 +128,7 @@ architecture mix of ecp5pll is
       variable phase_count_x8: natural;
       variable phase_shift: natural;
     begin
+      params.fvco := 0;
       sfreq(1)  := request.out1_hz;
       sphase(1) := request.out1_deg;
       sfreq(2)  := request.out2_hz;
@@ -148,21 +149,21 @@ architecture mix of ecp5pll is
       for input_div in input_div_min to input_div_max loop
         fpfd := in_hz / input_div;
         for feedback_div in 1 to 80 loop
-          output_div_min := VCO_MIN/feedback_div/fpfd;
+          fout := fpfd * feedback_div;
+          output_div_min := VCO_MIN/fout;
           if output_div_min < 1 then
             output_div_min := 1;
           end if;
-          output_div_max := VCO_MAX/feedback_div/fpfd;
+          output_div_max := VCO_MAX/fout;
           if output_div_max > 128 then
             output_div_max := 128;
           end if;
           for output_div in output_div_min to output_div_max loop
-            fout := fpfd * feedback_div;
             fvco := fout * output_div;
             if abs(fout-out0_hz) < error -- prefer least error
             or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
             then
-              error  := abs(fout-out0_hz);
+              error                 := abs(fout-out0_hz);
               phase_compensation    := (output_div+1)/2*8-8+output_div/2*8; -- output_div/2*8 = 180 deg shift
               phase_count_x8        := phase_compensation + 8*output_div*out0_deg/360;
               if phase_count_x8 > 1023 then
@@ -340,8 +341,8 @@ begin
     CLKOS3_FPHASE   =>  params.secondary(3).fphase,
 
     INTFB_WAKE      => "DISABLED",
-    PLLRST_ENA      =>  enabled_str(reset_en),
     STDBY_ENABLE    =>  enabled_str(standby_en),
+    PLLRST_ENA      =>  enabled_str(reset_en),
     DPHASE_SOURCE   =>  enabled_str(dynamic_en),
     PLL_LOCK_MODE   =>  0
   )
