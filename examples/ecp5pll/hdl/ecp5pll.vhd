@@ -278,11 +278,8 @@ architecture mix of ecp5pll is
 
   -- internal signal declarations
   signal CLKOP_t  : std_logic;
-  signal CLKOS_t  : std_logic;
-  signal CLKOS2_t : std_logic;
-  signal CLKOS3_t : std_logic;
   signal REFCLK   : std_logic;
-  signal phasesel_hw : std_logic_vector(1 downto 0);
+  signal PHASESEL_HW : std_logic_vector(1 downto 0);
 
   attribute FREQUENCY_PIN_CLKI   : string;
   attribute FREQUENCY_PIN_CLKOP  : string;
@@ -305,7 +302,7 @@ architecture mix of ecp5pll is
   attribute NGD_DRC_MASK of mix : architecture is 1;
 begin
   G_dynamic: if dynamic_en /= 0 generate
-  phasesel_hw <= phasesel-1;
+  PHASESEL_HW <= phasesel-1;
   end generate;
   PLL_inst: EHXPLLL
   generic map
@@ -350,23 +347,20 @@ begin
   (
     CLKI => clk_i, CLKFB => CLKOP_t,
     RST => reset, STDBY => standby, PLLWAKESYNC => '0',
-    PHASESEL1    => phasesel_hw(1),
-    PHASESEL0    => phasesel_hw(0),
+    PHASESEL1    => PHASESEL_HW(1),
+    PHASESEL0    => PHASESEL_HW(0),
     PHASEDIR     => phasedir,
     PHASESTEP    => phasestep,
     PHASELOADREG => phaseloadreg,
     ENCLKOP =>'0', ENCLKOS => '0', ENCLKOS2 => '0', ENCLKOS3 => '0',
     CLKOP  => CLKOP_t,
-    CLKOS  => CLKOS_t,
-    CLKOS2 => CLKOS2_t,
-    CLKOS3 => CLKOS3_t,
+    CLKOS  => clk_o(1),
+    CLKOS2 => clk_o(2),
+    CLKOS3 => clk_o(3),
     INTLOCK => open, REFCLK => REFCLK, CLKINTFB => open,
     LOCK => locked
   );
   
-  clk_o(0) <= clkop_t;
-  clk_o(1) <= clkos_t;
-  clk_o(2) <= clkos2_t;
-  clk_o(3) <= clkos3_t;
+  clk_o(0) <= CLKOP_t;
 
 end mix;
