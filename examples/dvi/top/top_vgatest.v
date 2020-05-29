@@ -1,16 +1,28 @@
 module top_vgatest
 #(
-  // C_mode
-  // 0:  640x480  @60Hz
-  // 1:  720x576  @50Hz
-  // 2:  800x600  @60Hz
-  // 3: 1024x768  @60Hz
-  // 4: 1280x1024 @60Hz
-  // 5: 1920x1080 @30Hz
-  // 6: 1920x1080 @50Hz
-  // 7: 1920x1200 @50Hz
-  parameter C_mode = 0,
-  parameter C_ddr  = 1 // 0:SDR 1:DDR
+  //  modes tested on lenovo monitor
+  //  480x272  @60Hz
+  //  640x400  @50Hz
+  //  640x400  @60Hz
+  //  640x480  @50Hz
+  //  640x480  @60Hz
+  //  720x576  @50Hz
+  //  720x576  @60Hz
+  //  800x480  @60Hz
+  //  800x600  @60Hz
+  // 1024x768  @60Hz
+  // 1280x768  @60Hz
+  // 1366x768  @60Hz
+  // 1280x1024 @60Hz
+  // 1920x1080 @30Hz
+  // 1920x1080 @50Hz overclock
+  // 1920x1200 @50Hz overclock
+  parameter x =  640,      // pixels
+  parameter y =  480,      // pixels
+  parameter f =   60,      // Hz 60,50,30
+  parameter xadjustf =  0, // adjust -3..3 if no picture
+  parameter yadjustf =  0, // or to get correct f
+  parameter C_ddr    =  1  // 0:SDR 1:DDR
 )
 (
   input        clk_25mhz,
@@ -21,6 +33,51 @@ module top_vgatest
   output       wifi_gpio0
 );
 
+  function integer F_find_next_f(input integer f);
+    integer f0;
+    if(120000000>f)
+      f0=120000000; // overclock
+    if(108000000>f)
+      f0=108000000; // overclock
+    if(100000000>f)
+      f0=100000000; // overclock
+    if(80000000>f)
+      f0=80000000;  // overclock
+    if(75000000>f)
+      f0=75000000;
+    if(65000000>f)
+      f0=65000000;
+    if(60000000>f)
+      f0=60000000;
+    if(54000000>f)
+      f0=54000000;
+    if(50000000>f)
+      f0=50000000;
+    if(40000000>f)
+      f0=40000000;
+    if(27000000>f)
+      f0=27000000;
+    if(25000000>f)
+      f0=25000000;
+    F_find_next_f=f0;
+  endfunction
+  
+  localparam xminblank         = x/64; // initial estimate
+  localparam yminblank         = y/64; // for minimal blank space
+  localparam min_pixel_f       = f*(x+xminblank)*(y+yminblank);
+  localparam pixel_f           = F_find_next_f(min_pixel_f);
+  localparam yframe            = y+yminblank;
+  localparam xframe            = pixel_f/(f*yframe);
+  localparam xblank            = xframe-x;
+  localparam yblank            = yframe-y;
+  localparam hsync_front_porch = xblank/3;
+  localparam hsync_pulse_width = xblank/3;
+  localparam hsync_back_porch  = xblank-hsync_pulse_width-hsync_front_porch+xadjustf;
+  localparam vsync_front_porch = yblank/3;
+  localparam vsync_pulse_width = yblank/3;
+  localparam vsync_back_porch  = yblank-vsync_pulse_width-vsync_front_porch+yadjustf;
+
+  
   // wifi_gpio0=1 keeps board from rebooting
   // hold btn0 to let ESP32 take control over the board
   assign wifi_gpio0 = btn[0];
@@ -37,328 +94,46 @@ module top_vgatest
   wire [3:0] clocks;
   wire clk_shift = clocks[0];
   wire clk_pixel = clocks[1];
+  ecp5pll
+  #(
+      .in_hz(25000000),
+    .out0_hz(pixel_f*5*(C_ddr?1:2)),
+    .out1_hz(pixel_f)
+  )
+  ecp5pll_inst
+  (
+    .clk_i(clk_25mhz),
+    .clk_o(clocks),
+    .locked(clk_locked)
+  );
+  // VGA signal generator
   wire [7:0] vga_r, vga_g, vga_b;
   wire vga_hsync, vga_vsync, vga_blank;
-  generate
-    if(C_mode == 0) // 640x480@60Hz
-    begin
-      ecp5pll
-      #(
-          .in_hz( 25000000),
-        .out0_hz(125000000*(C_ddr?1:2)),
-        .out1_hz( 25000000)
-      )
-      ecp5pll_inst
-      (
-        .clk_i(clk_25mhz),
-        .clk_o(clocks),
-        .locked(clk_locked)
-      );
-      // VGA signal generator
-      vga
-      vga_instance
-      (
-        .clk_pixel(clk_pixel),
-        .clk_pixel_ena(1'b1),
-        .test_picture(1'b1), // enable test picture generation
-        .vga_r(vga_r),
-        .vga_g(vga_g),
-        .vga_b(vga_b),
-        .vga_hsync(vga_hsync),
-        .vga_vsync(vga_vsync),
-        .vga_blank(vga_blank)
-      );
-    end
-    if(C_mode == 1) // 720x576@50Hz
-    begin
-      ecp5pll
-      #(
-          .in_hz( 25000000),
-        .out0_hz(135000000*(C_ddr?1:2)),
-        .out1_hz( 27000000)
-      )
-      ecp5pll_inst
-      (
-        .clk_i(clk_25mhz),
-        .clk_o(clocks),
-        .locked(clk_locked)
-      );
-      // VGA signal generator
-      vga
-      #(
-        .C_resolution_x(720),
-        .C_hsync_front_porch(12),
-        .C_hsync_pulse(64),
-        .C_hsync_back_porch(68),
-        .C_resolution_y(576),
-        .C_vsync_front_porch(5),
-        .C_vsync_pulse(5),
-        .C_vsync_back_porch(39),
-        .C_bits_x(12),
-        .C_bits_y(11)
-      )
-      vga_instance
-      (
-        .clk_pixel(clk_pixel),
-        .clk_pixel_ena(1'b1),
-        .test_picture(1'b1), // enable test picture generation
-        .vga_r(vga_r),
-        .vga_g(vga_g),
-        .vga_b(vga_b),
-        .vga_hsync(vga_hsync),
-        .vga_vsync(vga_vsync),
-        .vga_blank(vga_blank)
-      );
-    end
-    if(C_mode == 2) // 800x600@60Hz
-    begin
-      ecp5pll
-      #(
-          .in_hz( 25000000),
-        .out0_hz(200000000*(C_ddr?1:2)),
-        .out1_hz( 40000000)
-      )
-      ecp5pll_inst
-      (
-        .clk_i(clk_25mhz),
-        .clk_o(clocks),
-        .locked(clk_locked)
-      );
-      // VGA signal generator
-      vga
-      #(
-        .C_resolution_x(800),
-        .C_hsync_front_porch(32),
-        .C_hsync_pulse(80),
-        .C_hsync_back_porch(112),
-        .C_resolution_y(600),
-        .C_vsync_front_porch(3),
-        .C_vsync_pulse(5),
-        .C_vsync_back_porch(43),
-        .C_bits_x(12),
-        .C_bits_y(11)
-      )
-      vga_instance
-      (
-        .clk_pixel(clk_pixel),
-        .clk_pixel_ena(1'b1),
-        .test_picture(1'b1), // enable test picture generation
-        .vga_r(vga_r),
-        .vga_g(vga_g),
-        .vga_b(vga_b),
-        .vga_hsync(vga_hsync),
-        .vga_vsync(vga_vsync),
-        .vga_blank(vga_blank)
-      );
-    end
-    if(C_mode == 3) // 1024x768@60Hz
-    begin
-      ecp5pll
-      #(
-          .in_hz( 25000000),
-        .out0_hz(325000000*(C_ddr?1:2)),
-        .out1_hz( 65000000)
-      )
-      ecp5pll_inst
-      (
-        .clk_i(clk_25mhz),
-        .clk_o(clocks),
-        .locked(clk_locked)
-      );
-      // VGA signal generator
-      vga
-      #(
-        .C_resolution_x(1024),
-        .C_hsync_front_porch(16),
-        .C_hsync_pulse(96),
-        .C_hsync_back_porch(44),
-        .C_resolution_y(768),
-        .C_vsync_front_porch(10),
-        .C_vsync_pulse(2),
-        .C_vsync_back_porch(31),
-        .C_bits_x(11),
-        .C_bits_y(11)
-      )
-      vga_instance
-      (
-        .clk_pixel(clk_pixel),
-        .clk_pixel_ena(1'b1),
-        .test_picture(1'b1), // enable test picture generation
-        .vga_r(vga_r),
-        .vga_g(vga_g),
-        .vga_b(vga_b),
-        .vga_hsync(vga_hsync),
-        .vga_vsync(vga_vsync),
-        .vga_blank(vga_blank)
-      );
-    end
-    if(C_mode == 4) // 1280x1024@60Hz
-    begin
-      ecp5pll
-      #(
-          .in_hz( 25000000),
-        .out0_hz(375000000*(C_ddr?1:2)),
-        .out1_hz( 75000000)
-      )
-      ecp5pll_inst
-      (
-        .clk_i(clk_25mhz),
-        .clk_o(clocks),
-        .locked(clk_locked)
-      );
-      // VGA signal generator
-      vga
-      #(
-        .C_resolution_x(1280),
-        .C_hsync_front_porch(30),
-        .C_hsync_pulse(64),
-        .C_hsync_back_porch(60),
-        .C_resolution_y(1024),
-        .C_vsync_front_porch(3),
-        .C_vsync_pulse(5),
-        .C_vsync_back_porch(10),
-        .C_bits_x(11),
-        .C_bits_y(11)
-      )
-      vga_instance
-      (
-        .clk_pixel(clk_pixel),
-        .clk_pixel_ena(1'b1),
-        .test_picture(1'b1), // enable test picture generation
-        .vga_r(vga_r),
-        .vga_g(vga_g),
-        .vga_b(vga_b),
-        .vga_hsync(vga_hsync),
-        .vga_vsync(vga_vsync),
-        .vga_blank(vga_blank)
-      );
-    end
-    if(C_mode == 5) // 1920x1080@30Hz
-    begin
-      ecp5pll
-      #(
-          .in_hz( 25000000),
-        .out0_hz(375000000*(C_ddr?1:2)),
-        .out1_hz( 75000000)
-      )
-      ecp5pll_inst
-      (
-        .clk_i(clk_25mhz),
-        .clk_o(clocks),
-        .locked(clk_locked)
-      );
-      // VGA signal generator
-      vga
-      #(
-        .C_resolution_x(1920),
-        .C_hsync_front_porch(88),
-        .C_hsync_pulse(44),
-        //.C_hsync_back_porch(148), // as specified by xvidc_timings
-        .C_hsync_back_porch(133), // our adjustment for 75 MHz pixel clock
-        .C_resolution_y(1080),
-        .C_vsync_front_porch(4),
-        .C_vsync_pulse(5),
-        //.C_vsync_back_porch(36), // as specified by xvidc_timings
-        .C_vsync_back_porch(46), // our adjustment for 75 MHz pixel clock
-        .C_bits_x(12),
-        .C_bits_y(11)
-      )
-      vga_instance
-      (
-        .clk_pixel(clk_pixel),
-        .clk_pixel_ena(1'b1),
-        .test_picture(1'b1), // enable test picture generation
-        .vga_r(vga_r),
-        .vga_g(vga_g),
-        .vga_b(vga_b),
-        .vga_hsync(vga_hsync),
-        .vga_vsync(vga_vsync),
-        .vga_blank(vga_blank)
-      );
-    end
-    if(C_mode == 6) // 1920x1080@50Hz
-    begin
-      ecp5pll
-      #(
-          .in_hz( 25000000),
-        .out0_hz(540000000*(C_ddr?1:2)), // overclock
-        .out1_hz(108000000)
-      )
-      ecp5pll_inst
-      (
-        .clk_i(clk_25mhz),
-        .clk_o(clocks),
-        .locked(clk_locked)
-      );
-      // VGA signal generator
-      vga
-      #(
-        .C_resolution_x(1920),
-        .C_hsync_front_porch(4),
-        .C_hsync_pulse(4),
-        .C_hsync_back_porch(21), // 21-22
-        .C_resolution_y(1080),
-        .C_vsync_front_porch(4),
-        .C_vsync_pulse(4),
-        .C_vsync_back_porch(21), // 21-22
-        .C_bits_x(12),
-        .C_bits_y(11)
-      )
-      vga_instance
-      (
-        .clk_pixel(clk_pixel),
-        .clk_pixel_ena(1'b1),
-        .test_picture(1'b1), // enable test picture generation
-        .vga_r(vga_r),
-        .vga_g(vga_g),
-        .vga_b(vga_b),
-        .vga_hsync(vga_hsync),
-        .vga_vsync(vga_vsync),
-        .vga_blank(vga_blank)
-      );
-    end
-    if(C_mode == 7) // 1920x1200@50Hz
-    begin
-      ecp5pll
-      #(
-          .in_hz( 25000000),
-        .out0_hz(600000000*(C_ddr?1:2)), // overclock
-        .out1_hz(120000000)
-      )
-      ecp5pll_inst
-      (
-        .clk_i(clk_25mhz),
-        .clk_o(clocks),
-        .locked(clk_locked)
-      );
-      // VGA signal generator
-      vga
-      #(
-        .C_resolution_x(1920),
-        .C_hsync_front_porch(12),
-        .C_hsync_pulse(12),
-        .C_hsync_back_porch(12),
-        .C_resolution_y(1200),
-        .C_vsync_front_porch(4),
-        .C_vsync_pulse(4),
-        .C_vsync_back_porch(16),
-        .C_bits_x(12),
-        .C_bits_y(11)
-      )
-      vga_instance
-      (
-        .clk_pixel(clk_pixel),
-        .clk_pixel_ena(1'b1),
-        .test_picture(1'b1), // enable test picture generation
-        .vga_r(vga_r),
-        .vga_g(vga_g),
-        .vga_b(vga_b),
-        .vga_hsync(vga_hsync),
-        .vga_vsync(vga_vsync),
-        .vga_blank(vga_blank)
-      );
-    end
-  endgenerate
+  vga
+  #(
+    .C_resolution_x(x),
+    .C_hsync_front_porch(hsync_front_porch),
+    .C_hsync_pulse(hsync_pulse_width),
+    .C_hsync_back_porch(hsync_back_porch),
+    .C_resolution_y(y),
+    .C_vsync_front_porch(vsync_front_porch),
+    .C_vsync_pulse(vsync_pulse_width),
+    .C_vsync_back_porch(vsync_back_porch),
+    .C_bits_x(12),
+    .C_bits_y(11)
+  )
+  vga_instance
+  (
+    .clk_pixel(clk_pixel),
+    .clk_pixel_ena(1'b1),
+    .test_picture(1'b1), // enable test picture generation
+    .vga_r(vga_r),
+    .vga_g(vga_g),
+    .vga_b(vga_b),
+    .vga_hsync(vga_hsync),
+    .vga_vsync(vga_vsync),
+    .vga_blank(vga_blank)
+  );
 
   // LED blinky
   localparam counter_width = 28;
