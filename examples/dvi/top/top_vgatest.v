@@ -1,7 +1,6 @@
 module top_vgatest
 #(
   //  modes tested on lenovo monitor
-  //  480x272  @60Hz
   //  640x400  @50Hz
   //  640x400  @60Hz
   //  640x480  @50Hz
@@ -21,7 +20,7 @@ module top_vgatest
   parameter y =  480,      // pixels
   parameter f =   60,      // Hz 60,50,30
   parameter xadjustf =  0, // adjust -3..3 if no picture
-  parameter yadjustf =  0, // or to get correct f
+  parameter yadjustf =  0, // or to fine-tune f
   parameter C_ddr    =  1  // 0:SDR 1:DDR
 )
 (
