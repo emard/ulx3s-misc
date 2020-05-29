@@ -1,4 +1,4 @@
-# Project Trellis DVI
+# DVI examples
 
 Simple VGA video example
 from [fpga4fun](https://www.fpga4fun.com/HDMI.html) shows
