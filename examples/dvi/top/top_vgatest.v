@@ -15,8 +15,8 @@ module top_vgatest
   // 1366x768  @60Hz
   // 1280x1024 @60Hz
   // 1920x1080 @30Hz
-  // 1920x1080 @50Hz overclock
-  // 1920x1200 @50Hz overclock
+  // 1920x1080 @50Hz overclock 540MHz
+  // 1920x1200 @50Hz overclock 600MHz
   parameter x =  640,      // pixels
   parameter y =  480,      // pixels
   parameter f =   60,      // Hz 60,50,30
