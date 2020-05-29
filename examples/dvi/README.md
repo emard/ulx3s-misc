@@ -16,50 +16,33 @@ Same source can also be compiled with Lattice Diamond:
 
     make -f makefile.diamond
 
-A part of diamond closed-source tools (DDTCMD) is used here to create
-*.vme programming file for "FleaFPGA-JTAG" tool, but it can be skiped as
-generated *.bin file can be programmed and flashed with our "ujprog" tool
-and generated *.svf file can be programmed with latest "openocd" or uploaded
-remotely using onboard ESP32 WiFi.
+# Flexible video modes
 
-# Compiling the opensource tools
+To change video mode, just edit the toplevel
+"top/top_vgatest.v" and enter desired screen
+resolution and frame refresh frequency, like:
 
-get prjtrellis (it should autmatically pull its latest database) and compile
+    parameter x =  640,      // pixels
+    parameter y =  480,      // pixels
+    parameter f =   60,      // Hz 60,50,30
 
-    git clone https://github.com/SymbiFlow/prjtrellis
-    cd prjtrellis/libtrellis
-    cmake -DCMAKE_INSTALL_PREFIX=/usr .
-    make
+or
 
-get yosys, and compile
+    parameter x = 1024,      // pixels
+    parameter y =  768,      // pixels
+    parameter f =   60,      // Hz 60,50,30
 
-    git clone https://github.com/YosysHQ/yosys
-    cd yosys
-    make config-gcc
-    make 
+Without overclock max resolution is
+1920x1080@30Hz, but some monitors will not accept 30Hz.
+Higher modes with 50Hz are more compatible
+but involve ECP5 oveclock much above official 400MHz max:
 
-get fresh nextpnr
+    1920x1080@50Hz 540MHz
+    1920x1200@50Hz 600MHz
 
-    git clone https://github.com/YosysHQ/nextpnr
-    cd nextpnr
-    cmake -DARCH=ecp5 -DTRELLIS_ROOT=/path/to/prjtrellis .
-    make
+If monitor doesn't show correct refresh rate,
+it can be fine tuned. Negative values will raise
+refresh rate. Positive values will lower refresh rate.
 
-In case of some errors, delete "CMakeCache.txt", change something like
-quoting last arg in file "CMakeLists.txt" around line 123:
-
-    -    STRING(REGEX REPLACE "[^0-9]" "" boost_py_version ${version})
-    +    STRING(REGEX REPLACE "[^0-9]" "" boost_py_version "${version}")
-
-If some older python file is missing, as a quick'n'drty fix just symlink
-to the newer file that's currently installed:
-
-    cd /usr/lib/x86_64-linux-gnu
-    ln -s libpython3.7m.so libpython3.6m.so
-
-To force-recompile existing nextpnr with newer prjtrellis database:
-
-    cd nextpnr
-    touch ecp5/trellis_import.py
-    make clean
-    make
+    parameter xadjustf =  0, // adjust -3..3 if no picture
+    parameter yadjustf =  0, // or to get correct f
