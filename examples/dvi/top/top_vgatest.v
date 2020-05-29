@@ -9,7 +9,7 @@ module top_vgatest
   // 5: 1920x1080 @30Hz
   // 6: 1920x1080 @50Hz
   // 7: 1920x1200 @50Hz
-  parameter C_mode = 7,
+  parameter C_mode = 0,
   parameter C_ddr  = 1 // 0:SDR 1:DDR
 )
 (
