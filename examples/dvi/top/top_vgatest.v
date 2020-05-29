@@ -33,32 +33,30 @@ module top_vgatest
 );
 
   function integer F_find_next_f(input integer f);
-    integer f0;
-    if(120000000>f)
-      f0=120000000; // overclock
-    if(108000000>f)
-      f0=108000000; // overclock
-    if(100000000>f)
-      f0=100000000; // overclock
-    if(80000000>f)
-      f0=80000000;  // overclock
-    if(75000000>f)
-      f0=75000000;
-    if(65000000>f)
-      f0=65000000;
-    if(60000000>f)
-      f0=60000000;
-    if(54000000>f)
-      f0=54000000;
-    if(50000000>f)
-      f0=50000000;
-    if(40000000>f)
-      f0=40000000;
-    if(27000000>f)
-      f0=27000000;
     if(25000000>f)
-      f0=25000000;
-    F_find_next_f=f0;
+      F_find_next_f=25000000;
+    else if(27000000>f)
+      F_find_next_f=27000000;
+    else if(40000000>f)
+      F_find_next_f=40000000;
+    else if(50000000>f)
+      F_find_next_f=50000000;
+    else if(54000000>f)
+      F_find_next_f=54000000;
+    else if(60000000>f)
+      F_find_next_f=60000000;
+    else if(65000000>f)
+      F_find_next_f=65000000;
+    else if(75000000>f)
+      F_find_next_f=75000000;
+    else if(80000000>f)
+      F_find_next_f=80000000;  // overclock
+    else if(100000000>f)
+      F_find_next_f=100000000; // overclock
+    else if(108000000>f)
+      F_find_next_f=108000000; // overclock
+    else if(120000000>f)
+      F_find_next_f=120000000; // overclock
   endfunction
   
   localparam xminblank         = x/64; // initial estimate
@@ -118,7 +116,7 @@ module top_vgatest
     .C_vsync_front_porch(vsync_front_porch),
     .C_vsync_pulse(vsync_pulse_width),
     .C_vsync_back_porch(vsync_back_porch),
-    .C_bits_x(12),
+    .C_bits_x(11),
     .C_bits_y(11)
   )
   vga_instance
