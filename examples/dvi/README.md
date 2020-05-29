@@ -8,13 +8,13 @@ is converted to 10-bit digital video, serialized with DDR/SDR option,
 and sent to single-ended otputs as fake differential signal.
 It works on ULX3S with latest prjtrellis.
 
-For prjtrellis, compile it with:
+For prjtrellis, compile and program it with:
 
-    make 
+    make clean; make program
 
 Same source can also be compiled with Lattice Diamond:
 
-    make -f makefile.diamond
+    make -f makefile.diamond; make -f makefile.diamond program
 
 # Flexible video modes
 
@@ -31,6 +31,11 @@ or
     parameter x = 1024,      // pixels
     parameter y =  768,      // pixels
     parameter f =   60,      // Hz 60,50,30
+
+This project features compile-time evaluated constant
+functions which calculate ECP5 PLL parameters and
+video timings that work for digital LCD displays.
+This is probably not suitable for analog CRT displays.
 
 Without overclock max resolution is
 1920x1080@30Hz, but some monitors will not accept 30Hz.
