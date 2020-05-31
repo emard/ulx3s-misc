@@ -5,8 +5,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-library ecp5u;
-use ecp5u.components.all;
+--library ecp5u;
+--use ecp5u.components.all;
 
 entity top_vgatest is
   generic
@@ -30,10 +30,7 @@ entity top_vgatest is
     gp, gn: inout std_logic_vector(27 downto 0) := (others => 'Z');
 
     -- Digital Video (differential outputs)
-    gpdi_dp: out std_logic_vector(3 downto 0);
-
-    -- SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
-    shutdown: out std_logic := '0'
+    gpdi_dp: out std_logic_vector(3 downto 0)
   );
 end;
 
@@ -109,9 +106,17 @@ architecture Behavioral of top_vgatest is
 
   signal clocks: std_logic_vector(3 downto 0);
   signal clk_pixel, clk_shift: std_logic;
-  signal vga_hsync, vga_vsync, vga_blank: std_logic;
+  signal vga_hsync, vga_vsync, vga_blank, vga_de: std_logic;
   signal vga_r, vga_g, vga_b: std_logic_vector(7 downto 0);
   signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
+  signal beam_x, beam_y: std_logic_vector(12 downto 0);
+  
+  signal R_slow_ena: std_logic_vector(10 downto 0);
+
+  component ODDRX1F
+    port (D0, D1, SCLK, RST: in std_logic; Q: out std_logic);
+  end component;
+
 begin
   clk_single_pll: entity work.ecp5pll
   generic map
@@ -127,6 +132,17 @@ begin
   );
   clk_shift <= clocks(0);
   clk_pixel <= clocks(1);
+  
+  process(clk_pixel)
+  begin
+    if rising_edge(clk_pixel) then
+      if R_slow_ena(R_slow_ena'high)='0' then
+        R_slow_ena <= R_slow_ena + 1;
+      else
+        R_slow_ena <= (others => '0');
+      end if;
+    end if;
+  end process;
 
   vga_instance: entity work.vga
   generic map
@@ -140,26 +156,28 @@ begin
     C_vsync_pulse       => video_timing.vsync_pulse_width,
     C_vsync_back_porch  => video_timing.vsync_back_porch,
 
-    C_bits_x       =>  11,
+    C_bits_x       =>  12,
     C_bits_y       =>  11
   )
   port map
   (
       clk_pixel  => clk_pixel,
-      clk_pixel_ena => '1',
+      clk_pixel_ena => '1', -- R_slow_ena(R_slow_ena'high),
       test_picture => '1',
-      beam_x     => open,
-      beam_y     => open,
-      red_byte   => open,
-      green_byte => open,
-      blue_byte  => open,
+      --beam_x     => beam_x,
+      --beam_y     => beam_y,
       vga_r      => vga_r,
       vga_g      => vga_g,
       vga_b      => vga_b,
       vga_hsync  => vga_hsync,
       vga_vsync  => vga_vsync,
       vga_blank  => vga_blank
+      --vga_de     => vga_de
   );
+  
+  led(0) <= vga_hsync;
+  led(1) <= vga_vsync;
+  led(7) <= vga_blank;
 
   vga2dvid_instance: entity work.vga2dvid
   generic map
