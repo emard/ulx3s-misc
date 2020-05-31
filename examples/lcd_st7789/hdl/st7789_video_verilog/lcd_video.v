@@ -39,7 +39,6 @@ module lcd_video #(
   output wire spi_resn
 );
 
-
   reg [7:0] c_oled_init[0:c_init_size-1];
   initial begin
     $readmemh(c_init_file, c_oled_init);
@@ -48,48 +47,29 @@ module lcd_video #(
   reg [c_x_bits-1:0] R_x_in;
   reg [c_y_bits-1:0] R_y_in;
   wire [c_color_bits-1:0] S_color;
+
+  reg [c_color_bits-1:0] R_scanline[0:c_x_size-1];
   generate
   if(c_vga_sync)
   begin
-  reg [c_color_bits-1:0] R_scanline[0:c_x_size-1];
-  always @(posedge clk)
-  begin
+    always @(posedge clk)
+    begin
       if(clk_pixel_ena)
       begin
-        if(vsync)
-          R_y_in <= 0;
-        else
-        begin
-          if(hsync)
-            R_x_in <= 0;
-          else
-          begin
-            if(blank == 0)
-            begin
-              R_scanline[R_x_in] <= color;
-              if (R_x_in == c_x_size-1)
-              begin
-                R_x_in <= 0;
-                if (R_y_in == c_y_size-1)
-                  R_y_in <= 0;
-                else
-                  R_y_in <= R_y_in + 1;
-              end
-              else
-                R_x_in <= R_x_in + 1;
-            end // blank
-          end // hsync
-        end // vsync
+        if(blank == 0)
+          R_scanline[R_x_in] <= color;
+        R_x_in <= hsync == 1 || R_x_in == c_x_size-1 ? 0 : (blank == 1 ? R_x_in : R_x_in+1);
+        R_y_in <= vsync == 1 || R_y_in == c_y_size-1 ? 0 : (R_x_in == c_x_size-1 ? R_y_in+1 : R_y_in);
       end // clk_pixel_ena
-  end // posedge clk
-  assign S_color = R_scanline[x];
+    end // posedge clk
+    assign S_color = R_scanline[x];
   end
   else // not c_vga_sync
   begin
     assign S_color = color;
   end  // c_vga_sync
   endgenerate
-  
+
   reg [10:0] index;
   reg [7:0] data = c_nop;
   reg dc = 1;
@@ -102,7 +82,6 @@ module lcd_video #(
   reg [7:0] last_cmd;
   reg resn = 0;
   reg clken = 0;
-
 
   // The next byte in the initialisation sequence
   wire [7:0] next_byte = c_oled_init[index[10:4]];

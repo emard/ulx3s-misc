@@ -4,12 +4,6 @@ BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
 
-FPGA_PACKAGE = 6bg381c
-# config flash: 1:SPI (standard), 4:QSPI (quad)
-FLASH_SPI = 4
-# chip: is25lp032d is25lp128f s25fl164k
-FLASH_CHIP = is25lp128f
-
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
 OPENOCD=openocd_ft232r
@@ -29,12 +23,16 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
+  ../../../ecp5pll/hdl/ecp5pll.sv \
   ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v
 
 VHDL_FILES = \
   ../../../dvi/hdl/vga.vhd \
 
-SCRIPTS = ../../../../scripts
-include $(SCRIPTS)/trellis_path.mk
+YOSYS_OPTIONS = -abc9
+NEXTPNR_OPTIONS = --timing-allow-fail
+
+SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/diamond_path.mk
-include $(SCRIPTS)/diamond_main.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk

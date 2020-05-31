@@ -13,20 +13,23 @@ module top_st7789_vga
   assign wifi_gpio0 = btn[0];
   wire S_reset = ~btn[0];
 
-    // clock generator
-    wire clk_250MHz, clk_125MHz, clk_25MHz, clk_locked;
-    clk_25_250_125_25
-    clock_instance
-    (
-      .clk25_i(clk_25mhz),
-      //.clk250_o(clk_250MHz),
-      .clk125_o(clk_125MHz),
-      .clk25_o(clk_25MHz),
-      .locked(clk_locked)
-    );
-
-  wire clk_pixel = clk_25MHz;
-  wire clk_lcd = clk_125MHz; // up to clk_125MHz NOTE below lcd_video_inst .c_clk_mhz(125)
+  // clock generator
+  wire clk_locked;
+  wire [3:0] clocks;
+  ecp5pll
+  #(
+      .in_hz( 25*1000000),
+    .out0_hz(125*1000000),
+    .out1_hz( 25*1000000)
+  )
+  ecp5pll_inst
+  (
+    .clk_i(clk_25mhz),
+    .clk_o(clocks),
+    .locked(clk_locked)
+  );
+  wire clk_lcd = clocks[0];
+  wire clk_pixel = clocks[1];
 
   // test picture video generator for debug purposes
   wire vga_hsync_test;
@@ -49,8 +52,8 @@ module top_st7789_vga
   vga_instance
   (
     .clk_pixel(clk_pixel),
-    .clk_pixel_ena(1),
-    .test_picture(1),
+    .clk_pixel_ena(1'b1),
+    .test_picture(1'b1),
     .vga_r(vga_r_test),
     .vga_g(vga_g_test),
     .vga_b(vga_b_test),
@@ -59,6 +62,11 @@ module top_st7789_vga
     .vga_blank(vga_blank_test)
   );
   wire [15:0] vga_rgb_test = {vga_r_test[7:3],vga_g_test[7:2],vga_b_test[7:3]};
+
+  assign led[0] = ~vga_blank_test;
+  assign led[1] = vga_hsync_test;
+  assign led[2] = vga_vsync_test;
+  assign led[7:3] = 0;
   
   reg [1:0] R_clk_pixel;
   always @(posedge clk_lcd)
@@ -88,8 +96,5 @@ module top_st7789_vga
     .spi_mosi(oled_mosi)
   );
   assign oled_csn = 1;
-  assign led[0] = ~vga_blank_test;
-  assign led[1] = vga_hsync_test;
-  assign led[2] = vga_vsync_test;
-  assign led[7:3] = 0;
+
 endmodule
