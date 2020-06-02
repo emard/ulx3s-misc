@@ -152,16 +152,16 @@ architecture mix of ecp5pll is
       end if;
       for input_div in input_div_min to input_div_max loop
         for feedback_div in 1 to 80 loop
-          fout := in_hz * feedback_div / input_div;
-          output_div_min := VCO_MIN/fout;
+          output_div_min := (VCO_MIN/feedback_div) / (in_hz/input_div);
           if output_div_min < 1 then
             output_div_min := 1;
           end if;
-          output_div_max := VCO_MAX/fout;
+          output_div_max := (VCO_MAX/feedback_div) / (in_hz/input_div);
           if output_div_max > 128 then
             output_div_max := 128;
           end if;
           for output_div in output_div_min to output_div_max loop
+            fout := in_hz / input_div * feedback_div;
             fvco := fout * output_div;
             if abs(fout-out0_hz) < error -- prefer least error
             or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
@@ -177,7 +177,7 @@ architecture mix of ecp5pll is
               params.output_div     := output_div;
               params.fin_string     := Hz2MHz_str(in_hz);
               params.fout_string    := Hz2MHz_str(fout);
-              params.fout           := fout;
+              params.fout           := in_hz * feedback_div / input_div;
               params.fvco           := fvco;
               params.primary_cphase := phase_count_x8 / 8;
               params.primary_fphase := phase_count_x8 mod 8;
