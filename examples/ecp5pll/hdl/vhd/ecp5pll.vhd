@@ -117,10 +117,10 @@ architecture mix of ecp5pll is
       constant VCO_MAX: natural := 800000000;
       constant VCO_OPTIMAL: natural := (VCO_MIN+VCO_MAX)/2;
       variable params: T_params;
-      variable input_div, feedback_div, output_div: natural;
-      variable input_div_min,  input_div_max  : natural;
-      variable output_div_min, output_div_max : natural;
---      variable fpfd: natural;
+
+      variable input_div, input_div_min, input_div_max : natural;
+      variable feedback_div, feedback_div_min, feedback_div_max : natural;
+      variable output_div, output_div_min, output_div_max : natural;
       variable fout: natural;
       variable fvco: natural := 0;
       variable error: natural := 999999999;
@@ -151,7 +151,18 @@ architecture mix of ecp5pll is
         input_div_max := 128;
       end if;
       for input_div in input_div_min to input_div_max loop
-        for feedback_div in 1 to 80 loop
+        feedback_div := out0_hz / in_hz * input_div;
+        if feedback_div < 2 then
+          feedback_div_min := 1;
+        else
+          feedback_div_min := feedback_div-1;
+        end if;
+        if feedback_div > 79 then
+          feedback_div_max := 80;
+        else
+          feedback_div_max := feedback_div+1;
+        end if;
+        for feedback_div in feedback_div_min to feedback_div_max loop
           output_div_min := (VCO_MIN/feedback_div) / (in_hz/input_div);
           if output_div_min < 1 then
             output_div_min := 1;
@@ -160,12 +171,8 @@ architecture mix of ecp5pll is
           if output_div_max > 128 then
             output_div_max := 128;
           end if;
+          fout := in_hz * feedback_div / input_div;
           for output_div in output_div_min to output_div_max loop
-            if in_hz / 1000000 * feedback_div < 2000 then
-              fout := in_hz * feedback_div / input_div;
-            else
-              fout := in_hz / input_div * feedback_div;
-            end if;
             fvco := fout * output_div;
             if abs(fout-out0_hz) < error -- prefer least error
             or (fout=out0_hz and abs(fvco-VCO_OPTIMAL) < abs(params.fvco-VCO_OPTIMAL)) -- or if 0 error prefer closest to optimal VCO frequency
