@@ -71,15 +71,15 @@ module ecp5pll
     begin
       for(feedback_div = 1; feedback_div <= 80; feedback_div=feedback_div+1)
       begin
-	fout = in_hz * feedback_div / input_div;
-        output_div_min = VCO_MIN/fout;
+        output_div_min = (VCO_MIN/feedback_div) / (in_hz/input_div);
         if(output_div_min < 1)
           output_div_min = 1;
-        output_div_max = VCO_MAX/fout;
+        output_div_max = (VCO_MAX/feedback_div) / (in_hz/input_div);
         if(output_div_max > 128)
           output_div_max = 128;
         for(output_div = output_div_min; output_div <= output_div_max; output_div=output_div+1)
         begin
+          fout = in_hz / input_div * feedback_div;
           fvco = fout * output_div;
           if( abs(fout-out0_hz) < error
           || (fout==out0_hz && abs(fvco-VCO_OPTIMAL) < abs(params_fvco-VCO_OPTIMAL)) )
