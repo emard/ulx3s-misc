@@ -24,11 +24,11 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
 TOP_MODULE = top_ecp5pll
-TOP_MODULE_FILE = top/$(TOP_MODULE).v
+TOP_MODULE_FILE = top/v/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  hdl/ecp5pll.sv \
+  hdl/sv/ecp5pll.sv \
 
 VHDL_FILES =
 

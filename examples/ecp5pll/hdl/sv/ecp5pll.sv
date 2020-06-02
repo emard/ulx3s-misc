@@ -13,16 +13,16 @@ module ecp5pll
   parameter integer in_hz      =  25000000,
   parameter integer out0_hz    =  25000000,
   parameter integer out0_deg   =         0, // keep 0
-  parameter integer out0_err_hz=         0, // tolerance: if freq differs more, then error
+  parameter integer out0_tol_hz=         0, // tolerance: if freq differs more, then error
   parameter integer out1_hz    =  25000000,
   parameter integer out1_deg   =         0,
-  parameter integer out1_err_hz=         0,
+  parameter integer out1_tol_hz=         0,
   parameter integer out2_hz    =  25000000,
   parameter integer out2_deg   =         0,
-  parameter integer out2_err_hz=         0,
+  parameter integer out2_tol_hz=         0,
   parameter integer out3_hz    =  25000000,
   parameter integer out3_deg   =         0,
-  parameter integer out3_err_hz=         0,
+  parameter integer out3_tol_hz=         0,
   parameter integer reset_en   =         0,
   parameter integer standby_en =         0,
   parameter integer dynamic_en =         0
@@ -155,18 +155,18 @@ module ecp5pll
   localparam params_secondary3_fphase   = F_secondary_phase  (out3_hz, out3_deg) % 8;
 
   // check if generated frequencies are out of range
-  localparam error_out0_hz = abs(out0_hz - params_fout)                         > out0_err_hz;
-  localparam error_out1_hz = abs(out1_hz - params_fvco / params_secondary1_div) > out1_err_hz;
-  localparam error_out2_hz = abs(out2_hz - params_fvco / params_secondary2_div) > out2_err_hz;
-  localparam error_out3_hz = abs(out3_hz - params_fvco / params_secondary3_div) > out3_err_hz;
-  // trellis: supports $error(), ignores division by zero. diamond won't compile this
-/*
-  if(error_out0_hz) $error("out0_hz tolerance exceeds out0_err_hz");
-  if(error_out1_hz) $error("out1_hz tolerance exceeds out1_err_hz");
-  if(error_out2_hz) $error("out2_hz tolerance exceeds out2_err_hz");
-  if(error_out3_hz) $error("out3_hz tolerance exceeds out3_err_hz");
-*/
-  // diamond: triggers error with division by zero, doesn't accept $error()
+  localparam error_out0_hz = abs(out0_hz - params_fout)                         > out0_tol_hz;
+  localparam error_out1_hz = abs(out1_hz - params_fvco / params_secondary1_div) > out1_tol_hz;
+  localparam error_out2_hz = abs(out2_hz - params_fvco / params_secondary2_div) > out2_tol_hz;
+  localparam error_out3_hz = abs(out3_hz - params_fvco / params_secondary3_div) > out3_tol_hz;
+  // diamond: won't compile this, comment it out. Workaround follows using division by zero
+//
+  if(error_out0_hz) $error("out0_hz tolerance exceeds out0_tol_hz");
+  if(error_out1_hz) $error("out1_hz tolerance exceeds out1_tol_hz");
+  if(error_out2_hz) $error("out2_hz tolerance exceeds out2_tol_hz");
+  if(error_out3_hz) $error("out3_hz tolerance exceeds out3_tol_hz");
+//
+  // diamond: trigger error with division by zero, doesn't accept $error()
   localparam trig_out0_hz = error_out0_hz ? 1/0 : 0;
   localparam trig_out1_hz = error_out1_hz ? 1/0 : 0;
   localparam trig_out2_hz = error_out2_hz ? 1/0 : 0;

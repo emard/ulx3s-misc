@@ -26,10 +26,10 @@ begin
     generic map
     (
         in_Hz => natural( 25.0e6),
-      out0_Hz => natural( 40.0e6),
-      out1_Hz => natural( 50.0e6), out1_deg =>  90,
-      out2_Hz => natural( 60.0e6), out2_deg => 180,
-      out3_Hz => natural(  6.0e6), out3_deg => 300
+      out0_Hz => natural( 40.0e6),                  out0_tol_hz => 0,
+      out1_Hz => natural( 50.0e6), out1_deg =>  90, out1_tol_hz => 0,
+      out2_Hz => natural( 60.0e6), out2_deg => 180, out2_tol_hz => 0,
+      out3_Hz => natural(  6.0e6), out3_deg => 300, out3_tol_hz => 10
     )
     port map
     (

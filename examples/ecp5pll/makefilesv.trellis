@@ -19,14 +19,12 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
 TOP_MODULE = top_ecp5pll
-TOP_MODULE_FILE = top/$(TOP_MODULE).v
+TOP_MODULE_FILE = top/v/$(TOP_MODULE).v
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-
-SYSTEMVERILOG_FILES = \
-  hdl/ecp5pll.sv \
+  hdl/sv/ecp5pll.sv \
 
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail
@@ -34,4 +32,4 @@ NEXTPNR_OPTIONS = --timing-allow-fail
 SCRIPTS = ../../scripts
 include $(SCRIPTS)/diamond_path.mk
 include $(SCRIPTS)/trellis_path.mk
-include $(SCRIPTS)/trellis_main_sv.mk
+include $(SCRIPTS)/trellis_main.mk

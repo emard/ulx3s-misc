@@ -14,10 +14,10 @@ module top_ecp5pll
   ecp5pll
   #(
       .in_hz(25000000),
-    .out0_hz(40000000),                 .out0_err_hz(0),
-    .out1_hz(50000000), .out1_deg( 90), .out1_err_hz(0),
-    .out2_hz(60000000), .out2_deg(180), .out2_err_hz(0),
-    .out3_hz( 6000000), .out3_deg(300), .out3_err_hz(0)
+    .out0_hz(40000000),                 .out0_tol_hz(0),
+    .out1_hz(50000000), .out1_deg( 90), .out1_tol_hz(0),
+    .out2_hz(60000000), .out2_deg(180), .out2_tol_hz(0),
+    .out3_hz( 6000000), .out3_deg(300), .out3_tol_hz(0)
   )
   ecp5pll_inst
   (
