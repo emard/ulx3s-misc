@@ -23,7 +23,7 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../../ecp5pll/hdl/ecp5pll.sv \
+  ../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v
 
 VHDL_FILES = \

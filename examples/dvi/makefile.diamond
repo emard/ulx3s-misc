@@ -28,7 +28,7 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../ecp5pll/hdl/ecp5pll.sv \
+  ../ecp5pll/hdl/sv/ecp5pll.sv \
 
 VHDL_FILES = \
   hdl/blink.vhd \

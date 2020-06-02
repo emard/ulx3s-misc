@@ -24,7 +24,7 @@ TOP_MODULE_FILE = ../hdl/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../../ecp5pll/hdl/ecp5pll.sv \
+  ../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../../hex/decoder/hex_decoder_v.v \
   ../../../dvi/hdl/fake_differential.v
 
