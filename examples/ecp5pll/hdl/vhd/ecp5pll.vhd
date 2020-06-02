@@ -151,7 +151,11 @@ architecture mix of ecp5pll is
         input_div_max := 128;
       end if;
       for input_div in input_div_min to input_div_max loop
-        feedback_div := out0_hz / in_hz * input_div;
+        if out0_hz / 1000000 * input_div < 2000 then
+          feedback_div := out0_hz * input_div / in_hz;
+        else
+          feedback_div := out0_hz / in_hz * input_div;
+        end if;
         if feedback_div < 2 then
           feedback_div_min := 1;
         else
