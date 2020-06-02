@@ -19,12 +19,12 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
 TOP_MODULE = top_ecp5pll
-TOP_MODULE_FILE = top/$(TOP_MODULE).vhd
+TOP_MODULE_FILE = top/vhd/$(TOP_MODULE).vhd
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 GHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  hdl/ecp5pll.vhd \
+  hdl/vhd/ecp5pll.vhd \
 
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail
