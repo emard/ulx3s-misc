@@ -50,7 +50,7 @@ module ecp5pll
   function integer F_ecp5pll(input integer x);
     integer input_div, input_div_min, input_div_max;
     integer output_div, output_div_min, output_div_max;
-    integer feedback_div;
+    integer feedback_div, feedback_div_min, feedback_div_max;
     integer fvco, fout;
     integer error;
     integer params_fvco;
@@ -69,7 +69,14 @@ module ecp5pll
       input_div_max = 128;
     for(input_div = input_div_min; input_div <= input_div_max; input_div=input_div+1)
     begin
-      for(feedback_div = 1; feedback_div <= 80; feedback_div=feedback_div+1)
+      feedback_div = out0_hz / in_hz * input_div;
+      feedback_div_min = feedback_div;
+      feedback_div_max = feedback_div+1;
+      if(feedback_div_min < 1)
+        feedback_div_min = 1;
+      if(feedback_div_max > 80)
+        feedback_div_max = 80;
+      for(feedback_div = feedback_div_min; feedback_div <= feedback_div_max; feedback_div = feedback_div+1)
       begin
         output_div_min = (VCO_MIN/feedback_div) / (in_hz/input_div);
         if(output_div_min < 1)
@@ -77,12 +84,9 @@ module ecp5pll
         output_div_max = (VCO_MAX/feedback_div) / (in_hz/input_div);
         if(output_div_max > 128)
           output_div_max = 128;
+        fout = in_hz * feedback_div / input_div;
         for(output_div = output_div_min; output_div <= output_div_max; output_div=output_div+1)
         begin
-          if(in_hz / 1000000 * feedback_div < 2000)
-            fout = in_hz * feedback_div / input_div;
-          else
-            fout = in_hz / input_div * feedback_div;
           fvco = fout * output_div;
           if( abs(fout-out0_hz) < error
           || (fout==out0_hz && abs(fvco-VCO_OPTIMAL) < abs(params_fvco-VCO_OPTIMAL)) )
@@ -91,7 +95,6 @@ module ecp5pll
             params_refclk_div       = input_div;
             params_feedback_div     = feedback_div;
             params_output_div       = output_div;
-            //params_primary_phase_x8 = phase_count_x8;
             params_fvco             = fvco;
           end
         end
