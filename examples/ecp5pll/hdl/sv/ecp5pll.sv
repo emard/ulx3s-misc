@@ -69,7 +69,10 @@ module ecp5pll
       input_div_max = 128;
     for(input_div = input_div_min; input_div <= input_div_max; input_div=input_div+1)
     begin
-      feedback_div = out0_hz / in_hz * input_div;
+      if(out0_hz / 1000000 * input_div < 2000)
+        feedback_div = out0_hz * input_div / in_hz;
+      else
+        feedback_div = out0_hz / in_hz * input_div;
       feedback_div_min = feedback_div;
       feedback_div_max = feedback_div+1;
       if(feedback_div_min < 1)
