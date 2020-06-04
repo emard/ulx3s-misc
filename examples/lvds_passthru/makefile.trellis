@@ -25,8 +25,10 @@ TOP_MODULE_FILE = hdl/$(TOP_MODULE).vhd
 GHDL_FILES = \
   $(TOP_MODULE_FILE) \
   ../ecp5pll/hdl/vhd/ecp5pll.vhd \
-  ../lvds/hdl/vga2lvds.vhd \
   ../lvds/hdl/lvds2vga.vhd \
+  ../lvds/hdl/vga2lvds.vhd \
+  ../dvi/hdl/vga2dvid.vhd \
+  ../dvi/hdl/tmds_encoder.vhd \
 
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail --lpf-allow-unconstrained
