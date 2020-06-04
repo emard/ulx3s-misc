@@ -31,8 +31,10 @@ VERILOG_FILES =
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
   ../ecp5pll/hdl/vhd/ecp5pll.vhd \
-  ../lvds/hdl/vga2lvds.vhd \
   ../lvds/hdl/lvds2vga.vhd \
+  ../lvds/hdl/vga2lvds.vhd \
+  ../dvi/hdl/vga2dvid.vhd \
+  ../dvi/hdl/tmds_encoder.vhd \
 
 
 SCRIPTS = ../../scripts
