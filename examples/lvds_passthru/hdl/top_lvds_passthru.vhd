@@ -54,7 +54,7 @@ begin
       in_Hz    => natural( 25.0e6),
     out0_Hz    => natural(175.0e6),
     out1_Hz    => natural( 25.0e6), out1_deg =>   0, -- clk_pixel   0, 0-30 340-359
-    out2_Hz    => natural(175.0e6), out2_deg => 100, -- clk_shift 100, 40-150
+    out2_Hz    => natural(175.0e6), out2_deg =>  70, -- clk_shift 100, 40-150
     out3_Hz    => natural( 25.0e6),
     dynamic_en =>           1
   )
