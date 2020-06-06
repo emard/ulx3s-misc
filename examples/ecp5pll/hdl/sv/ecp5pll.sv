@@ -52,7 +52,7 @@ module ecp5pll
     integer output_div, output_div_min, output_div_max;
     integer feedback_div, feedback_div_min, feedback_div_max;
     integer fvco, fout;
-    integer error;
+    integer error, error_prev;
     integer params_fvco;
 
     integer params_refclk_div;
@@ -60,7 +60,7 @@ module ecp5pll
     integer params_output_div;
 
     params_fvco = 0;
-    error = 999999999;
+    error_prev = 999999999;
     input_div_min = in_hz/PFD_MAX;
     if(input_div_min < 1)
       input_div_min = 1;
@@ -91,10 +91,14 @@ module ecp5pll
         for(output_div = output_div_min; output_div <= output_div_max; output_div=output_div+1)
         begin
           fvco = fout * output_div;
-          if( abs(fout-out0_hz) < error
-          || (fout==out0_hz && abs(fvco-VCO_OPTIMAL) < abs(params_fvco-VCO_OPTIMAL)) )
+          error = abs(fout-out0_hz)
+                + abs(fvco/(fvco/out1_hz)-out1_hz)
+                + abs(fvco/(fvco/out2_hz)-out2_hz)
+                + abs(fvco/(fvco/out3_hz)-out3_hz);
+          if( error < error_prev
+          || (error == error_prev && abs(fvco-VCO_OPTIMAL) < abs(params_fvco-VCO_OPTIMAL)) )
           begin
-            error                   = abs(fout-out0_hz);
+            error_prev              = error;
             params_refclk_div       = input_div;
             params_feedback_div     = feedback_div;
             params_output_div       = output_div;
