@@ -92,9 +92,9 @@ module ecp5pll
         begin
           fvco = fout * output_div;
           error = abs(fout-out0_hz)
-                + abs(fvco/(fvco/out1_hz)-out1_hz)
-                + abs(fvco/(fvco/out2_hz)-out2_hz)
-                + abs(fvco/(fvco/out3_hz)-out3_hz);
+                + (out1_hz > 0 ? abs(fvco/(fvco/out1_hz)-out1_hz) : 0)
+                + (out2_hz > 0 ? abs(fvco/(fvco/out2_hz)-out2_hz) : 0)
+                + (out3_hz > 0 ? abs(fvco/(fvco/out3_hz)-out3_hz) : 0);
           if( error < error_prev
           || (error == error_prev && abs(fvco-VCO_OPTIMAL) < abs(params_fvco-VCO_OPTIMAL)) )
           begin
@@ -139,19 +139,26 @@ module ecp5pll
   localparam params_primary_fphase   = F_primary_phase(params_output_div, out0_deg) % 8;
 
   function integer F_secondary_divisor(input integer sfreq);
-    F_secondary_divisor = params_fvco/sfreq;
+    if(sfreq > 0)
+      F_secondary_divisor = params_fvco/sfreq;
+    else
+      F_secondary_divisor = 1;
   endfunction
 
   function integer F_secondary_phase(input integer sfreq, sphase);
     integer div, freq;
     integer phase_compensation, phase_count_x8;
 
-    div = params_fvco/sfreq;
-    freq = params_fvco/div;
-    phase_compensation = div*8-8;
-    phase_count_x8 = phase_compensation + 8*div*sphase/360;
-    if(phase_count_x8 > 1023)
-      phase_count_x8 = phase_count_x8 % (div*8); // wraparound 360 deg
+    phase_count_x8 = 0;
+    if(sfreq > 0)
+    begin
+      div = params_fvco/sfreq;
+      freq = params_fvco/div;
+      phase_compensation = div*8-8;
+      phase_count_x8 = phase_compensation + 8*div*sphase/360;
+      if(phase_count_x8 > 1023)
+        phase_count_x8 = phase_count_x8 % (div*8); // wraparound 360 deg
+    end
 
     F_secondary_phase = phase_count_x8;
   endfunction
@@ -167,17 +174,17 @@ module ecp5pll
   localparam params_secondary3_fphase   = F_secondary_phase  (out3_hz, out3_deg) % 8;
 
   // check if generated frequencies are out of range
-  localparam error_out0_hz = abs(out0_hz - params_fout)                         > out0_tol_hz;
-  localparam error_out1_hz = abs(out1_hz - params_fvco / params_secondary1_div) > out1_tol_hz;
-  localparam error_out2_hz = abs(out2_hz - params_fvco / params_secondary2_div) > out2_tol_hz;
-  localparam error_out3_hz = abs(out3_hz - params_fvco / params_secondary3_div) > out3_tol_hz;
+  localparam error_out0_hz =               abs(out0_hz - params_fout)                         > out0_tol_hz;
+  localparam error_out1_hz = out1_hz > 0 ? abs(out1_hz - params_fvco / params_secondary1_div) > out1_tol_hz : 0;
+  localparam error_out2_hz = out2_hz > 0 ? abs(out2_hz - params_fvco / params_secondary2_div) > out2_tol_hz : 0;
+  localparam error_out3_hz = out3_hz > 0 ? abs(out3_hz - params_fvco / params_secondary3_div) > out3_tol_hz : 0;
   // diamond: won't compile this, comment it out. Workaround follows using division by zero
-//
+/*
   if(error_out0_hz) $error("out0_hz tolerance exceeds out0_tol_hz");
   if(error_out1_hz) $error("out1_hz tolerance exceeds out1_tol_hz");
   if(error_out2_hz) $error("out2_hz tolerance exceeds out2_tol_hz");
   if(error_out3_hz) $error("out3_hz tolerance exceeds out3_tol_hz");
-//
+*/
   // diamond: trigger error with division by zero, doesn't accept $error()
   localparam trig_out0_hz = error_out0_hz ? 1/0 : 0;
   localparam trig_out1_hz = error_out1_hz ? 1/0 : 0;
@@ -209,19 +216,19 @@ module ecp5pll
     .CLKOP_FPHASE (params_primary_fphase),
 
     .OUTDIVIDER_MUXB("DIVB"),
-    .CLKOS_ENABLE ("ENABLED"),
+    .CLKOS_ENABLE (out1_hz > 0 ? "ENABLED" : "DISABLED"),
     .CLKOS_DIV    (params_secondary1_div),
     .CLKOS_CPHASE (params_secondary1_cphase),
     .CLKOS_FPHASE (params_secondary1_fphase),
 
     .OUTDIVIDER_MUXC("DIVC"),
-    .CLKOS2_ENABLE("ENABLED"),
+    .CLKOS2_ENABLE(out2_hz > 0 ? "ENABLED" : "DISABLED"),
     .CLKOS2_DIV   (params_secondary2_div),
     .CLKOS2_CPHASE(params_secondary2_cphase),
     .CLKOS2_FPHASE(params_secondary2_fphase),
 
     .OUTDIVIDER_MUXD("DIVD"),
-    .CLKOS3_ENABLE("ENABLED"),
+    .CLKOS3_ENABLE(out3_hz > 0 ? "ENABLED" : "DISABLED"),
     .CLKOS3_DIV   (params_secondary3_div),
     .CLKOS3_CPHASE(params_secondary3_cphase),
     .CLKOS3_FPHASE(params_secondary3_fphase),
