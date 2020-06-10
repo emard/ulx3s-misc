@@ -54,6 +54,7 @@ module ecp5pll
     integer fvco, fout;
     integer error, error_prev;
     integer params_fvco;
+    integer div1, div2, div3;
 
     integer params_refclk_div;
     integer params_feedback_div;
@@ -92,9 +93,9 @@ module ecp5pll
         begin
           fvco = fout * output_div;
           error = abs(fout-out0_hz)
-                + (out1_hz > 0 ? abs(fvco/(fvco/out1_hz)-out1_hz) : 0)
-                + (out2_hz > 0 ? abs(fvco/(fvco/out2_hz)-out2_hz) : 0)
-                + (out3_hz > 0 ? abs(fvco/(fvco/out3_hz)-out3_hz) : 0);
+                + (out1_hz > 0 ? abs(fvco/(fvco >= out1_hz ? fvco/out1_hz : 1)-out1_hz) : 0)
+                + (out2_hz > 0 ? abs(fvco/(fvco >= out2_hz ? fvco/out2_hz : 1)-out2_hz) : 0)
+                + (out3_hz > 0 ? abs(fvco/(fvco >= out3_hz ? fvco/out3_hz : 1)-out3_hz) : 0);
           if( error < error_prev
           || (error == error_prev && abs(fvco-VCO_OPTIMAL) < abs(params_fvco-VCO_OPTIMAL)) )
           begin

@@ -182,6 +182,9 @@ architecture mix of ecp5pll is
             for channel in 1 to 3 loop
               if sfreq(channel) > 0 then
                 div   := fvco/sfreq(channel);
+                if div = 0 then
+                  div := 1;
+                end if;
                 freq  := fvco/div;
                 error := error + abs(freq-sfreq(channel));
               end if;
