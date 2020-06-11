@@ -140,10 +140,10 @@ module ecp5pll
   localparam params_primary_fphase   = F_primary_phase(params_output_div, out0_deg) % 8;
 
   function integer F_secondary_divisor(input integer sfreq);
+    F_secondary_divisor = 1;
     if(sfreq > 0)
-      F_secondary_divisor = params_fvco/sfreq;
-    else
-      F_secondary_divisor = 1;
+      if(params_fvco >= sfreq)
+        F_secondary_divisor = params_fvco/sfreq;
   endfunction
 
   function integer F_secondary_phase(input integer sfreq, sphase);
@@ -153,7 +153,9 @@ module ecp5pll
     phase_count_x8 = 0;
     if(sfreq > 0)
     begin
-      div = params_fvco/sfreq;
+      div = 1;
+      if(params_fvco >= sfreq)
+        div = params_fvco/sfreq;
       freq = params_fvco/div;
       phase_compensation = div*8-8;
       phase_count_x8 = phase_compensation + 8*div*sphase/360;
