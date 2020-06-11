@@ -181,8 +181,9 @@ architecture mix of ecp5pll is
             error := abs(fout-out0_hz);
             for channel in 1 to 3 loop
               if sfreq(channel) > 0 then
-                div   := fvco/sfreq(channel);
-                if div = 0 then
+                if fvco >= sfreq(channel) then
+                  div := fvco/sfreq(channel);
+                else
                   div := 1;
                 end if;
                 freq  := fvco/div;
