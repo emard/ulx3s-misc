@@ -27,7 +27,7 @@ port
   reset: in std_logic; -- clk synchronous
   clk: in std_logic; -- 1-25 MHz clock typical
   clk_pixel_ena: in std_logic := '1'; -- input pixel clock ena, same clk ena from VGA generator module
-  hsync, vsync, blank: in std_logic;
+  hsync, vsync, blank: in std_logic; -- hsync not used
   pixel: in unsigned(C_color_bits-1 downto 0);
   x: out unsigned(c_x_bits-1 downto 0);
   y: out unsigned(c_y_bits-1 downto 0);
@@ -57,16 +57,15 @@ architecture rtl of st7789_vga is
   signal R_y_in: unsigned(c_y_bits-1 downto 0);
   signal S_x_in_next: unsigned(c_x_bits-1 downto 0);
   signal S_y_in_next: unsigned(c_y_bits-1 downto 0);
-  signal S_x_in_inc: unsigned(c_x_bits-1 downto 0);
+  --signal S_x_in_inc: unsigned(c_x_bits-1 downto 0);
   signal S_y_in_inc: unsigned(c_y_bits-1 downto 0);
 
   signal S_color: unsigned(C_color_bits-1 downto 0);
-  type T_scanline is array (0 to 95) of unsigned(C_color_bits-1 downto 0); -- buffer for one scan line
+  type T_scanline is array (0 to c_x_size-1) of unsigned(C_color_bits-1 downto 0); -- buffer for one scan line
   signal R_scanline: T_scanline;
 begin
   -- track signal's pixel coordinates and buffer one line
-  S_x_in_inc  <= R_x_in+1 when blank = '0' else R_x_in;
-  S_x_in_next <= (others => '0') when hsync = '1' else S_x_in_inc;
+  S_x_in_next <= R_x_in+1 when blank = '0' else (others => '0');
   S_y_in_inc  <= R_y_in+1 when R_x_in = c_x_size-1 else R_y_in;
   S_y_in_next <= (others => '0') when vsync = '1' else S_y_in_inc;
   process(clk)
@@ -137,7 +136,7 @@ begin
               delay_set <= '0';
               arg <= (others => '0');
             end if; -- arg
-          else
+          else -- not init, draw picture
             if R_y_in = y then -- or c_vga_sync == 0
               dc <= '1';
               byte_toggle <= not byte_toggle;
@@ -164,7 +163,7 @@ begin
                   x <= x + 1;
                 end if;
               end if;
-            else -- y == y_in
+            else -- R_y_in /= y
               clken <= '0';
             end if;
           end if; -- init
