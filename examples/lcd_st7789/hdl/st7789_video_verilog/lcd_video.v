@@ -58,7 +58,7 @@ module lcd_video #(
       begin
         if(blank == 0)
           R_scanline[R_x_in] <= color;
-        R_x_in <= hsync == 1 || R_x_in == c_x_size-1 ? 0 : (blank == 1 ? R_x_in : R_x_in+1);
+        R_x_in <= blank == 0 ? R_x_in+1 : 0;
         R_y_in <= vsync == 1 || R_y_in == c_y_size-1 ? 0 : (R_x_in == c_x_size-1 ? R_y_in+1 : R_y_in);
       end // clk_pixel_ena
     end // posedge clk
@@ -135,24 +135,24 @@ module lcd_video #(
         end else begin // Send pixels and set x,y and next_pixel
          if(R_y_in == y || c_vga_sync == 0)
          begin
-          dc <= 1;
-          byte_toggle <= ~byte_toggle;
-          if(c_color_bits < 12)
-            data <= S_color[7:0];
-          else
-            data <= byte_toggle ? S_color[7:0] : S_color[15:8];
-          clken <= 1;
-          if (byte_toggle || c_color_bits < 12) begin
-            next_pixel <= 1;
-            if (x == c_x_size-1) begin
-              x <= 0;
-              if (y == c_y_size-1)
-                y <= 0;
-              else
-                y <= y + 1;
-            end else x <= x + 1;
-          end
-         end // y == y_in
+           dc <= 1;
+           byte_toggle <= ~byte_toggle;
+           if(c_color_bits < 12)
+             data <= S_color[7:0];
+           else
+             data <= byte_toggle ? S_color[7:0] : S_color[15:8];
+           clken <= 1;
+           if (byte_toggle || c_color_bits < 12) begin
+             next_pixel <= 1;
+             if (x == c_x_size-1) begin
+               x <= 0;
+               if (y == c_y_size-1)
+                 y <= 0;
+               else
+                 y <= y + 1;
+             end else x <= x + 1;
+           end
+         end // R_y_in != y
          else
            clken <= 0;
         end
