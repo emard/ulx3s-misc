@@ -162,7 +162,7 @@ module lcd_video #(
       end
     end else begin // Initialisation done, start sending pixels
       init <= 0;
-      index[10:4] <= c_init_size - 1;
+      index[10:4] <= 0;
     end
   end
 
