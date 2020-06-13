@@ -57,6 +57,7 @@ architecture rtl of st7789_vga is
 
   signal R_x_in      : unsigned(c_x_bits-1 downto 0);
   signal S_x_in_next : unsigned(c_x_bits-1 downto 0);
+  signal S_x_in_inc  : unsigned(c_x_bits-1 downto 0);
   signal R_y_in      : unsigned(c_y_bits-1 downto 0);
   signal S_y_in_next : unsigned(c_y_bits-1 downto 0);
   signal S_y_in_inc  : unsigned(c_y_bits-1 downto 0);
@@ -66,9 +67,10 @@ architecture rtl of st7789_vga is
   signal R_scanline: T_scanline;
 begin
   -- track signal's pixel coordinates and buffer one line
-  S_x_in_next <= R_x_in+1 when blank = '0' else (others => '0');
+  S_x_in_inc  <= R_x_in+1 when R_x_in /= c_x_size else R_x_in;
+  S_x_in_next <= S_x_in_inc when blank = '0' else (others => '0');
   S_y_in_inc  <= R_y_in+1 when R_x_in = c_x_size-1 else R_y_in;
-  S_y_in_next <= (others => '1') when vsync = '1' else S_y_in_inc;
+  S_y_in_next <= S_y_in_inc when vsync = '0' else (others => '1');
   process(clk)
   begin
     if rising_edge(clk) then
