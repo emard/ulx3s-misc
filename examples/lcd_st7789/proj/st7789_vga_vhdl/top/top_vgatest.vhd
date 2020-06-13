@@ -191,8 +191,6 @@ begin
     c_clk_polarity => '1',
     c_x_size       => 240,
     c_y_size       => 240,
-    --c_x_bits       => 12,
-    --c_y_bits       => 12,
     c_nop          => x"00"
   )
   port map
@@ -200,10 +198,9 @@ begin
     reset          => not btn(0),
     clk            => clk_shift, -- 125 MHz
     clk_pixel_ena  => S_clk_pixel_edge,
-    hsync          => vga_hsync,
     vsync          => vga_vsync,
     blank          => vga_blank,
-    pixel          => S_pixel,
+    color          => S_pixel,
     spi_resn       => oled_resn,
     spi_clk        => oled_clk,
     --spi_csn        => oled_csn,
