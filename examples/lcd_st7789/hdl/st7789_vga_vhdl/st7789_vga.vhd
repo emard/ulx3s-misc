@@ -2,43 +2,45 @@
 -- AUTHOR=EMARD
 -- LICENSE=BSD
 
-library IEEE;
-use IEEE.std_logic_1164.ALL;
-use IEEE.numeric_std.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 use work.st7789_vga_init_pack.all;
 
 entity st7789_vga is
 generic
 (
-  c_clk_mhz      : natural := 25;     -- MHz clk freq (125 MHz max for st7789)
-  c_reset_us     : natural := 150000; -- us holding hardware reset
-  c_color_bits   : natural := 16;     -- RGB565
-  c_clk_phase    : std_logic := '0';  -- spi_clk phase
-  c_clk_polarity : std_logic := '1';  -- spi_clk polarity and idle state 0:normal; 1:inverted (for st7789)
-  c_x_size       : natural := 240;    -- pixel X screen size
-  c_y_size       : natural := 240;    -- pixel Y screen size
-  c_x_bits       : natural := 8;      -- $clog2(c_x_size); -- 240->8
-  c_y_bits       : natural := 8;      -- $clog2(c_y_size); -- 240->8
+  c_clk_mhz      : natural   := 25;     -- MHz clk freq (125 MHz max for st7789)
+  c_reset_us     : natural   := 150000; -- us holding hardware reset
+  c_color_bits   : natural   := 16;     -- RGB565
+  c_clk_phase    : std_logic := '0';    -- spi_clk phase
+  c_clk_polarity : std_logic := '1';    -- spi_clk polarity and idle state 0:normal; 1:inverted (for st7789)
+  c_x_size       : natural   := 240;    -- pixel X screen size
+  c_y_size       : natural   := 240;    -- pixel Y screen size
+  c_x_bits       : natural   := 8;      -- integer(ceil(log2(real(c_x_size)))) -- 240->8
+  c_y_bits       : natural   := 8;      -- integer(ceil(log2(real(c_y_size)))) -- 240->8
   c_nop          : unsigned(7 downto 0) := x"00"   -- NOP command from datasheet
 );
 port
 (
-  reset: in std_logic; -- clk synchronous
-  clk: in std_logic; -- 1-25 MHz clock typical
-  clk_pixel_ena: in std_logic := '1'; -- input pixel clock ena, same clk ena from VGA generator module
-  hsync, vsync, blank: in std_logic; -- hsync not used
-  pixel: in unsigned(C_color_bits-1 downto 0);
-  x: out unsigned(c_x_bits-1 downto 0);
-  y: out unsigned(c_y_bits-1 downto 0);
-  next_pixel: out std_logic; -- '1' when x/y changes
+  reset          : in std_logic; -- clk synchronous
+  clk            : in std_logic; -- 1-150 MHz clock
+  clk_pixel_ena  : in std_logic := '1'; -- input pixel clock ena, same clk ena from VGA generator module
+  vsync, blank   : in std_logic;
+  color          : in unsigned(C_color_bits-1 downto 0);
+  x              : out unsigned(c_x_bits-1 downto 0);
+  y              : out unsigned(c_y_bits-1 downto 0);
+  next_pixel     : out std_logic; -- '1' when x/y changes
   spi_resn, spi_clk, spi_csn, spi_dc, spi_mosi: out std_logic := '1' -- spi_clk = clk/2
 );
 end;
 
 architecture rtl of st7789_vga is
-  signal index: unsigned(10 downto 0);
-  signal c_init_size: unsigned(10 downto 4) := to_unsigned(C_oled_init_seq'length,7);
+  constant c_init_index_bits: natural := integer(ceil(log2(real(C_oled_init_seq'length))));
+  constant c_init_size: unsigned(c_init_index_bits+3 downto 4) := to_unsigned(C_oled_init_seq'length,c_init_index_bits);
+  signal index: unsigned(c_init_index_bits+3 downto 0);
   signal data: unsigned(7 downto 0) := c_nop;
   signal dc: std_logic := '1';
   signal byte_toggle: std_logic; -- alternates data byte for 16-bit mode
@@ -53,12 +55,11 @@ architecture rtl of st7789_vga is
   signal clken: std_logic := '0';
   signal next_byte: unsigned(7 downto 0);
 
-  signal R_x_in: unsigned(c_x_bits-1 downto 0);
-  signal R_y_in: unsigned(c_y_bits-1 downto 0);
-  signal S_x_in_next: unsigned(c_x_bits-1 downto 0);
-  signal S_y_in_next: unsigned(c_y_bits-1 downto 0);
-  --signal S_x_in_inc: unsigned(c_x_bits-1 downto 0);
-  signal S_y_in_inc: unsigned(c_y_bits-1 downto 0);
+  signal R_x_in      : unsigned(c_x_bits-1 downto 0);
+  signal S_x_in_next : unsigned(c_x_bits-1 downto 0);
+  signal R_y_in      : unsigned(c_y_bits-1 downto 0);
+  signal S_y_in_next : unsigned(c_y_bits-1 downto 0);
+  signal S_y_in_inc  : unsigned(c_y_bits-1 downto 0);
 
   signal S_color: unsigned(C_color_bits-1 downto 0);
   type T_scanline is array (0 to c_x_size-1) of unsigned(C_color_bits-1 downto 0); -- buffer for one scan line
@@ -73,7 +74,7 @@ begin
     if rising_edge(clk) then
       if clk_pixel_ena = '1' then
         if blank = '0' then
-          R_scanline(to_integer(R_x_in)) <= pixel;
+          R_scanline(to_integer(R_x_in)) <= color;
         end if;
         R_x_in <= S_x_in_next;
         R_y_in <= S_y_in_next;
@@ -83,7 +84,7 @@ begin
   S_color <= R_scanline(to_integer(x));
 
   -- The next byte in the initialisation sequence
-  next_byte <= unsigned(c_oled_init_seq(to_integer(index(10 downto 4))));
+  next_byte <= unsigned(c_oled_init_seq(to_integer(index(c_init_index_bits+3 downto 4))));
 
   process(clk)
   begin
@@ -104,7 +105,7 @@ begin
       elsif delay_cnt(delay_cnt'high) = '0' then
         delay_cnt <= delay_cnt - 1;
         resn <= '1';
-      elsif index(10 downto 4) /= c_init_size then
+      elsif index(c_init_index_bits+3 downto 4) /= c_init_size then
         index <= index + 1;
         if index(3 downto 0) = 0 then
           if init = '1' then -- Still initialisation
@@ -175,7 +176,7 @@ begin
         end if; -- index
       else
         init <= '0';
-        index(10 downto 4) <= (others => '0');
+        index(c_init_index_bits+3 downto 4) <= (others => '0');
       end if;
     end if;
   end process;
