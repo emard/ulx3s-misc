@@ -68,6 +68,7 @@ module top_st7789_vga
   assign led[2] = vga_vsync_test;
   assign led[7:3] = 0;
   
+  // clk_pixel edge detection
   reg [1:0] R_clk_pixel;
   always @(posedge clk_lcd)
     R_clk_pixel <= {clk_pixel,R_clk_pixel[1]}; 
@@ -85,7 +86,7 @@ module top_st7789_vga
   (
     .clk(clk_lcd), // 125 MHz
     .reset(S_reset),
-    .clk_pixel_ena(clk_pixel_ena), // if not 1 real pixel rate would be 800 kHz
+    .clk_pixel_ena(clk_pixel_ena), // edge detection
     .blank(vga_blank_test),
     .hsync(vga_hsync_test),
     .vsync(vga_vsync_test),
