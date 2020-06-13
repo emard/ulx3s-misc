@@ -14,7 +14,7 @@ entity top_vgatest is
   (
     x        : natural :=  240; -- pixels
     y        : natural :=  240; -- pixels
-    f        : natural :=   50; -- Hz 60,50,30
+    f        : natural :=   60; -- Hz
     xadjustf : integer :=    0; -- adjust -3..3 if no picture
     yadjustf : integer :=    0; -- or to fine-tune f
     C_ddr    : natural :=    1  -- 0:SDR 1:DDR
@@ -105,6 +105,7 @@ architecture Behavioral of top_vgatest is
     end F_video_timing;
     
   constant video_timing : T_video_timing := F_video_timing(x,y,f);
+  constant C_clk_shift_hz: natural := video_timing.f_pixel*4; -- *4 minimum
 
   signal clocks: std_logic_vector(3 downto 0);
   signal clk_pixel, clk_shift: std_logic;
@@ -126,7 +127,7 @@ begin
   generic map
   (
       in_Hz => natural(25.0e6),
-    out0_Hz => video_timing.f_pixel*5,
+    out0_Hz => C_clk_shift_hz,
     out1_Hz => video_timing.f_pixel
   )
   port map
@@ -140,14 +141,14 @@ begin
   vga_instance: entity work.vga
   generic map
   (
-    C_resolution_x      => 240, -- video_timing.x,
-    C_hsync_front_porch => 1800, -- video_timing.hsync_front_porch,
-    C_hsync_pulse       => 1, -- video_timing.hsync_pulse_width,
-    C_hsync_back_porch  => 1800, -- video_timing.hsync_back_porch,
-    C_resolution_y      => 240, -- video_timing.y,
-    C_vsync_front_porch => 1, -- video_timing.vsync_front_porch,
-    C_vsync_pulse       => 1, -- video_timing.vsync_pulse_width,
-    C_vsync_back_porch  => 1, -- video_timing.vsync_back_porch,
+    C_resolution_x      => video_timing.x,
+    C_hsync_front_porch => video_timing.hsync_front_porch,
+    C_hsync_pulse       => video_timing.hsync_pulse_width,
+    C_hsync_back_porch  => video_timing.hsync_back_porch,
+    C_resolution_y      => video_timing.y,
+    C_vsync_front_porch => video_timing.vsync_front_porch,
+    C_vsync_pulse       => video_timing.vsync_pulse_width,
+    C_vsync_back_porch  => video_timing.vsync_back_porch,
 
     C_bits_x       =>  12,
     C_bits_y       =>  8
@@ -184,7 +185,7 @@ begin
   st7789_vga_instance: entity work.st7789_vga
   generic map
   (
-    c_clk_mhz      => 125,
+    c_clk_mhz      => C_clk_shift_hz/1000000,
     c_reset_us     => 1,
     c_color_bits   => 16,
     c_clk_phase    => '0',
