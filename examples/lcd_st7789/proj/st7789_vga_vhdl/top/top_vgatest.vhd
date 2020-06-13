@@ -197,8 +197,8 @@ begin
   )
   port map
   (
-    reset          => btn(1), -- 125 MHz
-    clk            => clk_shift,
+    reset          => not btn(0),
+    clk            => clk_shift, -- 125 MHz
     clk_pixel_ena  => S_clk_pixel_edge,
     hsync          => vga_hsync,
     vsync          => vga_vsync,
