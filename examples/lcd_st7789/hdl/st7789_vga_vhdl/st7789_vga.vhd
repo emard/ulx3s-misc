@@ -67,7 +67,7 @@ begin
   -- track signal's pixel coordinates and buffer one line
   S_x_in_next <= R_x_in+1 when blank = '0' else (others => '0');
   S_y_in_inc  <= R_y_in+1 when R_x_in = c_x_size-1 else R_y_in;
-  S_y_in_next <= (others => '0') when vsync = '1' else S_y_in_inc;
+  S_y_in_next <= (others => '1') when vsync = '1' else S_y_in_inc;
   process(clk)
   begin
     if rising_edge(clk) then
