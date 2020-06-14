@@ -14,7 +14,7 @@ entity top_vgatest is
   (
     x        : natural :=  240; -- pixels
     y        : natural :=  240; -- pixels
-    f        : natural :=   60; -- Hz
+    f        : natural :=   50; -- Hz
     xadjustf : integer :=    0; -- adjust -3..3 if no picture
     yadjustf : integer :=    0; -- or to fine-tune f
     C_ddr    : natural :=    1  -- 0:SDR 1:DDR
@@ -68,22 +68,29 @@ architecture Behavioral of top_vgatest is
 
   function F_find_next_f(f: natural)
     return natural is
-      variable f0: natural := 0;
     begin
       for fx in C_possible_freqs'range loop
         if C_possible_freqs(fx)>f then
-          f0 := C_possible_freqs(fx);
-          exit;
+          return C_possible_freqs(fx);
         end if;
       end loop;
-      return f0;
+      return C_possible_freqs(0);
     end F_find_next_f;
+  
+  function F_max(x,y: integer)
+    return integer is
+  begin
+    if x > y then
+      return x;
+    end if;
+    return y;
+  end F_max;
   
   function F_video_timing(x,y,f: integer)
     return T_video_timing is
       variable video_timing : T_video_timing;
-      variable xminblank   : natural := x/64; -- initial estimate
-      variable yminblank   : natural := y/64; -- for minimal blank space
+      variable xminblank   : natural := F_max(x/64,3); -- initial estimate
+      variable yminblank   : natural := F_max(y/64,3); -- for minimal blank space
       variable min_pixel_f : natural := f*(x+xminblank)*(y+yminblank);
       variable pixel_f     : natural := F_find_next_f(min_pixel_f);
       variable yframe      : natural := y+yminblank;
