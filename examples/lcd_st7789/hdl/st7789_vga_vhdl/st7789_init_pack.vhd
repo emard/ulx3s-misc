@@ -4,10 +4,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+use work.spi_display_init_pack.all;
+
 -- LCD ST7789 initialization sequence
 -- next byte after a NOP command encodes delay in ms
 
-package st7789_vga_init_pack is
+package st7789_init_pack is
   -- all this are commands and should be send with DC line low
   constant C_ST7789_SWRESET: std_logic_vector(7 downto 0) := x"01";
   constant C_ST7789_SLPOUT: std_logic_vector(7 downto 0) := x"11";
@@ -19,8 +21,7 @@ package st7789_vga_init_pack is
   constant C_ST7789_DISPON: std_logic_vector(7 downto 0) := x"29";
   constant C_ST7789_RAMWR: std_logic_vector(7 downto 0) := x"2C";
 
-  type T_oled_init_seq is array (natural range <>) of std_logic_vector(7 downto 0);
-  constant C_oled_init_seq: T_oled_init_seq :=
+  constant C_st7789_init_seq: T_spi_display_init_seq :=
   (
 -- after reset, delay 2^13 us = 8ms before sending commands
 x"80",

@@ -1,4 +1,6 @@
--- VGA to SPI LCD ST7789 display
+-- VGA to SPI LCD display
+-- supports ST7789 and similar displays
+
 -- AUTHOR=EMARD
 -- LICENSE=BSD
 
@@ -7,9 +9,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-use work.st7789_vga_init_pack.all;
+use work.spi_display_init_pack.all;
 
-entity st7789_vga is
+entity spi_display is
 generic
 (
   c_clk_mhz      : natural   := 25;     -- MHz clk freq (125 MHz max for st7789)
@@ -21,6 +23,7 @@ generic
   c_y_size       : natural   := 240;    -- pixel Y screen size
   c_x_bits       : natural   := 8;      -- integer(ceil(log2(real(c_x_size)))) -- 240->8
   c_y_bits       : natural   := 8;      -- integer(ceil(log2(real(c_y_size)))) -- 240->8
+  c_init_seq     : T_spi_display_init_seq;
   c_nop          : unsigned(7 downto 0) := x"00"   -- NOP command from datasheet
 );
 port
@@ -37,9 +40,9 @@ port
 );
 end;
 
-architecture rtl of st7789_vga is
-  constant c_init_index_bits: natural := integer(ceil(log2(real(C_oled_init_seq'length))));
-  constant c_init_size: unsigned(c_init_index_bits+3 downto 4) := to_unsigned(C_oled_init_seq'length,c_init_index_bits);
+architecture rtl of spi_display is
+  constant c_init_index_bits: natural := integer(ceil(log2(real(c_init_seq'length))));
+  constant c_init_size: unsigned(c_init_index_bits+3 downto 4) := to_unsigned(c_init_seq'length,c_init_index_bits);
   signal index: unsigned(c_init_index_bits+3 downto 0);
   signal data: unsigned(7 downto 0) := c_nop;
   signal dc: std_logic := '1';
@@ -86,7 +89,7 @@ begin
   S_color <= R_scanline(to_integer(x));
 
   -- The next byte in the initialisation sequence
-  next_byte <= unsigned(c_oled_init_seq(to_integer(index(c_init_index_bits+3 downto 4))));
+  next_byte <= unsigned(c_init_seq(to_integer(index(c_init_index_bits+3 downto 4))));
 
   process(clk)
   begin

@@ -4,10 +4,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.ALL;
---use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
---library ecp5u;
---use ecp5u.components.all;
+use work.st7789_init_pack.all;
 
 entity top_vgatest is
   generic
@@ -189,7 +187,7 @@ begin
   S_clk_pixel_edge <= '1' when R_clk_pixel = "10" else '0';
 
   S_pixel <= unsigned(vga_r(7 downto 3) & vga_g(7 downto 2) & vga_b(7 downto 3));
-  st7789_vga_instance: entity work.st7789_vga
+  spi_display_instance: entity work.spi_display
   generic map
   (
     c_clk_mhz      => C_clk_shift_hz/1000000,
@@ -199,6 +197,7 @@ begin
     c_clk_polarity => '1',
     c_x_size       => 240,
     c_y_size       => 240,
+    c_init_seq     => c_st7789_init_seq,
     c_nop          => x"00"
   )
   port map

@@ -33,8 +33,9 @@ VHDL_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../ecp5pll/hdl/vhd/ecp5pll.vhd \
   ../../../dvi/hdl/vga.vhd \
-  ../../hdl/st7789_vga_vhdl/st7789_vga.vhd \
-  ../../hdl/st7789_vga_vhdl/st7789_vga_init_pack.vhd \
+  ../../hdl/st7789_vga_vhdl/spi_display.vhd \
+  ../../hdl/st7789_vga_vhdl/spi_display_init_pack.vhd \
+  ../../hdl/st7789_vga_vhdl/st7789_init_pack.vhd \
 
 SCRIPTS = ../../../../scripts
 include $(SCRIPTS)/trellis_path.mk
