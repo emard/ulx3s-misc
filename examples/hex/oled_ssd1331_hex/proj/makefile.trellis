@@ -25,7 +25,7 @@ VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../decoder/hex_decoder_v.v \
   ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
-  ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v \
+  ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = 

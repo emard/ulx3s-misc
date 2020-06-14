@@ -1,1 +1,1 @@
-../../../lcd_st7789/hdl/st7789_video_verilog/ssd1331_linit_xflip_16bit.mem
+../../../spi_display/hdl/spi_display_verilog/ssd1331_linit_xflip_16bit.mem
