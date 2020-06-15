@@ -198,7 +198,7 @@ begin
     c_x_size       => 96,
     c_y_size       => 64,
     c_init_seq     => c_ssd1331_init_seq,
-    c_nop          => x"00"
+    c_nop          => x"BC"
   )
   port map
   (
