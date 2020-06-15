@@ -12,7 +12,7 @@ entity top_vgatest is
   (
     x        : natural :=   96; -- pixels
     y        : natural :=   64; -- pixels
-    f        : natural :=  100; -- Hz
+    f        : natural :=   60; -- Hz
     xadjustf : integer :=    0; -- adjust -3..3 if no picture
     yadjustf : integer :=    0; -- or to fine-tune f
     C_ddr    : natural :=    1  -- 0:SDR 1:DDR
@@ -111,10 +111,9 @@ architecture Behavioral of top_vgatest is
     
   constant video_timing : T_video_timing := F_video_timing(x,y,f);
   constant C_clk_shift_hz: natural := video_timing.f_pixel*4; -- *4 minimum
-  constant C_clk_oled_hz: natural := 12500000;
 
   signal clocks: std_logic_vector(3 downto 0);
-  signal clk_pixel, clk_shift, clk_oled: std_logic;
+  signal clk_pixel, clk_shift: std_logic;
   signal vga_hsync, vga_vsync, vga_blank, vga_de: std_logic;
   signal vga_r, vga_g, vga_b: std_logic_vector(7 downto 0);
   signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
@@ -123,6 +122,7 @@ architecture Behavioral of top_vgatest is
   signal S_pixel: unsigned(15 downto 0);
   signal R_clk_pixel: std_logic_vector(1 downto 0);
   signal S_clk_pixel_edge: std_logic;
+  signal R_clk_spi_ena: std_logic;
 
   component ODDRX1F
     port (D0, D1, SCLK, RST: in std_logic; Q: out std_logic);
@@ -134,8 +134,7 @@ begin
   (
       in_Hz => natural(25.0e6),
     out0_Hz => C_clk_shift_hz,
-    out1_Hz => video_timing.f_pixel,
-    out2_Hz => C_clk_oled_hz
+    out1_Hz => video_timing.f_pixel
   )
   port map
   (
@@ -144,7 +143,6 @@ begin
   );
   clk_shift <= clocks(0);
   clk_pixel <= clocks(1);
-  clk_oled  <= clocks(2);
   
   vga_instance: entity work.vga
   generic map
@@ -163,7 +161,7 @@ begin
   )
   port map
   (
-      clk_pixel  => clk_oled,
+      clk_pixel  => clk_pixel,
       clk_pixel_ena => '1', -- R_slow_ena(R_slow_ena'high),
       test_picture => '1',
       --beam_x     => beam_x,
@@ -183,17 +181,16 @@ begin
 
   process(clk_shift)
   begin
-    if rising_edge(clk_shift) then
-      R_clk_pixel <= clk_pixel & R_clk_pixel(1); -- shift
+    if rising_edge(clk_pixel) then
+      R_clk_spi_ena <= not R_clk_spi_ena; -- divide by 2
     end if;
   end process;
-  S_clk_pixel_edge <= '1' when R_clk_pixel = "10" else '0';
 
   S_pixel <= unsigned(vga_r(7 downto 3) & vga_g(7 downto 2) & vga_b(7 downto 3));
   spi_display_instance: entity work.spi_display
   generic map
   (
-    c_clk_mhz      => C_clk_oled_hz/1000000,
+    c_clk_mhz      => video_timing.f_pixel/1000000,
     c_reset_us     => 1,
     c_color_bits   => 16,
     c_clk_phase    => '0',
@@ -206,8 +203,9 @@ begin
   port map
   (
     reset          => not btn(0),
-    clk            => clk_oled, -- 12.5 MHz
+    clk            => clk_pixel,
     clk_pixel_ena  => '1',
+    clk_spi_ena    => R_clk_spi_ena,
     vsync          => vga_vsync,
     blank          => vga_blank,
     color          => S_pixel,
