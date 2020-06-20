@@ -18,8 +18,10 @@ module top_memtest
     output wifi_gpio0
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
-    parameter C_clk_gui_Hz = 32'd27500000; // Hz
-    parameter C_clk_sdram_Hz = 32'd112500000; // Hz
+    parameter C_clk_pixel_Hz  =  27500000; // Hz
+    parameter C_clk_gui_Hz    =  50000000; // Hz
+    parameter C_clk_sdram_Hz  = 112500000; // Hz
+    parameter C_sdram_clk_deg =       120; // deg phase shift for chip
     parameter C_size_MB = 32; // 8/16/32/64 MB
 
     localparam [31:0] C_sec_max = C_clk_gui_Hz - 1;
@@ -36,42 +38,44 @@ module top_memtest
     // hold btn0 to let ESP32 take control over the board
     assign wifi_gpio0 = btn[0];
 
-    // clock generator
-    wire clk_shift, clk_pixel, clk_sys;
-    wire clk_gui, clk_sdram;
-    wire locked;
-    clk_25_shift_pixel
-    clock_video_instance
+    // clock generator for video and sys
+    wire clk_video_locked;
+    wire [3:0] clocks;
+    ecp5pll
+    #(
+        .in_hz(25*1000000), // 25 MHz
+      .out0_hz(C_ddr ? C_clk_pixel_Hz*5 : C_clk_pixel_Hz*10),
+      .out1_hz(C_clk_pixel_Hz),
+      .out2_hz(C_clk_gui_Hz)
+    )
+    clk_25_video
     (
-      .clkin(clk_25mhz),
-      .clk_shift(clk_shift),
-      .clk_pixel(clk_pixel),
-      .clk_sys(clk_sys),
-      .locked(locked)
-    /*
-      .CLKI(clk_25mhz),
-      .CLKOP(clk_shift),
-      .CLKOS(clk_pixel),
-      .CLKOS2(clk_sys),
-      .LOCK(locked)
-    */
+      .clk_i(clk_25mhz),
+      .clk_o(clocks),
+      .locked(clk_video_locked)
     );
-    wire locked_sdram;
+    wire clk_shift = clocks[0];
+    wire clk_pixel = clocks[1];
+    wire clk_sys   = clocks[2];
+    wire clk_gui   = clk_pixel;
+
+    wire clk_sdram;
+    wire clk_sdram_locked;
+    wire [3:0] clocks_sdram;
+    ecp5pll
+    #(
+        .in_hz(25*1000000), // 25 MHz
+      .out0_hz(C_clk_sdram_Hz),
+      .out1_hz(C_clk_sdram_Hz), .out1_deg(C_sdram_clk_deg)
+    )
     clk_25_sdram
-    clock_ram_instance
     (
-      .clkin(clk_25mhz),
-      .clk_sdram(clk_sdram), // to controller soft-core
-      .clk_sdram_shift(sdram_clk), // to SDRAM chip
-      .locked(locked_sdram)
-    /*
-      .CLKI(clk_25mhz),
-      .CLKOP(clk_sdram), // to controller soft-core
-      .CLKOS(sdram_clk), // to SDRAM chip
-      .LOCK(locked_sdram)
-    */
+      .clk_i(clk_25mhz),
+      .clk_o(clocks_sdram),
+      .locked(clk_sdram_locked)
     );
-    assign clk_gui = clk_pixel;
+    wire   clk_sdram = clocks_sdram[0];
+    assign sdram_clk = clocks_sdram[1]; // phase shifted for the chip
 
     // LED blinky
     localparam counter_width = 28;
@@ -282,8 +286,8 @@ module top_memtest
 ///////////////////////////////////////////////////////////////////
 
     reg timer_reset;
-    always @(posedge clk_gui)
-        timer_reset <= ~(btn[0] & locked);
+    always @(posedge clk_gui) // FIXME should we use hardware 25 MHz here?
+        timer_reset <= ~(btn[0] & clk_video_locked);
 
     reg [15:0] mins;
     reg [31:0] min;
@@ -337,8 +341,8 @@ module top_memtest
     wire [31:0] passcount, failcount;
 
     reg resetn;
-    always @(posedge clk_sdram)
-        resetn <= btn[0] & locked_sdram;
+    always @(posedge clk_sdram) // FIXME should we use hardware 25 MHz here?
+        resetn <= btn[0] & clk_sdram_locked;
 
     defparam my_memtst.DRAM_COL_SIZE = C_size_MB == 64 ? 10 : C_size_MB == 32 ? 9 : 8; // 8:8-16MB 9:32MB 10:64MB
     defparam my_memtst.DRAM_ROW_SIZE = C_size_MB > 8 ? 13 : 12; // 12:8MB 13:>=16MB
