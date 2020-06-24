@@ -238,8 +238,8 @@ module ecp5pll
 
     .INTFB_WAKE   ("DISABLED"),
     .STDBY_ENABLE (standby_en ? "ENABLED" : "DISABLED"),
-    .PLLRST_ENA   (standby_en ? "ENABLED" : "DISABLED"),
-    .DPHASE_SOURCE(standby_en ? "ENABLED" : "DISABLED"),
+    .PLLRST_ENA   (  reset_en ? "ENABLED" : "DISABLED"),
+    .DPHASE_SOURCE(dynamic_en ? "ENABLED" : "DISABLED"),
     .PLL_LOCK_MODE(0)
   )
   pll_inst
