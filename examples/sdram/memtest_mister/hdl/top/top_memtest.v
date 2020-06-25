@@ -88,7 +88,7 @@ module top_memtest
       if(R_new)
       begin
         R_phasestep <= R_btn[5] | R_btn[6];
-        R_phasedir  <= R_btn[6];
+        R_phasedir  <= R_btn[5] | R_btn[6] ? R_btn[6] : R_phasedir;
       end
     end
     
