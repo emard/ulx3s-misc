@@ -1,21 +1,21 @@
 module top_memtest
 (
-    input clk_25mhz,
-    input [6:0] btn,
-    output [7:0] led,
-    output [3:0] gpdi_dp, gpdi_dn,
+    input         clk_25mhz,
+    input   [6:0] btn,
+    output  [7:0] led,
+    output  [3:0] gpdi_dp, gpdi_dn,
     //  SDRAM interface (For use with 16Mx16bit or 32Mx16bit SDR DRAM, depending on version)
-    output sdram_csn,       // chip select
-    output sdram_clk,       // clock to SDRAM
-    output sdram_cke,       // clock enable to SDRAM	
-    output sdram_rasn,      // SDRAM RAS
-    output sdram_casn,      // SDRAM CAS
-    output sdram_wen,       // SDRAM write-enable
-    output [12:0] sdram_a,  // SDRAM address bus
-    output [1:0] sdram_ba,  // SDRAM bank-address
-    output [1:0] sdram_dqm, // byte select
-    inout [15:0] sdram_d,   // data bus to/from SDRAM	
-    output wifi_gpio0
+    output        sdram_csn,  // chip select
+    output        sdram_clk,  // clock to SDRAM
+    output        sdram_cke,  // clock enable to SDRAM	
+    output        sdram_rasn, // SDRAM RAS
+    output        sdram_casn, // SDRAM CAS
+    output        sdram_wen,  // SDRAM write-enable
+    output [12:0] sdram_a,    // SDRAM address bus
+    output  [1:0] sdram_ba,   // SDRAM bank-address
+    output  [1:0] sdram_dqm,  // byte select
+    inout  [15:0] sdram_d,    // data bus to/from SDRAM	
+    output        wifi_gpio0
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
     parameter C_clk_pixel_Hz  =  27500000; // Hz
@@ -59,6 +59,50 @@ module top_memtest
     wire clk_sys   = clocks[2];
     wire clk_gui   = clk_pixel;
 
+    localparam C_debounce_bits = 16;
+    reg [C_debounce_bits-1:0] R_debounce;
+    reg  [6:0] R_btn, R_btn_prev;
+    reg        R_phasedir, R_phasestep;
+    reg        R_new;
+    always @(posedge clk_gui)
+    begin
+      if(R_debounce[C_debounce_bits-1])
+      begin
+        if(R_btn != R_btn_prev)
+        begin
+          R_debounce <= 0;
+          R_new <= 1;
+        end
+        R_btn <= btn;
+        R_btn_prev <= R_btn;
+      end
+      else
+      begin
+        R_debounce <= R_debounce + 1;
+        R_new <= 0;
+      end
+    end
+
+    always @(posedge clk_gui)
+    begin
+      if(R_new)
+      begin
+        R_phasestep <= R_btn[5] | R_btn[6];
+        R_phasedir  <= R_btn[6];
+      end
+    end
+    
+    reg [11:0] R_phase_bcd;
+    reg  [6:0] R_phase;
+    reg        R_phasestep_old;
+    always @(posedge clk_gui)
+    begin
+      if(R_phasestep == 1 && R_phasestep_old == 0)
+        R_phase <= R_phasedir ? R_phase + 1 : R_phase - 1;
+      R_phasestep_old <= R_phasestep;
+      R_phase_bcd <= R_phase;
+    end
+
     wire clk_sdram;
     wire clk_sdram_locked;
     wire [3:0] clocks_sdram;
@@ -66,12 +110,17 @@ module top_memtest
     #(
         .in_hz(25*1000000), // 25 MHz
       .out0_hz(C_clk_sdram_Hz),
-      .out1_hz(C_clk_sdram_Hz), .out1_deg(C_sdram_clk_deg)
+      .out1_hz(C_clk_sdram_Hz), .out1_deg(C_sdram_clk_deg),
+      .dynamic_en(1)
     )
     clk_25_sdram
     (
       .clk_i(clk_25mhz),
       .clk_o(clocks_sdram),
+      .phasesel(2'd1),
+      .phasedir(R_phasedir),
+      .phasestep(R_phasestep),
+      .phaseloadreg(0),
       .locked(clk_sdram_locked)
     );
     wire   clk_sdram = clocks_sdram[0];
@@ -380,6 +429,7 @@ module top_memtest
 //        .mark(8'h80 >> secs[2:0]),
 //        .elapsed(mins),
 //        .freq(C_clk_sdram_bcd),
+        .freq(R_phase_bcd),
         .hs(vga_hsync),
         .vs(vga_vsync),
         .de(VGA_DE),
