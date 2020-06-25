@@ -117,7 +117,7 @@ module top_memtest
     (
       .clk_i(clk_25mhz),
       .clk_o(clocks_sdram),
-      .phasesel(2'd1),
+      .phasesel(2'd1), // select out1
       .phasedir(R_phasedir),
       .phasestep(R_phasestep),
       .phaseloadreg(0),
