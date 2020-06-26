@@ -1,5 +1,10 @@
 // PRESS BTN6-RIGHT to increase SDRAM chip phase shift
 // PRESS BTN5-LEFT  to decrease SDRAM chip phase shift
+
+// go up and down with BTNs and check that
+// default phase shift is approx in the middle of the
+// working range where errors don't appear
+
 // counter on screen will increase immediately when BTN is pressed
 // phase shift will be applied when BTN is released
 
