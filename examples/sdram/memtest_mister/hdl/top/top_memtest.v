@@ -1,3 +1,8 @@
+// PRESS BTN6-RIGHT to increase SDRAM chip phase shift
+// PRESS BTN5-LEFT  to decrease SDRAM chip phase shift
+// counter on screen will increase immediately when BTN is pressed
+// phase shift will be applied when BTN is released
+
 module top_memtest
 (
     input         clk_25mhz,
@@ -62,7 +67,7 @@ module top_memtest
     localparam C_debounce_bits = 16;
     reg [C_debounce_bits-1:0] R_debounce;
     reg  [6:0] R_btn, R_btn_prev;
-    reg        R_phasedir, R_phasestep;
+    reg        R_phasedir, R_phasestep, R_phasestep_early;
     reg        R_new;
     always @(posedge clk_gui)
     begin
@@ -87,19 +92,19 @@ module top_memtest
     begin
       if(R_new)
       begin
-        R_phasestep <= R_btn[5] | R_btn[6];
-        R_phasedir  <= R_btn[5] | R_btn[6] ? R_btn[6] : R_phasedir;
+        R_phasedir        <= R_btn[5] | R_btn[6] ? R_btn[6] : R_phasedir;
+        R_phasestep_early <= R_btn[5] | R_btn[6];
       end
+      // phasedir must be stable 5ns before phasestep is pulsed
+      R_phasestep <= R_phasestep_early;
     end
     
     reg [11:0] R_phase_bcd;
-    reg  [6:0] R_phase;
-    reg        R_phasestep_old;
+    reg  [7:0] R_phase;
     always @(posedge clk_gui)
     begin
-      if(R_phasestep == 1 && R_phasestep_old == 0)
+      if(R_phasestep_early == 1 && R_phasestep == 0)
         R_phase <= R_phasedir ? R_phase + 1 : R_phase - 1;
-      R_phasestep_old <= R_phasestep;
       R_phase_bcd <= R_phase;
     end
 
