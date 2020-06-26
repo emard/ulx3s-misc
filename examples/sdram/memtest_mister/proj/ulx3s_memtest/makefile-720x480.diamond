@@ -1,8 +1,6 @@
 # SDRAM test clock
-FREQ  = 112.5
-PHASE = 120
 # ******* project, board and chip name *******
-PROJECT = memtest_32MB_$(FREQ)MHz_$(PHASE)deg
+PROJECT = memtest
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 85
