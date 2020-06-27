@@ -1,0 +1,18 @@
+ghdl --ieee=synopsys -fexplicit -frelaxed-rules --std=08 \
+	--work=custom_lib \
+	vhd/blink.vhd \
+	-e blink
+
+ghdl --ieee=synopsys -fexplicit -frelaxed-rules --std=08 \
+	--work=work \
+	vhd/top_blink.vhd \
+	-e top_blink
+
+delete cegen
+
+synth_ecp5 -top top_blink -nowidelut -run :check
+
+stat
+check -noinit
+
+write_json blink.json

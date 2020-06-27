@@ -1,13 +1,13 @@
-PROJ=ecp5pll
+PROJ=blink
 all: $(PROJ).bit
 
 FPGA_SIZE=12
 
 CONSTRAINTS=../../constraints/ulx3s_v20.lpf
 
-FILES=top/vhd/top_ecp5pll.vhd hdl/vhd/ecp5pll.vhd
+FILES=vhd/top_blink.vhd vhd/blink.vhd
 
-$(PROJ).json: $(FILES)
+$(PROJ).json: $(FILES) synth.ys Makefile
 	yosys -q synth.ys
 
 $(PROJ).config: $(PROJ).json
