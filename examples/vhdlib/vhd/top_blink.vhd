@@ -6,8 +6,6 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
 library custom_lib;
-use custom_lib.all;
---use custom_lib.std.all;
 
 entity top_blink is
   generic

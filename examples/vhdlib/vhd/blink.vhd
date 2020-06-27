@@ -5,10 +5,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library custom_lib;
+use custom_lib.blinkpkg.all;
+
 entity blink is
   generic
   (
-    bits : natural := 25
+    bits : natural := c_blink_bits
   );
   port
   (

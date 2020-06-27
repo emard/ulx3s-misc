@@ -1,5 +1,6 @@
 ghdl --ieee=synopsys -fexplicit -frelaxed-rules --std=08 \
 	--work=custom_lib \
+	vhd/blinkpkg.vhd \
 	vhd/blink.vhd \
 	-e blink
 
