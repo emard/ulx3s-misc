@@ -69,49 +69,21 @@ module top_memtest
     wire clk_sys   = clocks[2];
     wire clk_gui   = clk_pixel;
 
-    localparam C_debounce_bits = 16;
-    reg [C_debounce_bits-1:0] R_debounce;
-    reg  [6:0] R_btn, R_btn_prev;
-    reg        R_phasedir, R_phasestep, R_phasestep_early;
-    reg        R_new;
-    always @(posedge clk_gui)
-    begin
-      if(R_debounce[C_debounce_bits-1])
-      begin
-        if(R_btn != R_btn_prev)
-        begin
-          R_debounce <= 0;
-          R_new <= 1;
-        end
-        R_btn <= btn;
-        R_btn_prev <= R_btn;
-      end
-      else
-      begin
-        R_debounce <= R_debounce + 1;
-        R_new <= 0;
-      end
-    end
-
-    always @(posedge clk_gui)
-    begin
-      if(R_new)
-      begin
-        R_phasedir        <= R_btn[5] | R_btn[6] ? R_btn[6] : R_phasedir;
-        R_phasestep_early <= R_btn[5] | R_btn[6];
-      end
-      // phasedir must be stable 5ns before phasestep is pulsed
-      R_phasestep <= R_phasestep_early;
-    end
-    
-    reg [11:0] R_phase_bcd;
-    reg  [7:0] R_phase;
-    always @(posedge clk_gui)
-    begin
-      if(R_phasestep_early == 1 && R_phasestep == 0)
-        R_phase <= R_phasedir ? R_phase + 1 : R_phase - 1;
-      R_phase_bcd <= R_phase;
-    end
+    wire [7:0] S_phase;
+    btn_ecp5pll_phase
+    #(
+      .c_debounce_bits(16)
+    )
+    btn_ecp5pll_phase_inst
+    (
+      .clk(clk_gui),
+      .inc(btn[6]),
+      .dec(btn[5]),
+      .phase(S_phase),
+      .phasedir(S_phasedir),
+      .phasestep(S_phasestep),
+      .phaseloadreg(S_phaseloadreg)
+    );
 
     wire clk_sdram;
     wire clk_sdram_locked;
@@ -128,9 +100,9 @@ module top_memtest
       .clk_i(clk_25mhz),
       .clk_o(clocks_sdram),
       .phasesel(2'd1), // select out1
-      .phasedir(R_phasedir),
-      .phasestep(R_phasestep),
-      .phaseloadreg(0),
+      .phasedir(S_phasedir),
+      .phasestep(S_phasestep),
+      .phaseloadreg(S_phaseloadreg),
       .locked(clk_sdram_locked)
     );
     wire   clk_sdram = clocks_sdram[0];
@@ -439,7 +411,7 @@ module top_memtest
 //        .mark(8'h80 >> secs[2:0]),
 //        .elapsed(mins),
 //        .freq(C_clk_sdram_bcd),
-        .freq(R_phase_bcd),
+        .freq(S_phase),
         .hs(vga_hsync),
         .vs(vga_vsync),
         .de(VGA_DE),

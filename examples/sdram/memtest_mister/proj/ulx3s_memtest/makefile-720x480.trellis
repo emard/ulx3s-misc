@@ -30,6 +30,7 @@ VERILOG_FILES = \
   ../../hdl/sdram_control.v \
   ../../hdl/mem_tester.v \
   ../../hdl/vgaout.v \
+  ../../hdl/btn_ecp5pll_phase.v \
   ../../../../dvi/hdl/fake_differential.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
