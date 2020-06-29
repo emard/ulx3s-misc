@@ -16,6 +16,7 @@ entity top_vgatest is
     f        : natural :=   60; -- Hz 60,50,30
     xadjustf : integer :=    0; -- adjust -3..3 if no picture
     yadjustf : integer :=    0; -- or to fine-tune f
+    ext_gpdi : natural :=    1; -- 0:disable 1:enable external gpdi
     C_ddr    : natural :=    1  -- 0:SDR 1:DDR
   );
   port
@@ -209,5 +210,13 @@ begin
   ddr_red:   ODDRX1F port map (D0=>dvid_red(0),   D1=>dvid_red(1),   Q=>gpdi_dp(2), SCLK=>clk_shift, RST=>'0');
   ddr_green: ODDRX1F port map (D0=>dvid_green(0), D1=>dvid_green(1), Q=>gpdi_dp(1), SCLK=>clk_shift, RST=>'0');
   ddr_blue:  ODDRX1F port map (D0=>dvid_blue(0),  D1=>dvid_blue(1),  Q=>gpdi_dp(0), SCLK=>clk_shift, RST=>'0');
+
+  g_external_gpdi:
+  if ext_gpdi > 0 generate
+  ddr_xclock: ODDRX1F port map (D0=>dvid_clock(0), D1=>dvid_clock(1), Q=>gp(12), SCLK=>clk_shift, RST=>'0');
+  ddr_xred:   ODDRX1F port map (D0=>dvid_red(0),   D1=>dvid_red(1),   Q=>gp(11), SCLK=>clk_shift, RST=>'0');
+  ddr_xgreen: ODDRX1F port map (D0=>dvid_green(0), D1=>dvid_green(1), Q=>gp(10), SCLK=>clk_shift, RST=>'0');
+  ddr_xblue:  ODDRX1F port map (D0=>dvid_blue(0),  D1=>dvid_blue(1),  Q=>gp( 9), SCLK=>clk_shift, RST=>'0');
+  end generate;
 
 end Behavioral;
