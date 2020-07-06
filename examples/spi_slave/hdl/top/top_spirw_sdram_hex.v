@@ -57,15 +57,17 @@ module top_spirw_sdram_hex
   wire clk_sdram   = clocks[0];
   wire clk         = clocks[0];
   assign sdram_clk = clocks[1];
+  assign sdram_cke = 1'b1;
 
   assign sd_d[3] = 1'bz; // FPGA pin pullup sets SD card inactive at SPI bus
   
   wire spi_cs = wifi_gpio5;
   wire spi_csn = ~wifi_gpio5; // LED is used as SPI CS
 
-  wire ram_rd, ram_wr;
-  wire [31:0] ram_addr;
-  wire [15:0] ram_di;
+  wire spi_ram_rd, spi_ram_wr;
+  wire [31:0] spi_ram_addr;
+  wire  [7:0] spi_ram_di;
+  wire  [7:0] spi_ram_do;
   wire [15:0] ram_do;
   spirw_slave_v
   #(
@@ -79,24 +81,52 @@ module top_spirw_sdram_hex
     .sclk(wifi_gpio16),
     .mosi(sd_d[1]), // wifi_gpio4
     .miso(sd_d[2]), // wifi_gpio12
-    .rd(ram_rd),
-    .wr(ram_wr),
-    .addr(ram_addr),
-    .data_in(ram_do[7:0]),
-    .data_out(ram_di[7:0])
+    .rd(spi_ram_rd),
+    .wr(spi_ram_wr),
+    .addr(spi_ram_addr),
+    .data_in(spi_ram_addr[0] ? ram_do[7:0] : ram_do[15:8]),
+    .data_out(spi_ram_do)
   );
 
-  assign sdram_cke = 1'b1;
-  wire ram_ack = ~(ram_rd|ram_wr);
+  reg [7:0] R_cpu_control;
+  // SPI 8-bit to 16-bit conversion
+  reg [7:0] R_spi_ram_byte[0:1];
+  reg R_spi_ram_wr;
+  reg spi_ram_word_wr;
+  always @(posedge clk_sdram)
+  begin
+    R_spi_ram_wr <= spi_ram_wr;
+    if(spi_ram_wr == 1'b1)
+    begin
+      if(spi_ram_addr[31:24] == 8'hFF)
+	R_cpu_control <= spi_ram_do;
+      else
+	R_spi_ram_byte[spi_ram_addr[0]] <= spi_ram_do;
+      if(R_spi_ram_wr == 1'b0)
+      begin
+        if(spi_ram_addr[31:24] == 8'h00 && spi_ram_addr[0] == 1'b1)
+          spi_ram_word_wr <= 1'b1;
+      end
+    end
+    else
+    begin
+      spi_ram_word_wr <= 1'b0;
+    end
+  end
+  wire [15:0] ram_di = { R_spi_ram_byte[0], R_spi_ram_byte[1] };
+
+
   wire ram_rdy;
+  wire ram_ack = ~(spi_ram_rd|spi_ram_word_wr);
+  wire ram_rd = spi_ram_addr[31:24] == 8'h00 ? spi_ram_rd : 1'b0;
   sdram_pnru
   sdram_pnru_inst
   (
     .sys_clk(clk_sdram),
     .sys_rd(ram_rd),
-    .sys_wr(ram_addr[31:24] == 8'h00 ? ram_wr : 1'b0),
-    .sys_ab(ram_addr),
-    .sys_di({ram_di[7:0],ram_di[7:0]}),
+    .sys_wr(spi_ram_word_wr),
+    .sys_ab(spi_ram_addr[23:1]),
+    .sys_di(ram_di),
     .sys_do(ram_do),
     .sys_ack(ram_ack),
     .sys_rdy(ram_rdy),
