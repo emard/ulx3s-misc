@@ -26,29 +26,13 @@ CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
 TOP_MODULE = top_spirw_sdram_hex
 TOP_MODULE_FILE = ../../../spi_slave/hdl/top/$(TOP_MODULE).v
 
-CLK0_NAME = clk_25_125_125s_25_12
-CLK0_FILE_NAME = ../../../../clocks/$(CLK0_NAME).v
-CLK0_OPTIONS = \
-  --module=$(CLK0_NAME) \
-  --clkin_name=clki_25 \
-  --clkin=25 \
-  --clkout0_name=clko_125 \
-  --clkout0=125 \
-  --clkout1_name=clko_125s \
-  --clkout1=125 --phase1=90 \
-  --clkout2_name=clko_25 \
-  --clkout2=25 \
-  --clkout3_name=clko_12 \
-  --clkout3=12.5 \
-
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  $(CLK0_FILE_NAME) \
+  ../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../../spi_slave/hdl/spirw_slave_v.v \
   ../../../sdram/sdram_pnru/sdram_pnru.v \
-  ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
-  ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v \
-  ../../../oled/hdl/ssd1331_term_verilog/pll.v \
+  ../../../hex/decoder/hex_decoder_v.v \
+  ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
 
 VHDL_FILES = 
 
