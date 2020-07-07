@@ -29,8 +29,6 @@ VERILOG_FILES = \
   ../../../hex/decoder/hex_decoder_v.v \
   ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
 
-#  ../../../sdram/sdram_pnru/sdram_pnru2.v \
-
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = 
 

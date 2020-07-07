@@ -45,8 +45,8 @@ module top_spirw_sdram_hex
   ecp5pll
   #(
       .in_hz( 25*1000000),
-    .out0_hz(125*1000000),
-    .out1_hz(125*1000000), .out1_deg(90), // phase shifted for SDRAM chip
+    .out0_hz(100*1000000),
+    .out1_hz(100*1000000), .out1_deg(90), // phase shifted for SDRAM chip
     .out2_hz( 25*1000000)
   )
   ecp5pll_inst
@@ -164,12 +164,12 @@ module top_spirw_sdram_hex
     .din(ram_di),
     .req(req),
     .ds(2'b11),
-    .dout(),
+    .dout(ram_do),
     // ROM access port
     .rom_oe(re),
     //.rom_addr(spi_ram_addr[23:1]),
     .rom_addr(0),
-    .rom_dout(ram_do)
+    .rom_dout()
   );
   
   assign led = 0;
