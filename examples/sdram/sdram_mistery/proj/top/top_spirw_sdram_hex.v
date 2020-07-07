@@ -1,3 +1,4 @@
+`default_nettype none
 module top_spirw_sdram_hex
 (
   input  wire clk_25mhz,
@@ -59,7 +60,7 @@ module top_spirw_sdram_hex
   wire clk         = clocks[0];
   assign sdram_clk = clocks[1];
   assign sdram_cke = 1'b1;
-  wire clk_cpu     = clocks[0];
+  wire clk_cpu     = clocks[2];
 
   // SPI slave loader
   assign sd_d[3] = 1'bz; // FPGA pin pullup sets SD card inactive at SPI bus
@@ -119,10 +120,13 @@ module top_spirw_sdram_hex
       spi_ram_word_wr <= 1'b0;
     end
   end
-  wire [15:0] ram_di = { R_spi_ram_byte[0], R_spi_ram_byte[1] };
+//  wire [15:0] ram_di = { R_spi_ram_byte[0], R_spi_ram_byte[1] };
+//  wire we = spi_ram_word_wr;
+//  wire re = spi_ram_addr[31:24] == 8'h00 ? spi_ram_rd : 1'b0;
 
-  wire we = spi_ram_word_wr;
-  wire re = spi_ram_addr[31:24] == 8'h00 ? spi_ram_rd : 1'b0;
+  wire [15:0] ram_di = {spi_ram_do, spi_ram_do};
+  wire we = spi_ram_wr;
+  wire re = spi_ram_rd;
 
   reg we_d, re_d;                      // Read and write requests
   reg [7:0] div;
@@ -157,19 +161,19 @@ module top_spirw_sdram_hex
     // system interface
     .clk_96(clk_sdram),
     .clk_8_en(clk_enable),
-    .init(!clk_sdram_locked),
+    .init(!locked),
     // SPI interface
     .we(we),
     .addr(spi_ram_addr[23:1]),
     .din(ram_di),
     .req(req),
     .ds(2'b11),
-    .dout(ram_do),
+    .dout(),
     // ROM access port
     .rom_oe(re),
     //.rom_addr(spi_ram_addr[23:1]),
-    .rom_addr(0),
-    .rom_dout()
+    .rom_addr(spi_ram_addr[23:1]),
+    .rom_dout(ram_do)
   );
   
   assign led = 0;
@@ -182,6 +186,7 @@ module top_spirw_sdram_hex
     R_display[23: 0]       <= spi_ram_addr;
     R_display[39:24]       <= ram_do;
     R_display[55:40]       <= ram_di;
+    R_display[63:56]       <= div;
     R_display[15+64: 0+64] <= sdram_a;
     R_display[39+64:24+64] <= sdram_d_out;
     R_display[55+64:40+64] <= sdram_d_in;
