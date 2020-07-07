@@ -47,7 +47,7 @@ module top_spirw_sdram_hex
   #(
       .in_hz( 25*1000000),
     .out0_hz(100*1000000),
-    .out1_hz(100*1000000), .out1_deg(90), // phase shifted for SDRAM chip
+    .out1_hz(100*1000000), .out1_deg(270), // phase shifted for SDRAM chip
     .out2_hz( 25*1000000)
   )
   ecp5pll_inst
@@ -120,13 +120,13 @@ module top_spirw_sdram_hex
       spi_ram_word_wr <= 1'b0;
     end
   end
-//  wire [15:0] ram_di = { R_spi_ram_byte[0], R_spi_ram_byte[1] };
-//  wire we = spi_ram_word_wr;
-//  wire re = spi_ram_addr[31:24] == 8'h00 ? spi_ram_rd : 1'b0;
+  wire [15:0] ram_di = { R_spi_ram_byte[0], R_spi_ram_byte[1] };
+  wire we = spi_ram_word_wr;
+  wire re = spi_ram_addr[31:24] == 8'h00 ? spi_ram_rd : 1'b0;
 
-  wire [15:0] ram_di = {spi_ram_do, spi_ram_do};
-  wire we = spi_ram_wr;
-  wire re = spi_ram_rd;
+//  wire [15:0] ram_di = {spi_ram_do, spi_ram_do};
+//  wire we = spi_ram_wr;
+//  wire re = spi_ram_rd;
 
   reg we_d, re_d;                      // Read and write requests
   reg [7:0] div;
