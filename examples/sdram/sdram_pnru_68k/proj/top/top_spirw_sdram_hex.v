@@ -1,7 +1,7 @@
 `default_nettype none
 module top_spirw_sdram_hex
 #(
-  parameter c_hex_display = 1
+  parameter c_hex_display = 1 // 1: LCD ST7789, 0: no LCD, faster compile
 )
 (
   input  wire clk_25mhz,
@@ -139,13 +139,6 @@ module top_spirw_sdram_hex
     we_d <= we;
     re_d <= re;
   end
-  wire req = (we && !we_d) || (re && !re_d); // Set for one clock cycle
-  wire clk_enable = div[2];
-
-  wire sdram_d_wr; // SDRAM controller sets this when writing
-  wire [15:0] sdram_d_in, sdram_d_out;
-  assign sdram_d = sdram_d_wr ? sdram_d_out : 16'hzzzz;
-  assign sdram_d_in = sdram_d;
 
   //assign ram_do = spi_ram_addr[15:0]; // debugging
   sdram
