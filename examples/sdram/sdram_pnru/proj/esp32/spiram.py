@@ -65,38 +65,6 @@ class spiram:
 
   def cpu_continue(self):
     self.ctrl(0)
-    
-  def store_rom(self,length=32):
-    self.stored_code=bytearray(length)
-    self.led.on()
-    self.hwspi.write(bytearray([1, 0,0,(self.code_addr>>8)&0xFF,self.code_addr&0xFF, 0]))
-    self.hwspi.readinto(self.stored_code)
-    self.led.off()
-    self.stored_vector=bytearray(2)
-    self.led.on()
-    self.hwspi.write(bytearray([1, 0,0,(self.vector_addr>>8)&0xFF,self.vector_addr&0xFF, 0]))
-    self.hwspi.readinto(self.stored_vector)
-    self.led.off()
-
-  def restore_rom(self):
-    self.led.on()
-    self.hwspi.write(bytearray([0, 0,0,(self.code_addr>>8)&0xFF,self.code_addr&0xFF]))
-    self.hwspi.write(self.stored_code)
-    self.led.off()
-    self.led.on()
-    self.hwspi.write(bytearray([0, 0,0,(self.vector_addr>>8)&0xFF,self.vector_addr&0xFF]))
-    self.hwspi.write(self.stored_vector)
-    self.led.off()
-
-  def patch_rom(self,regs):
-    self.led.on()
-    self.hwspi.write(bytearray([0, 0,0,(self.vector_addr>>8)&0xFF,self.vector_addr&0xFF, self.code_addr&0xFF, (self.code_addr>>8)&0xFF])) # overwrite reset vector at 0xFFFC
-    self.led.off()
-    self.led.on()
-    self.hwspi.write(bytearray([0, 0,0,(self.code_addr>>8)&0xFF,self.code_addr&0xFF])) # overwrite code
-    self.led.off()
-    self.led.on()
-
 
 def load(filename, addr=0):
   s=spiram()
