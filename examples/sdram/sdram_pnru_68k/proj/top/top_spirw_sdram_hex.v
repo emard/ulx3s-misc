@@ -50,7 +50,7 @@ module top_spirw_sdram_hex
   #(
       .in_hz( 25*1000000),
     .out0_hz(100*1000000),
-    .out1_hz(100*1000000), .out1_deg(90), // phase shifted for SDRAM chip
+    .out1_hz(100*1000000), .out1_deg(180), // phase shifted for SDRAM chip 0:write fail, 90-270:all works, 
     .out2_hz( 25*1000000)
   )
   ecp5pll_inst
@@ -153,8 +153,8 @@ module top_spirw_sdram_hex
     .ldsn(~(we|re)),
     .asn (~(we|re)),
     .rw  (~we),
-    .rst(!locked),
-    
+    .rst(~locked),
+
     // sdram side
     .sd_data(sdram_d),
     .sd_addr(sdram_a),
@@ -181,8 +181,8 @@ module top_spirw_sdram_hex
     R_display[55:40]       <= ram_di;
     R_display[63:56]       <= div;
     R_display[15+64: 0+64] <= sdram_a;
-    R_display[39+64:24+64] <= sdram_d_out;
-    R_display[55+64:40+64] <= sdram_d_in;
+    R_display[39+64:24+64] <= sdram_d;
+    //R_display[55+64:40+64] <= sdram_d;
   end
 
   wire [7:0] x;
