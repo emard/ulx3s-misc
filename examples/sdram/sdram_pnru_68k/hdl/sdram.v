@@ -45,12 +45,12 @@ module sdram
 
   // The state machine runs at 100Mhz, asynchronous from the CPU
 
-  localparam STATE_FIRST     = 4'd0;   // first state in cycle
+  localparam STATE_FIRST     = 3'd0;   // first state in cycle
   localparam STATE_CMD_CONT  = STATE_FIRST  + RASCAS_DELAY; // command can be continued
-  localparam STATE_READ      = STATE_CMD_CONT + CAS_LATENCY + 4'd1;
-  localparam STATE_LAST      = 4'd8;  // last state in cycle
+  localparam STATE_READ      = STATE_CMD_CONT + CAS_LATENCY + 3'd1;
+  localparam STATE_LAST      = 3'd7;  // last state in cycle
 
-  reg [3:0] t;
+  reg [2:0] t;
 
   // ---------------------------------------------------------------------
   // --------------------------- startup/reset ---------------------------
