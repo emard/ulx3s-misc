@@ -1,26 +1,28 @@
 //
 // sdram.v
 //
-// This code is public domain
+// This source code is public domain
+//
+// SDRAM controller for Micron MT48LC16M16 chip (or equivalent)
 //
 
 module sdram (
-  input             clk100_mhz,     // sdram is accessed at 100MHz
+  input             clk125_mhz,     // sdram is accessed at 125MHz
   
-  // interface to the MT48LC16M16 chip
+  // interface to the chip
   inout      [15:0] sd_data,    // 16 bit databus
-  output reg [12:0] sd_addr,    // 13 bit multiplexed address bus
-  output reg  [1:0] sd_dqm,     // two byte masks
-  output reg  [1:0] sd_ba,      // two banks
+  output reg [12:0]	sd_addr,    // 13 bit multiplexed address bus
+  output reg [1:0] 	sd_dqm,     // two byte masks
+  output reg [1:0] 	sd_ba,      // two banks
   output            sd_cs,      // chip select
-  output 	    sd_we,      // write enable
+  output 	          sd_we,      // write enable
   output            sd_ras,     // row address select
   output            sd_cas,     // columns address select
-  output reg        sd_cke,     // clock enable
+  output            sd_cke,     // clock enable
   output            sd_clk,     // chip clock (inverted from input clk)
 
   // M68K interface
-  input      [15:0] din,        // data input from cpu
+  input      [15:0]	din,        // data input from cpu
   output reg [15:0] dout,       // data output to cpu
   input      [23:0] addr,       // 24 bit word address
   input             udsn,       // upper data strobe
@@ -30,10 +32,10 @@ module sdram (
   input             rst         // cpu reset
 );
 
-  localparam RASCAS_DELAY   = 3'd2;   // tRCD=20ns -> 2 cycles is just enough @ 100MHz
-  localparam BURST_LENGTH   = 3'b001; // 000=1, 001=2, 010=4, 011=8
+  localparam RASCAS_DELAY   = 3'd3;   // tRCD=20ns -> 3 cycles @ >100MHz
+  localparam BURST_LENGTH   = 3'b000; // 000=1, 001=2, 010=4, 011=8
   localparam ACCESS_TYPE    = 1'b0;   // 0=sequential, 1=interleaved
-  localparam CAS_LATENCY    = 3'd3;   // 2/3 allowed
+  localparam CAS_LATENCY    = 3'd3;   // 3 needed @ >100Mhz
   localparam OP_MODE        = 2'b00;  // only 00 (standard operation) allowed
   localparam NO_WRITE_BURST = 1'b1;   // 0=write burst enabled, 1=only single access write
 
@@ -45,12 +47,12 @@ module sdram (
 
   // The state machine runs at 100Mhz, asynchronous from the CPU
 
-  localparam STATE_FIRST     = 3'd0;   // idle state, prep command
+  localparam STATE_FIRST     = 0;  // idle state, prep command
   localparam STATE_CMD_CAS   = STATE_FIRST  + RASCAS_DELAY; // prep CAS cycle
-  localparam STATE_READ      = STATE_CMD_CAS + CAS_LATENCY + 3'd1;
-  localparam STATE_LAST      = STATE_READ + 3'd1;
+  localparam STATE_READ      = STATE_CMD_CAS + CAS_LATENCY + 1;
+  localparam STATE_LAST      = STATE_READ + 1;
 
-  reg [2:0] t;
+  reg [3:0] t;
 
   // ---------------------------------------------------------------------
   // --------------------------- startup/reset ---------------------------
@@ -58,7 +60,7 @@ module sdram (
 
   // make sure rst lasts long enough (recommended 100us)
   reg [4:0] reset;
-  always @(posedge clk100_mhz) begin
+  always @(posedge clk125_mhz) begin
     reset <= (|reset) ? reset - 5'd1 : 0;
     if(rst)	reset <= 5'd25;
   end
@@ -80,7 +82,8 @@ module sdram (
 
   reg  [3:0] sd_cmd = CMD_INHIBIT; // current command sent to sd ram
 
-  assign sd_clk = !clk100_mhz; // chip clock shifted 180 deg.
+  assign sd_clk = !clk125_mhz; // chip clock shifted 180 deg.
+  assign sd_cke = 1'b1;
 
   // drive control signals according to current command
   assign sd_cs  = sd_cmd[3];
@@ -92,16 +95,15 @@ module sdram (
   reg  sd_data_wr = 1'b0;
   wire sd_data_rd = (t==STATE_READ) & rw & memact;
   assign sd_data  = sd_data_wr ? din : 16'hzzzz;
-  always @(posedge clk100_mhz) if(sd_data_rd) dout <= sd_data;
+  always @(posedge clk125_mhz) if(sd_data_rd) dout <= sd_data;
   
   // controller<->CPU cycle management
   wire block  = !asn & udsn & ldsn; // block start of new refresh cycle if about to write
   wire memcyc = !(udsn & ldsn) & !asn; // start memory cycle
   reg  memact = 0; // memory cycle active
 
-  always @(posedge clk100_mhz) begin
+  always @(posedge clk125_mhz) begin
     sd_cmd <= CMD_INHIBIT;  // default: idle
-    sd_cke <= 1'b1;
     
     // move to next state, but stay at start early in write cycle,
     // or at end when mem cycle not complete yet. When in a refresh
@@ -149,7 +151,6 @@ module sdram (
         end
         if(t == STATE_CMD_CAS)   sd_cmd <= rw ? CMD_READ : CMD_WRITE;
         if(t == STATE_CMD_CAS+1) sd_data_wr <= 1'b0; // revert sd_data to hi-z
-        if(t == STATE_CMD_CAS+2) sd_cke <= !rw; // keep read data for 2 clocks
         
       end
       

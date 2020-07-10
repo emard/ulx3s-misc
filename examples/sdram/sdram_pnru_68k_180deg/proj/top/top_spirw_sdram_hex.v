@@ -49,8 +49,8 @@ module top_spirw_sdram_hex
   ecp5pll
   #(
       .in_hz( 25*1000000),
-    .out0_hz(100*1000000),
-    .out1_hz(100*1000000), .out1_deg(180), // phase shifted for SDRAM chip 0:write fail, 90-270:all works, 
+    .out0_hz(125*1000000),
+    //.out1_hz(100*1000000), .out1_deg(180), // phase shifted for SDRAM chip 0:write fail, 90-270:all works, 
     .out2_hz( 25*1000000)
   )
   ecp5pll_inst
@@ -61,8 +61,6 @@ module top_spirw_sdram_hex
   );
   wire clk_sdram   = clocks[0];
   wire clk         = clocks[0];
-  assign sdram_clk = clocks[1];
-  assign sdram_cke = 1'b1;
   wire clk_cpu     = clocks[2];
 
   // SPI slave loader
@@ -145,7 +143,7 @@ module top_spirw_sdram_hex
   sdram_i
   (
     // cpu side
-    .clk100_mhz(clk_sdram),
+    .clk125_mhz(clk_sdram),
     .din(ram_di),
     .dout(ram_do),
     .addr({1'b0, spi_ram_addr[23:1]}),
@@ -153,17 +151,19 @@ module top_spirw_sdram_hex
     .ldsn(~(we|re)),
     .asn (~(we|re)),
     .rw  (~we),
-    .rst(~locked),
+    .rst (~locked),
 
     // sdram side
+    .sd_clk (sdram_clk),
+    .sd_cke (sdram_cke),
     .sd_data(sdram_d),
     .sd_addr(sdram_a),
-    .sd_dqm(sdram_dqm),
-    .sd_ba(sdram_ba),
-    .sd_cs(sdram_csn),
-    .sd_we(sdram_wen),
-    .sd_ras(sdram_rasn),
-    .sd_cas(sdram_casn)
+    .sd_dqm (sdram_dqm),
+    .sd_ba  (sdram_ba),
+    .sd_cs  (sdram_csn),
+    .sd_we  (sdram_wen),
+    .sd_ras (sdram_rasn),
+    .sd_cas (sdram_casn)
   );
   
   assign led = 0;
