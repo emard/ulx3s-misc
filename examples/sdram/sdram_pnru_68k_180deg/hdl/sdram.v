@@ -3,26 +3,28 @@
 //
 // This source code is public domain
 //
-// SDRAM controller for Micron MT48LC16M16 chip (or equivalent)
+// SDRAM controller. Valid clk_in range
+//   PC133 chips: 100, 125, 133, 143 MHz
+//   PC166 chips: 125, 133, 143, 166 MHz
 //
 
 module sdram (
-  input             clk125_mhz,     // sdram is accessed at 125MHz
-  
+  input             clk_in,     // controller clock
+
   // interface to the chip
   inout      [15:0] sd_data,    // 16 bit databus
-  output reg [12:0]	sd_addr,    // 13 bit multiplexed address bus
-  output reg [1:0] 	sd_dqm,     // two byte masks
-  output reg [1:0] 	sd_ba,      // two banks
+  output reg [12:0] sd_addr,    // 13 bit multiplexed address bus
+  output reg [1:0]  sd_dqm,     // two byte masks
+  output reg [1:0]  sd_ba,      // two banks
   output            sd_cs,      // chip select
-  output 	          sd_we,      // write enable
+  output            sd_we,      // write enable
   output            sd_ras,     // row address select
   output            sd_cas,     // columns address select
   output            sd_cke,     // clock enable
   output            sd_clk,     // chip clock (inverted from input clk)
 
   // M68K interface
-  input      [15:0]	din,        // data input from cpu
+  input      [15:0] din,        // data input from cpu
   output reg [15:0] dout,       // data output to cpu
   input      [23:0] addr,       // 24 bit word address
   input             udsn,       // upper data strobe
@@ -60,7 +62,7 @@ module sdram (
 
   // make sure rst lasts long enough (recommended 100us)
   reg [4:0] reset;
-  always @(posedge clk125_mhz) begin
+  always @(posedge clk_in) begin
     reset <= (|reset) ? reset - 5'd1 : 0;
     if(rst)	reset <= 5'd25;
   end
@@ -82,7 +84,7 @@ module sdram (
 
   reg  [3:0] sd_cmd = CMD_INHIBIT; // current command sent to sd ram
 
-  assign sd_clk = !clk125_mhz; // chip clock shifted 180 deg.
+  assign sd_clk = !clk_in; // chip clock shifted 180 deg.
   assign sd_cke = 1'b1;
 
   // drive control signals according to current command
@@ -95,14 +97,15 @@ module sdram (
   reg  sd_data_wr = 1'b0;
   wire sd_data_rd = (t==STATE_READ) & rw & memact;
   assign sd_data  = sd_data_wr ? din : 16'hzzzz;
-  always @(posedge clk125_mhz) if(sd_data_rd) dout <= sd_data;
+  //IFS1P3BX dbi_FF[15:0] (.D(sd_data), .Q(dout), .SCLK(clk_in), .SP(sd_data_rd), .PD(1'b0));
+  always @(posedge clk_in) if(sd_data_rd) dout <= sd_data;
   
   // controller<->CPU cycle management
   wire block  = !asn & udsn & ldsn; // block start of new refresh cycle if about to write
   wire memcyc = !(udsn & ldsn) & !asn; // start memory cycle
   reg  memact = 0; // memory cycle active
 
-  always @(posedge clk125_mhz) begin
+  always @(posedge clk_in) begin
     sd_cmd <= CMD_INHIBIT;  // default: idle
     
     // move to next state, but stay at start early in write cycle,

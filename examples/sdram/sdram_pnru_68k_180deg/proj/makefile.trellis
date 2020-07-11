@@ -25,7 +25,7 @@ VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../../spi_slave/hdl/spirw_slave_v.v \
-  ../../../sdram/sdram_pnru_68k/hdl/sdram.v \
+  ../../../sdram/sdram_pnru_68k_180deg/hdl/sdram.v \
   ../../../hex/decoder/hex_decoder_v.v \
   ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
 

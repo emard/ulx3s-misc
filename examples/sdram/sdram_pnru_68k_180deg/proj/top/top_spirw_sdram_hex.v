@@ -143,7 +143,7 @@ module top_spirw_sdram_hex
   sdram_i
   (
     // cpu side
-    .clk125_mhz(clk_sdram),
+    .clk_in(clk_sdram),
     .din(ram_di),
     .dout(ram_do),
     .addr({1'b0, spi_ram_addr[23:1]}),
