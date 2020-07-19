@@ -127,8 +127,8 @@ begin
     (
         in_Hz => natural( 25.0e6),
       out0_Hz => natural(100.0e6),                  out0_tol_hz => 0,
-      out1_Hz => natural(125.0e6), out1_deg =>   0, out1_tol_hz => 0,
-      out2_Hz => natural( 25.0e6), out2_deg =>   0, out2_tol_hz => 0,
+      out1_Hz => natural(125.0e6), out1_deg =>  75, out1_tol_hz => 0,
+      out2_Hz => natural( 25.0e6), out2_deg =>  75, out2_tol_hz => 0,
       reset_en   => 1,
       dynamic_en => 1
     )
