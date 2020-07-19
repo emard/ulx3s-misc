@@ -89,6 +89,7 @@ architecture Behavioral of top_dvi_in is
 --      port (A: in std_logic; Z: out std_logic);
 --    end component;
 
+    signal clocks: std_logic_vector(3 downto 0);
     signal clk_100, locked: std_logic;
     signal clk_pixel, clk_shift: std_logic;
     signal reset_pll, reset_pll_blink: std_logic;
@@ -121,23 +122,31 @@ begin
     --gp(17) <= not gpa(10);
     --gp(18) <= not gpa(9);
 
-    -- clock recovery PLL with reset and lock
-    clk_video_inst: entity work.clk_25_dvi_in_vhd
+    clk_video_inst: entity work.ecp5pll
+    generic map
+    (
+        in_Hz => natural( 25.0e6),
+      out0_Hz => natural(100.0e6),                  out0_tol_hz => 0,
+      out1_Hz => natural( 25.0e6), out1_deg =>   0, out1_tol_hz => 0,
+      out2_Hz => natural(125.0e6), out2_deg =>   0, out2_tol_hz => 0,
+      reset_en   => 1,
+      dynamic_en => 1
+    )
     port map
     (
-      clki         => gpa(12), -- take tmds clock as input
-      --clki       => clk_25mhz, -- onobard clock
-      clk_sys      => clk_100,
-      clk_pixel    => clk_pixel,  --  25 MHz phase 60 deg
-      clk_shift    => clk_shift,  -- 125 MHz phase 60 deg
-      phasesel     => phasesel,   -- output2 "10"-clk_pixel, output1 "01"-clk_shift
+      clk_i        => gpa(12),
+      phasesel     => phasesel, -- output2 "10"-clk_pixel, output1 "01"-clk_shift
       phasedir     => R_btn(1),
       phasestep    => R_btn(3), -- need debounce
-      phaseloadreg => '0',    -- need debounce
+      phaseloadreg => '0',      -- need debounce
       locked       => locked,
-      reset        => reset_pll
+      reset        => reset_pll,
+      clk_o        => clocks
     );
-    
+    clk_100   <= clocks(0);
+    clk_pixel <= clocks(1);
+    clk_shift <= clocks(2);
+
     -- hold btn3 for fine selection
     phasesel <= "01" when R_btn(2)='1' else "10";
     --phasesel <= "10"; -- adjust clk_pixel

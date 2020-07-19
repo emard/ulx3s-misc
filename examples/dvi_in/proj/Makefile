@@ -26,21 +26,9 @@ CONSTRAINTS = constraints/ulx3s_v20.lpf
 TOP_MODULE = top_dvi_in
 TOP_MODULE_FILE = top/$(TOP_MODULE).vhd
 
-CLK0_NAME = clk_25_dvi_in
-CLK0_FILE_NAME = ../../dvi/clocks/$(CLK0_NAME).v
-CLK0_OPTIONS = \
-  --module=$(CLK0_NAME) \
-  --clkin_name=clki         --clkin=25    \
-  --clkout0_name=clk_shift0 --clkout0=125 \
-  --clkout1_name=clk_shift  --clkout1=125  --phase1=0 \
-  --clkout2_name=clk_pixel  --clkout2=25   --phase2=0 \
-  --clkout3_name=clk_sys    --clkout3=100 \
-  --reset --dynamic
-
-
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \
-  ../../dvi/clocks/clk_25_dvi_in_vhd.vhd \
+  ../../ecp5pll/hdl/vhd/ecp5pll.vhd \
   ../../dvi/hdl/blink.vhd \
   ../hdl/edid_rom.vhd \
   ../hdl/tmds_deserializer.vhd \
@@ -49,12 +37,11 @@ VHDL_FILES = \
   ../hdl/tmds_dekoder.vhd \
   ../../dvi/hdl/vga2dvid.vhd \
   ../../dvi/hdl/tmds_encoder.vhd \
-  ../../lcd_st7789/hdl/st7789_video_verilog/lcd_video_vhd.vhd \
+  ../../spi_display/hdl/spi_display_verilog/lcd_video_vhd.vhd \
   ../../hex/decoder/hex_decoder.vhd \
 
 VERILOG_FILES = \
-  $(CLK0_FILE_NAME) \
-  ../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v \
+  ../../spi_display/hdl/spi_display_verilog/lcd_video.v \
   ../../hex/decoder/hex_decoder_v.v \
 
 
