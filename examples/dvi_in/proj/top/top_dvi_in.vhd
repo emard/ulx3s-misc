@@ -127,14 +127,15 @@ begin
     (
         in_Hz => natural( 25.0e6),
       out0_Hz => natural(100.0e6),                  out0_tol_hz => 0,
-      out1_Hz => natural( 25.0e6), out1_deg =>   0, out1_tol_hz => 0,
-      out2_Hz => natural(125.0e6), out2_deg =>   0, out2_tol_hz => 0,
+      out1_Hz => natural(125.0e6), out1_deg =>   0, out1_tol_hz => 0,
+      out2_Hz => natural( 25.0e6), out2_deg =>   0, out2_tol_hz => 0,
       reset_en   => 1,
       dynamic_en => 1
     )
     port map
     (
-      clk_i        => gpa(12),
+      clk_i        => gpa(12),  -- normal
+      --clk_i        => clk_25mhz, -- debug
       phasesel     => phasesel, -- output2 "10"-clk_pixel, output1 "01"-clk_shift
       phasedir     => R_btn(1),
       phasestep    => R_btn(3), -- need debounce
@@ -143,9 +144,9 @@ begin
       reset        => reset_pll,
       clk_o        => clocks
     );
-    clk_100   <= clocks(0);
-    clk_pixel <= clocks(1);
-    clk_shift <= clocks(2);
+    clk_100   <= clocks(0); -- not used
+    clk_shift <= clocks(1);
+    clk_pixel <= clocks(2);
 
     -- hold btn3 for fine selection
     phasesel <= "01" when R_btn(2)='1' else "10";
