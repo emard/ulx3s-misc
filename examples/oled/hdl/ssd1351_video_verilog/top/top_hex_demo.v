@@ -51,7 +51,7 @@ module top_hex_demo
 // we can use either lcd or oled video driver
 // oled driver core and init is shorter
 generate
-if(0)  // driver type 0-oled 1-lcd (both should work)
+if(1)  // driver type 0-oled 1-lcd (both should work)
 begin
     wire oled_clkn; 
     lcd_video
