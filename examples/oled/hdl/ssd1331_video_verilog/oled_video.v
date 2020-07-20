@@ -44,13 +44,13 @@ module oled_video
   reg [7:0] data;
   reg dc;
 
-  reg byte; // alternates data byte for 16-bit mode
+  reg R_byte; // alternates data R_byte for 16-bit mode
   wire [7:0] color_to_data;
   generate
     if(c_color_bits < 12)
       assign color_to_data = color;
     else
-      assign color_to_data = byte ? color[15:8] : color[7:0];
+      assign color_to_data = R_byte ? color[15:8] : color[7:0];
   endgenerate
   reg [7:0] datalow; // LSB byte of 16-bit data transfer
 
@@ -67,7 +67,7 @@ module oled_video
             dc <= 1'b0;
             x <= 0;
             y <= 0;
-            byte <= 0;
+            R_byte <= 0;
         end
         else 
         if (index[9:4] != c_init_size) 
@@ -83,8 +83,8 @@ module oled_video
                       data <= color;
                     else
                     begin
-                      byte <= ~byte;
-                      if(byte == 1'b0)
+                      R_byte <= ~R_byte;
+                      if(R_byte == 1'b0)
                       begin
                         datalow <= color[7:0];
                         data <= color[15:8];
@@ -92,7 +92,7 @@ module oled_video
                       else
                         data <= datalow;
                     end
-                    if(c_color_bits < 12 || byte == 1'b0)
+                    if(c_color_bits < 12 || R_byte == 1'b0)
                     begin
                       next_pixel <= 1'b1;
                       if (x == c_x_size-1)
