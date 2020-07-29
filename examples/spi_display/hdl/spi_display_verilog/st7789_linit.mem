@@ -4,24 +4,24 @@
 // after reset, delay 2^13 us = 8ms before sending commands
 80
 0D
-// SWRESET, delay 2^17 us = 131us
+// SWRESET, 0-param, delay 2^17 us = 131us
 01
-80
+80 
 11
-// SLPOUT, delay 2^14 us = 16ms
+// SLPOUT, 0-param, delay 2^14 us = 16ms
 11
 80
 0E
-// COLMOD, 16-bit color, delay 2^14 us = 16ms
+// COLMOD, 16-bit color, 1-param, delay 2^14 us = 16ms
 3A
 81
 55
 0E
-// MADCTL
+// MADCTL, 1-param
 36
 01
 C0
-// CASET X
+// CASET X, 4-param
 2A
 04
 // X start MSB,LSB
@@ -30,7 +30,7 @@ C0
 // X end MSB,LSB
 00
 EF
-// RASET Y
+// RASET Y, 4-param
 2B
 04
 // Y start MSB,LSB
@@ -39,18 +39,18 @@ EF
 // Y end MSB,LSB
 01
 3F
-// INVON, delay 2^14 us = 16ms
+// INVON, 0-param, delay 2^14 us = 16ms
 21
 80
 0E
-// NORON, delay 2^14 us = 16ms
+// NORON, 0-param, delay 2^14 us = 16ms
 13
 80
 0E
-// DISPON, delay 2^14 us = 16ms
+// DISPON, 0-param, delay 2^14 us = 16ms
 29
 80
 0E
-// RAMWR 2C 00
+// RAMWR, 0-param
 2C
 00
