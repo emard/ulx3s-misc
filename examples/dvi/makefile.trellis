@@ -7,7 +7,7 @@ FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
-OPENOCD=openocd_ft232r
+#OPENOCD=openocd_ft232r
 # default onboard usb-jtag
 OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ulx3s-jtag-passthru

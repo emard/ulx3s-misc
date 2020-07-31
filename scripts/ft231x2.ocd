@@ -7,7 +7,7 @@
 # GP15 TDI
 # GN15 TCK
 
-interface ft232r
+adapter driver ft232r
 ft232r_vid_pid 0x0403 0x6015
 # ft232r_serial_desc 250001
 ft232r_tck_num DTR
@@ -16,4 +16,4 @@ ft232r_tdi_num TXD
 ft232r_tdo_num RXD
 ft232r_trst_num DCD
 ft232r_srst_num RI
-adapter_khz 1000
+adapter speed 1000
