@@ -46,13 +46,13 @@ ifeq ($(FPGA_CHIP), lfe5u-85f)
   MASK_FILE=LFE5U-85F.msk
 endif
 
-ifeq ($(FPGA_SIZE), 12)
-  FPGA_K=25
-  IDCODE_CHIPID=--idcode $(CHIP_ID)
-else
+#ifeq ($(FPGA_SIZE), 12)
+#  FPGA_K=25
+#  IDCODE_CHIPID=--idcode $(CHIP_ID)
+#else
   FPGA_K=$(FPGA_SIZE)
   IDCODE_CHIPID=
-endif
+#endif
 
 FPGA_CHIP_EQUIVALENT ?= lfe5u-$(FPGA_K)f
 
@@ -96,11 +96,12 @@ endif
 #IMPL_DIR := $(shell fgrep default_strategy ${PROJ_FILE} | cut -d'"' -f 4)
 
 # programming tools
-TINYFPGASP ?= tinyfpgasp
+UJPROG ?= fujprog
+OPENFPGALOADER ?= openFPGALoader
 FLEAFPGA_JTAG ?= FleaFPGA-JTAG 
 OPENOCD ?= openocd
 OPENOCD_INTERFACE ?= $(SCRIPTS)/ft231x.ocd
-UJPROG ?= ujprog
+TINYFPGASP ?= tinyfpgasp
 
 # helper scripts directory
 SCRIPTS ?= scripts
@@ -215,9 +216,14 @@ $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme: $(BOARD)_$(FPGA_SIZE)
 #	LD_LIBRARY_PATH=$(LIBTRELLIS) $(ECPPACK) $(IDCODE_CHIPID) --db $(TRELLISDB) $< --freq 62.0 --svf-rowsize 8000 --svf $@
 
 # program SRAM  with ujrprog (temporary)
+prog: program
 program: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
 	$(UJPROG) $<
-prog: program
+
+# program SRAM with OPENFPGALOADER
+prog_ofl: program_ofl
+program_ofl: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
+	$(OPENFPGALOADER) -b ulx3s $<
 
 # program SRAM with FleaFPGA-JTAG (temporary)
 program_flea: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme
@@ -236,10 +242,11 @@ flash_tiny: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
 	$(TINYFPGASP) -w $<
 
 # generate chip-specific openocd programming file
-$(BOARD)_$(FPGA_SIZE)f.ocd: makefile $(SCRIPTS)/ecp5-ocd.sh
+$(BOARD)_$(FPGA_SIZE)f.ocd: $(SCRIPTS)/ecp5-ocd.sh
 	$(SCRIPTS)/ecp5-ocd.sh $(CHIP_ID) $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf > $@
 
 # program SRAM with OPENOCD
+prog_ocd: program_ocd
 program_ocd: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf $(BOARD)_$(FPGA_SIZE)f.ocd
 	$(OPENOCD) --file=$(OPENOCD_INTERFACE) --file=$(BOARD)_$(FPGA_SIZE)f.ocd
 

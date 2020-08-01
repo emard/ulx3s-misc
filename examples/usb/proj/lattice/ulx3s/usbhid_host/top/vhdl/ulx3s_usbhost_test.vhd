@@ -103,6 +103,7 @@ architecture Behavioral of ulx3s_usbhost_test is
   --signal us4_fpga_dp: std_logic; -- flat cable
   alias us4_fpga_dp: std_logic is gp(20); -- direct
 
+  signal clocks: std_logic_vector(3 downto 0);
   signal clk_200MHz, clk_125MHz, clk_100MHz, clk_89MHz, clk_60MHz, clk_48MHz, clk_12MHz, clk_7M5Hz, clk_6MHz: std_logic;
   signal clk_usb: std_logic; -- 48 MHz
   signal S_led: std_logic;
@@ -122,59 +123,25 @@ architecture Behavioral of ulx3s_usbhost_test is
   signal vga_r, vga_g, vga_b: std_logic_vector(7 downto 0);
   signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
 begin
-  g_single_pll: if true generate
-  clk_single_pll: entity work.clk_25M_100M_7M5_12M_60M
+  clkgen_inst: entity work.ecp5pll
+  generic map
+  (
+      in_Hz => natural( 25.0e6),
+    out0_Hz => natural(125.0e6),                  out0_tol_hz => 0,
+    out1_Hz => natural( 25.0e6), out1_deg =>   0, out1_tol_hz => 0,
+    out2_Hz => natural( 48.0e6), out2_deg =>   0, out2_tol_hz => 199990,
+    out3_Hz => natural(  6.0e6), out3_deg =>   0, out3_tol_hz => 10000
+  )
   port map
   (
-      CLKI        =>  clk_25MHz,
-      CLKOP       =>  clk_100MHz,
-      CLKOS       =>  clk_7M5Hz,
-      CLKOS2      =>  clk_12MHz,
-      CLKOS3      =>  clk_60MHz
+    clk_i => clk_25mhz,
+    clk_o => clocks
   );
-  end generate;
-
-  g_single_pll1: if true generate
-  clk_single_pll1: entity work.clk_25_125_68_6_25
-  port map
-  (
-      CLKI        =>  clk_25MHz,
-      CLKOP       =>  open,
-      CLKOS       =>  open,
-      CLKOS2      =>  clk_6MHz,
-      CLKOS3      =>  open
-  );
-  end generate;
-
-  g_single_pll2: if true generate
-  clk_single_pll2: entity work.clk_25_125_25_48_89
-  port map
-  (
-      CLKI        =>  clk_25MHz,
-      CLKOP       =>  clk_shift, -- 125 MHz
-      CLKOS       =>  clk_pixel, -- 25 MHz
-      CLKOS2      =>  clk_48MHz,
-      CLKOS3      =>  clk_89MHz -- 89.28 MHz
-  );
-  end generate;
-
-  g_double_pll: if false generate
-  clk_double_pll1: entity work.clk_25M_200M
-  port map
-  (
-      CLKI        =>  clk_25MHz,
-      CLKOP       =>  clk_200MHz
-  );
-  clk_double_pll2: entity work.clk_200M_60M_48M_12M_7M5
-  port map
-  (
-      CLKI        =>  clk_200MHz,
-      CLKOP       =>  clk_60MHz,
-      CLKOS       =>  clk_48MHz,
-      CLKOS2      =>  clk_12MHz,
-      CLKOS3      =>  clk_7M5Hz
-  );
-  end generate;
+  clk_125MHz <= clocks(0);
+  clk_shift  <= clocks(0);
+  clk_pixel  <= clocks(1);
+  clk_48MHz  <= clocks(2);
+  clk_6MHz   <= clocks(3);
 
   -- TX/RX passthru
   --ftdi_rxd <= wifi_txd;

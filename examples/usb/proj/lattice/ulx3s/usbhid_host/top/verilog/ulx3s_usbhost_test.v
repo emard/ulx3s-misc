@@ -68,17 +68,25 @@ wire [7:0] vga_r; wire [7:0] vga_g; wire [7:0] vga_b;
 wire [1:0] dvid_red; wire [1:0] dvid_green; wire [1:0] dvid_blue; wire [1:0] dvid_clock;
 
 assign shutdown = 0;
-
-  clk_25_125_48_6_25 clk_single_pll1
+  wire [3:0] clocks;
+  ecp5pll
+  #(
+      .in_hz( 25*1000000),
+    .out0_hz(125*1000000),                 .out0_tol_hz(0),
+    .out1_hz( 25*1000000), .out1_deg(  0), .out1_tol_hz(0),
+    .out2_hz( 48*1000000), .out2_deg(  0), .out2_tol_hz(100000),
+    .out3_hz(  6*1000000), .out3_deg(  0), .out3_tol_hz(10000)
+  )
+  ecp5pll_inst
   (
-    .clk25_i(clk_25mhz),
-    .clk125_o(clk_125MHz),
-    .clk48_o(clk_48MHz),
-    .clk6_o(clk_6MHz),
-    .clk25_o(clk_25MHz)
+    .clk_i(clk_25mhz),
+    .clk_o(clocks)
   );
-  assign clk_shift = clk_125MHz;
-  assign clk_pixel = clk_25MHz;
+  assign clk_125MHz= clocks[0];
+  assign clk_shift = clocks[0];
+  assign clk_pixel = clocks[1];
+  assign clk_48MHz = clocks[2];
+  assign clk_6MHz  = clocks[3];
 
   //ftdi_rxd <= wifi_txd;
   //wifi_rxd <= ftdi_txd;
@@ -301,15 +309,9 @@ assign shutdown = 0;
   (
     .clk_pixel(clk_pixel),
     .clk_pixel_ena(1'b1),
-    .test_picture(1'b1),
+    .test_picture(1'b0),
     .beam_x(beam_x),
     .beam_y(beam_y),
-    .red_byte(/* open */),
-    .green_byte(/* open */),
-    .blue_byte(/* open */),
-    .vga_r(/* open */),
-    .vga_g(/* open */),
-    .vga_b(/* open */),
     .vga_hsync(vga_hsync),
     .vga_vsync(vga_vsync),
     .vga_blank(vga_blank)

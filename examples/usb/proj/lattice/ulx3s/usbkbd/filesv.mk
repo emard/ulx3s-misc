@@ -1,7 +1,7 @@
 VERILOG_FILES = $(TOP_MODULE_FILE) \
-  $(CLK0_FILE_NAME) \
+  ../../../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../../../../hex/decoder/hex_decoder_v.v \
-  ../../../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video.v \
+  ../../../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
   ../../../../usbhost/usbh_sie.v \
   ../../../../usbhost/usbh_crc5.v \
   ../../../../usbhost/usbh_crc16.v \

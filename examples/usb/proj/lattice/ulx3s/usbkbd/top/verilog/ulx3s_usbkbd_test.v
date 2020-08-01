@@ -1,3 +1,5 @@
+// work in progress, USB not yet done
+
 module ulx3s_usbkbd_test
 (
   input clk_25mhz,
@@ -14,17 +16,28 @@ module ulx3s_usbkbd_test
 
     // clock generator
     wire clk_250MHz, clk_125MHz, clk_25MHz, clk_48MHz, clk_6MHz, clk_locked;
-    clk_25_125_48_6_25
-    clock_instance
-    (
-      .clk25_i(clk_25mhz),
-      .clk125_o(clk_125MHz),
-      .clk48_o(clk_48MHz),
-      .clk6_o(clk_6MHz),
-      .clk25_o(clk_25MHz),
-      .locked(clk_locked)
-    );
-    
+
+  wire [3:0] clocks;
+  ecp5pll
+  #(
+      .in_hz( 25*1000000),
+    .out0_hz(125*1000000),                 .out0_tol_hz(0),
+    .out1_hz( 25*1000000), .out1_deg(  0), .out1_tol_hz(0),
+    .out2_hz( 48*1000000), .out2_deg(  0), .out2_tol_hz(100000),
+    .out3_hz(  6*1000000), .out3_deg(  0), .out3_tol_hz(10000)
+  )
+  ecp5pll_inst
+  (
+    .clk_i(clk_25mhz),
+    .clk_o(clocks),
+    .locked(locked)
+  );
+  assign clk_125MHz= clocks[0];
+  assign clk_shift = clocks[0];
+  assign clk_pixel = clocks[1];
+  assign clk_48MHz = clocks[2];
+  assign clk_6MHz  = clocks[3];
+
     // shift clock choice SDR/DDR
     wire clk_pixel, clk_shift;
     assign clk_pixel = clk_25MHz;

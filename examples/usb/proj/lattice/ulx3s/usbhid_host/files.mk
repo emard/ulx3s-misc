@@ -1,4 +1,5 @@
 VHDL_FILES = $(TOP_MODULE_FILE) \
+  ../../../../../ecp5pll/hdl/vhd/ecp5pll.vhd \
   ../../../../lattice/ulx3s/clocks/clk_25M_100M_7M5_12M_60M.vhd \
   ../../../../lattice/ulx3s/clocks/clk_25_125_25_48_89.vhd \
   ../../../../lattice/ulx3s/clocks/clk_25m_200m.vhd \

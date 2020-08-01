@@ -16,7 +16,7 @@ CONSTRAINTS = constraints/ulx3s_v20.lpf
 TOP_MODULE = ulx3s_usbhost_test
 
 # various toplevels for building different f32c soc's
-TOP_MODULE_FILE = ../../../../lattice/ulx3s/top/ulx3s_usbhost_test.vhd
+TOP_MODULE_FILE = top/vhdl/ulx3s_usbhost_test.vhd
 
 include files.mk
 
