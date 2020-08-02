@@ -33,6 +33,19 @@ SET_RAM_X_ADDRESS_COUNTER             = const(0x4E)
 SET_RAM_Y_ADDRESS_COUNTER             = const(0x4F)
 TERMINATE_FRAME_READ_WRITE            = const(0xFF)
 
+# 0:flat cable on top, 3:pins on top, framebuf.MONO_HLSB
+ROTATION=0
+if ROTATION==0:
+  X_START=EPD_WIDTH-1
+  Y_START=EPD_HEIGHT-1
+  X_END=0
+  Y_END=0
+if ROTATION==3:
+  X_START=0
+  Y_START=0
+  X_END=EPD_WIDTH-1
+  Y_END=EPD_HEIGHT-1
+
 class epaper290:
   def __init__(self, dc, din, cs, clk, busy, rst, miso=34):
     self.dc_pin=Pin(dc,Pin.OUT)
@@ -59,31 +72,31 @@ class epaper290:
   @micropython.viper
   def init(self):
     self.reset()
-    self.send_command(DRIVER_OUTPUT_CONTROL);
-    self.send_data(EPD_HEIGHT-1);
-    self.send_data((EPD_HEIGHT-1) >> 8);
-    self.send_data(0x00);                     # GD = 0; SM = 0; TB = 0;
-    self.send_command(BOOSTER_SOFT_START_CONTROL);
-    self.send_data(0xD7);
-    self.send_data(0xD6);
-    self.send_data(0x9D);
-    self.send_command(WRITE_VCOM_REGISTER);
-    self.send_data(0xA8);                     # VCOM 7C
-    self.send_command(SET_DUMMY_LINE_PERIOD);
-    self.send_data(0x1A);                     # 4 dummy lines per gate
-    self.send_command(SET_GATE_TIME);
-    self.send_data(0x08);                     # 2us per line
-    self.send_command(DATA_ENTRY_MODE_SETTING);
-    self.send_data(0x03);                     # X increment; Y increment
+    self.send_command(DRIVER_OUTPUT_CONTROL)
+    self.send_data(EPD_HEIGHT-1)
+    self.send_data((EPD_HEIGHT-1) >> 8)
+    self.send_data(0x00) # GD = 0; SM = 0; TB = 0;
+    self.send_command(BOOSTER_SOFT_START_CONTROL)
+    self.send_data(0xD7)
+    self.send_data(0xD6)
+    self.send_data(0x9D)
+    self.send_command(WRITE_VCOM_REGISTER) 
+    self.send_data(0xA8)
+    self.send_command(SET_DUMMY_LINE_PERIOD)
+    self.send_data(0x1A) # 4 dummy lines per gate
+    self.send_command(SET_GATE_TIME)
+    self.send_data(0x08) # 2us per line
+    self.send_command(DATA_ENTRY_MODE_SETTING)
+    self.send_data(ROTATION)
     self.set_lut(self.lut_full_update)
     self.wait_until_idle()
 
   @micropython.viper
   def set_lut(self, lut):
     p8=ptr8(addressof(lut))
-    self.send_command(WRITE_LUT_REGISTER);
+    self.send_command(WRITE_LUT_REGISTER)
     for i in range(30):
-      self.send_data(p8[i]);
+      self.send_data(p8[i])
 
   @micropython.viper
   def _spi_transfer(self,data:int):
@@ -122,7 +135,7 @@ class epaper290:
     self.send_command(SET_RAM_X_ADDRESS_START_END_POSITION)
     self.send_data(x_start >> 3)
     self.send_data(x_end >> 3)
-    self.send_command(SET_RAM_Y_ADDRESS_START_END_POSITION);
+    self.send_command(SET_RAM_Y_ADDRESS_START_END_POSITION)
     self.send_data(y_start)
     self.send_data(y_start >> 8)
     self.send_data(y_end)
@@ -132,15 +145,15 @@ class epaper290:
   def set_memory_pointer(self,x:int,y:int):
     self.send_command(SET_RAM_X_ADDRESS_COUNTER)
     self.send_data(x >> 3)
-    self.send_command(SET_RAM_Y_ADDRESS_COUNTER);
+    self.send_command(SET_RAM_Y_ADDRESS_COUNTER)
     self.send_data(y)
     self.send_data(y >> 8)
     self.wait_until_idle()
 
   @micropython.viper
   def write_frame(self,frame_buffer):
-    self.set_memory_area(0,0, EPD_WIDTH-1,EPD_HEIGHT-1);
-    self.set_memory_pointer(0,0)
+    self.set_memory_area(X_START,Y_START, X_END,Y_END)
+    self.set_memory_pointer(X_START,Y_START)
     p8=ptr8(addressof(frame_buffer))
     self.send_command(WRITE_RAM)
     for i in range(int(len(frame_buffer))):
