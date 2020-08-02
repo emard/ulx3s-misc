@@ -54,19 +54,11 @@ class HINK_E0154A07_A1:
   def init(self):
     self.reset()
     self.send_command(DRIVER_OUTPUT_CONTROL)
-    self.send_data((EPD_HEIGHT - 1) & 0xFF)
-    self.send_data(((EPD_HEIGHT - 1) >> 8) & 0xFF)
+    self.send_data(EPD_HEIGHT-1)
+    self.send_data((EPD_HEIGHT-1) >> 8)
     self.send_data(0x00) # GD = 0, SM = 0, TB = 0
     self.send_command(DATA_ENTRY_MODE_SETTING) # data entry mode       
-    self.send_data(0x01)
-    self.send_command(SET_RAM_X_ADDRESS_START_END_POSITION) # set Ram-X address start/end position   
-    self.send_data(0x00)
-    self.send_data(0x18) # 0x0C => (0x18+1)*8=200
-    self.send_command(SET_RAM_Y_ADDRESS_START_END_POSITION) #set Ram-Y address start/end position          
-    self.send_data(0xC7) # 0xC7 => (0xC7+1)=200
-    self.send_data(0x00)
-    self.send_data(0x00)
-    self.send_data(0x00) 
+    self.send_data(0x03)
     self.send_command(BORDER_WAVEFORM_CONTROL) # BorderWavefrom
     self.send_data(0x01)
     self.send_command(TEMPERATURE_SENSOR_SELECTION)
@@ -75,12 +67,9 @@ class HINK_E0154A07_A1:
     self.send_data(0xB1)
     self.send_command(MASTER_ACTIVATION) 
     self.wait_until_idle()
-    self.send_command(SET_RAM_X_ADDRESS_COUNTER)   # set RAM x address count to 0
-    self.send_data(0x00)
-    self.send_command(SET_RAM_Y_ADDRESS_COUNTER)   # set RAM y address count to 0x199
-    self.send_data((EPD_HEIGHT - 1) & 0xFF)
-    self.send_data(((EPD_HEIGHT - 1) >> 8) & 0xFF)
-    self.wait_until_idle()
+    #                    x,y start      x,y end
+    self.set_memory_area(0,0, EPD_WIDTH-1,EPD_HEIGHT-1)
+    self.set_memory_pointer(0,0)
 
   @micropython.viper
   def _spi_transfer(self,data:int):
@@ -108,6 +97,26 @@ class HINK_E0154A07_A1:
   @micropython.viper
   def reset(self):
     self.send_command(SW_RESET)
+    self.wait_until_idle()
+
+  @micropython.viper
+  def set_memory_area(self,x_start:int,y_start:int,x_end:int,y_end:int):
+    self.send_command(SET_RAM_X_ADDRESS_START_END_POSITION)
+    self.send_data(x_start >> 3)
+    self.send_data(x_end >> 3)
+    self.send_command(SET_RAM_Y_ADDRESS_START_END_POSITION);
+    self.send_data(y_start)
+    self.send_data(y_start >> 8)
+    self.send_data(y_end)
+    self.send_data(y_end >> 8)
+
+  @micropython.viper
+  def set_memory_pointer(self,x:int,y:int):
+    self.send_command(SET_RAM_X_ADDRESS_COUNTER)
+    self.send_data(x >> 3)
+    self.send_command(SET_RAM_Y_ADDRESS_COUNTER);
+    self.send_data(y)
+    self.send_data(y >> 8)
     self.wait_until_idle()
 
   @micropython.viper
