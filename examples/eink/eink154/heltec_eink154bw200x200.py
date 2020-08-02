@@ -116,7 +116,7 @@ class HINK_E0154A07_A1:
     self.send_command(SET_RAM_X_ADDRESS_START_END_POSITION)
     self.send_data(x_start >> 3)
     self.send_data(x_end >> 3)
-    self.send_command(SET_RAM_Y_ADDRESS_START_END_POSITION);
+    self.send_command(SET_RAM_Y_ADDRESS_START_END_POSITION)
     self.send_data(y_start)
     self.send_data(y_start >> 8)
     self.send_data(y_end)
@@ -126,7 +126,7 @@ class HINK_E0154A07_A1:
   def set_memory_pointer(self,x:int,y:int):
     self.send_command(SET_RAM_X_ADDRESS_COUNTER)
     self.send_data(x >> 3)
-    self.send_command(SET_RAM_Y_ADDRESS_COUNTER);
+    self.send_command(SET_RAM_Y_ADDRESS_COUNTER)
     self.send_data(y)
     self.send_data(y >> 8)
     self.wait_until_idle()
