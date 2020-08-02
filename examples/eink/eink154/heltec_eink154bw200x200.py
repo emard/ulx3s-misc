@@ -50,10 +50,8 @@ class HINK_E0154A07_A1:
     self.height=EPD_HEIGHT
     self.spibyte=bytearray(1)
 
+  @micropython.viper
   def init(self):
-    self.init_green()
-
-  def init_green(self):
     self.reset()
     self.send_command(DRIVER_OUTPUT_CONTROL)
     self.send_data((EPD_HEIGHT - 1) & 0xFF)
@@ -112,11 +110,14 @@ class HINK_E0154A07_A1:
     self.send_command(SW_RESET)
     self.wait_until_idle()
 
+  @micropython.viper
   def write_frame(self,frame_buffer):
     self.send_command(WRITE_RAM)
-    for i in range(len(frame_buffer)):
-      self.send_data(frame_buffer[i])
+    p8=ptr8(addressof(frame_buffer))
+    for i in range(int(len(frame_buffer))):
+      self.send_data(p8[i])
 
+  @micropython.viper
   def refresh_frame(self):
     self.send_command(DISPLAY_UPDATE_CONTROL_2)
     self.send_data(0xF7)
@@ -124,11 +125,13 @@ class HINK_E0154A07_A1:
     self.send_command(TERMINATE_FRAME_READ_WRITE)
     self.wait_until_idle()
 
+  @micropython.viper
   def display_frame(self,frame_buffer):
     self.write_frame(frame_buffer)
     self.refresh_frame()
 
   # after this, call epd.init() to awaken the module
+  @micropython.viper
   def sleep(self):
     self.send_command(DEEP_SLEEP_MODE)
 
