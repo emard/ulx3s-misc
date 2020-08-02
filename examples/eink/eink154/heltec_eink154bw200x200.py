@@ -40,6 +40,19 @@ SET_RAM_X_ADDRESS_COUNTER             = const(0x4E)
 SET_RAM_Y_ADDRESS_COUNTER             = const(0x4F)
 TERMINATE_FRAME_READ_WRITE            = const(0xFF)
 
+# 0:flat cable on top, 3:pins on top
+ROTATION=3
+if ROTATION==0:
+  X_START=EPD_WIDTH-1
+  Y_START=EPD_HEIGHT-1
+  X_END=0
+  Y_END=0
+if ROTATION==3:
+  X_START=0
+  Y_START=0
+  X_END=EPD_WIDTH-1
+  Y_END=EPD_HEIGHT-1
+
 class HINK_E0154A07_A1:
   def __init__(self, dc, mosi, cs, clk, busy, miso=34):
     self.dc_pin=Pin(dc,Pin.OUT)
@@ -57,9 +70,9 @@ class HINK_E0154A07_A1:
     self.send_data(EPD_HEIGHT-1)
     self.send_data((EPD_HEIGHT-1) >> 8)
     self.send_data(0x00) # GD = 0, SM = 0, TB = 0
-    self.send_command(DATA_ENTRY_MODE_SETTING) # data entry mode       
-    self.send_data(0x03)
-    self.send_command(BORDER_WAVEFORM_CONTROL) # BorderWavefrom
+    self.send_command(DATA_ENTRY_MODE_SETTING) # screen rotation
+    self.send_data(ROTATION)
+    self.send_command(BORDER_WAVEFORM_CONTROL)
     self.send_data(0x01)
     self.send_command(TEMPERATURE_SENSOR_SELECTION)
     self.send_data(0x80) # built-in temperature sensor
@@ -67,9 +80,8 @@ class HINK_E0154A07_A1:
     self.send_data(0xB1)
     self.send_command(MASTER_ACTIVATION) 
     self.wait_until_idle()
-    #                    x,y start      x,y end
-    self.set_memory_area(0,0, EPD_WIDTH-1,EPD_HEIGHT-1)
-    self.set_memory_pointer(0,0)
+    self.set_memory_area(X_START,Y_START, X_END,Y_END)
+    self.set_memory_pointer(X_START,Y_START)
 
   @micropython.viper
   def _spi_transfer(self,data:int):
