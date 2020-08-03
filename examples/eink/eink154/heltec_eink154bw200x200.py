@@ -54,7 +54,7 @@ if ROTATION==3:
   Y_END=EPD_HEIGHT-1
 
 class HINK_E0154A07_A1:
-  def __init__(self, dc, mosi, cs, clk, busy, miso=34):
+  def __init__(self, dc, mosi, cs, clk, busy, miso=34, rotation=0):
     self.dc_pin=Pin(dc,Pin.OUT)
     self.cs_pin=Pin(cs,Pin.OUT)
     self.busy_pin=Pin(busy,Pin.IN)
@@ -62,6 +62,44 @@ class HINK_E0154A07_A1:
     self.width=EPD_WIDTH
     self.height=EPD_HEIGHT
     self.spibyte=bytearray(1)
+    self.rb=bytearray(256) # reverse bits
+    self.init_reverse_bits()
+    if rotation==0:
+      self.DATA_ENTRY=0
+      self.X_START=EPD_WIDTH-1
+      self.Y_START=EPD_HEIGHT-1
+      self.X_END=0
+      self.Y_END=0
+    if rotation==1:
+      self.DATA_ENTRY=6
+      self.X_START=EPD_WIDTH-1
+      self.Y_START=0
+      self.X_END=0
+      self.Y_END=EPD_HEIGHT-1
+    if rotation==2:
+      self.DATA_ENTRY=3
+      self.X_START=0
+      self.Y_START=0
+      self.X_END=EPD_WIDTH-1
+      self.Y_END=EPD_HEIGHT-1
+    if rotation==3:
+      self.DATA_ENTRY=5
+      self.X_START=0
+      self.Y_START=EPD_HEIGHT-1
+      self.X_END=EPD_WIDTH-1
+      self.Y_END=0
+
+  @micropython.viper
+  def init_reverse_bits(self):
+    p8rb=ptr8(addressof(self.rb))
+    for i in range(256):
+      v=i
+      r=0
+      for j in range(8):
+        r<<=1
+        r|=v&1
+        v>>=1
+      p8rb[i]=r
 
   @micropython.viper
   def init(self):
@@ -71,7 +109,7 @@ class HINK_E0154A07_A1:
     self.send_data((EPD_HEIGHT-1) >> 8)
     self.send_data(0x00) # GD = 0, SM = 0, TB = 0
     self.send_command(DATA_ENTRY_MODE_SETTING) # screen rotation
-    self.send_data(ROTATION)
+    self.send_data(self.DATA_ENTRY)
     self.send_command(BORDER_WAVEFORM_CONTROL)
     self.send_data(0x01)
     self.send_command(TEMPERATURE_SENSOR_SELECTION)
@@ -80,8 +118,8 @@ class HINK_E0154A07_A1:
     self.send_data(0xB1)
     self.send_command(MASTER_ACTIVATION) 
     self.wait_until_idle()
-    self.set_memory_area(X_START,Y_START, X_END,Y_END)
-    self.set_memory_pointer(X_START,Y_START)
+    self.set_memory_area(self.X_START,self.Y_START, self.X_END,self.Y_END)
+    self.set_memory_pointer(self.X_START,self.Y_START)
 
   @micropython.viper
   def _spi_transfer(self,data:int):
@@ -139,6 +177,14 @@ class HINK_E0154A07_A1:
       self.send_data(p8[i])
 
   @micropython.viper
+  def write_frame_rb(self,frame_buffer):
+    p8=ptr8(addressof(frame_buffer))
+    p8rb=ptr8(addressof(self.rb))
+    self.send_command(WRITE_RAM)
+    for i in range(int(len(frame_buffer))):
+      self.send_data(p8rb[p8[i]])
+
+  @micropython.viper
   def refresh_frame(self):
     self.send_command(DISPLAY_UPDATE_CONTROL_2)
     self.send_data(0xF7)
@@ -148,7 +194,10 @@ class HINK_E0154A07_A1:
 
   @micropython.viper
   def display_frame(self,frame_buffer):
-    self.write_frame(frame_buffer)
+    if int(self.DATA_ENTRY)&4: # fix missing framebuf.MONO_VMSB
+      self.write_frame_rb(frame_buffer)
+    else:
+      self.write_frame(frame_buffer)
     self.refresh_frame()
 
   # after this, call epd.init() to awaken the module

@@ -3,11 +3,15 @@ from time import sleep_ms
 from random import randint
 import framebuf
 
-epd=heltec_eink154bw200x200.HINK_E0154A07_A1(dc=26,mosi=25,cs=16,clk=17,busy=5)
+rotation=0 # *90 deg
+epd=heltec_eink154bw200x200.HINK_E0154A07_A1(dc=26,mosi=25,cs=16,clk=17,busy=5,rotation=rotation)
 # initialize the frame buffer
 fb_size = (epd.width*epd.height)//8
 frame = bytearray(fb_size)
-fb=framebuf.FrameBuffer(frame, epd.width, epd.height, framebuf.MONO_HLSB)
+if rotation&1:
+  fb=framebuf.FrameBuffer(frame, epd.height, epd.width, framebuf.MONO_VLSB)
+else:
+  fb=framebuf.FrameBuffer(frame, epd.width, epd.height, framebuf.MONO_HLSB)
 
 def clear():
   for i in range(fb_size):
@@ -41,7 +45,8 @@ def run():
   fb.fill(0xFF)
   fb.text("Micropython!", 0,0, 0)
   fb.hline(0,10, 96, 0)
-  randlines(100)
+  fb.line(0,10, 96,106, 0)
+  #randlines(100)
 
   epd.init()
   epd.display_frame(frame)
