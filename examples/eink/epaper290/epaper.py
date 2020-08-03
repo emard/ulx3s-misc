@@ -3,11 +3,15 @@ from time import sleep_ms
 from random import randint
 import framebuf
 
-epd=waveshare_epaper290bw296x128.epaper290(dc=26,din=25,cs=16,clk=17,rst=15,busy=5)
+rotation=0 # *90 deg
+epd=waveshare_epaper290bw296x128.epaper290(dc=26,din=25,cs=16,clk=17,rst=15,busy=5,rotation=rotation)
 # initialize the frame buffer
 fb_size = (epd.width*epd.height)//8
 frame = bytearray(fb_size)
-fb=framebuf.FrameBuffer(frame, epd.width, epd.height, framebuf.MONO_HLSB)
+if rotation&1:
+  fb=framebuf.FrameBuffer(frame, epd.height, epd.width, framebuf.MONO_VLSB)
+else:
+  fb=framebuf.FrameBuffer(frame, epd.width, epd.height, framebuf.MONO_HLSB)
 
 def clear():
   for i in range(fb_size):
@@ -44,8 +48,8 @@ def run():
   fb.fill(0xFF)
   fb.text("Micropython!", 0,0, 0)
   fb.hline(0,10, 96, 0)
-  #fb.line(0,10, 96,106, 0)
-  randlines(100)
+  fb.line(0,10, 96,106, 0)
+  #randlines(100)
 
   epd.init()
   epd.display_frame(frame)

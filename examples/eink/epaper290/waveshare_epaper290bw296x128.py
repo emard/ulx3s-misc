@@ -33,21 +33,8 @@ SET_RAM_X_ADDRESS_COUNTER             = const(0x4E)
 SET_RAM_Y_ADDRESS_COUNTER             = const(0x4F)
 TERMINATE_FRAME_READ_WRITE            = const(0xFF)
 
-# 0:flat cable on top, 3:pins on top, framebuf.MONO_HLSB
-ROTATION=0
-if ROTATION==0:
-  X_START=EPD_WIDTH-1
-  Y_START=EPD_HEIGHT-1
-  X_END=0
-  Y_END=0
-if ROTATION==3:
-  X_START=0
-  Y_START=0
-  X_END=EPD_WIDTH-1
-  Y_END=EPD_HEIGHT-1
-
 class epaper290:
-  def __init__(self, dc, din, cs, clk, busy, rst, miso=34):
+  def __init__(self, dc, din, cs, clk, busy, rst, miso=34, rotation=0):
     self.dc_pin=Pin(dc,Pin.OUT)
     self.cs_pin=Pin(cs,Pin.OUT)
     self.reset_pin=Pin(rst,Pin.OUT)
@@ -67,7 +54,45 @@ class epaper290:
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
       0x00, 0x00, 0x00, 0x00, 0x13, 0x14, 0x44, 0x12, 
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    ])  
+    ])
+    self.rb=bytearray(256) # reverse bits
+    self.init_reverse_bits()
+    if rotation==0:
+      self.DATA_ENTRY=0
+      self.X_START=EPD_WIDTH-1
+      self.Y_START=EPD_HEIGHT-1
+      self.X_END=0
+      self.Y_END=0
+    if rotation==1:
+      self.DATA_ENTRY=6
+      self.X_START=EPD_WIDTH-1
+      self.Y_START=0
+      self.X_END=0
+      self.Y_END=EPD_HEIGHT-1
+    if rotation==2:
+      self.DATA_ENTRY=3
+      self.X_START=0
+      self.Y_START=0
+      self.X_END=EPD_WIDTH-1
+      self.Y_END=EPD_HEIGHT-1
+    if rotation==3:
+      self.DATA_ENTRY=5
+      self.X_START=0
+      self.Y_START=EPD_HEIGHT-1
+      self.X_END=EPD_WIDTH-1
+      self.Y_END=0
+
+  @micropython.viper
+  def init_reverse_bits(self):
+    p8rb=ptr8(addressof(self.rb))
+    for i in range(256):
+      v=i
+      r=0
+      for j in range(8):
+        r<<=1
+        r|=v&1
+        v>>=1
+      p8rb[i]=r
 
   @micropython.viper
   def init(self):
@@ -87,7 +112,7 @@ class epaper290:
     self.send_command(SET_GATE_TIME)
     self.send_data(0x08) # 2us per line
     self.send_command(DATA_ENTRY_MODE_SETTING)
-    self.send_data(ROTATION)
+    self.send_data(self.DATA_ENTRY)
     self.set_lut(self.lut_full_update)
     self.wait_until_idle()
 
@@ -152,12 +177,22 @@ class epaper290:
 
   @micropython.viper
   def write_frame(self,frame_buffer):
-    self.set_memory_area(X_START,Y_START, X_END,Y_END)
-    self.set_memory_pointer(X_START,Y_START)
+    self.set_memory_area(self.X_START,self.Y_START, self.X_END,self.Y_END)
+    self.set_memory_pointer(self.X_START,self.Y_START)
     p8=ptr8(addressof(frame_buffer))
     self.send_command(WRITE_RAM)
     for i in range(int(len(frame_buffer))):
       self.send_data(p8[i])
+
+  @micropython.viper
+  def write_frame_rb(self,frame_buffer):
+    self.set_memory_area(self.X_START,self.Y_START, self.X_END,self.Y_END)
+    self.set_memory_pointer(self.X_START,self.Y_START)
+    p8=ptr8(addressof(frame_buffer))
+    p8rb=ptr8(addressof(self.rb))
+    self.send_command(WRITE_RAM)
+    for i in range(int(len(frame_buffer))):
+      self.send_data(p8rb[p8[i]])
 
   @micropython.viper
   def refresh_frame(self):
@@ -169,7 +204,10 @@ class epaper290:
 
   @micropython.viper
   def display_frame(self,frame_buffer):
-    self.write_frame(frame_buffer)
+    if int(self.DATA_ENTRY)&4: # fix missing framebuf.MONO_VMSB
+      self.write_frame_rb(frame_buffer)
+    else:
+      self.write_frame(frame_buffer)
     self.refresh_frame()
 
   # after this, call epd.init() to awaken the module
