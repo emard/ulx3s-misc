@@ -26,7 +26,7 @@ def lines():
 
 def randlines(n):
   for i in range(n):
-    epd.draw_line(frame, randint(0,epd.width),randint(0,epd.height), randint(0,epd.width),randint(0,epd.height), 0)
+    fb.line(randint(0,epd.width),randint(10,epd.height), randint(0,epd.width),randint(10,epd.height), 0)
     i+=8
 
 def run():
@@ -38,12 +38,10 @@ def run():
 
   #sleep_ms(10000)
   
-  #clear()
-  #randlines(100)
-
   fb.fill(0xFF)
   fb.text("Micropython!", 0,0, 0)
   fb.hline(0,10, 96, 0)
+  randlines(100)
 
   epd.init()
   epd.display_frame(frame)
