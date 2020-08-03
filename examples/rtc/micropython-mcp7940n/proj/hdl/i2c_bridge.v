@@ -2,9 +2,9 @@
 module i2c_bridge
 (
     input  wire       clk,    // any
-    input  wire       clk_en, // 5 MHz pulse
+    input  wire       clk_en, // 1.5 MHz pulse
     input  wire [1:0] i,      // inputs
-    output wire [1:0] t       // tristate 0:0 1:Z
+    output wire [1:0] t       // tristate 0->0 1->Z
 );
   reg [1:0] state;
   genvar next_state;
