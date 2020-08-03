@@ -9,7 +9,7 @@ to external pins GP0-5, display directly pluggable.
     Resolution      : 296*128
     Working Voltage : 3.3V
     Viewing Angle   : >170°
-    Controller IC   : 
+    Controller IC   : IL3820
     Dimension       : 89.5mm x 38mm x 1.18mm
     PCB Color       : Blue with white silkscreen
 

@@ -1,5 +1,5 @@
 # ESP32 micropython
-# for Waveshare BW 2.9" 296x128 IL3829
+# for Waveshare BW 2.9" 296x128 IL3820
 
 from time import sleep_ms
 from machine import Pin,SPI
