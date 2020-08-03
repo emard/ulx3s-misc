@@ -1,0 +1,44 @@
+# ******* project, board and chip name *******
+PROJECT = epd1in54b
+
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 12
+
+# ******* if programming with OpenOCD *******
+# using local latest openocd until in linux distribution
+OPENOCD=openocd_ft232r
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+# ulx3s-jtag-passthru
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
+# ulx2s
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft232r.ocd
+# external jtag
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
+
+# ******* design files *******
+CONSTRAINTS = ../../../../constraints/ulx3s_v20.lpf
+TOP_MODULE = top_eink
+TOP_MODULE_FILE = top/$(TOP_MODULE).v
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+  ../../../spi_slave/hdl/spirw_slave_v.v \
+  ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
+  ../../../hex/decoder/hex_decoder_v.v \
+  ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
+  ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v \
+  ../../../oled/hdl/ssd1331_term_verilog/pll.v \
+
+# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
+VHDL_FILES = \
+  ../../../spi_slave/hdl/spirw_slave.vhd \
+
+YOSYS_OPTIONS = -abc9
+NEXTPNR_OPTIONS = --timing-allow-fail
+
+SCRIPTS = ../../../../scripts/
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
