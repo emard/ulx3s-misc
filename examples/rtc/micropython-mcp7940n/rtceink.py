@@ -19,12 +19,15 @@ if rotation&1:
 else:
   fb=framebuf.FrameBuffer(frame, epd.width, epd.height, framebuf.MONO_HLSB)
 
-def disp():
+def disp(t=None):
   fb.fill(0xFF)
   fb.text("Micropython!", 0,0, 0)
   fb.hline(0,10, 96, 0)
   #fb.line(0,10, 96,106, 0)
-  td=mcp.time
+  if t:
+    td=t
+  else:
+    td=mcp.time
   weekday=["MO","TU","WE","TH","FR","SA", "SU"]
   time_str="%04d-%02d-%02d %02d:%02d:%02d %02s" % \
     (td[0],td[1],td[2],td[3],td[4],td[5],weekday[td[6]])
@@ -43,7 +46,7 @@ def clock():
       sleep_ms(500)
       sec_prev=td[5]
       td=mcp.time
-    disp()
+    disp(td)
 
 settime() # localtime() set from NTP
 print(localtime())
