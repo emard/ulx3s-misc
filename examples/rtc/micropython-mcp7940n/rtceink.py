@@ -1,9 +1,10 @@
 import heltec_eink154bw200x200
-from time import sleep_ms
+from time import localtime,sleep_ms
 from random import randint
 import framebuf
 from machine import Pin, I2C
 import mcp7940
+from ntptime import settime
 
 i2c = I2C(sda=Pin(16), scl=Pin(17), freq=400000)
 mcp = mcp7940.MCP7940(i2c)
@@ -44,4 +45,8 @@ def clock():
       td=mcp.time
     disp()
 
-disp()
+settime() # localtime() set from NTP
+print(localtime())
+mcp.time=localtime()
+mcp.start()
+#clock()

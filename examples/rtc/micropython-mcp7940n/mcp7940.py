@@ -80,24 +80,24 @@ class MCP7940:
 
         # Add VBATEN (battery enable) bit
 
-        print(
-            "{}/{}/{} {}:{}:{} (day={})".format(
-                time_reg[6],
-                time_reg[5],
-                time_reg[4],
-                time_reg[2],
-                time_reg[1],
-                time_reg[0],
-                time_reg[3],
-            )
-        )
-        print(time_reg)
-        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x3F, 0x3F, 0xFF)
+        #print(
+        #    "{}/{}/{} {}:{}:{} (day={})".format(
+        #        time_reg[6],
+        #        time_reg[5],
+        #        time_reg[4],
+        #        time_reg[2],
+        #        time_reg[1],
+        #        time_reg[0],
+        #        time_reg[3],
+        #    )
+        #)
+        #print(time_reg)
+        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x3F, 0x1F, 0xFF)
         # t = bytes([MCP7940.bcd_to_int(reg & filt) for reg, filt in zip(time_reg, reg_filter)])
         t = [(MCP7940.int_to_bcd(reg) & filt) for reg, filt in zip(time_reg, reg_filter)]
         # Note that some fields will be overwritten that are important!
         # fixme!
-        print(t)
+        #print(t)
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x00, bytes(t))
 
     @property
@@ -109,7 +109,7 @@ class MCP7940:
         _, month, date, hours, minutes, seconds, weekday, _ = t  # Don't need year or yearday
         # Reorder
         time_reg = [seconds, minutes, hours, weekday + 1, date, month]
-        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x3F, 0x3F)  # No year field for alarms
+        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x1F, 0x3F)  # No year field for alarms
         t = [(MCP7940.int_to_bcd(reg) & filt) for reg, filt in zip(time_reg, reg_filter)]
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x0A, bytes(t))
 
@@ -122,7 +122,7 @@ class MCP7940:
         _, month, date, hours, minutes, seconds, weekday, _ = t  # Don't need year or yearday
         # Reorder
         time_reg = [seconds, minutes, hours, weekday + 1, date, month]
-        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x3F, 0x3F)  # No year field for alarms
+        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x1F, 0x3F)  # No year field for alarms
         t = [(MCP7940.int_to_bcd(reg) & filt) for reg, filt in zip(time_reg, reg_filter)]
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x11, bytes(t))
 
@@ -143,9 +143,9 @@ class MCP7940:
     def _get_time(self, start_reg = 0x00):
         num_registers = 7 if start_reg == 0x00 else 6
         time_reg = self._i2c.readfrom_mem(MCP7940.ADDRESS, start_reg, num_registers)  # Reading too much here for alarms
-        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x3F, 0x3F, 0xFF)[:num_registers]
-        print(time_reg)
-        print(reg_filter)
+        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x3F, 0x1F, 0xFF)[:num_registers]
+        #print(time_reg)
+        #print(reg_filter)
         t = [MCP7940.bcd_to_int(reg & filt) for reg, filt in zip(time_reg, reg_filter)]
         # Reorder
         t2 = (t[5], t[4], t[2], t[1], t[0], t[3] - 1)
@@ -154,7 +154,7 @@ class MCP7940:
         # year, month, date, hours, minutes, seconds, weekday, yearday = t
         # time_reg = [seconds, minutes, hours, weekday, date, month, year % 100]
 
-        print(t)
+        #print(t)
         return t
 
     class Data:
