@@ -36,12 +36,12 @@ def disp():
 def clock():
   while True:
     sec_prev=0
-    sec=0
-    min=1
-    while sec>=sec_prev or min%5!=0:
+    td=mcp.time
+    # update every 5 minutes
+    while td[5]>=sec_prev or (td[4]%5)!=0:
       sleep_ms(500)
-      sec_prev=sec
-      sec=mcp.time[5]
+      sec_prev=td[5]
+      td=mcp.time
     disp()
 
 disp()
