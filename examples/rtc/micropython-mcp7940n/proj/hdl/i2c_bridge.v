@@ -2,7 +2,7 @@
 module i2c_bridge
 (
     input  wire       clk,    // any
-    input  wire       clk_en, // 1.5 MHz pulse
+    input  wire       clk_en, // 1-clk pulse, repeats 1.5-6 MHz
     input  wire [1:0] i,      // inputs
     output wire [1:0] t       // tristate 0->0 1->Z
 );
