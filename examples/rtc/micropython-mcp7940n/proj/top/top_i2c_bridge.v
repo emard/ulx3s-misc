@@ -72,7 +72,7 @@ module top_i2c_bridge
 
     // i2c bridge
     // slow clock enable pulse around 1.5 MHz
-    localparam bridge_clk_div = 4; // 2^n
+    localparam bridge_clk_div = 3; // div = 1+2^n, 25/9=2.77 MHz
     reg [bridge_clk_div:0] bridge_cnt;
     always @(posedge clk) // 25 MHz
     begin
