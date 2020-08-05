@@ -10,6 +10,7 @@ module top_i2c_bridge
     output wire oled_mosi,
     output wire oled_dc,
     output wire oled_resn,
+    output wire shutdown,
     inout  wire gpdi_sda,
     inout  wire gpdi_scl,
     input  wire ftdi_txd,
@@ -71,7 +72,7 @@ module top_i2c_bridge
     assign ftdi_rxd = wifi_txd;
 
     // i2c bridge
-    // slow clock enable pulse around 1.5 MHz
+    // slow clock enable pulse 2.77 MHz
     localparam bridge_clk_div = 3; // div = 1+2^n, 25/9=2.77 MHz
     reg [bridge_clk_div:0] bridge_cnt;
     always @(posedge clk) // 25 MHz
