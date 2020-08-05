@@ -16,8 +16,8 @@ epd=IL382x.driver(
   specific=heltec_eink154bw200x200.specific(),\
   rotation=rotation)
 # initialize the frame buffer
-fb_size = (epd.width*epd.height)//8
-frame = bytearray(fb_size)
+fb_bytes = (epd.width*epd.height)//8
+frame = bytearray(fb_bytes)
 if rotation&1:
   fb=framebuf.FrameBuffer(frame, epd.height, epd.width, framebuf.MONO_VLSB)
 else:
