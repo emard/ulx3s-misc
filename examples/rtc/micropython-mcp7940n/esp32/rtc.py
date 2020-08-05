@@ -8,4 +8,4 @@ mcp = mcp7940.MCP7940(i2c)
 mcp.time # Read time
 mcp.time = time.localtime() # Set time
 mcp.start() # Start MCP oscillator
-mcp.time # Read time after setting it, repeat to see time incrementing
+print(mcp.time) # Read time after setting it, repeat to see time incrementing

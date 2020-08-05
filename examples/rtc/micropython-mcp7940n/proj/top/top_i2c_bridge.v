@@ -249,8 +249,8 @@ module top_i2c_bridge
         .spi_resn(oled_resn),
         .spi_csn(w_oled_csn)
     );
-    assign oled_csn = 1; // 7-pin ST7789: ON oled_csn is connected to BLK (backlight enable pin)
-    //assign oled_csn = 0; // 7-pin ST7789: OFF oled_csn is connected to BLK (backlight enable pin)
+    //assign oled_csn = 1; // 7-pin ST7789: ON oled_csn is connected to BLK (backlight enable pin)
+    assign oled_csn = 0; // 7-pin ST7789: OFF oled_csn is connected to BLK (backlight enable pin)
     //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to CSn
 
       end
