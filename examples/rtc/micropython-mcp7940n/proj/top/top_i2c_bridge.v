@@ -256,18 +256,24 @@ module top_i2c_bridge
     endgenerate
 
     // shutdown fuze
-    // after sufficient counts of busy falling edge
-    // and cs and dc high, shutdown.
-    localparam busy_div = 2;
-    reg [busy_div:0] busy_cnt = 0;
-    reg r_eink_busy = 0;
+    // while cs=1 toggle dc 9 times
+    localparam fuze_div = 3;
+    reg [fuze_div:0] fuze_cnt = 0;
+    reg r_eink_dc = 0;
     always @(posedge clk)
     begin
-      if(busy_cnt[busy_div]==0)
-        if(r_eink_busy & ~eink_busy) // falling edge
-          busy_cnt <= busy_cnt + 1;
-      r_eink_busy <= eink_busy;
+      if(fuze_cnt[fuze_div]==0)
+      begin
+        if(eink_cs)
+        begin
+          if(r_eink_dc & ~eink_dc) // falling edge
+            fuze_cnt <= fuze_cnt + 1;
+        end
+        else
+          fuze_cnt <= 0;
+      end
+      r_eink_dc <= eink_dc;
     end
-    assign shutdown = eink_cs & eink_dc & busy_cnt[busy_div];
+    assign shutdown = fuze_cnt[fuze_div];
 
 endmodule
