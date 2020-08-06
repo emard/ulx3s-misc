@@ -1,9 +1,9 @@
 from time import localtime,sleep_ms
+from ntptime import settime
 from random import randint
 import framebuf
 from math import sin,cos,pi
 from machine import Pin, I2C
-from ntptime import settime
 import mcp7940
 import IL382x
 import heltec_eink154bw200x200
@@ -39,7 +39,7 @@ def graphic(t,color):
     fb.line(x0+int(rtick*sin(ahour)),y0-int(rtick*cos(ahour)), x0+int(rmax*sin(ahour)),y0-int(rmax*cos(ahour)), color)
   # draw hands
   ahour=(t[3]+t[4]/60)*pi/6
-  amin=t[4]*pi/30
+  amin=(t[4]+t[5]/60)*pi/30
   fb.line(x0,y0, x0+int(rhour*sin(ahour)),y0-int(rhour*cos(ahour)), color)
   for i in range(3):
     fb.line(x0,y0, x0+int(rmin*sin(amin)),y0-int(rmin*cos(amin)), color)
@@ -61,9 +61,10 @@ def disp(t=None,color=0):
 
 def shutdown():
   epd.cs.on()
-  for i in range(14):
+  for i in range(500):
     epd.dc.on()
     epd.dc.off()
+    sleep_ms(2)
 
 def clock():
   epd.init()
@@ -81,8 +82,8 @@ def clock():
   epd.refresh_frame()
   disp(td,0)
   epd.sleep()
-  mcp.battery_backup_enable(1)
   mcp.alarm0=td
+  mcp.battery_backup_enable(1)
   mcp.alarm0_every_minute()
   shutdown()
 
