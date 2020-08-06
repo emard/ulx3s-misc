@@ -191,19 +191,19 @@ class driver:
     self.wait_until_idle()
 
   @micropython.viper
-  def write_frame(self,frame_buffer):
+  def write_frame(self,frame_buffer,cmd:int):
     self.set_memory_area(self.X_START,self.Y_START, self.X_END,self.Y_END)
     self.set_memory_pointer(self.X_START,self.Y_START)
-    self.send_command(WRITE_RAM)
+    self.send_command(cmd)
     p8=ptr8(addressof(frame_buffer))
     for i in range(int(len(frame_buffer))):
       self.send_data(p8[i])
 
   @micropython.viper
-  def write_frame_rb(self,frame_buffer):
+  def write_frame_rb(self,frame_buffer,cmd:int):
     p8=ptr8(addressof(frame_buffer))
     p8rb=ptr8(addressof(self.rb))
-    self.send_command(WRITE_RAM)
+    self.send_command(cmd)
     for i in range(int(len(frame_buffer))):
       self.send_data(p8rb[p8[i]])
 
@@ -232,9 +232,9 @@ class driver:
   @micropython.viper
   def display_frame(self,frame_buffer):
     if int(self.DATA_ENTRY)&4: # fix missing framebuf.MONO_VMSB
-      self.write_frame_rb(frame_buffer)
+      self.write_frame_rb(frame_buffer,WRITE_RAM)
     else:
-      self.write_frame(frame_buffer)
+      self.write_frame(frame_buffer,WRITE_RAM)
     self.refresh_frame()
 
   # after this, call epd.init() to awaken the module
