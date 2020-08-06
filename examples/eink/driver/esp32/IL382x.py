@@ -43,12 +43,12 @@ TERMINATE_FRAME_READ_WRITE            = const(0xFF)
 
 class driver:
   def __init__(self, specific, dc, mosi, cs, clk, busy, reset=-1, miso=34, rotation=0):
-    self.dc_pin=Pin(dc,Pin.OUT)
-    self.cs_pin=Pin(cs,Pin.OUT)
-    self.busy_pin=Pin(busy,Pin.IN)
-    self.reset_pin=None
+    self.dc=Pin(dc,Pin.OUT)
+    self.cs=Pin(cs,Pin.OUT)
+    self.busy=Pin(busy,Pin.IN)
+    self.rst=None
     if reset>=0:
-      self.reset_pin=Pin(reset,Pin.OUT)
+      self.rst=Pin(reset,Pin.OUT)
     self.spi=SPI(-1, baudrate=2000000, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(clk), mosi=Pin(mosi), miso=Pin(miso))
     self.spibyte=bytearray(1)
     self.rb=bytearray(256) # reverse bits
@@ -138,33 +138,33 @@ class driver:
   def _spi_transfer(self,data:int):
     p8=ptr8(addressof(self.spibyte))
     p8[0]=data
-    self.cs_pin(False)
+    self.cs.off()
     self.spi.write(self.spibyte)
-    self.cs_pin(True)
+    self.cs.on()
 
   @micropython.viper
   def send_command(self, command:int):
-    self.dc_pin(False)
+    self.dc.off()
     self._spi_transfer(command)
 
   @micropython.viper
   def send_data(self, data:int):
-    self.dc_pin(True)
+    self.dc.on()
     self._spi_transfer(data)
 
   @micropython.viper
   def wait_until_idle(self):
-    while(self.busy_pin()): # 0: idle, 1: busy
+    while(self.busy()): # 0: idle, 1: busy
       sleep_ms(100)
 
   @micropython.viper
   def reset(self):
-    if self.reset_pin:
-      self.reset_pin.on()
+    if self.rst:
+      self.rst.on()
       sleep_ms(200)
-      self.reset_pin.off()
+      self.rst.off()
       sleep_ms(10)
-      self.reset_pin.on()
+      self.rst.on()
       sleep_ms(200)
     else:
       self.send_command(SW_RESET)
