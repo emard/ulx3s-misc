@@ -22,4 +22,4 @@ ebay:
 [1.54 Inch E-Paper Module E-Ink Electronic Display Screen SPI Black White Color](https://www.ebay.com/itm/1-54-Inch-E-Paper-Module-E-Ink-Electronic-Display-Screen-SPI-Black-White-Color/392556403310?hash=item5b662f5a6e:g:BfgAAOSwrcRd3W2f)
 
 similar to:
-[e-Paper 1.54" V2](https://github.com/waveshare/e-Paper/blob/master/Arduino/epd1in54b_V2/epd1in54b_V2.cpp)
+[e-Paper 1.54" V2](https://github.com/waveshare/e-Paper/blob/master/Arduino/epd1in54_V2/epd1in54_V2.cpp)
