@@ -10,7 +10,7 @@ module top_i2c_bridge
     output wire oled_mosi,
     output wire oled_dc,
     output wire oled_resn,
-    output wire shutdown,
+    inout  wire shutdown,
     inout  wire gpdi_sda,
     inout  wire gpdi_scl,
     input  wire ftdi_txd,
@@ -107,7 +107,7 @@ module top_i2c_bridge
     assign wifi_gpio17 = i2c_scl_t[0] ? 1'bz : 1'b0;
 
     assign led[4:0] = {eink_busy,eink_clk,eink_cs,eink_sdi,eink_dc};
-    assign led[5]   = 0;
+    assign led[5]   = shutdown;
     assign led[7:6] = {gpdi_sda,gpdi_scl};
 
 /*
@@ -274,6 +274,6 @@ module top_i2c_bridge
       end
       r_eink_dc <= eink_dc;
     end
-    assign shutdown = fuze_cnt[fuze_div];
+    assign shutdown = fuze_cnt[fuze_div] ? 1'b1 : 1'bz;
 
 endmodule
