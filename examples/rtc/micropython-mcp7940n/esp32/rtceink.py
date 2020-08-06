@@ -49,25 +49,19 @@ def shutdown():
 
 def clock():
   epd.init()
-  # first update will make screen clear
+  # first update will generate cleared screen in RAM
+  # but partial update will fade existing content
   epd.set_partial_refresh()
-  #disp()
-  # if shutdown was not successful, clock will be displayed
-  # every 5 sec
-  for i in range(3):
-  #while False:
+  fb.fill(0xFF)
+  epd.write_frame(frame,IL382x.WRITE_RAM_RED) # must be to fade
+  epd.write_frame(frame,IL382x.WRITE_RAM)
+  epd.refresh_frame()
+  td=mcp.time
+  # wait for full minute
+  while td[5]!=0:
+    sleep_ms(500)
     td=mcp.time
-    sec_prev=td[5]
-    # update every 5 minutes
-    #while td[5]>=sec_prev or (td[4]%5)!=0:
-    # update every 5 seconds
-    #while td[5]==sec_prev or (td[5]%5)!=0:
-    # update every second
-    while td[5]==sec_prev:
-      sleep_ms(500)
-      sec_prev=td[5]
-      td=mcp.time
-    disp(td,i&1)
+  disp(td,0)
   epd.sleep()
   mcp.battery_backup_enable(1)
   mcp.alarm0=td
