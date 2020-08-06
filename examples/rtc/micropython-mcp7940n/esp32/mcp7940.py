@@ -47,6 +47,13 @@ class MCP7940:
     def is_battery_backup_enabled(self):
         return self._read_bit(MCP7940.RTCWKDAY, MCP7940.VBATEN)
 
+    def alarm0_every_minute(self):
+        # 0x07<=0x10 set control register, enable only alarm0
+        # 0x08<=0x45 set oscillator digital trim
+        self._i2c.writeto_mem(MCP7940.ADDRESS, 0x07, bytes([0x10, 0x45]))
+        self._i2c.writeto_mem(MCP7940.ADDRESS, 0x0A, bytes([0x50])) # BCD seconds in minute
+        self._i2c.writeto_mem(MCP7940.ADDRESS, 0x0D, bytes([0x01 | 0x00])) # weekday | match_condition seconds
+
     def _set_bit(self, register, bit, value):
         """ Set only a single bit in a register. To do so, need to read
             the current state of the register and modify just the one bit.
@@ -101,11 +108,11 @@ class MCP7940:
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x00, bytes(t))
 
     @property
-    def alarm1(self):
+    def alarm0(self):
         return self._get_time(start_reg=0x0A)
 
-    @alarm1.setter
-    def alarm1(self, t):
+    @alarm0.setter
+    def alarm0(self, t):
         _, month, date, hours, minutes, seconds, weekday, _ = t  # Don't need year or yearday
         # Reorder
         time_reg = [seconds, minutes, hours, weekday + 1, date, month]
@@ -114,11 +121,11 @@ class MCP7940:
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x0A, bytes(t))
 
     @property
-    def alarm2(self):
+    def alarm1(self):
         return self._get_time(start_reg=0x11)
 
-    @alarm2.setter
-    def alarm2(self, t):
+    @alarm1.setter
+    def alarm1(self, t):
         _, month, date, hours, minutes, seconds, weekday, _ = t  # Don't need year or yearday
         # Reorder
         time_reg = [seconds, minutes, hours, weekday + 1, date, month]
