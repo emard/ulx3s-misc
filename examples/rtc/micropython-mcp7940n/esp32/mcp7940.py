@@ -51,7 +51,7 @@ class MCP7940:
         # 0x07<=0x10 set control register, enable only alarm0
         # 0x08<=0x45 set oscillator digital trim
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x07, bytes([0x10, 0x45]))
-        self._i2c.writeto_mem(MCP7940.ADDRESS, 0x0A, bytes([0x50])) # BCD seconds in minute
+        self._i2c.writeto_mem(MCP7940.ADDRESS, 0x0A, bytes([0x45])) # BCD seconds in minute
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x0D, bytes([0x01 | 0x00])) # weekday | match_condition seconds
 
     def _set_bit(self, register, bit, value):
