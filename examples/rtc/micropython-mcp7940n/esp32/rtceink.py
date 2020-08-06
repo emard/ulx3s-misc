@@ -36,13 +36,15 @@ def disp(t=None):
   time_str="%04d-%02d-%02d %02d:%02d:%02d %02s" % \
     (td[0],td[1],td[2],td[3],td[4],td[5],weekday[td[6]])
   fb.text(time_str, 0,40, 0)
-
-  epd.display_frame(frame)
+  epd.write_frame(frame)
+  epd.refresh_frame()
 
 def clock():
   epd.init()
-  epd.refresh_frame()
+  disp()
   epd.set_partial_refresh()
+  epd.write_frame(frame)
+  epd.refresh_frame()
   while True:
     sec_prev=0
     td=mcp.time
