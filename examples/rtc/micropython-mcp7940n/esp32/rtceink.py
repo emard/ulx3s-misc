@@ -25,22 +25,21 @@ else:
 
 ntp=0
 
-def disp(t=None):
+def disp(t=None,color=0):
   fb.fill(0xFF)
   fb.text("Micropython!", 0,0, 0)
   fb.hline(0,10, 96, 0)
-  fb.text("NTP" if ntp else "MCP", 0,20, 0)
   #fb.line(0,10, 96,106, 0)
   if t:
     td=t
   else:
     td=mcp.time
   weekday=["MO","TU","WE","TH","FR","SA", "SU"]
-  time_str="%04d-%02d-%02d %02d:%02d:%02d %02s" % \
-    (td[0],td[1],td[2],td[3],td[4],td[5],weekday[td[6]])
-  fb.text(time_str, 0,40, 0)
-  epd.write_frame(frame)
-  epd.refresh_frame()
+  source=["MCP","NTP"]
+  time_str="%04d-%02d-%02d %02d:%02d:%02d %02s %03s" % \
+    (td[0],td[1],td[2],td[3],td[4],td[5],weekday[td[6]],source[ntp])
+  fb.text(time_str, 0,40+(10*td[4])%120, color)
+  epd.display_frame(frame)
 
 def shutdown():
   epd.cs.on()
@@ -55,7 +54,7 @@ def clock():
   #disp()
   # if shutdown was not successful, clock will be displayed
   # every 5 sec
-  for i in range(4):
+  for i in range(3):
   #while False:
     td=mcp.time
     sec_prev=td[5]
@@ -68,7 +67,7 @@ def clock():
       sleep_ms(500)
       sec_prev=td[5]
       td=mcp.time
-    disp(td)
+    disp(td,i&1)
   epd.sleep()
   mcp.battery_backup_enable(1)
   mcp.alarm0=td
