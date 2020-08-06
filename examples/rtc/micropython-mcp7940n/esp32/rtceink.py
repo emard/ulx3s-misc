@@ -23,10 +23,13 @@ if rotation&1:
 else:
   fb=framebuf.FrameBuffer(frame, epd.width, epd.height, framebuf.MONO_HLSB)
 
+ntp=0
+
 def disp(t=None):
   fb.fill(0xFF)
   fb.text("Micropython!", 0,0, 0)
   fb.hline(0,10, 96, 0)
+  fb.text("NTP" if ntp else "MCP", 0,20, 0)
   #fb.line(0,10, 96,106, 0)
   if t:
     td=t
@@ -39,30 +42,46 @@ def disp(t=None):
   epd.write_frame(frame)
   epd.refresh_frame()
 
+def shutdown():
+  epd.cs.on()
+  for i in range(14):
+    epd.dc.on()
+    epd.dc.off()
+
 def clock():
   epd.init()
-  disp()
+  # first update will make screen clear
   epd.set_partial_refresh()
-  epd.write_frame(frame)
-  epd.refresh_frame()
-  while True:
-    sec_prev=0
+  #disp()
+  # if shutdown was not successful, clock will be displayed
+  # every 5 sec
+  for i in range(4):
+  #while False:
     td=mcp.time
+    sec_prev=td[5]
     # update every 5 minutes
     #while td[5]>=sec_prev or (td[4]%5)!=0:
     # update every 5 seconds
-    while td[5]==sec_prev or (td[5]%5)!=0:
+    #while td[5]==sec_prev or (td[5]%5)!=0:
+    # update every second
+    while td[5]==sec_prev:
       sleep_ms(500)
       sec_prev=td[5]
       td=mcp.time
     disp(td)
   epd.sleep()
+  mcp.battery_backup_enable(1)
+  mcp.alarm0=td
+  mcp.alarm0_every_minute()
+  shutdown()
 
 try:
   settime() # localtime() set from NTP
+  mcp.time=localtime()
+  mcp.start()
+  print(mcp.time)
+  ntp=1
 except:
   print("NTP not available")
-print(localtime())
-mcp.time=localtime()
-mcp.start()
+
 clock()
