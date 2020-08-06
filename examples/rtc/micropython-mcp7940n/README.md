@@ -20,6 +20,13 @@ RTC battery CR1225 3V
 
 e-ink display Heltec 1.54" V2 200x200 Black&White.
 
+Power ULX3S from US2 connector to allow shutdown.
+Press BTN0 to start process for the first time.
+
+When powered from US1, ULX3S will not enter shutdown by default.
+FT231X could be reconfigured to allow shutdown from US1 by
+turning OFF green LED D18.
+
 # Links
 
 [RTC](https://github.com/mattytrentini/micropython-mcp7940)
