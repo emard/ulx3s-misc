@@ -41,11 +41,9 @@ def graphic(t,color):
   ahour=(t[3]+t[4]/60)*pi/6
   amin=(t[4]+t[5]/60)*pi/30
   fb.line(x0,y0, x0+int(rhour*sin(ahour)),y0-int(rhour*cos(ahour)), color)
-  for i in range(3):
-    fb.line(x0,y0, x0+int(rmin*sin(amin)),y0-int(rmin*cos(amin)), color)
-    amin-=pi/720
+  fb.line(x0,y0, x0+int(rmin*sin(amin)),y0-int(rmin*cos(amin)), color)
 
-def disp(t=None,color=0):
+def draw_clock(t=None,color=0):
   fb.fill(0xFF)
   if t:
     td=t
@@ -57,7 +55,6 @@ def disp(t=None,color=0):
     (td[0],td[1],td[2], weekday[td[6]], td[3],td[4],td[5], source[ntp])
   fb.text(time_str, 0,42+(10*td[4])%120, color)
   graphic(td,color)
-  epd.display_frame(frame)
 
 def shutdown():
   epd.cs.on()
@@ -68,19 +65,21 @@ def shutdown():
 
 def clock():
   epd.init()
-  # first update will generate cleared screen in RAM
-  # but partial update will fade existing content
   epd.set_partial_refresh()
-  fb.fill(0xFF)
-  epd.write_frame(frame,IL382x.WRITE_RAM_RED) # must be to fade
-  epd.write_frame(frame,IL382x.WRITE_RAM)
   td=mcp.time
   # wait for next minute
   while td[5]!=0:
     sleep_ms(500)
     td=mcp.time
+  # draw previous content to be faded
+  # TODO better date arithmetic -1 minute
+  td_prev=(td[0],td[1],td[2],td[3],(td[4]+59)%60,td[5],td[6])
+  draw_clock(td_prev,0)
+  epd.write_frame(frame,IL382x.WRITE_RAM_RED) # to fade previous content
+  # draw new content
+  draw_clock(td,0)
+  epd.write_frame(frame,IL382x.WRITE_RAM)
   epd.refresh_frame()
-  disp(td,0)
   epd.sleep()
   mcp.alarm0=td
   mcp.battery_backup_enable(1)
