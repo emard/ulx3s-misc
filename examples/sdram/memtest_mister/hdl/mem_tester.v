@@ -52,7 +52,7 @@ always @(posedge clk,negedge rst_n)
 
 reg rnd_init,rnd_save,rnd_restore; // rnd_vec_gen control
 wire [DRAM_DATA_SIZE-1:0] rnd_out; // rnd_vec_gen output
-
+wire dram_ready;
 rnd_vec_gen my_rnd
 (
 	.clk(clk),
@@ -65,9 +65,11 @@ rnd_vec_gen my_rnd
 defparam my_rnd.OUT_SIZE = DRAM_DATA_SIZE;
 
 
+reg dram_start;
 reg dram_start,dram_rnw;
 wire dram_done,dram_ready;
 wire [DRAM_DATA_SIZE-1:0] dram_rdat;
+
 
 
 // FIXME combinatorial loop in sdram_control
@@ -181,7 +183,6 @@ end
 
 
 // FSM controller
-
 always @(posedge clk) begin
     case( curr_state )
 
