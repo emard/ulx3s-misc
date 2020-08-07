@@ -65,17 +65,17 @@ def shutdown():
 
 def clock():
   epd.init()
-  epd.set_partial_refresh()
   td=mcp.time
   # wait for next minute
   while td[5]!=0:
     sleep_ms(500)
     td=mcp.time
-  # draw previous content to be faded
-  # TODO better date arithmetic -1 minute
-  td_prev=(td[0],td[1],td[2],td[3],(td[4]+59)%60,td[5],td[6])
-  draw_clock(td_prev,0)
-  epd.write_frame(frame,IL382x.WRITE_RAM_RED) # to fade previous content
+  if td[4]:
+    epd.set_partial_refresh()
+    # draw previous content to be faded
+    td_prev=(td[0],td[1],td[2],td[3],(td[4]+59)%60,td[5],td[6])
+    draw_clock(td_prev,0)
+    epd.write_frame(frame,IL382x.WRITE_RAM_RED) # to fade previous content
   # draw new content
   draw_clock(td,0)
   epd.write_frame(frame,IL382x.WRITE_RAM)
