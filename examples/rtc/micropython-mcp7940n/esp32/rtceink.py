@@ -53,7 +53,7 @@ def draw_clock(t=None,color=0):
   source=["MCP","NTP"]
   time_str="%04d-%02d-%02d %02s %02d:%02d:%02d %03s" % \
     (td[0],td[1],td[2], weekday[td[6]], td[3],td[4],td[5], source[ntp])
-  fb.text(time_str, 0,42+(10*td[4])%120, color)
+  fb.text(time_str, 0,52+(td[4]%10)*10, color)
   graphic(td,color)
 
 def shutdown():
