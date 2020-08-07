@@ -86,6 +86,7 @@ endif
 # programming tools
 UJPROG ?= fujprog
 OPENFPGALOADER ?= openFPGALoader
+OPENFPGALOADER_OPTIONS ?= --board ulx3s
 FLEAFPGA_JTAG ?= FleaFPGA-JTAG 
 OPENOCD ?= openocd
 OPENOCD_INTERFACE ?= $(SCRIPTS)/ft231x.ocd
@@ -174,7 +175,7 @@ program: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
 # program SRAM with OPENFPGALOADER
 prog_ofl: program_ofl
 program_ofl: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
-	$(OPENFPGALOADER) -b ulx3s $<
+	$(OPENFPGALOADER) $(OPENFPGALOADER_OPTIONS) $<
 
 # program SRAM  with FleaFPGA-JTAG (temporary)
 program_flea: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme
