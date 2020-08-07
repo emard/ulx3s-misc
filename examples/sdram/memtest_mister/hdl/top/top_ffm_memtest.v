@@ -1,3 +1,4 @@
+`default_nettype none
 module top_ffm_memtest
 (
     input clk_100mhz_p, // core should use only positive when in differential mode
@@ -19,25 +20,24 @@ module top_ffm_memtest
     inout [31:0] dr_d     // data bus to/from SDRAM	
 );
     parameter C_ddr = 1'b1; // 0:SDR 1:DDR
-    parameter C_clk_gui_Hz = 32'd27500000; // Hz
-    parameter C_clk_dr_Hz = 32'd112500000; // Hz
+    parameter C_clk_pixel_Hz  =  27500000; // Hz
+    parameter C_clk_gui_Hz    = C_clk_pixel_Hz; // Hz
+    parameter C_clk_sdram_Hz  = 112500000; // Hz
+    parameter C_sdram_clk_deg =       120; // deg phase shift for chip
     
     parameter nreset_btn = 1'b1;
 
     localparam [31:0] C_sec_max = C_clk_gui_Hz - 1;
     localparam [31:0] C_min_max = C_clk_gui_Hz*60 - 1;
 
-    localparam [15:0] C_clk_dr_1MHz = C_clk_dr_Hz / 1000000;
+    localparam [15:0] C_clk_dr_1MHz = C_clk_sdram_Hz / 1000000;
     localparam [15:0] C_clk_dr_10MHz = C_clk_dr_1MHz / 10;
     localparam [15:0] C_clk_dr_100MHz = C_clk_dr_10MHz / 10;
     localparam [11:0] C_clk_dr_bcd = (C_clk_dr_100MHz % 10) * 'h100
                                       + (C_clk_dr_10MHz  % 10) * 'h10
                                       + (C_clk_dr_1MHz   % 10);
 
-    // wifi_gpio0=1 keeps board from rebooting
-    // hold btn0 to let ESP32 take control over the board
-    //assign wifi_gpio0 = nreset_btn;
-
+/*
     // clock generator
     wire clk_shift, clk_pixel, clk_sys;
     wire clk_gui, clk_sdram;
@@ -50,13 +50,6 @@ module top_ffm_memtest
       .clk_pixel(clk_pixel),
       .clk_sys(clk_sys),
       .locked(locked)
-    /*
-      .CLKI(clk_25mhz),
-      .CLKOP(clk_shift),
-      .CLKOS(clk_pixel),
-      .CLKOS2(clk_sys),
-      .LOCK(locked)
-    */
     );
     wire locked_sdram;
     clk_100_sdram
@@ -66,14 +59,71 @@ module top_ffm_memtest
       .clk_sdram(clk_sdram), // to controller soft-core
       .clk_sdram_shift(dr_clk), // to SDRAM chip
       .locked(locked_sdram)
-    /*
-      .CLKI(clk_25mhz),
-      .CLKOP(clk_sdram), // to controller soft-core
-      .CLKOS(dr_clk), // to SDRAM chip
-      .LOCK(locked_sdram)
-    */
     );
     assign clk_gui = clk_pixel;
+*/
+
+    // clock generator for video and sys
+    wire clk_video_locked;
+    wire [3:0] clocks;
+    ecp5pll
+    #(
+        .in_hz(100*1000000), // 100 MHz
+      .out0_hz(C_ddr ? C_clk_pixel_Hz*5 : C_clk_pixel_Hz*10),
+      .out1_hz(C_clk_pixel_Hz),
+      .out2_hz(C_clk_gui_Hz)
+    )
+    clk_100_video
+    (
+      .clk_i(clk_100mhz_p),
+      .clk_o(clocks),
+      .locked(clk_video_locked)
+    );
+    wire clk_shift = clocks[0];
+    wire clk_pixel = clocks[1];
+    wire clk_sys   = clocks[2];
+    wire clk_gui   = clk_pixel;
+
+    wire S_phasedir, S_phasestep, S_phaseloadreg;
+    wire [7:0] S_phase;
+    btn_ecp5pll_phase
+    #(
+      .c_debounce_bits(16)
+    )
+    btn_ecp5pll_phase_inst
+    (
+      .clk(clk_gui),
+      .inc(0),
+      .dec(0),
+      .phase(S_phase),
+      .phasedir(S_phasedir),
+      .phasestep(S_phasestep),
+      .phaseloadreg(S_phaseloadreg)
+    );
+
+    wire clk_sdram;
+    wire clk_sdram_locked;
+    wire [3:0] clocks_sdram;
+    ecp5pll
+    #(
+        .in_hz(100*1000000), // 100 MHz
+      .out0_hz(C_clk_sdram_Hz),
+      .out1_hz(C_clk_sdram_Hz), .out1_deg(C_sdram_clk_deg),
+      .dynamic_en(1)
+    )
+    clk_25_sdram
+    (
+      .clk_i(clk_100mhz_p),
+      .clk_o(clocks_sdram),
+      .phasesel(2'd1), // select out1
+      .phasedir(S_phasedir),
+      .phasestep(S_phasestep),
+      .phaseloadreg(S_phaseloadreg),
+      .locked(clk_sdram_locked)
+    );
+    wire   clk_sdram = clocks_sdram[0];
+    assign dr_clk    = clocks_sdram[1]; // phase shifted for the chip
+
 
     // LED blinky
     localparam counter_width = 28;
@@ -285,7 +335,7 @@ module top_ffm_memtest
 
     reg timer_reset;
     always @(posedge clk_gui)
-        timer_reset <= ~(nreset_btn & locked);
+        timer_reset <= ~(nreset_btn & clk_video_locked);
 
     reg [15:0] mins;
     reg [31:0] min;
@@ -340,7 +390,7 @@ module top_ffm_memtest
 
     reg resetn;
     always @(posedge clk_sdram)
-        resetn <= nreset_btn & locked_sdram;
+        resetn <= nreset_btn & clk_sdram_locked;
 
     wire sdram_dqm;
     defparam my_memtst.DRAM_DATA_SIZE = 32; // this board has 32-bit SDRAM
@@ -373,6 +423,7 @@ module top_ffm_memtest
 
     // VGA signal generator
     wire VGA_DE;
+    wire vga_hsync, vga_vsync;
     wire [1:0] vga_r, vga_g, vga_b;
     vgaout showrez
     (
@@ -382,7 +433,7 @@ module top_ffm_memtest
         // disabled to shorten compile time
 //        .mark(8'h80 >> secs[2:0]),
 //        .elapsed(mins),
-//        .freq(C_clk_dr_bcd),
+        .freq(S_phase),
         .hs(vga_hsync),
         .vs(vga_vsync),
         .de(VGA_DE),
@@ -390,7 +441,7 @@ module top_ffm_memtest
         .g(vga_g),
         .b(vga_b)
     );
-    assign vga_blank = ~VGA_DE;
+    wire vga_blank = ~VGA_DE;
 
     // VGA to digital video converter
     wire [1:0] tmds[3:0];

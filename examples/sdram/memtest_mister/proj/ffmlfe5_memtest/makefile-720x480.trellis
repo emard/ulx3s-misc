@@ -1,6 +1,3 @@
-# SDRAM test clock
-FREQ  = 112.5
-PHASE = 120
 # ******* project, board and chip name *******
 PROJECT = memtest_32MB_$(FREQ)MHz_$(PHASE)deg
 BOARD = ulx3s
@@ -8,9 +5,9 @@ BOARD = ulx3s
 FPGA_SIZE = 85
 FPGA_PACKAGE = CABGA554
 
-# ******* if programming with OpenOCD *******
+# ******* make prog_ocd - programming with OpenOCD *******
 # using local latest openocd until in linux distribution
-OPENOCD=openocd_ft232r
+#OPENOCD=openocd_ft232r
 # default onboard usb-jtag
 OPENOCD_INTERFACE=$(SCRIPTS)/ft4232.ocd
 # ulx3s-jtag-passthru
@@ -20,50 +17,24 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft4232.ocd
 # external jtag
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
+# ******* make prog_ofl - programming with openFPGALoader *******
+OPENFPGALOADER_OPTIONS=--cable ft4232
+
 
 # ******* design files *******
 CONSTRAINTS = ../../../../../constraints/FFM-LFE5U-V0r0_mit_FFC-CA7-V2r0.lpf
 TOP_MODULE = top_ffm_memtest
 TOP_MODULE_FILE = ../../hdl/top/$(TOP_MODULE).v
 
-CLK0_NAME = clk_100_shift_pixel
-CLK0_FILE_NAME = clocks/$(CLK0_NAME).v
-CLK0_OPTIONS = \
-  --module=$(CLK0_NAME) \
-  --clkin_name=clkin \
-  --clkin=100 \
-  --clkout0_name=clk_shift \
-  --clkout0=137.5 \
-  --clkout1_name=clk_pixel \
-  --clkout1=27.5 \
-  --clkout2_name=clk_sys \
-  --clkout2=50 \
-
-#  --feedback_clkout=0 \
-#  --internal_feedback \
-
-CLK1_NAME = clk_100_sdram
-CLK1_FILE_NAME = clocks/$(CLK1_NAME).v
-CLK1_OPTIONS = \
-  --module=$(CLK1_NAME) \
-  --clkin_name=clkin \
-  --clkin=100 \
-  --clkout0_name=clk_sdram \
-  --clkout0=$(FREQ) \
-  --clkout1_name=clk_sdram_shift \
-  --clkout1=$(FREQ) --phase1=$(PHASE) \
-
-#  --feedback_clkout=0 \
-#  --internal_feedback \
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-  $(CLK0_FILE_NAME) \
-  $(CLK1_FILE_NAME) \
+  ../../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../hdl/rnd_vec_gen.v \
   ../../hdl/sdram_control.v \
   ../../hdl/mem_tester.v \
   ../../hdl/vgaout.v \
+  ../../hdl/btn_ecp5pll_phase.v \
   ../../../../dvi/hdl/fake_differential.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
@@ -88,6 +59,7 @@ VHDL_FILES = \
 # 12F+64MB 170   MHz 0-120 deg PASS (center 60 deg); 135-345 deg FAIL
 
 # synthesis options
+YOSYS_OPTIONS = -abc9
 NEXTPNR_OPTIONS = --timing-allow-fail
 #NEXTPNR_OPTIONS = --timing-allow-fail --ignore-loops
 
