@@ -1,7 +1,8 @@
 # micropython example SD card in 4-bit mode
 
-For ESP32 to be able to use SD card in 4-bit mode
-FPGA must pull up all SD card pins.
+For ESP32 (MicroPython v1.12 on 2019-12-20)
+to be able to use SD card in 4-bit mode,
+FPGA should pull up all SD card pins.
 Compile and write to config flash:
 
     cd proj
