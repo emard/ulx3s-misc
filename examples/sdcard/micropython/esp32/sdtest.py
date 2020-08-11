@@ -1,14 +1,16 @@
-from machine import SDCard
+from machine import SDCard,freq
 from os import mount,umount,listdir
 from time import ticks_ms
 
 def run():
-  #sd=SDCard() # 4-bit mode
-  sd=SDCard(slot=3) # 1-bit mode
+  # some SD cards won't work in 4-bit mode unless freq() is explicitely set
+  freq(240*1000*1000) # 80/160/240 MHz, faster CPU = faster SD card
+  #sd=SDCard(slot=3) # 1-bit mode
+  sd=SDCard() # 4-bit mode
   mount(sd,"/sd")
   print(listdir("/sd"))
   f=open("/sd/long_file.bin","rb") # any 1-10 MB long file
-  b=bytearray(16384)
+  b=bytearray(16*1024)
   i=0
   t1=ticks_ms()
   while f.readinto(b):
