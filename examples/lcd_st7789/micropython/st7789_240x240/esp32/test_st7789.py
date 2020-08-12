@@ -16,7 +16,7 @@ class test:
 
   def run(self):
     print("st7789")
-    # NOTE miso and cs not used
+    # NOTE 7-pin display doesn't have miso and cs pins
     spi = SPI(2, baudrate=26000000, polarity=1, mosi=Pin(25), sck=Pin(17), miso=Pin(33))
     self.display = st7789.ST7789(
         spi, 240, 240,
