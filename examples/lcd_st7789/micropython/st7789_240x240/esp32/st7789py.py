@@ -81,7 +81,9 @@ class ST77xx:
         self.spi = spi
         self.reset = reset
         self.dc = dc
-        self.cs = cs
+        if cs:
+          self.cs = cs
+          self.cs.off()
         self.backlight = backlight
         if xstart >= 0 and ystart >= 0:
             self.xstart = xstart
@@ -106,39 +108,39 @@ class ST77xx:
     def command(self, command:int):
         p8=ptr8(addressof(self.cmd))
         p8[0]=command
-        self.cs.off()
+        #self.cs.off()
         self.dc.off()
         self.spi.write(self.cmd)
-        self.cs.on()
+        #self.cs.on()
 
     @micropython.viper
     def data(self, data):
-        self.cs.off()
+        #self.cs.off()
         self.dc.on()
         self.spi.write(data)
-        self.cs.on()
+        #self.cs.on()
 
     @micropython.viper
     def commandata(self, command:int, data):
         p8=ptr8(addressof(self.cmd))
         p8[0]=command
-        self.cs.off()
+        #self.cs.off()
         self.dc.off()
         self.spi.write(self.cmd)
         self.dc.on()
         self.spi.write(data)
-        self.cs.on()
+        #self.cs.on()
 
     @micropython.viper
     def hard_reset(self):
-        self.cs.off()
+        #self.cs.off()
         self.reset.on()
         sleep_ms(50)
         self.reset.off()
         sleep_ms(50)
         self.reset.on()
         sleep_ms(150)
-        self.cs.on()
+        #self.cs.on()
 
     @micropython.viper
     def soft_reset(self):
@@ -240,8 +242,14 @@ class ST77xx:
 
     @micropython.viper
     def pixel(self, x:int, y:int):
-        self.set_window(x, y, x, y)
-        self.data(self.colr)
+        # self.set_window(x,y, x,y)
+        x += int(self.xstart)
+        self._encode_pos(x,x)
+        self.commandata(ST77XX_CASET, self.pos)
+        y += int(self.ystart)
+        self._encode_pos(y,y)
+        self.commandata(ST77XX_RASET, self.pos)
+        self.commandata(ST77XX_RAMWR, self.colr)
 
     @micropython.viper
     def blit_buffer(self, buffer, x:int, y:int, width:int, height:int):
@@ -267,13 +275,13 @@ class ST77xx:
         for i in range(int(_BUFFER_SIZE)):
           p8b[i+i]=p8c[0]
           p8b[i+i+1]=p8c[1]
-        self.cs.off()
+        #self.cs.off()
         self.dc.on()
         for i in range(chunks):
             self.spi.write(self.buf)
         if rest:
             self.spi.write(self.buf) # FIXME fills too much, should be self.buf[0:rest] but crashes viper
-        self.cs.on()
+        #self.cs.on()
 
     @micropython.viper
     def fill(self, color):
