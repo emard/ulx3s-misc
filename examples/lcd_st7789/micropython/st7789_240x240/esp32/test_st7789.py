@@ -32,8 +32,8 @@ class test:
         self.display.fill(
             st7789.color565(0,0,0)
         )
-        vf.text("123456",0,120,spacing=20,xscale=1024,yscale=1024)
-        for i in range(20):
+        vf.text("123ABCdef",0,120,spacing=20,xscale=1024,yscale=1024)
+        for i in range(100):
           self.display.line(120,120,randint(0,240),randint(0,240), \
             st7789.color565(
                 getrandbits(8),
@@ -41,8 +41,7 @@ class test:
                 getrandbits(8),
             )
           )
-        # Pause 2 seconds.
-        #time.sleep(2)
+        time.sleep(2)
 
 a=test()
 a.run()
