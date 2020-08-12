@@ -22,6 +22,8 @@ class test:
         cs=Pin(32,Pin.OUT),
         reset=Pin(16, Pin.OUT),
         dc=Pin(26, Pin.OUT),
+        xstart=0,
+        ystart=320-240
     )
     self.display.init()
     vf = vectorfont.vectorfont(240,240,self.line)
@@ -30,7 +32,7 @@ class test:
         self.display.fill(
             st7789.color565(0,0,0)
         )
-        vf.text("123456",spacing=20,xscale=1024,yscale=1024)
+        vf.text("123456",0,120,spacing=20,xscale=1024,yscale=1024)
         for i in range(20):
           self.display.line(120,120,randint(0,240),randint(0,240), \
             st7789.color565(

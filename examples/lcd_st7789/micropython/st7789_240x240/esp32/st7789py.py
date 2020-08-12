@@ -320,7 +320,7 @@ class ST7789(ST77xx):
         super().init()
         self._set_color_mode(color_mode)
         sleep_ms(50)
-        self._set_mem_access_mode(4,1,1,0)
+        self._set_mem_access_mode(3,0,0,0)
         self.inversion_mode(True)
         sleep_ms(10)
         self.command(ST77XX_NORON)
