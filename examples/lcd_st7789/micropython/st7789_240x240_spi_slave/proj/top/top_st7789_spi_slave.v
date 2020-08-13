@@ -115,16 +115,36 @@ module top_st7789_spi_slave
       else
       begin
         R_x <= 0;
+        R_color <= R_color+1;
         if (R_y != 319)
           R_y <= R_y+1;
         else
         begin
           R_y <= 80;
-          R_color <= R_color+1;
         end
       end
     end
   end
+
+  wire pixel_plot, pixel_busy;
+  wire [15:0] pixel_x, pixel_y, pixel_color;
+  draw_line
+  draw_line_inst
+  (
+    .clk(clk),
+    .plot(~btn[1]),
+    .busy(busy),
+    .x0(R_x),
+    .y0(R_y),
+    .x1(R_x),
+    .y1(R_y),
+    .color(R_color),
+    .pixel_plot(pixel_plot),
+    .pixel_busy(pixel_busy),
+    .pixel_x(pixel_x),
+    .pixel_y(pixel_y),
+    .pixel_color(pixel_color)
+  );
 
   wire w_oled_csn;
   lcd_pixel
@@ -140,8 +160,8 @@ module top_st7789_spi_slave
   (
     .clk(clk),
     .reset(~btn[0]),
-    .plot(~btn[1]),
-    .busy(busy),
+    .plot(pixel_plot),
+    .busy(pixel_busy),
     .x(R_x),
     .y(R_y),
     .color(R_color),
