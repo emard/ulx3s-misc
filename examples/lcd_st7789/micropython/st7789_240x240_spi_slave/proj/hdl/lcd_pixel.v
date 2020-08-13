@@ -51,7 +51,6 @@ module lcd_pixel #(
   reg [10:0] index;
   reg [7:0] data = c_nop;
   reg dc = 1;
-  reg byte_toggle; // alternates data byte for 16-bit mode
   reg init = 1;
   reg [4:0] num_args;
   reg [27:0] delay_cnt = c_clk_mhz*c_reset_us; // initial delay fits 1.3s at 100MHz
@@ -73,7 +72,6 @@ module lcd_pixel #(
       init <= 1;
       dc <= 1;
       resn <= 0;
-      byte_toggle <= 0;
       arg <= 1; // after reset, before commands take delay from init sequence
       data <= c_nop;
       clken <= 0;
