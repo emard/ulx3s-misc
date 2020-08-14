@@ -30,18 +30,9 @@ class test:
   def main(self,n=100):
     print("st7789 spi slave test")
     self.cls()
-    #self.line(100,39+20,  120,120, -1)
-    #self.line(149,150, 120,120, -1)
-    #return
     seed(0)
     for i in range(n):
       self.line(randint(0,240),randint(0,240), randint(0,240),randint(0,240), randint(0,0xFFFF))
-      #x=randint(0,240)
-      #y=randint(0,240)
-      #c=randint(0,0x10000)
-      #if i>=a:
-      #  self.line(x,y, 120,120, c)
-    #print(x,y)
 
 run=test()
 run.main()
