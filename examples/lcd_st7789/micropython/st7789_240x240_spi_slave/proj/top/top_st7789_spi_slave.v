@@ -31,7 +31,7 @@ module top_st7789_spi_slave
   ecp5pll
   #(
       .in_hz( 25*1000000),
-    .out0_hz(125*1000000)
+    .out0_hz(100*1000000)
   )
   ecp5pll_inst
   (
@@ -65,20 +65,11 @@ module top_st7789_spi_slave
   wire   spi_csn     = wifi_gpio16;
   wire   spi_clk     = wifi_gpio17;
   wire   spi_mosi    = wifi_gpio25;
-  wire   spi_miso;
+  wire   spi_miso, spi_busy;
   assign wifi_gpio33 = spi_miso;
+  assign wifi_gpio35 = spi_busy;
 
-  //assign oled_csn = 1; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
-  //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to CSn
-  //assign oled_dc    = lcd_dc;
-  //assign oled_resn  = lcd_resn;
-  //assign oled_mosi  = lcd_mosi;
-  //assign oled_clk   = lcd_clk;
-
-  assign led[4:0] = {oled_csn,oled_dc,oled_resn,oled_mosi,oled_clk};
-  assign led[7:5] = 0;
-
-  wire ram_wr;
+  wire ram_wr, ram_rd;
   wire [31:0] ram_addr;
   wire [7:0] ram_di, ram_do;
   spirw_slave_v
@@ -94,6 +85,7 @@ module top_st7789_spi_slave
       .mosi(spi_mosi),
       .miso(spi_miso),
       .wr(ram_wr),
+      .rd(ram_rd),
       .addr(ram_addr),
       .data_in(ram_do),
       .data_out(ram_di)
@@ -102,62 +94,57 @@ module top_st7789_spi_slave
   generate
   if(c_lcd)
 
-  reg R_plot;
-  wire busy;
-  reg R_busy;
+  wire w_busy;
+  assign spi_busy = w_busy;
 
-  reg [15:0] R_x, R_y, R_color;
+  reg [7:0] ram[0:10];
+  reg [7:0] R_ram_do;
   always @(posedge clk)
   begin
-    R_busy <= busy;
-    if (R_busy & ~busy) begin // falling edge of busy
-      if (R_x != 239)
-        R_x <= R_x+1;
-      else
-      begin
-        R_x <= 0;
-        if (R_y != 319)
-          R_y <= R_y+1;
-        else
-        begin
-          R_y <= 80;
-        end
-      end
-      R_plot <= 1;
-    end else begin
-      R_plot <= 0;
-    end
+    if(ram_wr)
+      ram[ram_addr] <= ram_di;
+    //else
+    //  R_ram_do <= ram[ram_addr];
   end
+  //assign ram_do = R_ram_do;
+  assign ram_do = {7'd0, w_busy}; // FIXME SPI reading doesn't work
 
-  wire pixel_plot, pixel_busy;
-  wire [15:0] pixel_x, pixel_y, pixel_color;
-  /*
+  wire [15:0] w_x0, w_y0, w_x1, w_y1, w_color;
+  assign w_x0 = {ram[0],ram[1]};
+  assign w_y0 = {ram[2],ram[3]};
+  assign w_x1 = {ram[4],ram[5]};
+  assign w_y1 = {ram[6],ram[7]};
+  assign w_color = {ram[8],ram[9]};
+  
+  reg R_plot;
+  always @(posedge clk)
+  begin
+    R_plot <= ram_addr[3:0] == 9 && ram_wr;
+  end
+  wire w_plot = R_plot;
+
+  wire [15:0] hvline_x, hvline_y, hvline_len, hvline_color;
+  wire hvline_vertical, hvline_plot, hvline_busy;
+
   draw_line
   draw_line_inst
   (
     .clk(clk),
-    .plot(~btn[1]),
-    .busy(busy),
-    .x0(R_x),
-    .y0(R_y),
-    .x1(R_x),
-    .y1(R_y),
-    .color(R_color),
-    .pixel_plot(pixel_plot),
-    .pixel_busy(pixel_busy),
-    .pixel_x(pixel_x),
-    .pixel_y(pixel_y),
-    .pixel_color(pixel_color)
+    .plot(w_plot),
+    .busy(w_busy),
+    .x0(w_x0),
+    .y0(w_y0),
+    .x1(w_x1),
+    .y1(w_y1),
+    .color(w_color),
+    .hvline_plot(hvline_plot),
+    .hvline_busy(hvline_busy),
+    .hvline_x(hvline_x),
+    .hvline_y(hvline_y),
+    .hvline_len(hvline_len),
+    .hvline_vertical(hvline_vertical),
+    .hvline_color(hvline_color)
   );
-  */
-  assign pixel_x = R_x;
-  assign pixel_y = R_y;
-  wire   [4:0] pixel_r = R_y[5:1];
-  wire   [5:0] pixel_g = 0; // R_x[5:0];
-  wire   [4:0] pixel_b = R_y[5:1];
-  assign pixel_color = {pixel_r,pixel_g,pixel_b}; // 31,63,31
-  assign pixel_plot = ~btn[1];
-  assign busy = pixel_busy;
 
   wire w_oled_csn;
   lcd_hvline
@@ -171,13 +158,13 @@ module top_st7789_spi_slave
   (
     .clk(clk),
     .reset(~btn[0]),
-    .plot(pixel_plot),
-    .busy(pixel_busy),
-    .x(120),
-    .y(pixel_y),
-    .len(40),
-    .vertical(0),
-    .color(pixel_color),
+    .plot(hvline_plot),
+    .busy(hvline_busy),
+    .x(hvline_x),
+    .y(hvline_y),
+    .len(hvline_len),
+    .vertical(hvline_vertical),
+    .color(hvline_color),
     .spi_clk(oled_clk),
     .spi_mosi(oled_mosi),
     .spi_dc(oled_dc),
@@ -273,5 +260,8 @@ module top_st7789_spi_slave
   //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to CSn
   end // if(c_hex)
   endgenerate
+
+  assign led[4:0] = {oled_csn,oled_dc,oled_resn,oled_mosi,oled_clk};
+  assign led[7:5] = ram_rd;
 
 endmodule
