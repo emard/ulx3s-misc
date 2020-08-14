@@ -35,7 +35,6 @@ module draw_line
         R_color <= color;
         dx <= x1>x0 ? x1-x0 : x0-x1;
         dy <= y1>y0 ? y1-y0 : y0-y1;
-        R_plot <= 1;
         busy  <= 1;
         state <= 1;
       end
