@@ -27,7 +27,7 @@ VERILOG_FILES = \
   ../../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../../../spi_slave/hdl/spirw_slave_v.v \
   ../../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
-  hdl/lcd_pixel.v \
+  hdl/lcd_hvline.v \
   hdl/draw_line.v \
   ../../../../hex/decoder/hex_decoder_v.v \
 

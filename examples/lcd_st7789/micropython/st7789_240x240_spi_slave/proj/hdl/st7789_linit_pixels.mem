@@ -44,7 +44,7 @@ C0
 // *** 28 bytes up to here ***
 // X end MSB,LSB (same value as X start)
 00
-00
+EF
 // RASET Y, 4-param
 2B
 04
@@ -53,17 +53,17 @@ C0
 00
 00
 // *** 34 bytes up to here ***
-// Y end MSB,LSB (same value as Y start)
-00
-00
-// RAMWR, 2-param
+// Y end MSB,LSB
+01
+3F
+// RAMWR, 6-param
 2C
-02
+00
 // *** 38 bytes up to here ***
 // color (black)
-00 00
+//00 00
 // *** 40 bytes up to here ***
-// NOP, 0-param
-//00
-//00
+//F0 00
 // *** 42 bytes up to here ***
+//00 0F
+// *** 44 bytes up to here ***
