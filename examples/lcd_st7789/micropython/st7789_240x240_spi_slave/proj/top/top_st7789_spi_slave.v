@@ -104,7 +104,7 @@ module top_st7789_spi_slave
 
   wire busy;
   reg R_busy;
-  
+
   reg [15:0] R_x, R_y, R_color;
   always @(posedge clk)
   begin
@@ -115,12 +115,12 @@ module top_st7789_spi_slave
       else
       begin
         R_x <= 0;
-        R_color <= R_color+1;
         if (R_y != 319)
           R_y <= R_y+1;
         else
         begin
           R_y <= 80;
+          R_color <= R_color+1;
         end
       end
     end
@@ -128,6 +128,7 @@ module top_st7789_spi_slave
 
   wire pixel_plot, pixel_busy;
   wire [15:0] pixel_x, pixel_y, pixel_color;
+  /*
   draw_line
   draw_line_inst
   (
@@ -145,6 +146,15 @@ module top_st7789_spi_slave
     .pixel_y(pixel_y),
     .pixel_color(pixel_color)
   );
+  */
+  assign pixel_x = R_x;
+  assign pixel_y = R_y;
+  wire   [4:0] pixel_r = R_x[5:1];
+  wire   [5:0] pixel_g = R_y[5:0];
+  wire   [4:0] pixel_b = R_y[5:1];
+  assign pixel_color = {pixel_r,pixel_g,pixel_b}; // 31,63,31
+  assign pixel_plot = ~btn[1];
+  assign busy = pixel_busy;
 
   wire w_oled_csn;
   lcd_pixel
@@ -152,9 +162,7 @@ module top_st7789_spi_slave
     .c_clk_mhz(125),
     .c_init_file("st7789_linit_pixels.mem"),
     .c_clk_phase(0),
-    .c_clk_polarity(1),
-    .c_pixel_start(24),
-    .c_init_size(40)
+    .c_clk_polarity(1)
   )
   lcd_pixel_inst
   (
@@ -162,9 +170,9 @@ module top_st7789_spi_slave
     .reset(~btn[0]),
     .plot(pixel_plot),
     .busy(pixel_busy),
-    .x(R_x),
-    .y(R_y),
-    .color(R_color),
+    .x(pixel_x),
+    .y(pixel_y),
+    .color(pixel_color),
     .spi_clk(oled_clk),
     .spi_mosi(oled_mosi),
     .spi_dc(oled_dc),

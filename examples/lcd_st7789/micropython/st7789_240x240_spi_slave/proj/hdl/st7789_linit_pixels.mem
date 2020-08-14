@@ -63,3 +63,7 @@ C0
 // color (black)
 00 00
 // *** 40 bytes up to here ***
+// NOP, 0-param
+//00
+//00
+// *** 42 bytes up to here ***
