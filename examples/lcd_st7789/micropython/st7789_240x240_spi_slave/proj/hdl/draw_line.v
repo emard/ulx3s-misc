@@ -2,8 +2,6 @@
 // AUTHOR=EMARD
 // LICENSE=BSD
 
-// TODO support plotting horizontal and vertical lines
-
 `default_nettype none
 module draw_line 
 (
@@ -64,10 +62,9 @@ module draw_line
     end else if (state == 3) begin
       ystep <= R_y0 < R_y1; // ystep 1:positive, 0:negative
       R_plot <= 1;
-      R_hvx <= R_x0; // TODO for len
-      R_hvy <= R_y0; // TODO for len
+      R_hvx <= R_x0;
+      R_hvy <= R_y0;
       R_hvlen <= 0;
-      //R_hvplot <= 0;
       state <= 4;
     end else begin // draw the line
       if (hvline_busy == 0) begin
@@ -81,7 +78,6 @@ module draw_line
           R_hvplot <= 1;
         end else begin
           if (err < dy) begin // negative?
-            // TODO draw horizontal/vertical line (faster)
             R_hvx <= R_x0;
             if (ystep) begin
               R_y0 <= R_y0+1;
@@ -114,7 +110,7 @@ module draw_line
   assign hvline_x = R_hvmode ? (steep ? R_hvy_plot : R_hvx_plot) : (steep ? R_y0 : R_x0);
   assign hvline_y = R_hvmode ? (steep ? R_hvx_plot : R_hvy_plot) : (steep ? R_x0 : R_y0);
   assign hvline_color = R_color;
-  assign hvline_len = R_hvmode ? R_hvlen_plot : 1; // TODO H/V line
-  assign hvline_vertical = steep; // TODO H/V line
+  assign hvline_len = R_hvmode ? R_hvlen_plot : 1;
+  assign hvline_vertical = steep;
 
 endmodule
