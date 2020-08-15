@@ -12,10 +12,10 @@ module draw_line
 (
   input  wire        clk, // SPI display clock rate will be half of this clock rate
   // line draw signaling
-  input  wire        plot, // request plotting a pixel
+  input  wire        plot, // request plotting the line
   output reg         busy = 0, // response to plot
   input  wire [15:0] x0,y0, x1,y1, color, // sampled at rising edge of plot
-  // LCD interface (future H/V line)
+  // LCD interface (single pixel or H/V line)
   output wire        hvline_plot,
   input  wire        hvline_busy,
   output wire [15:0] hvline_x, hvline_y, hvline_len, hvline_color,

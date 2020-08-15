@@ -19,7 +19,8 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 # ******* design files *******
 CONSTRAINTS = ../../../../../constraints/ulx3s_v20.lpf
-TOP_MODULE = top_st7789_spi_slave
+#TOP_MODULE = top_st7789_spi_slave
+TOP_MODULE = top_st7789_spi_slave_polyline
 TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
@@ -29,6 +30,7 @@ VERILOG_FILES = \
   ../../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
   hdl/lcd_hvline.v \
   hdl/draw_line.v \
+  hdl/draw_polyline.v \
   ../../../../hex/decoder/hex_decoder_v.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)

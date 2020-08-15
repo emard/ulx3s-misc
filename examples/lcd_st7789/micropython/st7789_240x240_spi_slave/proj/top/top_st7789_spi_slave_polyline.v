@@ -1,9 +1,9 @@
 `default_nettype none
-// passthru for st7789
-module top_st7789_spi_slave
+// polyline demo for st7789
+module top_st7789_spi_slave_polyline
 #(  // choose one of
   parameter c_lcd = 1, // SPI to display
-  parameter c_hex = 0  // see RAM in HEX
+  parameter c_hex = 0  // see RAM in HEX (must comment .spi_*() from draw_polyline)
 )
 (
   input  wire clk_25mhz,
@@ -91,142 +91,102 @@ module top_st7789_spi_slave
       .data_out(ram_di)
   );
 
-  wire w_busy;
+  wire polyline_busy;
+  assign spi_busy = polyline_busy; // pass polyline_busy to ESP32
+
+  reg [15:0] ram[0:1023]; // BUFFER
+  wire [9:0] polyline_addr;
+  reg [15:0] polyline_data;
+  reg [7:0] R_msb;
+  // polyline data max 2KB, 512 points (x,y)
+  // SPI writes 8-bit, polyline reads 16-bit
+  // 0x1CDD0000 MSB X0
+  // 0x1CDD0001 LSB X0
+  // 0x1CDD0002 MSB Y0
+  // 0x1CDD0003 LSB Y0
+  // 0x1CDD0004 MSB X1
+  // 0x1CDD0005 LSB X1
+  // 0x1CDD0006 MSB Y1
+  // 0x1CDD0007 LSB Y1
+  // ...
+  // 0x1CDD07FF LSB Y511
+  always @(posedge clk)
+  begin
+    if (ram_wr) begin
+      if (ram_addr[31:16] == 16'h1cdd) begin
+        if (ram_addr[0])
+          ram[ram_addr[10:1]] <= {R_msb, ram_di};
+        else
+          R_msb <= ram_di;
+      end
+    end
+    polyline_data <= ram[polyline_addr];
+  end
+
+  // write SPI byte to 
+  // 0x1CDE0000 MSB color
+  // 0x1CDE0001 LSB color
+  // 0x1CDE0002 MSB len (in bytes)
+  // 0x1CDE0003 LSB len and execute
+  reg polyline_plot;
+  reg [15:0] polyline_len, polyline_color; // registers
+  always @(posedge clk)
+  begin
+    if (ram_wr) begin
+      if (ram_addr[31:16] == 16'h1cde) begin // color, length and execute
+        if          (ram_addr[1:0] == 2'd0) begin // MSB color
+          polyline_color[15:8] <= ram_di;
+        end else if (ram_addr[1:0] == 2'd1) begin // LSB color
+          polyline_color[7:0] <= ram_di;
+        end else if (ram_addr[1:0] == 2'd2) begin // MSB len
+          polyline_len[15:8] <= ram_di;
+        end else /* if (ram_addr[1:0] == 2'd3) */ begin // LSB len and execute
+          polyline_len[7:0] <= ram_di;
+          polyline_plot <= 1;
+        end
+      end
+    end else begin
+      polyline_plot <= 0;
+    end
+  end
 
   // ************************************************************
   generate
-  if(c_lcd)
+  if (c_lcd) begin
 
-  assign spi_busy = w_busy;
-
-  reg [7:0] ram[0:10];
-  reg [7:0] R_ram_do;
-  always @(posedge clk)
-  begin
-    if(ram_wr)
-      ram[ram_addr] <= ram_di;
-    //else
-    //  R_ram_do <= ram[ram_addr];
-  end
-  //assign ram_do = R_ram_do;
-  //assign ram_do = {7'd0, w_busy}; // FIXME SPI reading doesn't work
-
-  wire [15:0] w_x0, w_y0, w_x1, w_y1, w_color;
-  assign w_x0 = {ram[0],ram[1]};
-  assign w_y0 = {ram[2],ram[3]};
-  assign w_x1 = {ram[4],ram[5]};
-  assign w_y1 = {ram[6],ram[7]};
-  assign w_color = {ram[8],ram[9]};
+  wire w_oled_csn;
   
-  reg R_plot;
-  always @(posedge clk)
-  begin
-    R_plot <= ram_addr[3:0] == 9 && ram_wr;
-  end
-  wire w_plot = R_plot;
-
-  wire [15:0] hvline_x, hvline_y, hvline_len, hvline_color;
-  wire hvline_vertical, hvline_plot, hvline_busy;
-
-/*
   draw_polyline
   draw_polyline_inst
   (
     .clk(clk),
-    .plot(w_plot), // input rising edge starts process
-    .busy(w_busy), // output, 1 during busy
-    .len(w_len),   // input how many data/addr in the buffer
-    .addr(w_addr), // output addr to buffer
-    .data(w_data), // input data from buffer - 8 or 16 bits?
-    .color(w_color), // input color (from register)
-    // H/V line draw hardware
-    .hvline_plot(hvline_plot), // output, rising edge starts process
-    .hvline_busy(hvline_busy), // input, 1 during busy
-    .hvline_x(hvline_x), // output start X
-    .hvline_y(hvline_y), // output start Y
-    .hvline_len(hvline_len), // output length pixels in positive X or Y direction
-    .hvline_vertical(hvline_vertical), // output 0:horizontal-X 1:vertical-Y
-    .hvline_color(hvline_color) // output color
-  );
-*/
-
-  draw_line
-  draw_line_inst
-  (
-    .clk(clk),
-    .plot(w_plot),
-    .busy(w_busy),
-    .x0(w_x0),
-    .y0(w_y0),
-    .x1(w_x1),
-    .y1(w_y1),
-    .color(w_color),
-    .hvline_plot(hvline_plot),
-    .hvline_busy(hvline_busy),
-    .hvline_x(hvline_x),
-    .hvline_y(hvline_y),
-    .hvline_len(hvline_len),
-    .hvline_vertical(hvline_vertical),
-    .hvline_color(hvline_color)
-  );
-
-  wire w_oled_csn;
-  lcd_hvline
-  #(
-    .c_clk_mhz(125),
-    .c_init_file("st7789_linit_pixels.mem"),
-    .c_clk_phase(0),
-    .c_clk_polarity(1)
-  )
-  lcd_hvline_inst
-  (
-    .clk(clk),
     .reset(~btn[0]),
-    .plot(hvline_plot),
-    .busy(hvline_busy),
-    .x(hvline_x),
-    .y(hvline_y),
-    .len(hvline_len),
-    .vertical(hvline_vertical),
-    .color(hvline_color),
+    .plot(polyline_plot), // input rising edge starts process
+    .busy(polyline_busy), // output, 1 during busy
+    .len(polyline_len[8:0]), // input 0-511, how many 32-bit x,y pairs in the buffer
+    .addr(polyline_addr), // output addr to buffer
+    .data(polyline_data), // input data from buffer, 16-bit
+    .color(polyline_color), // input color, 16-bit from SPI register
     .spi_clk(oled_clk),
     .spi_mosi(oled_mosi),
     .spi_dc(oled_dc),
     .spi_resn(oled_resn),
     .spi_csn(w_oled_csn)
   );
-
-  assign oled_csn = 1; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
-  //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to CSn
-  begin
   end
   endgenerate
 
   // ************************************************************
   generate
-  if(c_hex)
-  begin
-
-  reg [15:0] bram[0:15];
-  reg [7:0] R_ram_do, R_msb;
-  always @(posedge clk)
-  begin
-    if(ram_wr) begin
-      if (ram_addr[0])
-        bram[ram_addr[5:1]] <= {R_msb, ram_di};
-      else
-        R_msb <= ram_di;
-    end else
-      R_ram_do <= bram[ram_addr];
-  end
-  assign ram_do = R_ram_do;
+  if (c_hex) begin
 
   localparam C_display_bits = 64;
   wire [C_display_bits-1:0] S_display;
-  assign S_display[31:0] = ram_addr;
+  //assign S_display[31:0] = ram_addr;
   // such RAM reading works for trellis but not for diamond
-  assign S_display[47:32] = bram[0];
-  assign S_display[63:48] = bram[1];
+  //assign S_display[47:32] = polyline_len;
+  assign S_display[15:0]  = polyline_addr;
+  assign S_display[31:16] = polyline_data;
 
   wire [7:0] x;
   wire [7:0] y;
@@ -286,13 +246,15 @@ module top_st7789_spi_slave
     .spi_resn(oled_resn),
     .spi_csn(w_oled_csn)
   );
-  assign oled_csn = 1; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
-  //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to CSn
   end // if(c_hex)
   endgenerate
   // ************************************************************
 
+  //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to CSn
+  assign oled_csn = 1; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
+
   assign led[4:0] = {oled_csn,oled_dc,oled_resn,oled_mosi,oled_clk};
-  assign led[7:5] = ram_rd;
+  assign led[6:5] = 0;
+  assign led[7]   = polyline_busy;
 
 endmodule
