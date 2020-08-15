@@ -21,7 +21,7 @@ module draw_line
   reg [15:0] dx, dy, err;
   reg steep, ystep;
   reg R_plot;
-  reg [15:0] R_hvx, R_hvy, R_hvlen = 1, R_hvmode = 1;
+  reg [15:0] R_hvx, R_hvy, R_hvlen, R_hvmode;
   reg [15:0] R_hvx_plot, R_hvy_plot, R_hvlen_plot, R_hvplot;
   always @(posedge clk) begin
     if (state == 0) begin // idle
@@ -57,14 +57,14 @@ module draw_line
         R_y1 <= R_y0;
       end
       err <= dx >> 1;
-      R_hvmode <= dx > 2*dy; // speedup
+      R_hvmode <= dx > 2*dy; // speedup, set to 0 for single-pixel mode
       state <= 3;
     end else if (state == 3) begin
       ystep <= R_y0 < R_y1; // ystep 1:positive, 0:negative
       R_plot <= 1;
       R_hvx <= R_x0;
       R_hvy <= R_y0;
-      R_hvlen <= 0;
+      R_hvlen <= 1;
       state <= 4;
     end else begin // draw the line
       if (hvline_busy == 0) begin
@@ -74,11 +74,11 @@ module draw_line
           R_plot <= 0;
           R_hvx_plot <= R_hvx;
           R_hvy_plot <= R_hvy;
-          R_hvlen_plot <= R_hvlen+1;
+          R_hvlen_plot <= R_hvlen;
           R_hvplot <= 1;
         end else begin
           if (err < dy) begin // negative?
-            R_hvx <= R_x0;
+            R_hvx <= R_x0+1;
             if (ystep) begin
               R_y0 <= R_y0+1;
               R_hvy <= R_y0+1;
