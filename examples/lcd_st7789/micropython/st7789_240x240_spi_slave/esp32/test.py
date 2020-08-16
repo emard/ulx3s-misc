@@ -29,17 +29,20 @@ class test:
     self.csn.off()
     self.spi.write(bytearray([0, 0x1C,0xDD,0x00,0x00]))
     for i in range(l):
-      x=randint(0,240)
-      y=randint(0,240)+80
+      x=randint(0,239)
+      if randint(0,10)==0:
+        x|=32768 # discontinue polyline
+      y=randint(0,239)+80
+      if i==l-1:
+        y|=32768 # last point
       self.spi.write(bytearray([x>>8,x,y>>8,y]))
-    color = randint(0,0x10000)
+    color = randint(0,0xFFFF)
     self.csn.on()
     self.csn.off()
-    self.spi.write(bytearray([0, 0x1C,0xDE,0x00,0x00, color>>8,color, l>>8,l]))
+    self.spi.write(bytearray([0, 0x1C,0xDE,0x00,0x00, color>>8,color]))
     self.csn.on()
 
   def pline(self, poly, color:int):
-    l=len(poly)//2
     while self.busy.value():
       continue
     self.csn.off()
@@ -48,11 +51,11 @@ class test:
       self.spi.write(bytearray([x>>8,x]))
     self.csn.on()
     self.csn.off()
-    self.spi.write(bytearray([0, 0x1C,0xDE,0x00,0x00, color>>8,color, l>>8,l]))
+    self.spi.write(bytearray([0, 0x1C,0xDE,0x00,0x00, color>>8,color]))
     self.csn.on()
   
   def plt(self):
-    self.pline([0,0+80, 35,70+80, 80,45+80, 150,200+80], -1)
+    self.pline([0,0+80, 35,70+80, 80,45+80, 150,(200+80)|32768], -1)
 
   def pcl(self,color:int,len:int):
     self.csn.off()
@@ -61,7 +64,7 @@ class test:
 
   def pcls(self):
     for i in range(240):
-      self.pline([0,i+80, 239,i+80], 0)
+      self.pline([0,i+80, 239,(i+80)|32768], 0)
 
   def cls(self):
     for i in range(240):
@@ -72,7 +75,7 @@ class test:
     self.cls()
     seed(0)
     for i in range(n):
-      self.line(randint(0,240),randint(0,240), randint(0,240),randint(0,240), randint(0,0xFFFF))
+      self.line(randint(0,239),randint(0,239), randint(0,239),randint(0,239), randint(0,0xFFFF))
 
 run=test()
 #run.main()

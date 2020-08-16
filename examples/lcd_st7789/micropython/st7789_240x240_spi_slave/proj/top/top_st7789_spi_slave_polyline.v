@@ -129,19 +129,15 @@ module top_st7789_spi_slave_polyline
   // 0x1CDE0002 MSB len (in bytes)
   // 0x1CDE0003 LSB len and execute
   reg polyline_plot;
-  reg [15:0] polyline_len, polyline_color; // registers
+  reg [15:0] polyline_color; // registers
   always @(posedge clk)
   begin
     if (ram_wr) begin
-      if (ram_addr[31:16] == 16'h1cde) begin // color, length and execute
+      if (ram_addr[31:16] == 16'h1cde) begin // color and execute
         if          (ram_addr[1:0] == 2'd0) begin // MSB color
           polyline_color[15:8] <= ram_di;
-        end else if (ram_addr[1:0] == 2'd1) begin // LSB color
+        end else /*if (ram_addr[1:0] == 2'd1)*/ begin // LSB color and execute
           polyline_color[7:0] <= ram_di;
-        end else if (ram_addr[1:0] == 2'd2) begin // MSB len
-          polyline_len[15:8] <= ram_di;
-        end else /* if (ram_addr[1:0] == 2'd3) */ begin // LSB len and execute
-          polyline_len[7:0] <= ram_di;
           polyline_plot <= 1;
         end
       end
@@ -163,7 +159,6 @@ module top_st7789_spi_slave_polyline
     .reset(~btn[0]),
     .plot(polyline_plot), // input rising edge starts process
     .busy(polyline_busy), // output, 1 during busy
-    .len(polyline_len[8:0]), // input 0-511, how many 32-bit x,y pairs in the buffer
     .addr(polyline_addr), // output addr to buffer
     .data(polyline_data), // input data from buffer, 16-bit
     .color(polyline_color), // input color, 16-bit from SPI register

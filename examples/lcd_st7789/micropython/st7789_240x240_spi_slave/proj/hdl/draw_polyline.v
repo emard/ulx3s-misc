@@ -11,9 +11,8 @@
 // LCD display will be initialized first time when
 // bitstream is loaded or at any later time by "reset" signal.
 
-// TODO
-// if X MSB bit is set, end one polyline and start next polyline
-// if Y MSB bit is set, end polyline data and execute (no need for length)
+// X MSB=1: discontinue - end one polyline and start next polyline
+// Y MSB=1: last - end polyline, no more points to draw
 
 `default_nettype none
 module draw_polyline 
@@ -31,7 +30,6 @@ module draw_polyline
   // line draw signaling
   input  wire        plot, // request plotting the polyline
   output reg         busy = 0, // response to plot
-  input  wire  [8:0] len, // how many x,y pairs to plot
   input  wire [15:0] data, color, // sampled at rising edge of plot
   output wire  [9:0] addr, // for 2KB buffer (1024x16-bit)
   output wire        rd,   // BRAM read cycle (usally not needed)
@@ -45,8 +43,9 @@ module draw_polyline
 );
   reg [2:0] state = 0;
   reg full; // 1: enough data for one line
+  reg last; // 1: last point, exit polyline
   reg [15:0] R_color;
-  reg [9:0] R_len, R_addr;
+  reg [9:0] R_addr;
   // coordinate buffer for one line
   reg [15:0] R_line[0:3];
   // line signals
@@ -60,28 +59,28 @@ module draw_polyline
     end else if (state == 0) begin // idle
       if (plot & ~busy) begin
         R_color <= color;
-        R_len   <= {len,1'b0}; // len*2
         R_addr  <= 0;
         busy    <= 1;
         full    <= 0; // for first point, line is not full
+        last    <= 0; // not the last point
         R_line_plot <= 0;
         state   <= 1;
       end
     end else if (state == 1) begin // dummy cycle to get ram data ready
       state <= 2;
     end else if (state == 2) begin
-      if (R_addr != R_len) begin
-        R_line[R_addr[1:0]] <= data;
-        R_addr <= R_addr+1;
-        state <= 1; // to dummy cycle
-        if (R_addr[0]) begin // every odd addr
-          if (full)
-            state <= 3; // draw the line
-          full <= 1;
-        end
-      end else begin
-        busy <= 0;
-        state <= 0;
+      R_line[R_addr[1:0]] <= data[14:0]; // remove MSB bit
+      R_addr <= R_addr+1;
+      state <= 1; // to dummy cycle
+      if (R_addr[0]) begin // Y every odd addr
+        if (full)
+          state <= 3; // draw the line
+        full <= 1;
+        if (data[15]) // Y MSB=1 last point to plot
+          last <= 1;  // it's the last point
+      end else begin // X every even addr
+        if (data[15]) // X MSB=1 discontinues polyline
+          full <= 0;
       end
     end else if (state == 3) begin // wait for busy off
       if (line_busy == 0) begin
@@ -91,7 +90,11 @@ module draw_polyline
     end else begin // wait for busy on - plot accepted
       if (line_busy) begin
         R_line_plot <= 0;
-        state <= 2; // read next data
+        if (last) begin
+          busy <= 0;
+          state <= 0; // last point -> goto idle
+        end else
+          state <= 2; // read next data
       end
     end
   end
