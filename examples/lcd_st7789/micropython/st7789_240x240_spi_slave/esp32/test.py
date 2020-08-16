@@ -3,6 +3,12 @@
 from machine import SPI,Pin,freq
 from time import sleep_ms
 from random import randint,seed
+import vectorfont
+
+@micropython.viper
+def color565(r:int, g:int, b:int) -> int:
+    """Convert red, green and blue values (0-255) into a 16-bit 565 encoding."""
+    return (r & 0xf8) << 8 | (g & 0xfc) << 3 | b >> 3
 
 class test:
   def __init__(self):
@@ -12,6 +18,7 @@ class test:
     self.csn.on()
     self.spi = SPI(2, baudrate=20*1000000, polarity=0, phase=0, bits=8, firstbit=SPI.MSB,\
       mosi=Pin(25), sck=Pin(17), miso=Pin(33))
+    self.vf=vectorfont.vectorfont(240,320,self.csn,self.busy,self.spi)
 
   @micropython.viper
   def line(self, x0:int,y0:int, x1:int,y1:int, color:int):
@@ -82,11 +89,15 @@ class test:
     self.spi.write(bytearray([0, 0x1C,0xDE,0x00,0x00, color>>8,color]))
     self.csn.on()
 
-  def main(self,n=100):
+  def main(self,n=10):
     print("st7789 spi slave polyline test")
     self.pcls()
     #seed(0)
-    self.prline(n)
+    #self.prline(n)
+    self.vf.text("ABCDEFghij",0, 80)
+    self.vf.text("0123456789",0, 90)
+    self.vf.text("ABCDEFghij",0,110,spacing=20,xscale=1024,yscale=1024)
+    self.vf.text("0123456789",0,160,spacing=20,xscale=1024,yscale=1024)
     #for i in range(n):
     #  self.line(randint(0,239),randint(0,239), randint(0,239),randint(0,239), randint(0,0xFFFF))
 
