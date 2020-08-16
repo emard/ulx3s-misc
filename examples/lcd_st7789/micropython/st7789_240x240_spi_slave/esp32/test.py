@@ -23,6 +23,12 @@ class test:
     self.spi.write(bytearray([0, 0x1C,0xDC,0x00,0x00, x0>>8,x0, y0>>8,y0, x1>>8,x1, y1>>8,y1, color>>8,color]))
     self.csn.on()
 
+  def cls(self):
+    for i in range(240):
+      self.line(0,i, 239,i, 0)
+
+  # polyline
+  
   def prline(self, l:int):
     while self.busy.value():
       continue
@@ -57,27 +63,32 @@ class test:
   def plt(self):
     self.pline([0,0+80, 35,70+80, 80,45+80, 150,(200+80)|32768], -1)
 
-  def pcl(self,color:int,len:int):
+  def pcls(self):
+    x0 = 0 | 32768 # discontinue
+    x1 = 239
+    while self.busy.value():
+      continue
     self.csn.off()
-    self.spi.write(bytearray([0, 0x1C,0xDE,0x00,0x00, color>>8,color, len>>8,len]))
+    self.spi.write(bytearray([0, 0x1C,0xDD,0x00,0x00]))
+    for i in range(240):
+      y0 = i+80
+      y1 = i+80
+      if i==239:
+        y1 |= 32768 # last point
+      self.spi.write(bytearray([x0>>8,x0,y0>>8,y0,x1>>8,x1,y1>>8,y1]))
+    self.csn.on()
+    color = 0
+    self.csn.off()
+    self.spi.write(bytearray([0, 0x1C,0xDE,0x00,0x00, color>>8,color]))
     self.csn.on()
 
-  def pcls(self):
-    for i in range(240):
-      self.pline([0,i+80, 239,(i+80)|32768], 0)
-
-  def cls(self):
-    for i in range(240):
-      self.line(0,i, 239,i, 0)
-
   def main(self,n=100):
-    print("st7789 spi slave test")
-    self.cls()
-    seed(0)
-    for i in range(n):
-      self.line(randint(0,239),randint(0,239), randint(0,239),randint(0,239), randint(0,0xFFFF))
+    print("st7789 spi slave polyline test")
+    self.pcls()
+    #seed(0)
+    self.prline(n)
+    #for i in range(n):
+    #  self.line(randint(0,239),randint(0,239), randint(0,239),randint(0,239), randint(0,0xFFFF))
 
 run=test()
-#run.main()
-run.pcls()
-run.prline(20)
+run.main()
