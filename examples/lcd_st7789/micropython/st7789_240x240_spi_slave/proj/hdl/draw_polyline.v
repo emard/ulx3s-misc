@@ -11,8 +11,8 @@
 // LCD display will be initialized first time when
 // bitstream is loaded or at any later time by "reset" signal.
 
-// X MSB=1: discontinue - end one polyline and start next polyline
-// Y MSB=1: last - end polyline, no more points to draw
+// X MSB=1: start new segment, discontinue previos
+// Y MSB=1: last point - end polyline, no more points to draw
 
 `default_nettype none
 module draw_polyline 
