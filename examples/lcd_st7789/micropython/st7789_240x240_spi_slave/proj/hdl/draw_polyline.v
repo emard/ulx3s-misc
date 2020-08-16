@@ -67,7 +67,7 @@ module draw_polyline
         state   <= 1;
       end
     end else if (state == 1) begin // dummy cycle to get ram data ready
-      state <= 2;
+      state <= 2; // TODO R_addr == 0 safety stop
     end else if (state == 2) begin
       R_line[R_addr[1:0]] <= data[14:0]; // remove MSB bit
       R_addr <= R_addr+1;
@@ -90,7 +90,7 @@ module draw_polyline
     end else begin // wait for busy on - plot accepted
       if (line_busy) begin
         R_line_plot <= 0;
-        if (last) begin
+        if (last == 1'b1 || R_addr[9:1] == 0) begin // R_addr == 0 prevents endless loop
           busy <= 0;
           state <= 0; // last point -> goto idle
         end else
