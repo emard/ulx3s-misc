@@ -18,7 +18,7 @@ class st7789vfont:
     # SPI commands
     self.load_poly=bytearray([0, 0x1C,0xDD,0x00,0x00]) # loade buffer, follows: XMSB,XLSB,YMSB,YLSB
     self.color_draw=bytearray([0, 0x1C,0xDE,0x00,0x00, 0,0]) # draw buffer, last 2 bytes = color MSB,LSB 
-    self.end_poly=bytearray([0x80,0x00,0x00,0x00, 0x00,0x00,0x80,0x00]) # HACK off-screen draw one pixel
+    self.end_poly=bytearray([0x80,0x00,0x80,0x00])
     # screen dimension (0,0) is top left origin
     # (width-1,height-1) is bottom right origin
     self.width=240

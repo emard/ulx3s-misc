@@ -73,8 +73,14 @@ module draw_polyline
       R_addr <= R_addr+1;
       state <= 1; // to dummy cycle
       if (R_addr[0]) begin // Y every odd addr
-        if (full)
+        if (full) begin
           state <= 3; // draw the line
+        end else begin
+          if (data[15]) begin // not full and last
+            busy <= 0;
+            state <= 0;
+          end
+        end
         full <= 1;
         if (data[15]) // Y MSB=1 last point to plot
           last <= 1;  // it's the last point
