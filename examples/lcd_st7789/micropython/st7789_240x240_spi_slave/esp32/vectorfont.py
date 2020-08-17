@@ -1,4 +1,4 @@
-# Micropython ESP32 and passthru bitstream
+# Micropython ESP32 and ST7789 with polyline accelerator core
 
 # vector font which looks good as 5x7 or scaled
 # polyline buffer can hold 512 points.
@@ -16,9 +16,9 @@ class vectorfont:
     self.busy=busy # Pin.IN
     self.spi=spi # SPI st7789, self.spi.write(bytearray([...]))
     # SPI commands
-    self.load_polyline=bytearray([0, 0x1C,0xDD,0x00,0x00]) # loade buffer, follows: XMSB,XLSB,YMSB,YLSB
+    self.load_poly=bytearray([0, 0x1C,0xDD,0x00,0x00]) # loade buffer, follows: XMSB,XLSB,YMSB,YLSB
     self.color_draw=bytearray([0, 0x1C,0xDE,0x00,0x00, 0,0]) # draw buffer, last 2 bytes = color MSB,LSB 
-    self.end_polyline=bytearray([0x80,0x00,0x00,0x00, 0x00,0x00,0x80,0x00]) # HACK off-screen draw one pixel
+    self.end_poly=bytearray([0x80,0x00,0x00,0x00, 0x00,0x00,0x80,0x00]) # HACK off-screen draw one pixel
     # screen dimension (0,0) is top left origin
     # (width-1,height-1) is bottom right origin
     self.width=width
@@ -135,7 +135,7 @@ class vectorfont:
   # xscale, yscale = 256 default for 5x7 font
   # line = bytearray([x0,y0, x1,y1, ... xn,yn]); 128,any=delimiter
   @micropython.viper
-  def polyline(self, x:int, y:int, xscale:int, yscale:int, line):
+  def glyph2poly(self, x:int, y:int, xscale:int, yscale:int, line):
     if x >= int(self.width) or y >= int(self.height):
       return
     p = ptr8(addressof(line))
@@ -159,7 +159,7 @@ class vectorfont:
 
   # draw polyline loaded in the buffer
   @micropython.viper
-  def draw_polyline(self, color:int):
+  def draw_poly(self, color:int):
     c8 = ptr8(addressof(self.color_draw))
     c8[5]=color>>8
     c8[6]=color
@@ -177,10 +177,10 @@ class vectorfont:
     while self.busy.value():
       continue
     self.csn.off()
-    self.spi.write(self.load_polyline)
+    self.spi.write(self.load_poly)
     for char in text:
-      self.polyline(x,y,xscale,yscale,self.font[char])
+      self.glyph2poly(x,y,xscale,yscale,self.font[char])
       x += spacing
-    self.spi.write(self.end_polyline)
+    self.spi.write(self.end_poly)
     self.csn.on()
-    self.draw_polyline(color)
+    self.draw_poly(color)
