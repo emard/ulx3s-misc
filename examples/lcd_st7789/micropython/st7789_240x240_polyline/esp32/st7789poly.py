@@ -5,7 +5,7 @@ from machine import SPI,Pin,freq
 from uctypes import addressof
 
 @micropython.viper
-def color565(r:int, g:int, b:int) -> int:
+def rgb565(r:int, g:int, b:int) -> int:
     """Convert red, green and blue values (0-255) into a 16-bit 565 encoding."""
     return (r & 0xf8) << 8 | (g & 0xfc) << 3 | b >> 3
 
