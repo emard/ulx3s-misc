@@ -2,6 +2,7 @@
 # general puprose drawing: clear screen set color and polyine
 
 from machine import SPI,Pin,freq
+from uctypes import addressof
 
 @micropython.viper
 def color565(r:int, g:int, b:int) -> int:
@@ -9,9 +10,9 @@ def color565(r:int, g:int, b:int) -> int:
     return (r & 0xf8) << 8 | (g & 0xfc) << 3 | b >> 3
 
 class st7789poly:
-  def __init__(self,width,height,csn,busy,spi):
-    self.width=width
-    self.height=height
+  def __init__(self,csn,busy,spi):
+    self.width=240
+    self.height=320
     self.csn=csn # Pin.OZT
     self.busy=busy # Pin.IN
     self.spi=spi # SPI st7789, self.spi.write(bytearray([...]))
@@ -24,12 +25,15 @@ class st7789poly:
       continue
     self.csn.off()
     self.spi.write(self.load_poly)
-    y=0
+    i=0
+    last=int(len(poly))-1
     for x in poly:
-      if y: # y+80 required with HW rotation
+      if i&1: # y+80 required with HW rotation
         x+=80
+      if i==last:
+        x|=32768
       self.spi.write(bytearray([x>>8,x]))
-      y^=1
+      i+=1
     self.csn.on()
     self.draw_poly(color)
 
@@ -42,7 +46,8 @@ class st7789poly:
     self.spi.write(self.color_draw)
     self.csn.on()
 
-  def cls(self):
+  @micropython.viper
+  def cls(self,color:int):
     x0 = 0 | 32768 # discontinue
     x1 = 239
     while self.busy.value():

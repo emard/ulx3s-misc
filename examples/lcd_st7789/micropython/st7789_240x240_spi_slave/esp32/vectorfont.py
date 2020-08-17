@@ -11,7 +11,7 @@ from micropython import const
 from uctypes import addressof
 
 class vectorfont:
-  def __init__(self,width,height,csn,busy,spi):
+  def __init__(self,csn,busy,spi):
     self.csn=csn # Pin.OZT
     self.busy=busy # Pin.IN
     self.spi=spi # SPI st7789, self.spi.write(bytearray([...]))
@@ -21,8 +21,8 @@ class vectorfont:
     self.end_poly=bytearray([0x80,0x00,0x00,0x00, 0x00,0x00,0x80,0x00]) # HACK off-screen draw one pixel
     # screen dimension (0,0) is top left origin
     # (width-1,height-1) is bottom right origin
-    self.width=width
-    self.height=height
+    self.width=240
+    self.height=320
     # vector font as associative array of polylines, delimited by 128,any
     self.font = {
       " ":bytearray([]),
