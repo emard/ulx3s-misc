@@ -13,6 +13,7 @@ class vectorfont:
     # SPI commands
     self.load_polyline=bytearray([0, 0x1C,0xDD,0x00,0x00]) # buffer content follws XMSB,XLSB,YMSB,YLSB
     self.color_draw=bytearray([0, 0x1C,0xDE,0x00,0x00, 0,0]) # draw buffer, last 2 bytes = color MSB,LSB 
+    self.end_polyline=bytearray([0x80,0x00,0x00,0x00, 0x00,0x00,0x80,0x00]) # HACK off-screen draw one pixel
     # screen dimension (0,0) is top left origin
     # (width-1,height-1) is bottom right origin
     self.width=width
@@ -21,6 +22,7 @@ class vectorfont:
     self.font = {
       " ":bytearray([]),
       ".":bytearray([2,5, 2,6]),
+      "!":bytearray([2,0, 2,3, 128,128, 2,5, 2,6]),
       ",":bytearray([2,5, 2,6, 1,7]),
       ":":bytearray([2,0, 2,1, 128,128, 2,5, 2,6]),
       ";":bytearray([2,0, 2,1, 128,128, 2,5, 2,6, 1,7]),
@@ -114,36 +116,38 @@ class vectorfont:
       "ž":bytearray([0,2, 4,2, 0,6, 4,6, 128,128, 1,0, 2,1, 3,0]),
     }
 
+  # convert glyph polyline to hardware coordinates and load them to polyline buffer
   # x,y  = offset
   # xscale, yscale = 256 default for 5x7 font
   # line = bytearray([x0,y0, x1,y1, ... xn,yn]); 128,any=delimiter
-  # buf  = bytearray([x0,y0, x1,y1, color[0],color[1],color[2]])
-  @micropython.viper
-  def polyline(self, x:int, y:int, xscale:int, yscale:int, color:int, line):
+  #@micropython.viper
+  def polyline(self, x:int, y:int, xscale:int, yscale:int, line):
     if x >= int(self.width) or y >= int(self.height):
       return
-    p = ptr8(addressof(line))
-    #p = memoryview(line)
-    c8 = ptr8(addressof(self.color_draw))
-    n = 32768
+    #p = ptr8(addressof(line))
+    p = memoryview(line)
+    n = 32768 # 1<<15 starts new polyline
     m = int(len(line))>>1
-    while self.busy.value():
-      continue
-    self.csn.off()
-    self.spi.write(self.load_polyline)
     for i in range(m):
       xp = p[2*i]
+      if xp > 128: # negative
+        xp = xp-256 # signed
+      yp = p[1+2*i]
+      if yp > 128: # negative
+        yp = yp-256 # signed
       if xp == 128: # discontinue polyline
         n = 32768 # start new polyline
       else:
         x0 = ((xp*xscale)>>8)+x
-        x0 |= n # discontinue
-        y0 = ((p[1+2*i]*yscale)>>8)+y
-        if i == m-1:
-          y0 |= 32768 # last
+        x0 |= n # discontinue, start new
+        y0 = ((yp*yscale)>>8)+y
         self.spi.write(bytearray([x0>>8,x0, y0>>8,y0]))
         n = 0
-    self.csn.on()
+
+  # draw polyline loaded in the buffer
+  @micropython.viper
+  def draw_polyline(self, color:int):
+    c8 = ptr8(addressof(self.color_draw))
     c8[5]=color>>8
     c8[6]=color
     self.csn.off()
@@ -157,6 +161,13 @@ class vectorfont:
   # spacing = between chars
   def text(self, text, x=0, y=0, color=0xFFFF, spacing=6, xscale=256, yscale=256):
     x0 = x
+    while self.busy.value():
+      continue
+    self.csn.off()
+    self.spi.write(self.load_polyline)
     for char in text:
-      self.polyline(x0,y,xscale,yscale,color,self.font[char])
+      self.polyline(x0,y,xscale,yscale,self.font[char])
       x0 += spacing
+    self.spi.write(self.end_polyline)
+    self.csn.on()
+    self.draw_polyline(color)
