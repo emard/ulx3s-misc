@@ -7,9 +7,12 @@ from uctypes import addressof
 
 class vectorfont:
   def __init__(self,width,height,csn,busy,spi):
-    self.csn=csn
-    self.busy=busy
-    self.spi=spi # st7789 SPI channel for self.spi.write(bytearray([...]))
+    self.csn=csn # Pin.OZT
+    self.busy=busy # Pin.IN
+    self.spi=spi # SPI st7789, self.spi.write(bytearray([...]))
+    # SPI commands
+    self.load_polyline=bytearray([0, 0x1C,0xDD,0x00,0x00]) # buffer content follws XMSB,XLSB,YMSB,YLSB
+    self.color_draw=bytearray([0, 0x1C,0xDE,0x00,0x00, 0,0]) # draw buffer, last 2 bytes = color MSB,LSB 
     # screen dimension (0,0) is top left origin
     # (width-1,height-1) is bottom right origin
     self.width=width
@@ -121,18 +124,19 @@ class vectorfont:
       return
     p = ptr8(addressof(line))
     #p = memoryview(line)
+    c8 = ptr8(addressof(self.color_draw))
     n = 32768
     m = int(len(line))>>1
     while self.busy.value():
       continue
     self.csn.off()
-    self.spi.write(bytearray([0, 0x1C,0xDD,0x00,0x00]))
+    self.spi.write(self.load_polyline)
     for i in range(m):
       xp = p[2*i]
       if xp == 128: # discontinue polyline
         n = 32768 # start new polyline
       else:
-        x0 = ((     xp *xscale)>>8)+x
+        x0 = ((xp*xscale)>>8)+x
         x0 |= n # discontinue
         y0 = ((p[1+2*i]*yscale)>>8)+y
         if i == m-1:
@@ -140,8 +144,10 @@ class vectorfont:
         self.spi.write(bytearray([x0>>8,x0, y0>>8,y0]))
         n = 0
     self.csn.on()
+    c8[5]=color>>8
+    c8[6]=color
     self.csn.off()
-    self.spi.write(bytearray([0, 0x1C,0xDE,0x00,0x00, color>>8,color]))
+    self.spi.write(self.color_draw)
     self.csn.on()
 
   # x,y = coordinate upper left corner of the first char
