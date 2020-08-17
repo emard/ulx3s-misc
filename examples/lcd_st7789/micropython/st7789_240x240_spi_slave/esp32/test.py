@@ -94,10 +94,19 @@ class test:
     self.pcls()
     #seed(0)
     #self.prline(n)
-    self.vf.text("ABCDEFghij",0, 80)
-    self.vf.text("0123456789",0, 90)
-    self.vf.text("ABCDEFghij",0,110,spacing=20,xscale=1024,yscale=1024,color=color565(255,255,0))
-    self.vf.text("0123456789",0,160,spacing=20,xscale=1024,yscale=1024,color=color565(0,255,255))
+    for i in range(30):
+      self.vf.text("0123456789012345678901234567890123456789",0,i*8) 
+    self.pcls()
+    self.vf.text("ABCČĆDĐEFGHIJKLMNOPQRSŠTUVWXYZŽ",0, 10)
+    self.vf.text("abcčćdđefghijklmnopqrsštuvwxyzž",0, 20)
+    self.vf.text("0123456789012345678901234567890123456789",0, 30)
+    self.vf.text("ABCČĆDĐEFG",0,50,spacing=22,xscale=1024,yscale=1024,color=color565(255,255,0))
+    self.vf.text("abcčćdđefg",0,80,spacing=22,xscale=1024,yscale=1024,color=color565(255,255,0))
+    self.vf.text("0123456789",0,110,spacing=22,xscale=1024,yscale=1024,color=color565(0,255,255))
+    #self.vf.text("@!#$%&/()=",0,200,spacing=20,xscale=1024,yscale=1024,color=color565(0,255,255))
+    self.vf.text("@!?#$%&\\~^|",0,140,spacing=22,xscale=1024,yscale=1024,color=color565(0,255,255))
+    self.vf.text("@!?#$%&\\~^|",0,170,color=color565(255,255,255))
+    self.vf.text("8888888888888888888888888888888",0, 180)
     #for i in range(n):
     #  self.line(randint(0,239),randint(0,239), randint(0,239),randint(0,239), randint(0,0xFFFF))
 
