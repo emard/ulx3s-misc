@@ -96,8 +96,8 @@ class test:
     #self.prline(n)
     self.vf.text("ABCDEFghij",0, 80)
     self.vf.text("0123456789",0, 90)
-    self.vf.text("ABCDEFghij",0,110,spacing=20,xscale=1024,yscale=1024)
-    self.vf.text("0123456789",0,160,spacing=20,xscale=1024,yscale=1024)
+    self.vf.text("ABCDEFghij",0,110,spacing=20,xscale=1024,yscale=1024,color=color565(255,255,0))
+    self.vf.text("0123456789",0,160,spacing=20,xscale=1024,yscale=1024,color=color565(0,255,255))
     #for i in range(n):
     #  self.line(randint(0,239),randint(0,239), randint(0,239),randint(0,239), randint(0,0xFFFF))
 
