@@ -10,7 +10,7 @@ from machine import SPI,Pin
 from micropython import const
 from uctypes import addressof
 
-class vectorfont:
+class st7789vfont:
   def __init__(self,csn,busy,spi):
     self.csn=csn # Pin.OZT
     self.busy=busy # Pin.IN

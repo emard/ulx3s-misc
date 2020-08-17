@@ -3,7 +3,7 @@
 from machine import SPI,Pin,freq
 from time import sleep_ms
 from random import randint,seed
-import vectorfont
+import st7789vfont
 import st7789poly
 
 class test:
@@ -14,7 +14,7 @@ class test:
     self.csn.on()
     self.spi = SPI(2, baudrate=20*1000000, polarity=0, phase=0, bits=8, firstbit=SPI.MSB,\
       mosi=Pin(25), sck=Pin(17), miso=Pin(33))
-    self.vf=vectorfont.vectorfont(self.csn,self.busy,self.spi)
+    self.vf=st7789vfont.st7789vfont(self.csn,self.busy,self.spi)
     self.pl=st7789poly.st7789poly(self.csn,self.busy,self.spi)
 
   def main(self):
