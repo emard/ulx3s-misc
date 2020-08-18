@@ -20,22 +20,19 @@ class st7789poly:
     self.color_draw=bytearray([0, 0x1C,0xDE,0x00,0x00, 0,0]) # draw buffer, last 2 bytes = color MSB,LSB 
     self.end_poly=bytearray([0x80,0x00,0x80,0x00])
 
-  def polyline(self, poly, color:int):
-    while self.busy.value():
-      continue
-    self.csn.off()
-    self.spi.write(self.load_poly)
+  def write_poly(self, poly):
     i=0
-    last=int(len(poly))-1
     for x in poly:
       if i&1: # y+80 required with HW rotation
         x+=80
-      if i==last:
-        x|=32768
       self.spi.write(bytearray([x>>8,x]))
       i+=1
-    self.csn.on()
-    self.draw_poly(color)
+
+  def polyline(self, poly, color:int):
+    self.open_poly()
+    self.write_poly(poly)
+    self.spi.write(end_poly)
+    self.close_poly(color)
 
   @micropython.viper
   def draw_poly(self, color:int):
@@ -45,6 +42,18 @@ class st7789poly:
     self.csn.off()
     self.spi.write(self.color_draw)
     self.csn.on()
+
+  @micropython.viper
+  def open_poly(self, color:int):
+    while self.busy.value():
+      continue
+    self.csn.off()
+    self.spi.write(self.load_poly)
+
+  @micropython.viper
+  def close_poly(self, color:int):
+    self.csn.on()
+    self.draw_poly(color)
 
   @micropython.viper
   def cls(self,color:int):
