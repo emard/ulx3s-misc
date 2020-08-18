@@ -17,17 +17,22 @@ class stclock:
       mosi=Pin(25), sck=Pin(17), miso=Pin(33))
     self.vf=st7789vfont.st7789vfont(self.csn,self.busy,self.spi)
     self.pl=st7789poly.st7789poly(self.csn,self.busy,self.spi)
+    self.t=localtime()
+    self.pl.cls(0)
     self.timer=Timer(3)
     self.alloc_tick=self.tick
     self.timer.init(mode=Timer.PERIODIC, period=1000, callback=self.alloc_tick)
 
   def tick(self, timer):
-    #print(localtime())
-    t=localtime()
-    self.pl.cls(0)
-    self.text_clock(t,-1)
-    self.graph_clock(t,-1)
+    # erase last
+    #self.text_clock(self.t,0)
+    self.graph_clock(self.t,0)    
+    self.t=localtime()
+    # draw new
+    #self.text_clock(self.t,1)
+    self.graph_clock(self.t,1)
 
+  # color: 0-black/erase 1-draw
   def graph_clock(self,t,color):
     x0=self.width//2
     y0=x0
@@ -40,9 +45,14 @@ class stclock:
     # draw ticks
     color_tick = st7789poly.rgb565(255,255,255)
     color_num = st7789poly.rgb565(255,255,255)
-    color_hour = st7789poly.rgb565(255,255,0)    
-    color_min = st7789poly.rgb565(0,255,255)
-    color_second = st7789poly.rgb565(255,0,0)
+    if color:
+      color_hour = st7789poly.rgb565(255,255,0)    
+      color_min = st7789poly.rgb565(0,255,255)
+      color_second = st7789poly.rgb565(255,0,0)
+    else:
+      color_hour=0
+      color_min=0
+      color_second=0
     for i in range(12):
       ahour=i*pi/6
       self.pl.polyline([x0+int(rtick*sin(ahour)),y0-int(rtick*cos(ahour)), x0+int(rmax*sin(ahour)),y0-int(rmax*cos(ahour))], color_tick)
@@ -57,6 +67,8 @@ class stclock:
     self.pl.polyline([x0,y0, x0+int(rsecond*sin(asecond)),y0-int(rsecond*cos(asecond))], color_second)
 
   def text_clock(self,t,color):
+    if color:
+      color=-1
     weekday=["MO","TU","WE","TH","FR","SA", "SU"]
     time_str="%04d-%02d-%02d %02s  %02d:%02d:%02d" % \
       (t[0],t[1],t[2], weekday[t[6]], t[3],t[4],t[5])
