@@ -1,5 +1,5 @@
 `default_nettype none
-module top_i2c_rtc
+module top_mcp7940n_rtc
 (
   input  wire clk_25mhz,
   input  wire [6:0] btn,
