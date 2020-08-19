@@ -47,93 +47,37 @@ module top_mcp7940n_rtc
   assign wifi_rxd = ftdi_txd;
   assign ftdi_rxd = wifi_txd;
 
-  wire [31:0] ctrl_data, status;
-  wire wr_ctrl;
-  i2c_master
+  wire tick;
+  wire [55:0] datetime;
+  mcp7940n
   #(
-    .freq         (25) // MHz
+    .c_clk_mhz(25),
+    .c_slow_bits(18)
   )
-  i2c_master_inst
+  mcp7940n_inst
   (
-    .sys_clock    (clk),
-    .reset        (~btn[0]),
-    .SDA          (gpdi_sda),
-    .SCL          (gpdi_scl),
-    .ctrl_data    (ctrl_data),
-    .wr_ctrl      (wr_ctrl),
-    .status       (status)
+    .clk(clk),
+    .reset(~btn[0]),
+    .tick(tick),
+    .datetime_o(datetime),
+    .sda(gpdi_sda),
+    .scl(gpdi_scl)
   );
-  
-  // request reading of 7 regs 0-6 and display them as BCD
-  // 06 05 04 03 02 01 00
-  // YY:MM:DD WD HH:MM:SS
-  reg [7:0] timestamp[0:6];
-  reg [2:0] reg_addr, prev_reg_addr;
-  localparam c_slow_bits = 18; // 2^n slowdown 18 -> 95 Hz
-  reg [c_slow_bits:0] slow; // counter to slow down
 
-  // request-to-read pulse
+  reg [55:0] R_datetime;
   always @(posedge clk)
   begin
-    if (slow[c_slow_bits]) begin
-      slow <= 0;
-    end else begin
-      slow <= slow+1;
-    end
+    if (tick)
+      R_datetime <= datetime;
   end
-  assign wr_ctrl = slow[c_slow_bits];
-  
-  // cycle to registers
-  always @(posedge clk)
-  begin
-    if (slow[c_slow_bits]) begin
-      if (reg_addr == 6)
-        reg_addr <= 0;
-      else
-        reg_addr <= reg_addr+1;
-      prev_reg_addr <= reg_addr;
-    end
-  end
-  
-  // take data when ready to register
-  reg prev_busy;
-  wire busy = status[31];
-  wire ready = status[28];
-  always @(posedge clk)
-  begin
-    if (ready & prev_busy & ~busy)
-      timestamp[prev_reg_addr] <= status[7:0];
-    prev_busy <= busy;
-  end
-
-  // Write 'h44 to register 'h55 in I2C slave 'h66
-  //assign ctrl_data = 32'h00665544;
-
-  // Write 'h20 to register 'h06 in I2C slave 'h6F
-  //assign ctrl_data = 32'h006F0620;
-
-  // Read from register 'h00 (seconds) in I2C slave 'h6F (RTC MCP7940N)
-  //assign ctrl_data = 32'h006F0000;
-
-  assign ctrl_data[31:16] = 16'h806F;
-  assign ctrl_data[15:8] = reg_addr;
-  assign ctrl_data[7:0] = 0;
-
-  //assign led[7:6] = {gpdi_sda,gpdi_scl};
-  assign led = timestamp[0][6:0]; // seconds
 
   localparam C_display_bits = 64;
   wire [C_display_bits-1:0] S_display;
-  //assign S_display[31:0] = ctrl_data;
-  //assign S_display[63:32] = status;
-  assign S_display[ 7:0 ] = timestamp[0][6:0]; // seconds
-  assign S_display[15:8 ] = timestamp[1][6:0]; // minutes
-  assign S_display[23:16] = timestamp[2][5:0]; // hours
-  assign S_display[31:24] = timestamp[3][2:0]; // weekday
-  assign S_display[39:32] = timestamp[4][6:0]; // day
-  assign S_display[47:40] = timestamp[5][4:0]; // month
-  assign S_display[55:48] = timestamp[6][7:0]; // year
-  assign S_display[63:56] = 8'h20; // 100-year 20xx
+  assign S_display[55:0]  = R_datetime;
+  assign S_display[63:56] = 8'h20; // 100-year fixed 20xx
+  
+  assign led = R_datetime[7:0];
+  //assign led = busy;
 
   wire [7:0] x;
   wire [7:0] y;

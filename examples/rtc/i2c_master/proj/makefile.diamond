@@ -29,6 +29,7 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   hdl/i2c_master.v \
+  hdl/mcp7940n.v \
   ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
   ../../../hex/decoder/hex_decoder_v.v \
 
