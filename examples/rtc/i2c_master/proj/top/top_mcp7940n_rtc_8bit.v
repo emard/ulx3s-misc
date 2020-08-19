@@ -52,7 +52,7 @@ module top_mcp7940n_rtc_8bit
   assign req[3] = {~btn[3],7'd0}; // MSB 1-read, 0-write
   assign req[2] = 8'h6F; // device address
   assign req[1] = 0; // register addr
-  assign req[0] = 0; // value to write
+  assign req[0] = 8'h80; // value to write
   
   wire [7:0] di = req[addr];
   wire [7:0] do;
