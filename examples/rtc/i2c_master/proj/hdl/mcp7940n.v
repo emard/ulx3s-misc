@@ -33,11 +33,11 @@ module mcp7940n
   (
     .sys_clock    (clk),
     .reset        (reset),
-    .SDA          (sda),
-    .SCL          (scl),
-    .ctrl_data    (ctrl_data),
     .wr_ctrl      (wr_ctrl),
-    .status       (status)
+    .ctrl_data    (ctrl_data),
+    .status       (status),
+    .SDA          (sda),
+    .SCL          (scl)
   );
 
   // request reading of first 7 RTC regs 0-6
