@@ -160,6 +160,7 @@ module top_i2c_bridge
     wire [C_color_bits-1:0] color;
 
     generate
+/*
       if(0)
       begin // ssd1331 only
     hex_decoder
@@ -196,6 +197,7 @@ module top_i2c_bridge
         .spi_resn(oled_resn)
     );
       end
+*/
       if(1)
       begin // lcd st7789 universal, can drive others
     hex_decoder_v
