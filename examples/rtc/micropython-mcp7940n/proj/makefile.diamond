@@ -29,13 +29,10 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   hdl/i2c_bridge.v \
-  ../../../spi_slave/hdl/spirw_slave_v.v \
-  ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
-  ../../../hex/decoder/hex_decoder_v.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
-  ../../../spi_slave/hdl/spirw_slave.vhd \
+
 
 SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/trellis_path.mk
