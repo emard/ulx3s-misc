@@ -4,6 +4,7 @@
 // TODO schedule reading 0.5s before tick of a seconds
 // all register reading cycle should be done
 // during the safe interval when register don't change
+// FIXME tick ticks as valid data not at each second
 
 `default_nettype none
 
