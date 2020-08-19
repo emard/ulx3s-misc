@@ -92,7 +92,7 @@ module mcp7940n
   //assign ctrl_data = 32'h006F0620;
 
   // Read from register 'h00 (seconds) in I2C slave 'h6F (RTC MCP7940N)
-  //assign ctrl_data = 32'h006F0000;
+  //assign ctrl_data = 32'h806F0000;
 
   assign ctrl_data[31:16] = 16'h806F;
   assign ctrl_data[15:8] = reg_addr;
