@@ -66,10 +66,10 @@ module top_mcp7940n_rtc
   always @(posedge clk)
   begin
     if (btnr[6]) begin
-      if (cursor != 0)
+      //if (cursor != 0)
         cursor <= cursor - 1;
     end else if (btnr[5]) begin
-      if (cursor != 6)
+      //if (cursor != 6)
         cursor <= cursor + 1;
     end
   end
@@ -78,7 +78,7 @@ module top_mcp7940n_rtc
   wire [63:0] cursor_marker;
   generate
     genvar i;
-    for (i = 0; i != 7; i=i+1) begin
+    for (i = 0; i != 8; i=i+1) begin
       //assign cursor_marker[i] = (cursor == i ? 8'h11 : 8'h00);
       assign cursor_marker[i*8+7:i*8] = (cursor == i ? 8'h11 : 8'h00);
     end
