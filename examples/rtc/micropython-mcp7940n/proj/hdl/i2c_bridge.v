@@ -6,32 +6,31 @@ module i2c_bridge
     input  wire [1:0] i,      // inputs
     output wire [1:0] t       // tristate 0->0 1->Z
 );
-  reg [1:0] state;
-  genvar next_state;
+  reg [1:0] state, next_state;
 
-  always @(*)
+  always @(posedge clk)
     case(state)
       2'd0: begin
         if(i[0])
-          next_state = 3;
+          next_state <= 3;
         else
-          next_state = 0;
+          next_state <= 0;
       end
 
       2'd1: begin
         if(i[1])
-          next_state = 3;
+          next_state <= 3;
         else
-          next_state = 1;
+          next_state <= 1;
       end
 
       default: begin
         if(i[0]==0 && i[1]==1)
-          next_state = 0;
+          next_state <= 0;
         else if(i[1]==0 && i[0]==1)
-          next_state = 1;
+          next_state <= 1;
         else
-          next_state = 3;
+          next_state <= 3;
       end
     endcase
 

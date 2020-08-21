@@ -65,8 +65,8 @@ module top_i2c_bridge
     assign ftdi_rxd = wifi_txd;
 
     // i2c bridge
-    // slow clock enable pulse 2.77 MHz
-    localparam bridge_clk_div = 3; // div = 1+2^n, 25/9=2.77 MHz
+    // slow clock enable pulse 5 MHz
+    localparam bridge_clk_div = 3; // div = 1+2^n, 25/(1+2^2)=5 MHz
     reg [bridge_clk_div:0] bridge_cnt;
     always @(posedge clk) // 25 MHz
     begin
