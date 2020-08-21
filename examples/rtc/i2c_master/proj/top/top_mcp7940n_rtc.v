@@ -62,7 +62,7 @@ module top_mcp7940n_rtc
     .falling(btnf)
   );
 
-  reg [2:0] cursor;
+  reg [2:0] cursor = 7;
   always @(posedge clk)
   begin
     if (btnr[6]) begin
@@ -74,18 +74,11 @@ module top_mcp7940n_rtc
     end
   end
 
-  //wire [7:0] cursor_marker[0:6];
-  wire [63:0] cursor_marker;
-  generate
-    genvar i;
-    for (i = 0; i != 8; i=i+1) begin
-      //assign cursor_marker[i] = (cursor == i ? 8'h11 : 8'h00);
-      assign cursor_marker[i*8+7:i*8] = (cursor == i ? 8'h11 : 8'h00);
-    end
-  endgenerate
+  reg r_wr;
+  reg [7:0] r_data;
 
   wire tick;
-  wire [55:0] datetime;
+  wire [63:0] datetime;
   mcp7940n
   #(
     .c_clk_mhz(25),
@@ -95,27 +88,57 @@ module top_mcp7940n_rtc
   (
     .clk(clk),
     .reset(~btn[0]),
+    .wr(r_wr),
+    .addr(cursor),
+    .data(r_data),
     .tick(tick),
-    .datetime_o(datetime),
+    .datetime_o(datetime[55:0]),
     .sda(gpdi_sda),
     .scl(gpdi_scl)
   );
-
-  reg [55:0] R_datetime;
+  
+  reg [7:0] R_values[8:7];
+  wire [63:0] w_datetime;
+/*
   always @(posedge clk)
   begin
-    if (tick)
-      R_datetime <= datetime;
+    if (tick) begin
+      w_datetime[55:0] <= datetime[55:0];
+    end
+  end
+*/
+  wire [63:0] cursor_marker;
+  //wire [7:0] value[0:7];
+  generate
+    genvar i;
+    for (i = 0; i != 8; i=i+1) begin
+      assign cursor_marker[i*8+7:i*8] = (cursor == i ? 8'h11 : 8'h00);
+      assign w_datetime[i*8+7:i*8] = R_values[i];
+      always @(posedge clk) if (tick) R_values[i] <= datetime[i*8+7:i*8];
+    end
+  endgenerate
+
+  wire [7:0] next_data;
+  reg [7:0] current_val;
+  wire [7:0] bcd_inc = current_val[3:0] == 9 ? {current_val[7:4]+1,4'h0} : current_val+1;
+  wire [7:0] bcd_dec = current_val[3:0] == 0 ? {current_val[7:4]-1,4'h9} : current_val-1;
+  // BCD INC/DEC
+  assign next_data[6:0] = btnr[4] ? bcd_dec : bcd_inc;
+  assign next_data[7] = (cursor == 0) ? 1 : 0;
+  always @(posedge clk)
+  begin
+    current_val <= R_values[cursor];
+    r_data <= next_data;
+    r_wr <= btnr[3] | btnr[4];
   end
 
   localparam C_display_bits = 128;
   wire [C_display_bits-1:0] S_display;
-  assign S_display[55:0]  = R_datetime;
-  //assign S_display[63:56] = 8'h20; // 100-year fixed 20xx
-  assign S_display[63:56] = cursor;
+  assign S_display[55:0]   = w_datetime;
+  assign S_display[63:56]  = 8'h20; // 100-year fixed 20xx
   assign S_display[127:64] = cursor_marker;
 
-  assign led = R_datetime[7:0];
+  assign led = w_datetime[7:0];
   //assign led = busy;
 
   wire [7:0] x;

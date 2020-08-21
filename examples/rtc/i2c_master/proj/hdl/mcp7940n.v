@@ -16,6 +16,9 @@ module mcp7940n
 (
   input  wire        clk,        // System clock, wr_ctrl should be synchronous to this
   input  wire        reset,      // 1:reset - puts I2C bus into idle state
+  input  wire        wr,         // write enable
+  input  wire [2:0]  addr,       // 0-6:writing, 7:circular reading
+  input  wire [7:0]  data,       // data to write at addr
   output reg         tick,       // ticks every second -> 1: datetime_o is valid
   output wire [55:0] datetime_o, // BCD {YY,MM,DD, WD, HH,MM,SS}
   //input  wire [55:0] datetime_i,  // future expansion
@@ -40,6 +43,10 @@ module mcp7940n
     .SCL          (scl)
   );
 
+  reg wr_cycle; // replace one of circular read cycle with write cycle
+  reg [2:0] r_addr_wr;
+  reg [7:0] r_data_wr;
+
   // request reading of first 7 RTC regs 0-6
   // 06 05 04 03 02 01 00
   // YY:MM:DD WD HH:MM:SS
@@ -57,7 +64,7 @@ module mcp7940n
     end
   end
   assign wr_ctrl = slow[c_slow_bits];
-  
+
   // cycle to registers
   always @(posedge clk)
   begin
@@ -67,6 +74,13 @@ module mcp7940n
       else
         reg_addr <= reg_addr-1;
       prev_reg_addr <= reg_addr;
+      wr_cycle <= 0;
+    end else begin
+      if (wr) begin
+        wr_cycle <= 1;
+        r_addr_wr <= addr;
+        r_data_wr <= data;
+      end
     end
   end
   
@@ -80,8 +94,9 @@ module mcp7940n
       datetime[prev_reg_addr] <= status[7:0];
       if (prev_reg_addr == 0)
         tick <= 1; 
-    end else
+    end else begin
       tick <= 0;
+    end
     prev_busy <= busy;
   end
 
@@ -94,9 +109,10 @@ module mcp7940n
   // Read from register 'h00 (seconds) in I2C slave 'h6F (RTC MCP7940N)
   //assign ctrl_data = 32'h806F0000;
 
-  assign ctrl_data[31:16] = 16'h806F;
-  assign ctrl_data[15:8] = reg_addr;
-  assign ctrl_data[7:0] = 0;
+  assign ctrl_data[31:24] = wr_cycle ? 8'h00 : 8'h80;
+  assign ctrl_data[23:16] = 8'h6F;
+  assign ctrl_data[15:8] = wr_cycle ? r_addr_wr : reg_addr;
+  assign ctrl_data[7:0] = r_data_wr;
 
   // missing bits should be 0
   assign datetime_o[ 7:0 ] = datetime[0][6:0]; // seconds
