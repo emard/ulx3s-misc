@@ -47,6 +47,43 @@ module top_mcp7940n_rtc
   assign wifi_rxd = ftdi_txd;
   assign ftdi_rxd = wifi_txd;
 
+  wire [6:0] btnd, btnr, btnf;
+  btn_debounce
+  #(
+    .bits(16),
+    .btns(7)
+  )
+  btn_debounce_i
+  (
+    .clk(clk),
+    .btn(btn),
+    .debounce(btnd),
+    .rising(btnr),
+    .falling(btnf)
+  );
+
+  reg [2:0] cursor;
+  always @(posedge clk)
+  begin
+    if (btnr[6]) begin
+      if (cursor != 0)
+        cursor <= cursor - 1;
+    end else if (btnr[5]) begin
+      if (cursor != 6)
+        cursor <= cursor + 1;
+    end
+  end
+
+  //wire [7:0] cursor_marker[0:6];
+  wire [63:0] cursor_marker;
+  generate
+    genvar i;
+    for (i = 0; i != 7; i=i+1) begin
+      //assign cursor_marker[i] = (cursor == i ? 8'h11 : 8'h00);
+      assign cursor_marker[i*8+7:i*8] = (cursor == i ? 8'h11 : 8'h00);
+    end
+  endgenerate
+
   wire tick;
   wire [55:0] datetime;
   mcp7940n
@@ -71,11 +108,13 @@ module top_mcp7940n_rtc
       R_datetime <= datetime;
   end
 
-  localparam C_display_bits = 64;
+  localparam C_display_bits = 128;
   wire [C_display_bits-1:0] S_display;
   assign S_display[55:0]  = R_datetime;
-  assign S_display[63:56] = 8'h20; // 100-year fixed 20xx
-  
+  //assign S_display[63:56] = 8'h20; // 100-year fixed 20xx
+  assign S_display[63:56] = cursor;
+  assign S_display[127:64] = cursor_marker;
+
   assign led = R_datetime[7:0];
   //assign led = busy;
 
