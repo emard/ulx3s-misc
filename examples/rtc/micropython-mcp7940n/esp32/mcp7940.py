@@ -23,7 +23,7 @@ class MCP7940:
 
     def init0(self):
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x07, bytes([0x10])) # CONTROL
-        self._i2c.writeto_mem(MCP7940.ADDRESS, 0x08, bytes([0x20])) # OSCTRIM
+        self._i2c.writeto_mem(MCP7940.ADDRESS, 0x08, bytes([0x25])) # OSCTRIM more -> slower
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x06, bytes([0x17])) # year
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x05, bytes([0x12])) # month
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x04, bytes([0x31])) # day
