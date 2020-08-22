@@ -24,6 +24,7 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
+  ../../../ecp5pll/hdl/sv/ecp5pll.sv \
   hdl/i2c_master.v \
   hdl/mcp7940n.v \
   hdl/btn_debounce.v \
@@ -32,6 +33,9 @@ VERILOG_FILES = \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
+  ../../../dvi/hdl/vga.vhd \
+  ../../../dvi/hdl/vga2dvid.vhd \
+  ../../../dvi/hdl/tmds_encoder.vhd \
 
 YOSYS_OPTIONS = -abc9
 NEXTPNR_OPTIONS = --timing-allow-fail

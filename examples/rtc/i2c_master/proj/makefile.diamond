@@ -30,11 +30,15 @@ VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   hdl/i2c_master.v \
   hdl/mcp7940n.v \
+  hdl/btn_debounce.v \
   ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
   ../../../hex/decoder/hex_decoder_v.v \
 
-# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
+  ../../../ecp5pll/hdl/vhd/ecp5pll.vhd \
+  ../../../dvi/hdl/vga.vhd \
+  ../../../dvi/hdl/vga2dvid.vhd \
+  ../../../dvi/hdl/tmds_encoder.vhd \
 
 SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/trellis_path.mk
