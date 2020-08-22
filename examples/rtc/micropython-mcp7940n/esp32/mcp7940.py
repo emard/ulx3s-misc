@@ -13,10 +13,11 @@ class MCP7940:
     """
 
     ADDRESS = const(0x6F)
-    RTCSEC = 0x00  # RTC seconds register
-    ST = 7  # Status bit
-    RTCWKDAY = 0x03  # RTC Weekday register
-    VBATEN = 3  # External battery backup supply enable bit
+    RTCSEC = const(0)  # RTC seconds register
+    ST = const(7)  # Status bit
+    RTCWKDAY = const(3)  # RTC Weekday register
+    OSCTRIM = const(8) # one's complement
+    VBATEN = const(3)  # External battery backup supply enable bit
 
     def __init__(self, i2c, status=True, battery_enabled=True):
         self._i2c = i2c
@@ -41,11 +42,23 @@ class MCP7940:
     def is_started(self):
         return self._read_bit(MCP7940.RTCSEC, MCP7940.ST)
 
-    def battery_backup_enable(self, enable):
+    @property
+    def battery(self)->int:
+        return self._read_bit(MCP7940.RTCWKDAY, MCP7940.VBATEN)
+
+    @battery.setter
+    def battery(self, enable:int):
         self._set_bit(MCP7940.RTCWKDAY, MCP7940.VBATEN, enable)
 
-    def is_battery_backup_enabled(self):
-        return self._read_bit(MCP7940.RTCWKDAY, MCP7940.VBATEN)
+    @property
+    def trim(self)->int:
+        val = self._i2c.readfrom_mem(MCP7940.ADDRESS, OSCTRIM, 1)
+        return val[0] & 0x7F if val[0] & 0x80 else -val[0];
+
+    @trim.setter
+    def trim(self, t:int):
+        val = ((t & 0x7F) | 0x80) if t > 0 else ((-t) & 0x7F)
+        self._i2c.writeto_mem(MCP7940.ADDRESS, OSCTRIM, bytes([val]))
 
     def alarm0_every_minute(self):
         # 0x07<=0x10 set control register, enable only alarm0
@@ -82,29 +95,10 @@ class MCP7940:
         year, month, date, hours, minutes, seconds, weekday, yearday = t
         # Reorder
         time_reg = [seconds, minutes, hours, weekday + 1, date, month, year % 100]
-
         # Add ST (status) bit
-
-        # Add VBATEN (battery enable) bit
-
-        #print(
-        #    "{}/{}/{} {}:{}:{} (day={})".format(
-        #        time_reg[6],
-        #        time_reg[5],
-        #        time_reg[4],
-        #        time_reg[2],
-        #        time_reg[1],
-        #        time_reg[0],
-        #        time_reg[3],
-        #    )
-        #)
-        #print(time_reg)
-        reg_filter = (0x7F, 0x7F, 0x3F, 0x07, 0x3F, 0x1F, 0xFF)
-        # t = bytes([MCP7940.bcd_to_int(reg & filt) for reg, filt in zip(time_reg, reg_filter)])
-        t = [(MCP7940.int_to_bcd(reg) & filt) for reg, filt in zip(time_reg, reg_filter)]
-        # Note that some fields will be overwritten that are important!
-        # fixme!
-        #print(t)
+        mask_and = (0x7F, 0x7F, 0x3F, 0x07, 0x3F, 0x1F, 0xFF)
+        mask_or  = (0x80, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00) # set ST and VBATEN
+        t = [((MCP7940.int_to_bcd(reg) & m_and) | m_or) for reg, m_and, m_or in zip(time_reg, mask_and, mask_or)]
         self._i2c.writeto_mem(MCP7940.ADDRESS, 0x00, bytes(t))
 
     @property
