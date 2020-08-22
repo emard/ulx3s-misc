@@ -82,7 +82,7 @@ def clock():
   epd.refresh_frame()
   epd.sleep()
   mcp.alarm0=td
-  mcp.battery_backup_enable(1)
+  mcp.battery=1
   mcp.alarm0_every_minute()
   shutdown()
 
