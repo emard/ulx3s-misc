@@ -1,19 +1,23 @@
 `default_nettype none
-module top_i2c_bridge
+module top_i2c_bridge_eink
 (
     input  wire clk_25mhz,
     input  wire [6:0] btn,
     output wire [7:0] led,
-    //inout  wire shutdown,
+    inout  wire [27:0] gp,gn,
+    inout  wire shutdown,
     inout  wire gpdi_sda,
     inout  wire gpdi_scl,
     input  wire ftdi_txd,
     output wire ftdi_rxd,
+    inout  wire sd_clk, sd_cmd,
+    inout  wire [3:0] sd_d,
     output wire wifi_en,
     input  wire wifi_txd,
     output wire wifi_rxd,
     inout  wire wifi_gpio17,
     inout  wire wifi_gpio16,
+    output wire wifi_gpio5,
     output wire wifi_gpio0
 );
     assign wifi_gpio0 = btn[0];
@@ -33,6 +37,28 @@ module top_i2c_bridge
     wire clk = clocks[0];
 */
     wire clk = clk_25mhz;
+
+    assign sd_clk     = 1'bz; // wifi_gpio14
+    assign sd_cmd     = 1'bz; // wifi_gpio15
+    //assign sd_d[0]    = 1'bz; // wifi_gpio2
+    assign sd_d[1]    = 1'bz; // wifi_gpio4
+    assign sd_d[2]    = 1'bz; // wifi_gpio12
+    assign sd_d[3]    = 1;    // SD card inactive at SPI bus
+    
+    reg eink_dc, eink_sdi, eink_cs, eink_clk, eink_busy;
+    always @(posedge clk)
+    begin
+      eink_dc   <= gp[11];  // wifi_gpio26
+      eink_sdi  <= gn[11];  // wifi_gpio25
+      eink_cs   <= sd_cmd;  // wifi_gpio15
+      eink_clk  <= sd_clk;  // wifi_gpio14
+      eink_busy <= gp[4];   // wifi_gpio5
+    end
+    assign gp[0]      = eink_dc;
+    assign gp[1]      = eink_sdi;
+    assign gp[2]      = eink_cs;
+    assign gp[3]      = eink_clk;
+    assign wifi_gpio5 = eink_busy;
 
     // passthru to ESP32 micropython serial console
     assign wifi_rxd = ftdi_txd;
@@ -75,7 +101,29 @@ module top_i2c_bridge
     assign gpdi_scl    = i2c_scl_t[1] ? 1'bz : 1'b0;
     assign wifi_gpio17 = i2c_scl_t[0] ? 1'bz : 1'b0;
 
-    assign led[5:0] = 0;
+    assign led[4:0] = {eink_busy,eink_clk,eink_cs,eink_sdi,eink_dc};
+    assign led[5]   = shutdown;
     assign led[7:6] = {gpdi_sda,gpdi_scl};
+
+    // shutdown fuze
+    // while cs=1 toggle dc 9 times
+    localparam fuze_div = 3;
+    reg [fuze_div:0] fuze_cnt = 0;
+    reg r_eink_dc = 0;
+    always @(posedge clk)
+    begin
+      if(fuze_cnt[fuze_div]==0)
+      begin
+        if(eink_cs)
+        begin
+          if(r_eink_dc & ~eink_dc) // falling edge
+            fuze_cnt <= fuze_cnt + 1;
+        end
+        else
+          fuze_cnt <= 0;
+      end
+      r_eink_dc <= eink_dc;
+    end
+    assign shutdown = fuze_cnt[fuze_div] ? 1'b1 : 1'bz;
 
 endmodule
