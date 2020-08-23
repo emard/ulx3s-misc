@@ -16,6 +16,7 @@ class MCP7940:
     RTCSEC = const(0)  # RTC seconds register
     ST = const(7)  # Status bit
     RTCWKDAY = const(3)  # RTC Weekday register
+    CONTROL = const(7) # alarms, output, and trim fine/coarse (write 0 for default)
     OSCTRIM = const(8) # one's complement
     VBATEN = const(3)  # External battery backup supply enable bit
 
@@ -51,9 +52,18 @@ class MCP7940:
         self._set_bit(MCP7940.RTCWKDAY, MCP7940.VBATEN, enable)
 
     @property
+    def control(self)->int:
+        val = self._i2c.readfrom_mem(MCP7940.ADDRESS, CONTROL, 1)
+        return val[0]
+
+    @control.setter
+    def control(self, c:int):
+        self._i2c.writeto_mem(MCP7940.ADDRESS, CONTROL, bytes([c]))
+
+    @property
     def trim(self)->int:
         val = self._i2c.readfrom_mem(MCP7940.ADDRESS, OSCTRIM, 1)
-        return val[0] & 0x7F if val[0] & 0x80 else -val[0];
+        return val[0] & 0x7F if val[0] & 0x80 else -val[0]
 
     @trim.setter
     def trim(self, t:int):
