@@ -77,7 +77,7 @@ module mcp7940n
       wr_cycle <= 0;
     end else begin
       if (wr) begin
-        wr_cycle <= 1;
+        wr_cycle  <= addr != 7;
         r_addr_wr <= addr;
         r_data_wr <= data;
       end
