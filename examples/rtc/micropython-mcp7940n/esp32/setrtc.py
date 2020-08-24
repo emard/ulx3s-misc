@@ -12,7 +12,7 @@ i2c = I2C(sda=Pin(16), scl=Pin(17), freq=400000)
 mcp = mcp7940.MCP7940(i2c)
 
 mcp.control=0
-mcp.trim=-37
+mcp.trim=-40
 #mcp.battery=1
 #print("battery %s" % ("enabled" if mcp.battery else "disabled"))
 print("trim %+d ppm" % mcp.trim)
