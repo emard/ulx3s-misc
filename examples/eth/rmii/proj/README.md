@@ -45,8 +45,8 @@ but bytes from right to left.
     ....000000000000FE12
     ....................
 
-("..." below is HEX content repeated by
-display HEX decoder, not printed here for clarity)
+"..." is HEX content repeated by
+display HEX decoder, not printed here for clarity,
 
 # compiling
 
