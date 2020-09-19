@@ -38,14 +38,17 @@ Start tcpdump to see the requests in HEX:
 
 Take a look at LCD ST7789 display, you should see same HEX content
 but bytes from right to left.
+
+                  <-- vv first byte
     ....1100FFFFFFFFFFFF
     ....0100060855443322
     ....1100010004060008
     ....FE12A8C055443322
-    ....................
+    ....A8C0000000000000
+    ....0000000000000112
 
-"..." is HEX content repeated by
-display HEX decoder, not printed here for clarity,
+"...." is HEX content repeated by display HEX decoder,
+not printed here for clarity,
 
 # compiling
 
