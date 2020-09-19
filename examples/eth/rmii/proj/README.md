@@ -1,12 +1,46 @@
 # ETH RMII LAN8720
 
-Trivial demo:
-Currently it only takes 50MHz clock from the module
-and blinks LED. It counts number of CLK cycles when
-rmii_crs=1 (RX DATA VALID).
+Plug LAN8720 module to GP-GN 9-13, align GND=GND and VCC=3.3V.
+Plug ST7789 7-pin LCD display to 7-pin header, aligh GND and VCC too.
 
-Future development: here is working HEX output to
-IPS 240*240 LED displays ST7789
+Connect LAN8720 with ethernet cable to PC. If no traffic, green LED
+should be off and yellow LED ON (at RJ45 connector of LAN8720 module).
+
+Give PC ethernet some IP address
+
+    ifconfig eth0 192.168.18.254
+    ifconfig eth0
+    enp7s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+            inet 192.168.18.254  netmask 255.255.255.0  broadcast 192.168.18.255
+            ether 00:11:22:33:44:55  txqueuelen 1000  (Ethernet)
+            ...
+
+Start pinging any non-existing address on the same LAN as configured IP.
+Ping will generate ARP requests at each attempt and you should see green
+LED at RJ45 connector of LAN8720 module blinking each second:
+
+    ping 192.168.18.1
+    PING 192.168.18.1 (192.168.18.1) 56(84) bytes of data.
+    From 192.168.18.254 icmp_seq=1 Destination Host Unreachable
+    From 192.168.18.254 icmp_seq=2 Destination Host Unreachable
+
+Start tcpdump to see the requests in HEX:
+
+    tcpdump -XX -n -i eth0
+    17:37:54.528117 ARP, Request who-has 192.168.18.1 tell 192.168.18.254, length 28
+            0x0000:  ffff ffff ffff 0011 2233 4455 0806 0001  ........"3DU....
+            0x0010:  0800 0604 0001 0011 2233 4455 c0a8 12fe  ........"3DU....
+            0x0020:  0000 0000 0000 c0a8 1201                 ..........
+
+Take a look at LCD ST7789 display, you should see same HEX content after ffff,
+but bytes from right to left. ("..." below is HEX content repeated by
+display HEX decoder, not printed here for clarity)
+
+    ....0608554433221100
+    ....0100040600080100
+    ....A8C0554433221100
+    ....000000000000FE12
+    ....................
 
 cleanup:
 
