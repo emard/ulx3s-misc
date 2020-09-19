@@ -8,7 +8,7 @@
 `default_nettype none
 module top_hex_demo
 #(
-  parameter skip_bytes=6  // skip from preamble
+  parameter skip_bytes=0  // skip (ignore) data from beginning of packet
 )
 (
   input  wire clk_25mhz,
@@ -45,44 +45,54 @@ module top_hex_demo
   wire rmii_tx_en ; assign gn[10] = rmii_tx_en; // 0:RX 1:TX
   wire rmii_tx0   ; assign gp[10] = rmii_tx0;
   wire rmii_tx1   ; assign gn[9]  = rmii_tx1;
-  wire rmii_crs   = gp[12]; // 0:IDLE 1:RX DATA VALID
-  wire rmii_rx0   = gn[11];
-  wire rmii_rx1   = gp[11];
-  wire rmii_nint  = gn[12]; // clock 50MHz
-  wire rmii_mdio  = gn[13];
-  wire rmii_mdc   = gp[13];
-  
+  wire rmii_crs   =        gp[12]; // 0:IDLE 1:RX DATA VALID
+  wire rmii_rx0   =        gn[11];
+  wire rmii_rx1   =        gp[11];
+  wire rmii_nint  =        gn[12]; // clock 50MHz
+  wire rmii_mdio  =        gn[13]; // bidirectional
+  wire rmii_mdc   ; assign gp[13] = rmii_mdc;
+
   wire rmii_clk   = rmii_nint;
+  assign rmii_mdc = 0; // management clock held 0
   assign rmii_tx_en = 0; // dont send, just sniff
 
   reg [1:0] R_data[0:128]; // collects data
-  reg preamble = 1;
-  reg wait_ff = 1;
+  reg [1:0] preamble = 1; // 0:data, 1:wait 5, 2:wait non-5, 3:skip 
 
   reg [7:0] indx;
   always @(posedge rmii_clk)
   begin
     if(rmii_crs)
     begin // data valid
-      if(preamble)
+      if(preamble==2'd1)
       begin
-        if(wait_ff)
+        if({rmii_rx1, rmii_rx0} == 2'b01) // 5-pattern
+          preamble <= 2;
+      end
+      else if(preamble==2'd2)
+      begin
+        if({rmii_rx1, rmii_rx0} != 2'b01) // end of 5-pattern, D pattern
         begin
-          if({rmii_rx1, rmii_rx0} == 2'b11) // FF pattern
+          if(skip_bytes)
           begin
-            wait_ff <= 0;
-            indx <= 1-4*skip_bytes; // skip further FF pattern
+            indx <= 1-4*skip_bytes; // skip further bytes
+            preamble = 3;
+          end
+          else // nothing to skip, directly to data
+          begin
+            indx <= 0;
+            preamble <= 0;
           end
         end
-        else // not wait_ff
-        begin
-          if(indx == 0)
-            preamble <= 0;
-          else
-            indx <= indx+1; // count skip
-        end
       end
-      else // not preamble, store data
+      else if(preamble==2'd3) // skip some data
+      begin
+        if(indx == 0)
+          preamble <= 0;
+        else
+          indx <= indx+1; // count skip
+      end
+      else // preamble=0, store data
       begin
         if(indx[7]==0)
         begin
@@ -93,7 +103,6 @@ module top_hex_demo
     end
     else // not data valid
     begin
-      wait_ff <= 1;
       preamble <= 1;
     end
   end
