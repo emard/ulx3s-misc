@@ -12,7 +12,7 @@ Give PC ethernet some IP address
 
     ifconfig eth0 192.168.18.254
     ifconfig eth0
-    enp7s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+    eth0:   flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
             inet 192.168.18.254  netmask 255.255.255.0  broadcast 192.168.18.255
             ether 00:11:22:33:44:55  txqueuelen 1000  (Ethernet)
             ...
