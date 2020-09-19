@@ -56,10 +56,11 @@ module top_hex_demo
   assign rmii_mdc = 0; // management clock held 0
   assign rmii_tx_en = 0; // dont send, just sniff
 
-  reg [1:0] R_data[0:128]; // collects data
+  localparam datab2n = 8; // 2**n data bits
+  reg [1:0] R_data[0:2**(datab2n-1)-1]; // collects data
   reg [1:0] preamble = 1; // 0:data, 1:wait 5, 2:wait non-5, 3:skip 
 
-  reg [7:0] indx;
+  reg [datab2n-1:0] indx;
   always @(posedge rmii_clk)
   begin
     if(rmii_crs)
@@ -94,9 +95,9 @@ module top_hex_demo
       end
       else // preamble=0, store data
       begin
-        if(indx[7]==0)
+        if(indx[datab2n-1]==0)
         begin
-          R_data[indx[6:0]] <= {rmii_rx1, rmii_rx0};
+          R_data[indx[datab2n-2:0]] <= {rmii_rx1, rmii_rx0};
           indx <= indx + 1;
         end
       end
@@ -107,10 +108,10 @@ module top_hex_demo
     end
   end
 
-  wire [255:0] R_display; // wiring to display
+  wire [2**datab2n-1:0] R_display; // wiring to display
   generate
     genvar i;
-    for(i=0; i<128; i++)
+    for(i=0; i<2**(datab2n-1); i++)
     begin
       assign R_display[i*2+1:i*2] = R_data[i];
     end
@@ -123,7 +124,7 @@ module top_hex_demo
   wire [C_color_bits-1:0] color;
   hex_decoder_v
   #(
-    .c_data_len(256),
+    .c_data_len(2**datab2n),
     .c_row_bits(4),
     .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
