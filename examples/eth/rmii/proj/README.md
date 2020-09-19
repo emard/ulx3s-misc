@@ -36,6 +36,12 @@ Start tcpdump to see the requests in HEX:
             0x0010:  0800 0604 0001 0011 2233 4455 c0a8 12fe  ........"3DU....
             0x0020:  0000 0000 0000 c0a8 1201                 ..........
 
+DEBUG: this is not necessarey for this example but
+linux has special ethernet option for getting even those
+packets which have bad CRC:
+
+    ethtool -K eth0 rx-fcs on rx-all on
+
 Take a look at LCD ST7789 display, you should see same HEX content
 but bytes from right to left.
 
