@@ -36,13 +36,12 @@ Start tcpdump to see the requests in HEX:
             0x0010:  0800 0604 0001 0011 2233 4455 c0a8 12fe  ........"3DU....
             0x0020:  0000 0000 0000 c0a8 1201                 ..........
 
-Take a look at LCD ST7789 display, you should see same HEX content after ffff,
+Take a look at LCD ST7789 display, you should see same HEX content
 but bytes from right to left.
-
-    ....0608554433221100
-    ....0100040600080100
-    ....A8C0554433221100
-    ....000000000000FE12
+    ....1100FFFFFFFFFFFF
+    ....0100060855443322
+    ....1100010004060008
+    ....FE12A8C055443322
     ....................
 
 "..." is HEX content repeated by
