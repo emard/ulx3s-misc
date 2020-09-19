@@ -1,5 +1,15 @@
+/*
+** simple hex packet capture
+** packet content will be printed from right to left
+** 4 lines of 64-bits (32 bytes)
+** adjust skip bytes to see other parts of the packet
+*/
+
 `default_nettype none
 module top_hex_demo
+#(
+  parameter skip_bytes=6  // skip from preamble
+)
 (
   input  wire clk_25mhz,
   input  wire [6:0] btn,
@@ -46,21 +56,45 @@ module top_hex_demo
   assign rmii_tx_en = 0; // dont send, just sniff
 
   reg [1:0] R_data[0:128]; // collects data
+  reg preamble = 1;
+  reg wait_ff = 1;
 
   reg [7:0] indx;
   always @(posedge rmii_clk)
   begin
     if(rmii_crs)
-    begin
-      if(indx[7]==0)
+    begin // data valid
+      if(preamble)
       begin
-        R_data[indx] <= {rmii_rx1, rmii_rx0};
-        indx <= indx + 1;
+        if(wait_ff)
+        begin
+          if({rmii_rx1, rmii_rx0} == 2'b11) // FF pattern
+          begin
+            wait_ff <= 0;
+            indx <= 1-4*skip_bytes; // skip further FF pattern
+          end
+        end
+        else // not wait_ff
+        begin
+          if(indx == 0)
+            preamble <= 0;
+          else
+            indx <= indx+1; // count skip
+        end
+      end
+      else // not preamble, store data
+      begin
+        if(indx[7]==0)
+        begin
+          R_data[indx[6:0]] <= {rmii_rx1, rmii_rx0};
+          indx <= indx + 1;
+        end
       end
     end
-    else
+    else // not data valid
     begin
-      indx <= 0;
+      wait_ff <= 1;
+      preamble <= 1;
     end
   end
 
