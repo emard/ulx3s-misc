@@ -24,7 +24,12 @@ module top_hex_demo
 );
   parameter C_color_bits = 16; 
 
-  assign led = 0;
+  localparam reply_len = 66+16;
+  reg [7:0] reply[0:reply_len-1];
+  initial
+    $readmemh("arp_reply.mem", reply);
+
+  // assign led = 0;
 
   // clock generator
   wire clk_locked;
@@ -55,7 +60,6 @@ module top_hex_demo
 
   wire rmii_clk   = rmii_nint;
   assign rmii_mdc = 0; // management clock held 0
-  assign rmii_tx_en = 0; // dont send, just sniff
 
   reg [1:0] R_data[0:2**(datab2n-1)-1]; // collects data
   reg [1:0] preamble = 1; // 0:data, 1:wait 5, 2:wait non-5, 3:skip 
@@ -114,6 +118,35 @@ module top_hex_demo
     for(i=0; i<2**(datab2n-1); i++)
       assign R_display[i*2+1:i*2] = R_data[i];
   endgenerate
+
+  reg [8:0] txindx=0; // 2-bit counter
+  reg [7:0] R_tx;
+  reg R_tx_en = 0;
+  always @(posedge rmii_clk)
+  begin
+    if(txindx != reply_len)
+    begin
+      if(txindx[1:0]==0)
+        R_tx <= reply[txindx[8:2]];
+      else
+        R_tx <= {2'b00,R_tx[7:2]}; // shift
+      R_tx_en <= 1;
+      txindx <= txindx + 1;
+    end
+    else
+    begin
+      if(btn[1])
+      begin
+        txindx <= 0;
+      end
+      else
+        R_tx_en <= 0;
+    end
+  end
+  assign rmii_tx_en = R_tx_en;
+  assign rmii_tx0 = R_tx[0];
+  assign rmii_tx1 = R_tx[1];
+  assign led = R_tx_en;
 
   wire [7:0] x;
   wire [7:0] y;
