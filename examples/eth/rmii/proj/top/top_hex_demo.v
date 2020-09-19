@@ -43,22 +43,35 @@ module top_hex_demo
   wire rmii_mdc   = gp[13];
   
   wire rmii_clk   = rmii_nint;
-  assign rmii_tx_en = 0;
+  assign rmii_tx_en = 0; // dont send, just sniff
 
-  reg [127:0] R_display; // something to display
+  reg [1:0] R_data[0:128]; // collects data
+
+  reg [7:0] indx;
   always @(posedge rmii_clk)
   begin
-    R_display[0] <= btn[0];
-    R_display[4] <= btn[1];
-    R_display[8] <= btn[2];
-    R_display[12] <= btn[3];
-    R_display[16] <= btn[4];
-    R_display[20] <= btn[5];
-    R_display[24] <= btn[6];
-    R_display[58:52] <= btn;
     if(rmii_crs)
-      R_display[127:64] <= R_display[127:64] + 1; // shown in next OLED row
+    begin
+      if(indx[7]==0)
+      begin
+        R_data[indx] <= {rmii_rx1, rmii_rx0};
+        indx <= indx + 1;
+      end
+    end
+    else
+    begin
+      indx <= 0;
+    end
   end
+
+  wire [255:0] R_display; // wiring to display
+  generate
+    genvar i;
+    for(i=0; i<128; i++)
+    begin
+      assign R_display[i*2+1:i*2] = R_data[i];
+    end
+  endgenerate
 
   wire [7:0] x;
   wire [7:0] y;
@@ -67,7 +80,7 @@ module top_hex_demo
   wire [C_color_bits-1:0] color;
   hex_decoder_v
   #(
-    .c_data_len(128),
+    .c_data_len(256),
     .c_row_bits(4),
     .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
@@ -113,6 +126,8 @@ module top_hex_demo
     .spi_resn(oled_resn),
     .spi_csn(w_oled_csn)
   );
-  assign oled_csn = w_oled_csn | btn[1]; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
+  //assign oled_csn = w_oled_csn | btn[1]; // BTN1 and 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
+  assign oled_csn = 1; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
+  //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
 
 endmodule
