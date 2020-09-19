@@ -2,7 +2,7 @@
 ** simple hex packet capture
 ** packet content will be printed from right to left
 ** 4 lines of 64-bits (32 bytes)
-** adjust skip bytes to see other parts of the packet
+** adjust skip_bytes to see other parts of the packet
 */
 
 `default_nettype none
