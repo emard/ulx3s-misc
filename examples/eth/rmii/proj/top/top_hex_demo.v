@@ -118,13 +118,22 @@ module top_hex_demo
     for(i=0; i<2**(datab2n-1); i++)
       assign R_display[i*2+1:i*2] = R_data[i];
   endgenerate
+  
+  wire [6:0] btn_rising;
+  btn_debounce
+  btn_debounce_inst
+  (
+    .clk(rmii_clk),
+    .btn(btn),
+    .rising(btn_rising)
+  );
 
   reg [8:0] txindx=0; // 2-bit counter
   reg [7:0] R_tx;
   reg R_tx_en = 0;
   always @(posedge rmii_clk)
   begin
-    if(txindx != reply_len)
+    if(txindx != {reply_len,2'b00})
     begin
       if(txindx[1:0]==0)
         R_tx <= reply[txindx[8:2]];
@@ -135,10 +144,8 @@ module top_hex_demo
     end
     else
     begin
-      if(btn[1])
-      begin
+      if(btn_rising[1])
         txindx <= 0;
-      end
       else
         R_tx_en <= 0;
     end

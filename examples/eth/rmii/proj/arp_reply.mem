@@ -1,4 +1,4 @@
-// ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52 (with CRC)
+// ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52 (last 4 bytes are CRC)
 // preamble
 00 00 00 00 00 00 00 00 55 55 55 55 55 55 55 d5
 // 0x0000:
