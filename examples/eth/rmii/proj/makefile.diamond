@@ -1,0 +1,44 @@
+# ******* project, board and chip name *******
+PROJECT = st7789_hex
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 12
+
+FPGA_PACKAGE = 6bg381c
+# config flash: 1:SPI (standard), 4:QSPI (quad)
+FLASH_SPI = 4
+# chip: is25lp032d is25lp128f s25fl164k
+FLASH_CHIP = is25lp128f
+
+# ******* if programming with OpenOCD *******
+# using local latest openocd until in linux distribution
+OPENOCD=openocd_ft232r
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+# ulx3s-jtag-passthru
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
+# ulx2s
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft232r.ocd
+# external jtag
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
+
+# ******* design files *******
+CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
+#TOP_MODULE = top_checkered
+TOP_MODULE = top_hex_demo
+TOP_MODULE_FILE = ../../../spi_display/hdl/spi_display_verilog/top/$(TOP_MODULE).v
+
+VERILOG_FILES = \
+  $(TOP_MODULE_FILE) \
+  ../../../ecp5pll/hdl/sv/ecp5pll.sv \
+  ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
+  ../../../hex/decoder/hex_decoder_v.v \
+
+#VHDL_FILES = \
+#  ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video_vhd.vhd \
+#  ../../../hex/decoder/hex_decoder.vhd \
+
+SCRIPTS = ../../../../scripts/
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/diamond_main.mk
