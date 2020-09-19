@@ -1,7 +1,7 @@
 # ETH RMII LAN8720
 
 Plug LAN8720 module to GP-GN 9-13, align GND=GND and VCC=3.3V.
-Plug ST7789 7-pin LCD display to 7-pin header, aligh GND and VCC too.
+Plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
 
 LAN8720 has green and yellow LED at its RJ45 connector.
 Connect LAN8720 with ethernet cable to PC. 
