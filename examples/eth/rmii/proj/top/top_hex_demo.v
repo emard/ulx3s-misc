@@ -1,14 +1,15 @@
 /*
 ** simple hex packet capture
 ** packet content will be printed from right to left
-** 4 lines of 64-bits (32 bytes)
-** adjust skip_bytes to see other parts of the packet
+** 8 lines of 64-bits (64 bytes)
+** adjust skip_bytes to see other parts of a longer packet
 */
 
 `default_nettype none
 module top_hex_demo
 #(
-  parameter skip_bytes=0  // skip (ignore) data from beginning of packet
+  parameter datab2n    = 9, // 2**n data bits memory size 9: 512 bits = 64 bytes
+  parameter skip_bytes = 0  // skip (ignore) data from beginning of packet
 )
 (
   input  wire clk_25mhz,
@@ -56,7 +57,6 @@ module top_hex_demo
   assign rmii_mdc = 0; // management clock held 0
   assign rmii_tx_en = 0; // dont send, just sniff
 
-  localparam datab2n = 8; // 2**n data bits
   reg [1:0] R_data[0:2**(datab2n-1)-1]; // collects data
   reg [1:0] preamble = 1; // 0:data, 1:wait 5, 2:wait non-5, 3:skip 
 
@@ -112,9 +112,7 @@ module top_hex_demo
   generate
     genvar i;
     for(i=0; i<2**(datab2n-1); i++)
-    begin
       assign R_display[i*2+1:i*2] = R_data[i];
-    end
   endgenerate
 
   wire [7:0] x;
