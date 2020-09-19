@@ -37,14 +37,18 @@ Start tcpdump to see the requests in HEX:
             0x0020:  0000 0000 0000 c0a8 1201                 ..........
 
 Take a look at LCD ST7789 display, you should see same HEX content after ffff,
-but bytes from right to left. ("..." below is HEX content repeated by
-display HEX decoder, not printed here for clarity)
+but bytes from right to left.
 
     ....0608554433221100
     ....0100040600080100
     ....A8C0554433221100
     ....000000000000FE12
     ....................
+
+("..." below is HEX content repeated by
+display HEX decoder, not printed here for clarity)
+
+# compiling
 
 cleanup:
 
