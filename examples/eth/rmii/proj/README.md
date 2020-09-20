@@ -1,10 +1,10 @@
 # ETH RMII LAN8720
 
-Simple HEX packet sniffer and sender.
-Packets will be shown at LCD display.
-By pressing BTN1 it will send a fixed ARP reply.
+Simple ethernet packet sniffer and sender.
+Packet content will be shown in HEX on LCD display.
+By pressing BTN1 a fixed ARP reply will be sent.
 
-# usage
+# Usage
 
 Plug LAN8720 module to GP-GN 9-13, align GND=GND and VCC=3.3V.
 Plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
@@ -54,9 +54,9 @@ but bytes from right to left.
     ....0000000000008012
 
 "...." is HEX content repeated by display HEX decoder,
-not printed here for clarity,
+not printed here for clarity.
 
-Pressing BTN1 to send a fixed ARP reply:
+Press BTN1 to send a fixed ARP reply:
 
     01:56:24.564032 ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52
             0x0000:  ffff ffff ffff 0040 0001 0203 0806 0001  .......@........
@@ -65,12 +65,13 @@ Pressing BTN1 to send a fixed ARP reply:
             0x0030:  0000 0000 0000 0000 0000 0000 0000 6d2a  ..............m*
             0x0040:  fed9                                     ..
 
-This should enter ARP table and stay there for few seconds:
+This data should enter kernel ARP table and stay there for few seconds,
+so quickly after BTN1, issue this command:
 
     arp -an
     ? (192.168.18.128) at 00:40:00:01:02:03 [ether] on eth0
 
-# special capture
+# Special capture
 
 This is not necessarey for the example here, but it is
 the method how content of "arp_reply.mem" including CRC
@@ -80,7 +81,7 @@ to show CRC and to capture even those packets which have bad CRC:
 
     ethtool -K eth0 rx-fcs on rx-all on
 
-# compiling
+# Compiling
 
 cleanup:
 
