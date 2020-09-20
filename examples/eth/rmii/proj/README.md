@@ -1,5 +1,16 @@
 # ETH RMII LAN8720
 
+Simple HEX packet sniffer and sender.
+Packets will be shown at LCD display.
+By pressing BTN1 it will send a fixed ARP reply:
+
+    01:56:24.564032 ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52
+            0x0000:  ffff ffff ffff 0040 0001 0203 0806 0001  .......@........
+            0x0010:  0800 0604 0002 0040 0001 0203 c0a8 1280  .......@........
+            0x0020:  ffff ffff ffff c0a8 1280 0000 0000 0000  ................
+            0x0030:  0000 0000 0000 0000 0000 0000 0000 6d2a  ..............m*
+            0x0040:  fed9                                     ..
+
 Plug LAN8720 module to GP-GN 9-13, align GND=GND and VCC=3.3V.
 Plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
 
@@ -23,24 +34,18 @@ Start pinging any non-existing address on the same LAN as configured PC IP.
 Ping will generate ARP requests at each attempt and you should see green
 LED blinking each second:
 
-    ping 192.168.18.1
-    PING 192.168.18.1 (192.168.18.1) 56(84) bytes of data.
+    ping 192.168.18.128
+    PING 192.168.18.128 (192.168.18.128) 56(84) bytes of data.
     From 192.168.18.254 icmp_seq=1 Destination Host Unreachable
     From 192.168.18.254 icmp_seq=2 Destination Host Unreachable
 
 Start tcpdump to see the requests in HEX:
 
     tcpdump -XX -n -i eth0
-    17:37:54.528117 ARP, Request who-has 192.168.18.1 tell 192.168.18.254, length 28
+    01:59:02.140687 ARP, Request who-has 192.168.18.128 tell 192.168.18.254, length 28
             0x0000:  ffff ffff ffff 0011 2233 4455 0806 0001  ........"3DU....
             0x0010:  0800 0604 0001 0011 2233 4455 c0a8 12fe  ........"3DU....
-            0x0020:  0000 0000 0000 c0a8 1201                 ..........
-
-DEBUG: this is not necessarey for this example but
-linux has special ethernet option for getting even those
-packets which have bad CRC:
-
-    ethtool -K eth0 rx-fcs on rx-all on
+            0x0020:  0000 0000 0000 c0a8 1280                 ..........
 
 Take a look at LCD ST7789 display, you should see same HEX content
 but bytes from right to left.
@@ -51,10 +56,20 @@ but bytes from right to left.
     ....1100010004060008
     ....FE12A8C055443322
     ....A8C0000000000000
-    ....0000000000000112
+    ....0000000000008012
 
 "...." is HEX content repeated by display HEX decoder,
 not printed here for clarity,
+
+# special capture
+
+This is not necessarey for the example here, but it is
+the method how content of "arp_reply.mem" including CRC
+is captured.
+linux with some ethernet cards can use special ethernet option
+to show CRC and to capture even those packets which have bad CRC:
+
+    ethtool -K eth0 rx-fcs on rx-all on
 
 # compiling
 
