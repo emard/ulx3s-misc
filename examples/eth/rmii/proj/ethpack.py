@@ -26,7 +26,7 @@ icmp_reply = bytearray([
 ])
 
 preamble = bytearray([0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0xd5]);
-payload = icmp_reply
+payload = arp_reply
 crc = binascii.crc32(payload)
 crctx = struct.pack("<I",crc)
 # ETH PHY hardware should send this TX sequence (LSB first):
