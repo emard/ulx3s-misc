@@ -74,10 +74,10 @@ so quickly after BTN1, issue this command:
     arp -an
     ? (192.168.18.128) at 00:40:00:01:02:03 [ether] on eth0
 
-# packet generator
+# Packet generator
 
 Use "ethpack.py" to generate your own packets like "arp_reply.mem".
-It will prepend preamble and append calculated CRC.
+To given packet payload it will prepend preamble and append calculated CRC.
 
 # Special capture
 
