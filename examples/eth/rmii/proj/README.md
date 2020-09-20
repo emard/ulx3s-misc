@@ -13,8 +13,8 @@ LAN8720 has green &#x1f7e9; and yellow &#x1f7e7; LED at its RJ45 connector.
 
 |     GREEN       |    YELLOW     |                                |
 |-----------------|---------------|--------------------------------|
-| &#x1f7e9; ON    |           OFF | no cable or link DOWN          |
-|           OFF   | &#x1f7e7; ON  | connected, link UP, no traffic |
+| &#x1f7e9; ON    | &#x25a0;  OFF | no cable or link DOWN          |
+| &#x25a0;  OFF   | &#x1f7e7; ON  | connected, link UP, no traffic |
 | &#x1f7e9; BLINK | &#x1f7e7; ON  | connected and TX or RX traffic | 
 
 Connect LAN8720 with ethernet cable to PC. 
