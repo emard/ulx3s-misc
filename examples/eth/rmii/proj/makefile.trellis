@@ -1,5 +1,5 @@
 # ******* project, board and chip name *******
-PROJECT = st7789_hex
+PROJECT = eth_hex
 BOARD = ulx3s
 # leave empty, um-, um5g-
 # FPGA_PREFIX = um5g-
@@ -20,7 +20,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 # ******* design files *******
 CONSTRAINTS = ../../../../constraints/ulx3s_v20.lpf
-TOP_MODULE = top_hex_demo
+TOP_MODULE = top_eth_hex_demo
 TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \

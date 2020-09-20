@@ -1,5 +1,5 @@
 # ******* project, board and chip name *******
-PROJECT = st7789_hex
+PROJECT = eth_hex
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
@@ -25,14 +25,15 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
 #TOP_MODULE = top_checkered
-TOP_MODULE = top_hex_demo
-TOP_MODULE_FILE = ../../../spi_display/hdl/spi_display_verilog/top/$(TOP_MODULE).v
+TOP_MODULE = top_eth_hex_demo
+TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
   ../../../hex/decoder/hex_decoder_v.v \
+  ../../../rtc/i2c_master/proj/hdl/btn_debounce.v \
 
 #VHDL_FILES = \
 #  ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video_vhd.vhd \

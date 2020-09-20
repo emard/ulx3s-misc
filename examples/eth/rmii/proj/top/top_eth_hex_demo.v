@@ -6,7 +6,7 @@
 */
 
 `default_nettype none
-module top_hex_demo
+module top_eth_hex_demo
 #(
   parameter datab2n    = 9, // 2**n data bits memory size 9: 512 bits = 64 bytes
   parameter skip_bytes = 0  // skip (ignore) data from beginning of packet
