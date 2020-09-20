@@ -24,7 +24,7 @@ module top_hex_demo
 );
   parameter C_color_bits = 16; 
 
-  localparam reply_len = 66+16;
+  localparam reply_len = 82;
   reg [7:0] reply[0:reply_len-1];
   initial
     $readmemh("arp_reply.mem", reply);
@@ -128,7 +128,7 @@ module top_hex_demo
     .rising(btn_rising)
   );
 
-  reg [8:0] txindx=0; // 2-bit counter
+  reg [12:0] txindx=0; // 2-bit counter
   reg [7:0] R_tx;
   reg R_tx_en = 0;
   always @(posedge rmii_clk)
@@ -136,9 +136,9 @@ module top_hex_demo
     if(txindx != {reply_len,2'b00})
     begin
       if(txindx[1:0]==0)
-        R_tx <= reply[txindx[8:2]];
+        R_tx <= reply[txindx[12:2]];
       else
-        R_tx <= {2'b00,R_tx[7:2]}; // shift
+        R_tx <= R_tx[7:2]; // shift
       R_tx_en <= 1;
       txindx <= txindx + 1;
     end
