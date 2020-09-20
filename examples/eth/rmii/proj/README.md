@@ -2,14 +2,9 @@
 
 Simple HEX packet sniffer and sender.
 Packets will be shown at LCD display.
-By pressing BTN1 it will send a fixed ARP reply:
+By pressing BTN1 it will send a fixed ARP reply.
 
-    01:56:24.564032 ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52
-            0x0000:  ffff ffff ffff 0040 0001 0203 0806 0001  .......@........
-            0x0010:  0800 0604 0002 0040 0001 0203 c0a8 1280  .......@........
-            0x0020:  ffff ffff ffff c0a8 1280 0000 0000 0000  ................
-            0x0030:  0000 0000 0000 0000 0000 0000 0000 6d2a  ..............m*
-            0x0040:  fed9                                     ..
+# usage
 
 Plug LAN8720 module to GP-GN 9-13, align GND=GND and VCC=3.3V.
 Plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
@@ -60,6 +55,20 @@ but bytes from right to left.
 
 "...." is HEX content repeated by display HEX decoder,
 not printed here for clarity,
+
+Pressing BTN1 to send a fixed ARP reply:
+
+    01:56:24.564032 ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52
+            0x0000:  ffff ffff ffff 0040 0001 0203 0806 0001  .......@........
+            0x0010:  0800 0604 0002 0040 0001 0203 c0a8 1280  .......@........
+            0x0020:  ffff ffff ffff c0a8 1280 0000 0000 0000  ................
+            0x0030:  0000 0000 0000 0000 0000 0000 0000 6d2a  ..............m*
+            0x0040:  fed9                                     ..
+
+This should enter ARP table and stay there for few seconds:
+
+    arp -an
+    ? (192.168.18.128) at 00:40:00:01:02:03 [ether] on eth0
 
 # special capture
 
