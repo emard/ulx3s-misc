@@ -118,6 +118,32 @@ module top_hex_demo
     for(i=0; i<2**(datab2n-1); i++)
       assign R_display[i*2+1:i*2] = R_data[i];
   endgenerate
+
+   // RX LED blink
+  localparam led_on = 21;
+  reg [led_on:0] R_rxled, R_txled;
+  always @(posedge rmii_clk)
+  begin
+    if(rmii_crs)
+    begin
+      R_rxled <= -1;
+    end
+    else
+    begin
+      if(R_rxled[led_on])
+        R_rxled <= R_rxled - 1;
+    end
+    if(R_tx_en)
+    begin
+      R_txled <= -1;
+    end
+    else
+    begin
+      if(R_txled[led_on])
+        R_txled <= R_txled - 1;
+    end
+  end
+
   
   wire [6:0] btn_rising;
   btn_debounce
@@ -153,7 +179,7 @@ module top_hex_demo
   assign rmii_tx_en = R_tx_en;
   assign rmii_tx0 = R_tx[0];
   assign rmii_tx1 = R_tx[1];
-  assign led = R_tx_en;
+  assign led = {R_txled[led_on], R_rxled[led_on]};
 
   wire [7:0] x;
   wire [7:0] y;
