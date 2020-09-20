@@ -9,10 +9,12 @@ By pressing BTN1 a fixed ARP reply will be sent.
 Plug LAN8720 module to GP-GN 9-13, align GND=GND and VCC=3.3V.
 Plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
 
-LAN8720 has green and yellow LED at its RJ45 connector.
+LAN8720 has green (&#x1F4D7;) and yellow (&#x1F4D9;) LED at its RJ45 connector.
 Connect LAN8720 with ethernet cable to PC. 
 If cable is not connected or connected but PC ethernet is not UP,
 green LED should be ON, yellow LED OFF.
+
+
 
 Give PC ethernet some IP address
 
