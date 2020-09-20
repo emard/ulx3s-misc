@@ -11,15 +11,13 @@ Plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
 
 LAN8720 has green &#x1f7e9; and yellow &#x1f7e7; LED at its RJ45 connector.
 
-|     GREEN       |  YELLOW   |                                |
-|-----------------|-----------|--------------------------------|
-| &#x1f7e9;       |           | no cable or link DOWN          |
-|                 | &#x1f7e7; | connected, link UP, no traffic |
-| &#x1f7e9; blink | &#x1f7e7; | connected, TX or RX traffic    | 
+|     GREEN       |    YELLOW     |                                |
+|-----------------|---------------|--------------------------------|
+| &#x1f7e9; ON    |           OFF | no cable or link DOWN          |
+|           OFF   | &#x1f7e7; ON  | connected, link UP, no traffic |
+| &#x1f7e9; BLINK | &#x1f7e7; ON  | connected and TX or RX traffic | 
 
 Connect LAN8720 with ethernet cable to PC. 
-If cable is not connected or connected but PC ethernet is not UP,
-green &#x1f7e9; LED should be ON, yellow LED OFF.
 
 Give PC ethernet some IP address
 
@@ -29,8 +27,6 @@ Give PC ethernet some IP address
             inet 192.168.18.254  netmask 255.255.255.0  broadcast 192.168.18.255
             ether 00:11:22:33:44:55  txqueuelen 1000  (Ethernet)
             ...
-
-If no traffic, green LED should be OFF and yellow &#x1f7e7; LED ON.
 
 Start pinging any non-existing address on the same LAN as configured PC IP.
 Ping will generate ARP requests at each attempt and you should see green
