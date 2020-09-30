@@ -79,6 +79,8 @@ so quickly after BTN1, issue this command:
 
 Use "ethpack.py" to generate your own packets like "arp_reply.mem".
 To given packet payload it will prepend preamble and append calculated CRC.
+In toplevel, edit reply_len = N to match with generated packet len,
+reported in comment at the first line of *.mem file.
 
 # Special capture
 
