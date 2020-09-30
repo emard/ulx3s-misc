@@ -75,7 +75,7 @@ so quickly after BTN1, issue this command:
     arp -an
     ? (192.168.18.128) at 00:40:00:01:02:03 [ether] on eth0
 
-Receiving LAN8270 TX ARP traffic should be possible when LAN8720 is directly
+Receiving LAN8720 TX ARP traffic should be possible when LAN8720 is directly
 connected with a cable to PC ETH port which captures packets.
 If ETH switch is between LAN8720 and PC, ARP packets probably won't
 be captured by PC.
