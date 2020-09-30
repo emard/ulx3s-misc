@@ -60,7 +60,7 @@ but bytes from right to left.
 "...." is HEX content repeated by display HEX decoder,
 not printed here for clarity.
 
-Press BTN1 to send a fixed ARP reply:
+Press BTN1 to send a fixed ARP reply.
 
     01:56:24.564032 ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52
             0x0000:  ffff ffff ffff 0040 0001 0203 0806 0001  .......@........
@@ -74,6 +74,11 @@ so quickly after BTN1, issue this command:
 
     arp -an
     ? (192.168.18.128) at 00:40:00:01:02:03 [ether] on eth0
+
+Receiving LAN8270 TX ARP traffic should be possible when LAN8720 is directly
+connected with a cable to PC ETH port which captures packets.
+If ETH switch is between LAN8720 and PC, ARP packets probably won't
+be captured by PC.
 
 # Packet generator
 
