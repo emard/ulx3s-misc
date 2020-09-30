@@ -1,13 +1,14 @@
 # ETH RMII LAN8720
 
 Simple ethernet packet sniffer and sender.
-Packet content will be shown in HEX on LCD display.
+Packet content will be shown in HEX on DVI and LCD display.
 By pressing BTN1 a fixed ARP reply will be sent.
 
 # Usage
 
 Plug LAN8720 module to GP-GN 9-13, align GND=GND and VCC=3.3V.
-Plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
+Plug DVI digital montior to GPDI port and/or
+plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
 
 LAN8720 has green &#x1f7e9; and yellow &#x1f7e7; LED at its RJ45 connector.
 
@@ -45,7 +46,7 @@ Start tcpdump to see the requests in HEX:
             0x0010:  0800 0604 0001 0011 2233 4455 c0a8 12fe  ........"3DU....
             0x0020:  0000 0000 0000 c0a8 1280                 ..........
 
-Take a look at LCD ST7789 display, you should see same HEX content
+Take a look at DVI monitor or LCD ST7789 display, you should see same HEX content
 but bytes from right to left.
 
                   <-- vv first byte

@@ -31,7 +31,10 @@ VERILOG_FILES = \
   ../../../rtc/i2c_master/proj/hdl/btn_debounce.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
-# VHDL_FILES =  ../../../lcd_st7789/hdl/st7789_video_verilog/lcd_video_vhd.vhd \
+VHDL_FILES =  \
+  ../../../dvi/hdl/vga.vhd \
+  ../../../dvi/hdl/vga2dvid.vhd \
+  ../../../dvi/hdl/tmds_encoder.vhd \
 
 YOSYS_OPTIONS = -abc9
 NEXTPNR_OPTIONS = --timing-allow-fail

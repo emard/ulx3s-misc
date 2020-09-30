@@ -16,6 +16,7 @@ module top_eth_hex_demo
   input  wire [6:0] btn,
   output wire [7:0] led,
   inout  wire [27:0] gp,gn,
+  output wire [3:0] gpdi_dp,
   output wire oled_csn,
   output wire oled_clk,
   output wire oled_mosi,
@@ -38,7 +39,8 @@ module top_eth_hex_demo
   ecp5pll
   #(
       .in_hz( 25*1000000),
-    .out0_hz(125*1000000)
+    .out0_hz(125*1000000),
+    .out1_hz( 25*1000000)
   )
   ecp5pll_inst
   (
@@ -46,6 +48,8 @@ module top_eth_hex_demo
     .clk_o(clocks),
     .locked(clk_locked)
   );
+  wire clk_shift = clocks[0];
+  wire clk_pixel = clocks[1];
   
   // ETH RMII LAN8720 signals labelled on the PCB
   wire rmii_tx_en ; assign gn[10] = rmii_tx_en; // 0:RX 1:TX
@@ -237,5 +241,99 @@ module top_eth_hex_demo
   //assign oled_csn = w_oled_csn | btn[1]; // BTN1 and 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
   assign oled_csn = 1; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
   //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
+
+  wire [9:0] beam_x, beam_rx, beam_y;
+  wire [15:0] beam_color;
+  wire vga_hsync, vga_vsync, vga_blank;
+  wire [7:0] vga_r, vga_g, vga_b;
+  wire [1:0] dvid_red, dvid_green, dvid_blue, dvid_clock;
+  assign beam_rx = 636 - beam_x;
+  // HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
+  hex_decoder_v
+  #(
+    .c_data_len(2**datab2n),
+    .c_row_bits(4), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256
+    .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
+    .c_font_file("hex_font.mem"),
+    .c_x_bits(8),
+    .c_y_bits(6),
+    .c_color_bits(16)
+  )
+  hex_decoder_dvi_instance
+  (
+    .clk(clk_pixel),
+    .data(R_display),
+    .x(beam_rx[9:2]),
+    .y(beam_y[7:2]),
+    .color(beam_color)
+  );
+
+  vga
+  vga_instance
+  (
+    .clk_pixel(clk_pixel),
+    .clk_pixel_ena(1'b1),
+    .test_picture(1'b0),
+    .beam_x(beam_x),
+    .beam_y(beam_y),
+    .vga_hsync(vga_hsync),
+    .vga_vsync(vga_vsync),
+    .vga_blank(vga_blank)
+  );
+
+  assign vga_r = {beam_color[15:11],beam_color[11],beam_color[11],beam_color[11]};
+  assign vga_g = {beam_color[10:5],beam_color[5],beam_color[5]};
+  assign vga_b = {beam_color[4:0],beam_color[0],beam_color[0],beam_color[0]};
+  vga2dvid
+  #(
+    .C_ddr(1'b1),
+    .C_shift_clock_synchronizer(1'b0)
+  )
+  vga2dvid_instance
+  (
+    .clk_pixel(clk_pixel),
+    .clk_shift(clk_shift),
+    .in_red(vga_r),
+    .in_green(vga_g),
+    .in_blue(vga_b),
+    .in_hsync(vga_hsync),
+    .in_vsync(vga_vsync),
+    .in_blank(vga_blank),
+    // single-ended output ready for differential buffers
+    .out_red(dvid_red),
+    .out_green(dvid_green),
+    .out_blue(dvid_blue),
+    .out_clock(dvid_clock)
+  );
+
+  // vendor specific DDR modules
+  // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
+  ODDRX1F ddr_clock(
+    .D0(dvid_clock[0]),
+    .D1(dvid_clock[1]),
+    .Q(gpdi_dp[3]),
+    .SCLK(clk_shift),
+    .RST(1'b0));
+
+  ODDRX1F ddr_red(
+    .D0(dvid_red[0]),
+    .D1(dvid_red[1]),
+    .Q(gpdi_dp[2]),
+    .SCLK(clk_shift),
+    .RST(1'b0));
+
+  ODDRX1F ddr_green(
+    .D0(dvid_green[0]),
+    .D1(dvid_green[1]),
+    .Q(gpdi_dp[1]),
+    .SCLK(clk_shift),
+    .RST(1'b0));
+
+  ODDRX1F ddr_blue(
+    .D0(dvid_blue[0]),
+    .D1(dvid_blue[1]),
+    .Q(gpdi_dp[0]),
+    .SCLK(clk_shift),
+    .RST(1'b0));
 
 endmodule
