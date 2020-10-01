@@ -68,7 +68,8 @@ but bytes from right to left.
 not printed here for clarity.
 
 Press BTN1 to send a fixed ARP reply. Green &#x1f7e9; LED should blink
-each time BTN1 is pressed.
+each time BTN1 is pressed. This packet should be received on other
+end using tcpdump:
 
     01:56:24.564032 ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52
             0x0000:  ffff ffff ffff 0040 0001 0203 0806 0001  .......@........
@@ -77,7 +78,12 @@ each time BTN1 is pressed.
             0x0030:  0000 0000 0000 0000 0000 0000 0000 6d2a  ..............m*
             0x0040:  fed9                                     ..
 
-This data should enter kernel ARP table and stay there for few seconds,
+If green &#x1f7e9; LED blinks but above ARP Reply packet is not
+printed by tcpdump, TX is not working. Usual problem is
+module booted at power-up to wrong mode, typically indicated with
+yellow &#x2b1b; LED OFF when cable is connected to PC (should be ON).
+
+ARP reply data should enter kernel ARP table and stay there for few seconds,
 so quickly after BTN1, issue this command:
 
     arp -an
