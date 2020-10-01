@@ -83,16 +83,16 @@ printed by tcpdump, TX is not working. Usual problem is
 module booted at power-up to wrong mode, typically indicated with
 yellow &#x1f7e7; LED OFF when cable is connected to PC (should be ON).
 
-ARP reply data should enter kernel ARP table and stay there for few seconds,
-so quickly after BTN1, issue this command:
-
-    arp -an
-    ? (192.168.18.128) at 00:40:00:01:02:03 [ether] on eth0
-
 Receiving LAN8720 TX ARP traffic should be possible when LAN8720 is directly
 connected with a cable to PC ETH port which captures packets.
 If ETH switch is between LAN8720 and PC, ARP packets probably won't
 be captured by PC.
+
+ARP Reply data should enter kernel ARP table and stay there for few seconds,
+so quickly after BTN1, issue this command:
+
+    arp -an
+    ? (192.168.18.128) at 00:40:00:01:02:03 [ether] on eth0
 
 # Packet generator
 
