@@ -60,7 +60,7 @@ but bytes from right to left.
 "...." is HEX content repeated by display HEX decoder,
 not printed here for clarity.
 
-Press BTN1 to send a fixed ARP reply. Green &#x1f7e9 LED should blink
+Press BTN1 to send a fixed ARP reply. Green &#x1f7e9; LED should blink
 each time BTN1 is pressed.
 
     01:56:24.564032 ARP, Reply 192.168.18.128 is-at 00:40:00:01:02:03, length 52
