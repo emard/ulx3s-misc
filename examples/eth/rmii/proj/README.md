@@ -12,7 +12,7 @@ plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
 
 LAN8720 has green &#x1f7e9; and yellow &#x1f7e7; LED at its RJ45 connector.
 At power-on default (when only VCC and GND connected),
-it should starts with 100 Mbps half-duplex with LEDs
+it should start with 100 Mbps half-duplex with LEDs
 described here.
 
 |     GREEN       |    YELLOW     |                                |
