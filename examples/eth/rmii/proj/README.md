@@ -11,12 +11,19 @@ Plug DVI digital montior to GPDI port and/or
 plug ST7789 7-pin LCD display to 7-pin header, align GND and VCC too.
 
 LAN8720 has green &#x1f7e9; and yellow &#x1f7e7; LED at its RJ45 connector.
+At power-on default (when only VCC and GND connected),
+it should starts with 100 Mbps half-duplex with LEDs
+described here.
 
 |     GREEN       |    YELLOW     |                                |
 |-----------------|---------------|--------------------------------|
 | &#x1f7e9; ON    | &#x2b1b;  OFF | no cable or link DOWN          |
 | &#x2b1b;  OFF   | &#x1f7e7; ON  | connected, link UP, no traffic |
 | &#x1f7e9; BLINK | &#x1f7e7; ON  | connected and TX or RX traffic | 
+
+If descibed LED behaviour can't be obtained, try disconnecting
+pins MDC and MDIO, or disconnect all pins. Connect GND first,
+then VCC, and other pins after module boots.
 
 Connect LAN8720 with ethernet cable to PC. 
 
