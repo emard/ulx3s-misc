@@ -81,7 +81,7 @@ end using tcpdump:
 If green &#x1f7e9; LED blinks but above ARP Reply packet is not
 printed by tcpdump, TX is not working. Usual problem is
 module booted at power-up to wrong mode, typically indicated with
-yellow &#x2b1b; LED OFF when cable is connected to PC (should be ON).
+yellow &#x2b1b; LED OFF when cable is connected to PC (should be &#x1f7e7; ON).
 
 ARP reply data should enter kernel ARP table and stay there for few seconds,
 so quickly after BTN1, issue this command:
