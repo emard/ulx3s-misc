@@ -9,7 +9,8 @@ module top_ecp5pll
   output       wifi_gpio0
 );
   assign wifi_gpio0 = btn[0];
-  
+  SGSR gsr (.CLK(clk_25mhz), .GSR(btn[0])); // global state reset example
+
   wire [3:0] clocks;
   ecp5pll
   #(
