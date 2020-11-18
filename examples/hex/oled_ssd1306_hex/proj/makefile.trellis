@@ -31,7 +31,7 @@ VERILOG_FILES = \
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = 
 
-YOSYS_OPTIONS = -abc9
+#YOSYS_OPTIONS = -abc9
 NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../../../scripts/
