@@ -12,9 +12,9 @@ compile:
 
 program (upload to SRAM, temporary):
 
-    make -f makefile.trellis program
+    make -f makefile.trellis prog
 
 or
 
-    make -f makefile.trellis program_ocd
+    make -f makefile.trellis prog_ocd
 
