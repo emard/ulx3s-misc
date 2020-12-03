@@ -50,16 +50,15 @@ ifeq ($(FPGA_CHIP), lfe5u-85f)
   CHIP_ID=0x41113043
 endif
 
-#ifeq ($(FPGA_SIZE), 12)
-#  FPGA_K=$(FPGA_PREFIX)25
-#  IDCODE_CHIPID=--idcode $(CHIP_ID)
-#else
+ifeq ($(FPGA_SIZE), 12)
+  FPGA_K=$(FPGA_PREFIX)25
+  IDCODE_CHIPID=--idcode $(CHIP_ID)
+else
   FPGA_K=$(FPGA_PREFIX)$(FPGA_SIZE)
   IDCODE_CHIPID=
-#endif
+endif
 
 FPGA_CHIP_EQUIVALENT ?= lfe5u-$(FPGA_K)f
-
 
 # clock generator
 CLK0_NAME ?= clk0
