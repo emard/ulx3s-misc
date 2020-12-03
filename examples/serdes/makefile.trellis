@@ -26,8 +26,7 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
-
-#  ../ecp5pll/hdl/sv/ecp5pll.sv \
+  ../ecp5pll/hdl/sv/ecp5pll.sv \
 
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail
