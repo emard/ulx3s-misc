@@ -3,6 +3,8 @@ PROJECT = serdes
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
+# "um-" prefix for serdes:
+FPGA_PREFIX = um-
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution

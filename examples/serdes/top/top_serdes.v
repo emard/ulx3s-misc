@@ -25,8 +25,7 @@ module top_serdes
     wire tx_pwrup = 1'b1, rx_pwrup = 1'b1, serdes_pdb = 1'b1;
     wire rx_los_lol, rx_cdr_lol;
 
-/*
-    (* BEL="X42/Y71/DCU" *)
+    (* LOC="DCU0" *)
     DCUA DCU0_inst
     (
         .CH0_HDINP(), .CH1_HDINP(),
@@ -190,7 +189,7 @@ module top_serdes
     defparam DCU0_inst.D_PLL_LOL_SET = "0b00";
     defparam DCU0_inst.D_RG_EN = "0b0";
     defparam DCU0_inst.D_RG_SET = "0b00";
-*/
+
     reg [27:0] rx_hb, tx_hb;
     
     always @(posedge tx_pclk) tx_hb <= tx_hb + 1'b1;
