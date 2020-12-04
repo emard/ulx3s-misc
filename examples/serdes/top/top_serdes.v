@@ -96,6 +96,9 @@ module top_serdes
   defparam DCU0_inst.CH0_RTERM_TX = "0d35"; // 50 ohm
   defparam DCU0_inst.CH0_RXTERM_CM = "0b00"; // 0.7 V RX
   defparam DCU0_inst.CH0_TX_CM_SEL = "0b01"; // 0.6 V TX
+  defparam DCU0_inst.CH0_UDF_COMMA_MASK = "0x3FF";
+  defparam DCU0_inst.CH0_UDF_COMMA_A = "0x354"; // 0b1101010100 = 0x354
+  defparam DCU0_inst.CH0_UDF_COMMA_B = "0x0AB"; // 0b0010101011 = 0x0AB
 
   defparam DCU0_inst.CH1_UC_MODE = "0b1";
   defparam DCU0_inst.CH1_PCIE_MODE = "0b0";
@@ -122,9 +125,9 @@ module top_serdes
   defparam DCU0_inst.CH1_RX_GEAR_BYPASS = "0b0";
   defparam DCU0_inst.CH1_LSM_DISABLE = "0b1";
   defparam DCU0_inst.CH1_MIN_IPG_CNT = "0b11";
-  defparam DCU0_inst.CH1_UDF_COMMA_MASK = "0x3ff";
-  defparam DCU0_inst.CH1_UDF_COMMA_A = "0x283";
-  defparam DCU0_inst.CH1_UDF_COMMA_B = "0x17C";
+  defparam DCU0_inst.CH1_UDF_COMMA_MASK = "0x3FF";
+  defparam DCU0_inst.CH1_UDF_COMMA_A = "0x354";
+  defparam DCU0_inst.CH1_UDF_COMMA_B = "0x0AB";
   defparam DCU0_inst.CH1_RX_DCO_CK_DIV = "0b000";
   defparam DCU0_inst.CH1_RCV_DCC_EN = "0b0";
   defparam DCU0_inst.CH1_TPWDNB = "0b1";
