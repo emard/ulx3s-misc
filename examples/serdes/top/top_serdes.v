@@ -94,7 +94,8 @@ module top_serdes
   defparam DCU0_inst.D_SYNC_ND_EN = "0b0";
 
   defparam DCU0_inst.CH0_RTERM_TX = "0d35"; // 50 ohm
-  defparam DCU0_inst.CH0_TX_CM_SEL = "0b00"; // 0.7 V
+  defparam DCU0_inst.CH0_RXTERM_CM = "0b00"; // 0.7 V RX
+  defparam DCU0_inst.CH0_TX_CM_SEL = "0b01"; // 0.6 V TX
 
   defparam DCU0_inst.CH1_UC_MODE = "0b1";
   defparam DCU0_inst.CH1_PCIE_MODE = "0b0";
@@ -129,7 +130,7 @@ module top_serdes
   defparam DCU0_inst.CH1_TPWDNB = "0b1";
   defparam DCU0_inst.CH1_RATE_MODE_TX = "0b0";
   defparam DCU0_inst.CH1_RTERM_TX = "0d35"; // 50 ohm
-  defparam DCU0_inst.CH1_TX_CM_SEL = "0b00"; // 0.7 V
+  defparam DCU0_inst.CH1_TX_CM_SEL = "0b01"; // 0.6 V
   defparam DCU0_inst.CH1_TDRV_PRE_EN = "0b0";
   defparam DCU0_inst.CH1_TDRV_SLICE0_SEL = "0b01";
   defparam DCU0_inst.CH1_TDRV_SLICE1_SEL = "0b00";
