@@ -12,10 +12,10 @@ module top_serdes
   ecp5pll
   #(
       .in_hz( 25000000),
-    .out0_hz( 40000000),                 .out0_tol_hz(0),
-    .out1_hz(100000000), .out1_deg( 90), .out1_tol_hz(0),
-    .out2_hz( 60000000), .out2_deg(180), .out2_tol_hz(0),
-    .out3_hz(  6000000), .out3_deg(300), .out3_tol_hz(0)
+    .out0_hz( 30000000),                 .out0_tol_hz(0),
+    .out1_hz( 60000000), .out1_deg(  0), .out1_tol_hz(0),
+    .out2_hz(100000000), .out2_deg(  0), .out2_tol_hz(0),
+    .out3_hz(  6000000), .out3_deg(  0), .out3_tol_hz(0)
   )
   ecp5pll_inst
   (
@@ -25,31 +25,25 @@ module top_serdes
   wire clk = clk_25mhz;
   wire rst = btn[1];
 
-  // shared signals OLED-SERDES
-  wire refclkn_d0,   refclkp_d0;
-  wire hdrxn0_d0ch0, hdrxp0_d0ch0;
-  wire hdrxn0_d0ch1, hdrxp0_d0ch1;
+  // some demo clock to serdes RX
+  wire refclk_d0   = clocks[0]; // 30 MHz
+  wire hdrx0_d0ch0 = clocks[0]; // 30 MHz
+  wire hdrx0_d0ch1 = clocks[0]; // 30 MHz
 
-  assign oled_clk  = refclkn_d0;
-  assign oled_mosi = refclkp_d0;
-  assign oled_resn = hdrxn0_d0ch1;
-  assign oled_dc   = hdrxp0_d0ch1;
-  assign oled_csn  = hdrxn0_d0ch0;
-  assign oled_bl   = hdrxp0_d0ch0;
+  // fake differential to serdes (shared with oled)
+  assign oled_clk  = ~refclk_d0;
+  assign oled_mosi =  refclk_d0;
+  assign oled_resn = ~hdrx0_d0ch1;
+  assign oled_dc   =  hdrx0_d0ch1;
+  assign oled_csn  = ~hdrx0_d0ch0;
+  assign oled_bl   =  hdrx0_d0ch0;
 
-  wire tx_pclk, rx_pclk;
+  wire tx_pclk, rx_pclk; // serdes block generates those clocks
+
   reg [30:0] ctr;
   reg comma;
   wire [3:0] disp;
     
-  // some demo input clock to serdes RX
-  assign refclkn_d0   = ~clocks[0];
-  assign refclkp_d0   =  clocks[0];
-  assign hdrxn0_d0ch0 = ~clocks[0];
-  assign hdrxp0_d0ch0 =  clocks[0];
-  assign hdrxn0_d0ch1 = ~clocks[0];
-  assign hdrxp0_d0ch1 =  clocks[0];
-
   always @(posedge tx_pclk) begin
     ctr <= ctr + 1'b1;
     comma <= &(ctr[7:0]);    
@@ -64,23 +58,26 @@ module top_serdes
   wire tx_pwrup = 1'b1, rx_pwrup = 1'b1, serdes_pdb = 1'b1;
   wire rx_los_lol, rx_cdr_lol;
 
+  // see fpga-toolchain/share/yosys/ecp5/cells_bb.v
+  // DCUA EXTREFB PCSCLKDIV
+
   (* LOC="DCU0" *)
   DCUA DCU0_inst
   (
-        .CH0_HDINP(), .CH1_HDINP(),
-        .CH1_RX_REFCLK(clk),
-        .CH1_FF_RXI_CLK(rx_pclk), .CH1_FF_RX_PCLK(rx_pclk),
-        .CH1_FF_TXI_CLK(tx_pclk), .CH1_FF_TX_PCLK(tx_pclk), 
-        .CH1_FF_TX_D_0(txd[0]), .CH1_FF_TX_D_1(txd[1]),  .CH1_FF_TX_D_2(txd[2]),  .CH1_FF_TX_D_3(txd[3]),  
-        .CH1_FF_TX_D_4(txd[4]), .CH1_FF_TX_D_5(txd[5]),  .CH1_FF_TX_D_6(txd[6]),  .CH1_FF_TX_D_7(txd[7]),  
-        .CH1_FF_TX_D_8(comma),  .CH1_FF_TX_D_9(1'b0)  ,  .CH1_FF_TX_D_10(1'b0),   .CH0_FF_TX_D_11(1'b0),
-        .CH1_FFC_EI_EN(1'b0), .CH1_FFC_SIGNAL_DETECT(1'b0), .CH1_FFC_LANE_TX_RST(tx_pcs_rst), .CH1_FFC_LANE_RX_RST(rx_pcs_rst),
-        .CH1_FFC_RRST(rx_ser_rst), .CH1_FFC_TXPWDNB(tx_pwrup), .CH1_FFC_RXPWDNB(rx_pwrup), .D_FFC_DUAL_RST(dual_rst),
-        .D_FFC_MACRO_RST(serdes_dual_rst), .D_FFC_MACROPDB(serdes_pdb), .D_FFC_TRST(tx_ser_rst),
-        .CH1_FF_RX_D_0(rxd[0]), .CH1_FF_RX_D_1(rxd[1]), .CH1_FF_RX_D_2(rxd[2]), .CH1_FF_RX_D_3(rxd[3]),
-        .CH1_FF_RX_D_4(rxd[4]), .CH1_FF_RX_D_5(rxd[5]), .CH1_FF_RX_D_6(rxd[6]), .CH1_FF_RX_D_7(rxd[7]),
-        .CH1_FFS_RLOS(rx_los_lol), .CH1_FFS_RLOL(rx_cdr_lol),
-        .D_REFCLKI(clk)
+    .CH0_HDINP(), .CH1_HDINP(),
+    .CH1_RX_REFCLK(refclk_d0),
+    .CH1_FF_RXI_CLK(rx_pclk), .CH1_FF_RX_PCLK(rx_pclk),
+    .CH1_FF_TXI_CLK(tx_pclk), .CH1_FF_TX_PCLK(tx_pclk),
+    .CH1_FF_TX_D_0(txd[0]), .CH1_FF_TX_D_1(txd[1]),  .CH1_FF_TX_D_2(txd[2]),  .CH1_FF_TX_D_3(txd[3]),
+    .CH1_FF_TX_D_4(txd[4]), .CH1_FF_TX_D_5(txd[5]),  .CH1_FF_TX_D_6(txd[6]),  .CH1_FF_TX_D_7(txd[7]),
+    .CH1_FF_TX_D_8(comma),  .CH1_FF_TX_D_9(1'b0)  ,  .CH1_FF_TX_D_10(1'b0),   .CH0_FF_TX_D_11(1'b0),
+    .CH1_FFC_EI_EN(1'b0), .CH1_FFC_SIGNAL_DETECT(1'b0), .CH1_FFC_LANE_TX_RST(tx_pcs_rst), .CH1_FFC_LANE_RX_RST(rx_pcs_rst),
+    .CH1_FFC_RRST(rx_ser_rst), .CH1_FFC_TXPWDNB(tx_pwrup), .CH1_FFC_RXPWDNB(rx_pwrup), .D_FFC_DUAL_RST(dual_rst),
+    .D_FFC_MACRO_RST(serdes_dual_rst), .D_FFC_MACROPDB(serdes_pdb), .D_FFC_TRST(tx_ser_rst),
+    .CH1_FF_RX_D_0(rxd[0]), .CH1_FF_RX_D_1(rxd[1]), .CH1_FF_RX_D_2(rxd[2]), .CH1_FF_RX_D_3(rxd[3]),
+    .CH1_FF_RX_D_4(rxd[4]), .CH1_FF_RX_D_5(rxd[5]), .CH1_FF_RX_D_6(rxd[6]), .CH1_FF_RX_D_7(rxd[7]),
+    .CH1_FFS_RLOS(rx_los_lol), .CH1_FFS_RLOL(rx_cdr_lol),
+    .D_REFCLKI(refclk_d0)
   );
   defparam DCU0_inst.D_MACROPDB = "0b1";
   defparam DCU0_inst.D_IB_PWDNB = "0b1";
