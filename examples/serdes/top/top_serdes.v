@@ -65,7 +65,7 @@ module top_serdes
   DCUA DCU0_inst
   (
     .CH0_HDINP(), .CH1_HDINP(),
-    .CH0_FFC_FB_LOOPBACK(1'b1), .CH1_FFC_FB_LOOPBACK(1'b1),
+    .CH0_FFC_FB_LOOPBACK(1'b0), .CH1_FFC_FB_LOOPBACK(1'b0),
     .CH1_RX_REFCLK(clk),
     .CH1_FF_RXI_CLK(rx_pclk), .CH1_FF_RX_PCLK(rx_pclk),
     .CH1_FF_TXI_CLK(tx_pclk), .CH1_FF_TX_PCLK(tx_pclk),
@@ -155,8 +155,8 @@ module top_serdes
     defparam DCU0_inst.CH1_TX_PRE_SIGN = "0b0";
     defparam DCU0_inst.CH1_REQ_LVL_SET = "0b00";
     defparam DCU0_inst.CH1_REQ_EN = "0b1";
-    defparam DCU0_inst.CH1_RTERM_RX = "0d22";
-    defparam DCU0_inst.CH1_RXTERM_CM = "0b11";
+    defparam DCU0_inst.CH1_RTERM_RX = "0d35"; // 50 ohm
+    defparam DCU0_inst.CH1_RXTERM_CM = "0b00"; // 0.7 V
     defparam DCU0_inst.CH1_PDEN_SEL = "0b1";
     defparam DCU0_inst.CH1_RXIN_CM = "0b11";
     defparam DCU0_inst.CH1_LEQ_OFFSET_SEL = "0b0";
