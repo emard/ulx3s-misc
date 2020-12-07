@@ -26,7 +26,7 @@ module top_serdes
   wire rst = btn[1];
 
   // some demo clock to serdes RX
-  wire refclk_d0   = clocks[3]; // 250 MHz
+  wire refclk_d0   = clocks[2]; // 100 MHz
   wire hdrx0_d0ch0 = clocks[3]; // 250 MHz
   wire hdrx0_d0ch1 = clocks[3]; // 250 MHz
 
