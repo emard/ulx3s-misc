@@ -155,10 +155,10 @@ module top_serdes
     defparam DCU0_inst.CH1_TX_PRE_SIGN = "0b0";
     defparam DCU0_inst.CH1_REQ_LVL_SET = "0b00";
     defparam DCU0_inst.CH1_REQ_EN = "0b1";
-    defparam DCU0_inst.CH1_RTERM_RX = "0d35"; // 50 ohm
-    defparam DCU0_inst.CH1_RXTERM_CM = "0b00"; // 0.7 V
+    defparam DCU0_inst.CH1_RTERM_RX = "0d19"; // 50 ohm
+    defparam DCU0_inst.CH1_RXTERM_CM = "0b11"; // CMFB wizard value
     defparam DCU0_inst.CH1_PDEN_SEL = "0b1";
-    defparam DCU0_inst.CH1_RXIN_CM = "0b11";
+    defparam DCU0_inst.CH1_RXIN_CM = "0b11"; // wizard value
     defparam DCU0_inst.CH1_LEQ_OFFSET_SEL = "0b0";
     defparam DCU0_inst.CH1_LEQ_OFFSET_TRIM = "0b000";
     defparam DCU0_inst.CH1_RLOS_SEL = "0b1";
@@ -174,6 +174,7 @@ module top_serdes
     //defparam DCU0_inst.CH1_TXDEPRE = "DISABLED";
     //defparam DCU0_inst.CH1_TXDEPOST = "DISABLED";
     //defparam DCU0_inst.CH1_PROTOCOL = "G8B10B";
+    //defparam DCU0_inst.CH1_PROTOCOL = "10BSER";
     defparam DCU0_inst.D_ISETLOS = "0d0";
     defparam DCU0_inst.D_SETIRPOLY_AUX = "0b10";
     defparam DCU0_inst.D_SETICONST_AUX = "0b01";
