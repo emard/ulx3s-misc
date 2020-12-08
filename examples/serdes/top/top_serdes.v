@@ -52,6 +52,11 @@ module top_serdes
     
   wire [7:0] txd = ctr[30:23];
   wire [7:0] rxd0, rxd1;
+  parameter tx_ldr_en = 1'b0;
+  wire tx_ldr;
+  parameter rx0_ldr_en = 1'b0;
+  parameter rx1_ldr_en = 1'b0;
+  wire rx0_ldr, rx1_ldr;
   wire rx0_los_lol, rx0_cdr_lol;
   wire rx1_los_lol, rx1_cdr_lol;
   assign led = btn[2] ? {rxd1[7:4]|rxd1[3:0],disp1} : {rxd0[7:4]|rxd0[3:0],disp0};
@@ -188,7 +193,7 @@ module top_serdes
     .CH0_RX_LOS_EN(1'b1), // Enables LOS of signal detector: 0: Disabled, 1: Enabled
     // enables boundary scan input path for routing the high speed RX
     // inputs to a lower speed Serdes in the FPGA (for out of band application)
-    .CH0_LDR_RX2CORE_SEL(1'b0), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
+    .CH0_LDR_RX2CORE_SEL(rx0_ldr_en), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
 
     // TX settings
     .CH0_TPWDNB(1'b1), // transmit channel power: 0: power down, 1: power up
@@ -263,7 +268,7 @@ module top_serdes
     .CH0_REG_IDAC_EN(1'b0), // ?
     .CH0_RX_RATE_SEL(4'd10), // Equalizer pole position select
     // enables to transmit slow data from FPGA core to serdes TX
-    .CH0_LDR_CORE2TX_SEL(1'b0), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
+    .CH0_LDR_CORE2TX_SEL(tx_ldr_en), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
 
     // common channel settings
     .CH1_UC_MODE(1'b1), // 1: selects user configured mode, 0: selects other mode PCIe, RapidIO, 10GbE, 1GBE
@@ -327,7 +332,7 @@ module top_serdes
     .CH1_RX_LOS_EN(1'b1), // Enables LOS of signal detector: 0: Disabled, 1: Enabled
     // enables boundary scan input path for routing the high speed RX
     // inputs to a lower speed Serdes in the FPGA (for out of band application)
-    .CH1_LDR_RX2CORE_SEL(1'b0), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
+    .CH1_LDR_RX2CORE_SEL(rx1_ldr_en), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
 
     // TX settings
     .CH1_TPWDNB(1'b1), // transmit channel power: 0: power down, 1: power up
@@ -402,7 +407,7 @@ module top_serdes
     .CH1_REG_IDAC_EN(1'b0), // ?
     .CH1_RX_RATE_SEL(4'd10), // Equalizer pole position select
     // enables to transmit slow data from FPGA core to serdes TX
-    .CH1_LDR_CORE2TX_SEL(1'b0), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
+    .CH1_LDR_CORE2TX_SEL(tx_ldr_en), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
   )
   DCU0_inst
   (
@@ -410,36 +415,55 @@ module top_serdes
     .D_FFC_MACRO_RST(serdes_dual_rst),
     .D_FFC_MACROPDB(serdes_pdb),
     .D_FFC_TRST(tx_ser_rst),
+    .D_FFC_DUAL_RST(dual_rst),
 
-    .CH0_HDINP(), .CH0_HDINN(),
-    .CH0_HDOUTP(), .CH0_HDOUTN(),
     .CH0_FFC_FB_LOOPBACK(1'b0),
+    // RX
+    .CH0_HDINP(), .CH0_HDINN(),
     .CH0_RX_REFCLK(clk),
     .CH0_FF_RXI_CLK(rx0_pclk), .CH0_FF_RX_PCLK(rx0_pclk),
+    .CH0_FFC_EI_EN(1'b0), .CH0_FFC_SIGNAL_DETECT(1'b0),
+    .CH0_FFC_LANE_RX_RST(rx_pcs_rst),
+    .CH0_FFC_RRST(rx_ser_rst),
+    .CH0_FFC_RXPWDNB(rx_pwrup),
+    .CH0_FF_RX_D_0(rxd0[0]), .CH0_FF_RX_D_1(rxd0[1]), .CH0_FF_RX_D_2(rxd0[2]), .CH0_FF_RX_D_3(rxd0[3]),
+    .CH0_FF_RX_D_4(rxd0[4]), .CH0_FF_RX_D_5(rxd0[5]), .CH0_FF_RX_D_6(rxd0[6]), .CH0_FF_RX_D_7(rxd0[7]),
+    .CH0_FFS_RLOS(rx0_los_lol), .CH0_FFS_RLOL(rx0_cdr_lol),
+    .CH0_LDR_RX2CORE(rx0_ldr),
+    // TX
+    .CH0_HDOUTP(), .CH0_HDOUTN(),
+    .CH0_FFC_TXPWDNB(tx_pwrup),
+    .CH0_FFC_LANE_TX_RST(tx_pcs_rst),
     .CH0_FF_TXI_CLK(tx0_pclk), .CH0_FF_TX_PCLK(tx0_pclk),
     .CH0_FF_TX_D_0(txd[0]), .CH0_FF_TX_D_1(txd[1]),  .CH0_FF_TX_D_2(txd[2]),  .CH0_FF_TX_D_3(txd[3]),
     .CH0_FF_TX_D_4(txd[4]), .CH0_FF_TX_D_5(txd[5]),  .CH0_FF_TX_D_6(txd[6]),  .CH0_FF_TX_D_7(txd[7]),
     .CH0_FF_TX_D_8(comma),  .CH0_FF_TX_D_9(1'b0)  ,  .CH0_FF_TX_D_10(1'b0),   .CH0_FF_TX_D_11(1'b0),
-    .CH0_FFC_EI_EN(1'b0), .CH0_FFC_SIGNAL_DETECT(1'b0), .CH0_FFC_LANE_TX_RST(tx_pcs_rst), .CH0_FFC_LANE_RX_RST(rx_pcs_rst),
-    .CH0_FFC_RRST(rx_ser_rst), .CH0_FFC_TXPWDNB(tx_pwrup), .CH0_FFC_RXPWDNB(rx_pwrup), .D_FFC_DUAL_RST(dual_rst),
-    .CH0_FF_RX_D_0(rxd0[0]), .CH0_FF_RX_D_1(rxd0[1]), .CH0_FF_RX_D_2(rxd0[2]), .CH0_FF_RX_D_3(rxd0[3]),
-    .CH0_FF_RX_D_4(rxd0[4]), .CH0_FF_RX_D_5(rxd0[5]), .CH0_FF_RX_D_6(rxd0[6]), .CH0_FF_RX_D_7(rxd0[7]),
-    .CH0_FFS_RLOS(rx0_los_lol), .CH0_FFS_RLOL(rx0_cdr_lol),
+    .CH0_FFC_LDR_CORE2TX_EN(tx_ldr_en),
+    .CH0_LDR_CORE2TX(tx_ldr),
 
-    .CH1_HDINP(), .CH1_HDINN(),
-    .CH1_HDOUTP(), .CH1_HDOUTN(),
     .CH1_FFC_FB_LOOPBACK(1'b0),
+    // RX
+    .CH1_HDINP(), .CH1_HDINN(),
     .CH1_RX_REFCLK(clk),
     .CH1_FF_RXI_CLK(rx1_pclk), .CH1_FF_RX_PCLK(rx1_pclk),
+    .CH1_FFC_EI_EN(1'b0), .CH1_FFC_SIGNAL_DETECT(1'b0),
+    .CH1_FFC_LANE_RX_RST(rx_pcs_rst),
+    .CH1_FFC_RRST(rx_ser_rst),
+    .CH1_FFC_RXPWDNB(rx_pwrup),
+    .CH1_FF_RX_D_0(rxd1[0]), .CH1_FF_RX_D_1(rxd1[1]), .CH1_FF_RX_D_2(rxd1[2]), .CH1_FF_RX_D_3(rxd1[3]),
+    .CH1_FF_RX_D_4(rxd1[4]), .CH1_FF_RX_D_5(rxd1[5]), .CH1_FF_RX_D_6(rxd1[6]), .CH1_FF_RX_D_7(rxd1[7]),
+    .CH1_FFS_RLOS(rx1_los_lol), .CH1_FFS_RLOL(rx1_cdr_lol),
+    .CH1_LDR_RX2CORE(rx1_ldr),
+    // TX
+    .CH1_HDOUTP(), .CH1_HDOUTN(),
+    .CH1_FFC_TXPWDNB(tx_pwrup),
+    .CH1_FFC_LANE_TX_RST(tx_pcs_rst),
     .CH1_FF_TXI_CLK(tx1_pclk), .CH1_FF_TX_PCLK(tx1_pclk),
     .CH1_FF_TX_D_0(txd[0]), .CH1_FF_TX_D_1(txd[1]),  .CH1_FF_TX_D_2(txd[2]),  .CH1_FF_TX_D_3(txd[3]),
     .CH1_FF_TX_D_4(txd[4]), .CH1_FF_TX_D_5(txd[5]),  .CH1_FF_TX_D_6(txd[6]),  .CH1_FF_TX_D_7(txd[7]),
     .CH1_FF_TX_D_8(comma),  .CH1_FF_TX_D_9(1'b0)  ,  .CH1_FF_TX_D_10(1'b0),   .CH0_FF_TX_D_11(1'b0),
-    .CH1_FFC_EI_EN(1'b0), .CH1_FFC_SIGNAL_DETECT(1'b0), .CH1_FFC_LANE_TX_RST(tx_pcs_rst), .CH1_FFC_LANE_RX_RST(rx_pcs_rst),
-    .CH1_FFC_RRST(rx_ser_rst), .CH1_FFC_TXPWDNB(tx_pwrup), .CH1_FFC_RXPWDNB(rx_pwrup), .D_FFC_DUAL_RST(dual_rst),
-    .CH1_FF_RX_D_0(rxd1[0]), .CH1_FF_RX_D_1(rxd1[1]), .CH1_FF_RX_D_2(rxd1[2]), .CH1_FF_RX_D_3(rxd1[3]),
-    .CH1_FF_RX_D_4(rxd1[4]), .CH1_FF_RX_D_5(rxd1[5]), .CH1_FF_RX_D_6(rxd1[6]), .CH1_FF_RX_D_7(rxd1[7]),
-    .CH1_FFS_RLOS(rx1_los_lol), .CH1_FFS_RLOL(rx1_cdr_lol)
+    .CH0_FFC_LDR_CORE2TX_EN(tx_ldr_en),
+    .CH0_LDR_CORE2TX(tx_ldr),
   );
 
   // blink counters for clocks going out of serdes module
