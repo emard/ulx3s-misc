@@ -80,9 +80,9 @@ module top_serdes
     // 11: +- 300 ppm        +- 450 ppm
     .D_CDR_LOL_SET(2'b00),
     .D_TXPLL_PWDNB(1'b1), // TXPLL power down control: 0: power down, 1: power up
-    .D_BITCLK_LOCAL_EN(1'b1), // ?
-    .D_BITCLK_ND_EN(1'b0), // ?
-    .D_BITCLK_FROM_ND_EN(1'b0), // ?
+    .D_BITCLK_LOCAL_EN(1'b1), // ? enable local clock (ch0)
+    .D_BITCLK_ND_EN(1'b0), // ? clock from neighboring dual (ch0->ch1)
+    .D_BITCLK_FROM_ND_EN(1'b0), // ? pass clock from neighboring dual (ch0->ch1)
     .D_SYNC_LOCAL_EN(1'b1), // ?
     .D_SYNC_ND_EN(1'b0), // ?
     .D_TX_MAX_RATE(2.5), // TX max data rate 0.27-3.125/5.0
@@ -126,27 +126,28 @@ module top_serdes
     .D_RG_EN(1'b0), // ?
     .D_RG_SET(2'b00), // ?
 
-    .CH0_RPWDNB(1'b1), // receiver channel power: 0: power down, 1: power up
-    .CH0_TPWDNB(1'b1), // transmit channel power: 0: power down, 1: power up
+    // common channel settings
     .CH0_UC_MODE(1'b1), // 1: selects user configured mode, 0: selects other mode PCIe, RapidIO, 10GbE, 1GBE
     .CH0_PCIE_MODE(1'b0), // 1: PCI express mode of operation, 0: Selects other mode (RapidIO, 10GbE, 1GBE)
     .CH0_RIO_MODE(1'b0), // 1: RapidIO mode, 0: Selects other mode (10GbE, 1GBE)
     .CH0_WA_MODE(1'b1), // 1: bitslip word alignment mode, 0: barrel shift word alignment mode
-    .CH0_INVERT_RX(1'b0), // received data: 1: invert, 0: normal
-    .CH0_INVERT_TX(1'b0), // transmitted data: 1: invert, 0: normal
     .CH0_PRBS_SELECTION(1'b0), // ?
     .CH0_PRBS_LOCK(1'b0), // ?
     .CH0_PRBS_ENABLE(1'b0), // ?
     .CH0_GE_AN_ENABLE(1'b0), // GigE Auto Negotiation: 1: enable, 0: disable
+    .CH0_PCIE_EI_EN(1'b0), // 1: PCI Express Electrical Idle, 0: Normal operation
+
+    // RX settings
+    .CH0_RPWDNB(1'b1), // receiver channel power: 0: power down, 1: power up
+    .CH0_INVERT_RX(1'b0), // received data: 1: invert, 0: normal
     // CHx_ENABLE_CG_ALIGN: only valid when operating in uc_mode
+    .CH0_RLOS_SEL(1'b1), // 0: Disabled, 1: Enabled (If the channel is being used, this bit should be set to 1)
     .CH0_ENABLE_CG_ALIGN(1'b1), // continuous comma alignment: 1: enable, 0: disable
-    .CH0_TX_GEAR_MODE(1'b0), // 2:1 gearing for trasmit path on selected channels: 1: enable, 0: disable (no gearing)
+    .CH0_UDF_COMMA_MASK(10'h3ff), // user defined comma mask
+    .CH0_UDF_COMMA_A(10'h283), // user defined comma character 'a'
+    .CH0_UDF_COMMA_B(10'h17C), // user defined comma character 'b'
     .CH0_RX_GEAR_MODE(1'b0), // 2:1 gearing for receive path on selected channels: 1: enable, 0: disable (no gearing)
     .CH0_PCS_DET_TIME_SEL(2'b00), // PCS connection detection time: 11: 16us, 10: 4us, 01: 2us, 00: 8us
-    .CH0_PCIE_EI_EN(1'b0), // 1:PCI Express Electrical Idle, 0: Normal operation
-    .CH0_TX_GEAR_BYPASS(1'b0), // PCS Tx gear box 1: bypass, 0: Normal operation
-    .CH0_ENC_BYPASS(1'b1), // 1: bypass 8b10 encoder, 0: Normal operation
-    .CH0_SB_BYPASS(1'b0), // invert TX data after SerDes bridge; 1: invert, 0: normal (note: loopback data is inverted)
     .CH0_RX_SB_BYPASS(1'b0), // invert RX data after SerDes bridge: 1: invert, 0: normal (note: loopback data is inverted)
     .CH0_WA_BYPASS(1'b0), // word alignment: 1: bypass, 0: normal operation
     .CH0_DEC_BYPASS(1'b1), // 8b10 decoder: 1: bypass, 0: normal operation
@@ -154,14 +155,51 @@ module top_serdes
     .CH0_RX_GEAR_BYPASS(1'b0), // PCS Rx gear box: 1: bypass, 0: normal operation
     .CH0_LSM_DISABLE(1'b0), // Rx link state machine: 1: Disable, 0: Enable
     .CH0_MIN_IPG_CNT(1'b11), // minimum IPG to enforce
-    .CH0_UDF_COMMA_MASK(10'h3ff), // user defined comma mask
-    .CH0_UDF_COMMA_A(10'h283), // user defined comma character 'a'
-    .CH0_UDF_COMMA_B(10'h17C), // user defined comma character 'b'
     .CH0_RX_DCO_CK_DIV(3'b000), // VCO output frequency divide by: 00x: x/1, 01x: x/2, 100: x/4, 101: x/8, 110: x/16, 111: x/32
     .CH0_RCV_DCC_EN(1'b0), // receiver coupling: 1: DC, 0: AC
+    .CH0_RATE_MODE_RX(1'b0), // RX rate selection: 0: full rate, 1: half rate
+    .CH0_RX_DIV11_SEL(1'b0), // RX rate selection SMPTE: 0: full rate, high definition SMPTE, 1: x/11 rate, standard definition SMPTE
+    // CHx_SEL_SD_RX_CLK: FPGA bridge write clock and elastic buffer read clock driven by:
+    .CH0_SEL_SD_RX_CLK(1'b1), // buffer driven by: 1: serdes recovered clock, 0: ff_ebrd_clk
+    .CH0_FF_RX_H_CLK_EN(1'b0), // 1: enable, 0: disable
+    .CH0_FF_RX_F_CLK_DIS(1'b0), // 1: disable, 0: enable
+    .CH0_REQ_LVL_SET(2'b00), // level setting for equalization: 00: 6 dB, 01: 9 dB, 10: 12 dB, 11: not used
+    .CH0_REQ_EN(1'b1), // receiver equalization: 1: enable, 0: disable
+    .CH0_RTERM_RX(5'd19), // RX termination R ohm: 0: 5K, 1: 80, 4: 75, 6: 70, 11: 60, 19: 50, 25: 46, other: reserved
+    .CH0_RXTERM_CM(2'b11), // Common mode voltage for RX input termination: 00: RX input supply, 01: Floating (AC Ground), 10: GND, 11: RX input supply
+    // CHx_PDEN_SEL: this signal is used to disable the phase detector
+    // in the CDR during electrical idle.
+    // when set to 1 (enabled), checks if los is set.
+    // If los is 0 then disables the phase detector (or data loop)
+    .CH0_PDEN_SEL(1'b1), // 1: enable, 0: disable
+    .CH0_RXIN_CM(2'b11), // Common mode for equalizer input in AC coupling: 00: 0.7V, 01: 0.65V, 10: 0.75V: 11: CMFB
+    // CHx_LEQ_OFFSET: linear equalizer setting
+    // this is used to selectively amplify high frequency components
+    // more which are attenuated more on the backplane - similar to the
+    // function performed by de-emphasis of the transmitter.
+    // Four levels of equalization can be selected. ?
+    .CH0_LEQ_OFFSET_SEL(1'b0), // ?
+    .CH0_LEQ_OFFSET_TRIM(3'b000), // ?
+    // CHx_RLOS_SEL: enables LOS detector output before enabling CDR
+    // phase detector after calibration.
+    .CH0_RX_LOS_LVL(3'b100), // Sets differential p-p threshold voltage for loss of signal detection
+    .CH0_RX_LOS_CEQ(2'b11), // Sets the equalization value at input stage of LOS detector
+    .CH0_RX_LOS_HYST_EN(1'b0), // Enables hysteresis in detection treshold level
+    .CH0_RX_LOS_EN(1'b1), // Enables LOS of signal detector: 0: Disabled, 1: Enabled
+    // enables boundary scan input path for routing the high speed RX
+    // inputs to a lower speed Serdes in the FPGA (for out of band application)
+    .CH0_LDR_RX2CORE_SEL(1'b0), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
+
+    // TX settings
+    .CH0_TPWDNB(1'b1), // transmit channel power: 0: power down, 1: power up
+    .CH0_INVERT_TX(1'b0), // transmitted data: 1: invert, 0: normal
+    .CH0_SB_BYPASS(1'b0), // invert TX data after SerDes bridge; 1: invert, 0: normal (note: loopback data is inverted)
+    .CH0_ENC_BYPASS(1'b1), // 1: bypass 8b10 encoder, 0: Normal operation
     .CH0_RATE_MODE_TX(1'b0), // rate selection for transmit: 1: full rate, 0: half rate
     // CHx_RTERM_TX: TX resistor termination select. Disabled when PCIe is enabled
     .CH0_RTERM_TX(5'd19), // TX termination R ohm: 0: 5K, 1: 80, 4: 75, 6: 70, 11: 60, 19: 50, 25: 46, other: reserved
+    .CH0_TX_GEAR_BYPASS(1'b0), // PCS Tx gear box 1: bypass, 0: Normal operation
+    .CH0_TX_GEAR_MODE(1'b0), // 2:1 gearing for trasmit path on selected channels: 1: enable, 0: disable (no gearing)
     .CH0_TX_CM_SEL(2'b00), // TX output common mode: 00: power down, 01: 0.6V, 10: 0.55V, 11: 0.5V
     .CH0_TDRV_PRE_EN(1'b0), // TX driver pre-emphasis: 1: enable, 0: disable
     .CH0_TDRV_POST_EN(1'b0), // TX driver post-emphasis: 1: enable, 0:disable
@@ -190,43 +228,8 @@ module top_serdes
     // 11: Serial LB from equalizer to driver if slb_eq2t_en=1
     .CH0_TDRV_DAT_SEL(2'b00),
     .CH0_TX_DIV11_SEL(1'b0), // TX rate selection SMPTE: 0: full rate, high definition SMPTE, 1: x/11 rate, standard definition SMPTE
-    .CH0_RATE_MODE_RX(1'b0), // RX rate selection: 0: full rate, 1: half rate
-    .CH0_RX_DIV11_SEL(1'b0), // RX rate selection SMPTE: 0: full rate, high definition SMPTE, 1: x/11 rate, standard definition SMPTE
-    // CHx_SEL_SD_RX_CLK: FPGA bridge write clock and elastic buffer read clock driven by:
-    .CH0_SEL_SD_RX_CLK(1'b1), // buffer driven by: 1: serdes recovered clock, 0: ff_ebrd_clk
-    .CH0_FF_RX_H_CLK_EN(1'b0), // 1: enable, 0: disable
-    .CH0_FF_RX_F_CLK_DIS(1'b0), // 1: disable, 0: enable
     .CH0_FF_TX_H_CLK_EN(1'b0), // 1: enable, 0: disable
     .CH0_FF_TX_F_CLK_DIS(1'b0), // 1: disable, 0: enable
-    .CH0_REQ_LVL_SET(2'b00), // level setting for equalization: 00: 6 dB, 01: 9 dB, 10: 12 dB, 11: not used
-    .CH0_REQ_EN(1'b1), // receiver equalization: 1: enable, 0: disable
-    .CH0_RTERM_RX(5'd19), // RX termination R ohm: 0: 5K, 1: 80, 4: 75, 6: 70, 11: 60, 19: 50, 25: 46, other: reserved
-    .CH0_RXTERM_CM(2'b11), // Common mode voltage for RX input termination: 00: RX input supply, 01: Floating (AC Ground), 10: GND, 11: RX input supply
-    // CHx_PDEN_SEL: this signal is used to disable the phase detector
-    // in the CDR during electrical idle.
-    // when set to 1 (enabled), checks if los is set.
-    // If los is 0 then disables the phase detector (or data loop)
-    .CH0_PDEN_SEL(1'b1), // 1: enable, 0: disable
-    .CH0_RXIN_CM(2'b11), // Common mode for equalizer input in AC coupling: 00: 0.7V, 01: 0.65V, 10: 0.75V: 11: CMFB
-    // CHx_LEQ_OFFSET: linear equalizer setting
-    // this is used to selectively amplify high frequency components
-    // more which are attenuated more on the backplane - similar to the
-    // function performed by de-emphasis of the transmitter.
-    // Four levels of equalization can be selected. ?
-    .CH0_LEQ_OFFSET_SEL(1'b0), // ?
-    .CH0_LEQ_OFFSET_TRIM(3'b000), // ?
-    // CHx_RLOS_SEL: enables LOS detector output before enabling CDR
-    // phase detector after calibration.
-    .CH0_RLOS_SEL(1'b1), // 0: Disabled, 1: Enabled (If the channel is being used, this bit should be set to 1)
-    .CH0_RX_LOS_LVL(3'b100), // Sets differential p-p threshold voltage for loss of signal detection
-    .CH0_RX_LOS_CEQ(2'b11), // Sets the equalization value at input stage of LOS detector
-    .CH0_RX_LOS_HYST_EN(1'b0), // Enables hysteresis in detection treshold level
-    .CH0_RX_LOS_EN(1'b1), // Enables LOS of signal detector: 0: Disabled, 1: Enabled
-    // enables boundary scan input path for routing the high speed RX
-    // inputs to a lower speed Serdes in the FPGA (for out of band application)
-    .CH0_LDR_RX2CORE_SEL(1'b0), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
-    // enables to transmit slow data from FPGA core to serdes TX
-    .CH0_LDR_CORE2TX_SEL(1'b0), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
     //.CH0_CDR_MAX_RATE(2.5), // Receive max data rate (CDR)
     //.CH0_TXAMPLITUDE('d600), // TX amplitude in mV, acceptable values 100-1300 (steps of 20)
     //.CH0_TXDEPRE(DISABLED), // De-emphasis pre-cursor select: DISABLED, 0-11
@@ -259,28 +262,31 @@ module top_serdes
     .CH0_REG_IDAC_SEL('d0), // ?
     .CH0_REG_IDAC_EN(1'b0), // ?
     .CH0_RX_RATE_SEL(4'd10), // Equalizer pole position select
+    // enables to transmit slow data from FPGA core to serdes TX
+    .CH0_LDR_CORE2TX_SEL(1'b0), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
 
-    .CH1_RPWDNB(1'b1), // receiver channel power: 0: power down, 1: power up
-    .CH1_TPWDNB(1'b1), // transmit channel power: 0: power down, 1: power up
+    // common channel settings
     .CH1_UC_MODE(1'b1), // 1: selects user configured mode, 0: selects other mode PCIe, RapidIO, 10GbE, 1GBE
     .CH1_PCIE_MODE(1'b0), // 1: PCI express mode of operation, 0: Selects other mode (RapidIO, 10GbE, 1GBE)
     .CH1_RIO_MODE(1'b0), // 1: RapidIO mode, 0: Selects other mode (10GbE, 1GBE)
     .CH1_WA_MODE(1'b1), // 1: bitslip word alignment mode, 0: barrel shift word alignment mode
-    .CH1_INVERT_RX(1'b0), // received data: 1: invert, 0: normal
-    .CH1_INVERT_TX(1'b0), // transmitted data: 1: invert, 0: normal
     .CH1_PRBS_SELECTION(1'b0), // ?
     .CH1_PRBS_LOCK(1'b0), // ?
     .CH1_PRBS_ENABLE(1'b0), // ?
     .CH1_GE_AN_ENABLE(1'b0), // GigE Auto Negotiation: 1: enable, 0: disable
+    .CH1_PCIE_EI_EN(1'b0), // 1: PCI Express Electrical Idle, 0: Normal operation
+
+    // RX settings
+    .CH1_RPWDNB(1'b1), // receiver channel power: 0: power down, 1: power up
+    .CH1_INVERT_RX(1'b0), // received data: 1: invert, 0: normal
     // CHx_ENABLE_CG_ALIGN: only valid when operating in uc_mode
+    .CH1_RLOS_SEL(1'b1), // 0: Disabled, 1: Enabled (If the channel is being used, this bit should be set to 1)
     .CH1_ENABLE_CG_ALIGN(1'b1), // continuous comma alignment: 1: enable, 0: disable
-    .CH1_TX_GEAR_MODE(1'b0), // 2:1 gearing for trasmit path on selected channels: 1: enable, 0: disable (no gearing)
+    .CH1_UDF_COMMA_MASK(10'h3ff), // user defined comma mask
+    .CH1_UDF_COMMA_A(10'h283), // user defined comma character 'a'
+    .CH1_UDF_COMMA_B(10'h17C), // user defined comma character 'b'
     .CH1_RX_GEAR_MODE(1'b0), // 2:1 gearing for receive path on selected channels: 1: enable, 0: disable (no gearing)
     .CH1_PCS_DET_TIME_SEL(2'b00), // PCS connection detection time: 11: 16us, 10: 4us, 01: 2us, 00: 8us
-    .CH1_PCIE_EI_EN(1'b0), // 1:PCI Express Electrical Idle, 0: Normal operation
-    .CH1_TX_GEAR_BYPASS(1'b0), // PCS Tx gear box 1: bypass, 0: Normal operation
-    .CH1_ENC_BYPASS(1'b1), // 1: bypass 8b10 encoder, 0: Normal operation
-    .CH1_SB_BYPASS(1'b0), // invert TX data after SerDes bridge; 1: invert, 0: normal (note: loopback data is inverted)
     .CH1_RX_SB_BYPASS(1'b0), // invert RX data after SerDes bridge: 1: invert, 0: normal (note: loopback data is inverted)
     .CH1_WA_BYPASS(1'b0), // word alignment: 1: bypass, 0: normal operation
     .CH1_DEC_BYPASS(1'b1), // 8b10 decoder: 1: bypass, 0: normal operation
@@ -288,14 +294,51 @@ module top_serdes
     .CH1_RX_GEAR_BYPASS(1'b0), // PCS Rx gear box: 1: bypass, 0: normal operation
     .CH1_LSM_DISABLE(1'b0), // Rx link state machine: 1: Disable, 0: Enable
     .CH1_MIN_IPG_CNT(1'b11), // minimum IPG to enforce
-    .CH1_UDF_COMMA_MASK(10'h3ff), // user defined comma mask
-    .CH1_UDF_COMMA_A(10'h283), // user defined comma character 'a'
-    .CH1_UDF_COMMA_B(10'h17C), // user defined comma character 'b'
     .CH1_RX_DCO_CK_DIV(3'b000), // VCO output frequency divide by: 00x: x/1, 01x: x/2, 100: x/4, 101: x/8, 110: x/16, 111: x/32
     .CH1_RCV_DCC_EN(1'b0), // receiver coupling: 1: DC, 0: AC
+    .CH1_RATE_MODE_RX(1'b0), // RX rate selection: 0: full rate, 1: half rate
+    .CH1_RX_DIV11_SEL(1'b0), // RX rate selection SMPTE: 0: full rate, high definition SMPTE, 1: x/11 rate, standard definition SMPTE
+    // CHx_SEL_SD_RX_CLK: FPGA bridge write clock and elastic buffer read clock driven by:
+    .CH1_SEL_SD_RX_CLK(1'b1), // buffer driven by: 1: serdes recovered clock, 0: ff_ebrd_clk
+    .CH1_FF_RX_H_CLK_EN(1'b0), // 1: enable, 0: disable
+    .CH1_FF_RX_F_CLK_DIS(1'b0), // 1: disable, 0: enable
+    .CH1_REQ_LVL_SET(2'b00), // level setting for equalization: 00: 6 dB, 01: 9 dB, 10: 12 dB, 11: not used
+    .CH1_REQ_EN(1'b1), // receiver equalization: 1: enable, 0: disable
+    .CH1_RTERM_RX(5'd19), // RX termination R ohm: 0: 5K, 1: 80, 4: 75, 6: 70, 11: 60, 19: 50, 25: 46, other: reserved
+    .CH1_RXTERM_CM(2'b11), // Common mode voltage for RX input termination: 00: RX input supply, 01: Floating (AC Ground), 10: GND, 11: RX input supply
+    // CHx_PDEN_SEL: this signal is used to disable the phase detector
+    // in the CDR during electrical idle.
+    // when set to 1 (enabled), checks if los is set.
+    // If los is 0 then disables the phase detector (or data loop)
+    .CH1_PDEN_SEL(1'b1), // 1: enable, 0: disable
+    .CH1_RXIN_CM(2'b11), // Common mode for equalizer input in AC coupling: 00: 0.7V, 01: 0.65V, 10: 0.75V: 11: CMFB
+    // CHx_LEQ_OFFSET: linear equalizer setting
+    // this is used to selectively amplify high frequency components
+    // more which are attenuated more on the backplane - similar to the
+    // function performed by de-emphasis of the transmitter.
+    // Four levels of equalization can be selected. ?
+    .CH1_LEQ_OFFSET_SEL(1'b0), // ?
+    .CH1_LEQ_OFFSET_TRIM(3'b000), // ?
+    // CHx_RLOS_SEL: enables LOS detector output before enabling CDR
+    // phase detector after calibration.
+    .CH1_RX_LOS_LVL(3'b100), // Sets differential p-p threshold voltage for loss of signal detection
+    .CH1_RX_LOS_CEQ(2'b11), // Sets the equalization value at input stage of LOS detector
+    .CH1_RX_LOS_HYST_EN(1'b0), // Enables hysteresis in detection treshold level
+    .CH1_RX_LOS_EN(1'b1), // Enables LOS of signal detector: 0: Disabled, 1: Enabled
+    // enables boundary scan input path for routing the high speed RX
+    // inputs to a lower speed Serdes in the FPGA (for out of band application)
+    .CH1_LDR_RX2CORE_SEL(1'b0), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
+
+    // TX settings
+    .CH1_TPWDNB(1'b1), // transmit channel power: 0: power down, 1: power up
+    .CH1_INVERT_TX(1'b0), // transmitted data: 1: invert, 0: normal
+    .CH1_SB_BYPASS(1'b0), // invert TX data after SerDes bridge; 1: invert, 0: normal (note: loopback data is inverted)
+    .CH1_ENC_BYPASS(1'b1), // 1: bypass 8b10 encoder, 0: Normal operation
     .CH1_RATE_MODE_TX(1'b0), // rate selection for transmit: 1: full rate, 0: half rate
     // CHx_RTERM_TX: TX resistor termination select. Disabled when PCIe is enabled
     .CH1_RTERM_TX(5'd19), // TX termination R ohm: 0: 5K, 1: 80, 4: 75, 6: 70, 11: 60, 19: 50, 25: 46, other: reserved
+    .CH1_TX_GEAR_BYPASS(1'b0), // PCS Tx gear box 1: bypass, 0: Normal operation
+    .CH1_TX_GEAR_MODE(1'b0), // 2:1 gearing for trasmit path on selected channels: 1: enable, 0: disable (no gearing)
     .CH1_TX_CM_SEL(2'b00), // TX output common mode: 00: power down, 01: 0.6V, 10: 0.55V, 11: 0.5V
     .CH1_TDRV_PRE_EN(1'b0), // TX driver pre-emphasis: 1: enable, 0: disable
     .CH1_TDRV_POST_EN(1'b0), // TX driver post-emphasis: 1: enable, 0:disable
@@ -324,43 +367,8 @@ module top_serdes
     // 11: Serial LB from equalizer to driver if slb_eq2t_en=1
     .CH1_TDRV_DAT_SEL(2'b00),
     .CH1_TX_DIV11_SEL(1'b0), // TX rate selection SMPTE: 0: full rate, high definition SMPTE, 1: x/11 rate, standard definition SMPTE
-    .CH1_RATE_MODE_RX(1'b0), // RX rate selection: 0: full rate, 1: half rate
-    .CH1_RX_DIV11_SEL(1'b0), // RX rate selection SMPTE: 0: full rate, high definition SMPTE, 1: x/11 rate, standard definition SMPTE
-    // CHx_SEL_SD_RX_CLK: FPGA bridge write clock and elastic buffer read clock driven by:
-    .CH1_SEL_SD_RX_CLK(1'b1), // buffer driven by: 1: serdes recovered clock, 0: ff_ebrd_clk
-    .CH1_FF_RX_H_CLK_EN(1'b0), // 1: enable, 0: disable
-    .CH1_FF_RX_F_CLK_DIS(1'b0), // 1: disable, 0: enable
     .CH1_FF_TX_H_CLK_EN(1'b0), // 1: enable, 0: disable
     .CH1_FF_TX_F_CLK_DIS(1'b0), // 1: disable, 0: enable
-    .CH1_REQ_LVL_SET(2'b00), // level setting for equalization: 00: 6 dB, 01: 9 dB, 10: 12 dB, 11: not used
-    .CH1_REQ_EN(1'b1), // receiver equalization: 1: enable, 0: disable
-    .CH1_RTERM_RX(5'd19), // RX termination R ohm: 0: 5K, 1: 80, 4: 75, 6: 70, 11: 60, 19: 50, 25: 46, other: reserved
-    .CH1_RXTERM_CM(2'b11), // Common mode voltage for RX input termination: 00: RX input supply, 01: Floating (AC Ground), 10: GND, 11: RX input supply
-    // CHx_PDEN_SEL: this signal is used to disable the phase detector
-    // in the CDR during electrical idle.
-    // when set to 1 (enabled), checks if los is set.
-    // If los is 0 then disables the phase detector (or data loop)
-    .CH1_PDEN_SEL(1'b1), // 1: enable, 0: disable
-    .CH1_RXIN_CM(2'b11), // Common mode for equalizer input in AC coupling: 00: 0.7V, 01: 0.65V, 10: 0.75V: 11: CMFB
-    // CHx_LEQ_OFFSET: linear equalizer setting
-    // this is used to selectively amplify high frequency components
-    // more which are attenuated more on the backplane - similar to the
-    // function performed by de-emphasis of the transmitter.
-    // Four levels of equalization can be selected. ?
-    .CH1_LEQ_OFFSET_SEL(1'b0), // ?
-    .CH1_LEQ_OFFSET_TRIM(3'b000), // ?
-    // CHx_RLOS_SEL: enables LOS detector output before enabling CDR
-    // phase detector after calibration.
-    .CH1_RLOS_SEL(1'b1), // 0: Disabled, 1: Enabled (If the channel is being used, this bit should be set to 1)
-    .CH1_RX_LOS_LVL(3'b100), // Sets differential p-p threshold voltage for loss of signal detection
-    .CH1_RX_LOS_CEQ(2'b11), // Sets the equalization value at input stage of LOS detector
-    .CH1_RX_LOS_HYST_EN(1'b0), // Enables hysteresis in detection treshold level
-    .CH1_RX_LOS_EN(1'b1), // Enables LOS of signal detector: 0: Disabled, 1: Enabled
-    // enables boundary scan input path for routing the high speed RX
-    // inputs to a lower speed Serdes in the FPGA (for out of band application)
-    .CH1_LDR_RX2CORE_SEL(1'b0), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
-    // enables to transmit slow data from FPGA core to serdes TX
-    .CH1_LDR_CORE2TX_SEL(1'b0), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
     //.CH1_CDR_MAX_RATE(2.5), // Receive max data rate (CDR)
     //.CH1_TXAMPLITUDE('d600), // TX amplitude in mV, acceptable values 100-1300 (steps of 20)
     //.CH1_TXDEPRE(DISABLED), // De-emphasis pre-cursor select: DISABLED, 0-11
@@ -393,6 +401,8 @@ module top_serdes
     .CH1_REG_IDAC_SEL('d0), // ?
     .CH1_REG_IDAC_EN(1'b0), // ?
     .CH1_RX_RATE_SEL(4'd10), // Equalizer pole position select
+    // enables to transmit slow data from FPGA core to serdes TX
+    .CH1_LDR_CORE2TX_SEL(1'b0), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
   )
   DCU0_inst
   (
