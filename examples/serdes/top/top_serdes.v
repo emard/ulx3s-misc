@@ -27,8 +27,8 @@ module top_serdes
 
   // some demo clock to serdes RX
   wire refclk_d0   = clocks[2]; // 100 MHz
-  wire hdrx0_d0ch0 = clocks[3]; // 250 MHz
-  wire hdrx0_d0ch1 = clocks[3]; // 250 MHz
+  wire hdrx0_d0ch0; // = clocks[3]; // 250 MHz
+  wire hdrx0_d0ch1; // = clocks[3]; // 250 MHz
 
   // fake differential to serdes (shared with oled)
   assign oled_clk  = ~refclk_d0;
@@ -49,13 +49,15 @@ module top_serdes
     ctr <= ctr + 1'b1;
     comma <= &(ctr[7:0]);    
   end
-    
+  assign hdrx0_d0ch0 = ctr[9];
+  assign hdrx0_d0ch1 = ctr[5];
+
   wire [7:0] txd = ctr[30:23];
   wire [7:0] rxd0, rxd1;
   parameter tx_ldr_en = 1'b0;
   wire tx_ldr;
-  parameter rx0_ldr_en = 1'b0;
-  parameter rx1_ldr_en = 1'b0;
+  parameter rx0_ldr_en = 1'b1;
+  parameter rx1_ldr_en = 1'b1;
   wire rx0_ldr, rx1_ldr;
   wire rx0_los_lol, rx0_cdr_lol;
   wire rx1_los_lol, rx1_cdr_lol;
@@ -475,7 +477,20 @@ module top_serdes
   always @(posedge tx1_pclk) tx1_hb <= tx1_hb + 1'b1;
   always @(posedge rx1_pclk) rx1_hb <= rx1_hb + 1'b1;
   
-  assign disp0 = {rx0_los_lol, rx0_cdr_lol, tx0_hb[27], rx0_hb[27]};
-  assign disp1 = {rx1_los_lol, rx1_cdr_lol, tx1_hb[27], rx1_hb[27]};
+  //assign disp0 = {rx0_los_lol, rx0_cdr_lol, tx0_hb[27], rx0_hb[27]};
+  //assign disp1 = {rx1_los_lol, rx1_cdr_lol, tx1_hb[27], rx1_hb[27]};
+  
+  reg [1:0] r_rx0_ldr, r_rx1_ldr; // edge trackers for LDR signals
+  
+  always @(posedge rx0_pclk) r_rx0_ldr <= {rx0_ldr, r_rx0_ldr[1]};
+  always @(posedge rx1_pclk) r_rx1_ldr <= {rx1_ldr, r_rx1_ldr[1]};
+
+  reg [19:0] rx0_ldr_cnt, rx1_ldr_cnt;
+  
+  always @(posedge rx0_pclk) if(r_rx0_ldr == 2'b10) rx0_ldr_cnt <= rx0_ldr_cnt+1;
+  always @(posedge rx1_pclk) if(r_rx1_ldr == 2'b10) rx1_ldr_cnt <= rx1_ldr_cnt+1;
+
+  assign disp0 = {rx0_los_lol, rx0_cdr_lol, tx0_hb[27], rx0_ldr_cnt[19]};
+  assign disp1 = {rx1_los_lol, rx1_cdr_lol, tx1_hb[27], rx1_ldr_cnt[19]};
 
 endmodule
