@@ -168,27 +168,11 @@ module top_serdes_dvi
   endgenerate
 
   // ************** SERDES ****************
-  /*
-  wire [3:0] clocks_serdes;
-  ecp5pll
-  #(
-      .in_hz( 25*1000000),
-    .out0_hz( 25*1000000),                 .out0_tol_hz(0),
-    .out1_hz( 50*1000000), .out1_deg(  0), .out1_tol_hz(0),
-    .out2_hz(100*1000000), .out2_deg(  0), .out2_tol_hz(0),
-    .out3_hz(250*1000000), .out3_deg(  0), .out3_tol_hz(0)
-  )
-  ecp5pll_serdes_inst
-  (
-    .clk_i(clk_25mhz),
-    .clk_o(clocks_serdes)
-  );
-  */
   wire clk = clk_pixel; // 27 MHz for 720x576@60Hz
   wire rst = btn[1];
 
   // some demo clock to serdes RX
-  wire refclk_d0   = clk_shift;  // tmds[3][0]; // clk_pixel 27 MHz
+  wire refclk_d0   = tmds[3][0]; // clk_pixel 27 MHz
   wire hdrx0_d0ch0 = tmds[0][0]; // blue with hsync/vsync/blank
   wire hdrx0_d0ch1 = tmds[2][0]; // red
 
@@ -319,7 +303,7 @@ module top_serdes_dvi
     .CH0_PCS_DET_TIME_SEL(2'b00), // PCS connection detection time: 11: 16us, 10: 4us, 01: 2us, 00: 8us
     .CH0_RX_SB_BYPASS(1'b0), // invert RX data after SerDes bridge: 1: invert, 0: normal (note: loopback data is inverted)
     .CH0_WA_BYPASS(1'b0), // word alignment: 1: bypass, 0: normal operation
-    .CH0_DEC_BYPASS(1'b1), // 8b10 decoder: 1: bypass, 0: normal operation
+    .CH0_DEC_BYPASS(1'b0), // 8b10 decoder: 1: bypass, 0: normal operation
     .CH0_CTC_BYPASS(1'b1), // clock toleration compensation: 1: bypass, 0: normal operation
     .CH0_RX_GEAR_BYPASS(1'b0), // PCS Rx gear box: 1: bypass, 0: normal operation
     .CH0_LSM_DISABLE(1'b0), // Rx link state machine: 1: Disable, 0: Enable
@@ -403,7 +387,7 @@ module top_serdes_dvi
     //.CH0_TXAMPLITUDE('d600), // TX amplitude in mV, acceptable values 100-1300 (steps of 20)
     //.CH0_TXDEPRE(DISABLED), // De-emphasis pre-cursor select: DISABLED, 0-11
     //.CH0_TXDEPOST(DISABLED), // De-emphasis post-cursor select: DISABLED, 0-11
-    .CH0_PROTOCOL("8BSER"), // "8B10B", "G8B10B", "PCIe", "GbE", "SGMII", "XAUI", "SDI", "CPRI", "JESD204", "10BSER", "8BSER", "eDP"
+    .CH0_PROTOCOL("8B10B"), // "8B10B", "G8B10B", "PCIe", "GbE", "SGMII", "XAUI", "SDI", "CPRI", "JESD204", "10BSER", "8BSER", "eDP"
     .CH0_CDR_CNT4SEL(2'b00), // ?
     .CH0_CDR_CNT8SEL(2'b00), // ?
     .CH0_DCOATDCFG(2'b00), // ?
@@ -458,7 +442,7 @@ module top_serdes_dvi
     .CH1_PCS_DET_TIME_SEL(2'b00), // PCS connection detection time: 11: 16us, 10: 4us, 01: 2us, 00: 8us
     .CH1_RX_SB_BYPASS(1'b0), // invert RX data after SerDes bridge: 1: invert, 0: normal (note: loopback data is inverted)
     .CH1_WA_BYPASS(1'b0), // word alignment: 1: bypass, 0: normal operation
-    .CH1_DEC_BYPASS(1'b1), // 8b10 decoder: 1: bypass, 0: normal operation
+    .CH1_DEC_BYPASS(1'b0), // 8b10 decoder: 1: bypass, 0: normal operation
     .CH1_CTC_BYPASS(1'b1), // clock toleration compensation: 1: bypass, 0: normal operation
     .CH1_RX_GEAR_BYPASS(1'b0), // PCS Rx gear box: 1: bypass, 0: normal operation
     .CH1_LSM_DISABLE(1'b0), // Rx link state machine: 1: Disable, 0: Enable
@@ -542,7 +526,7 @@ module top_serdes_dvi
     //.CH1_TXAMPLITUDE('d600), // TX amplitude in mV, acceptable values 100-1300 (steps of 20)
     //.CH1_TXDEPRE(DISABLED), // De-emphasis pre-cursor select: DISABLED, 0-11
     //.CH1_TXDEPOST(DISABLED), // De-emphasis post-cursor select: DISABLED, 0-11
-    .CH1_PROTOCOL("8BSER"), // "8B10B", "G8B10B", "PCIe", "GbE", "SGMII", "XAUI", "SDI", "CPRI", "JESD204", "10BSER", "8BSER", "eDP"
+    .CH1_PROTOCOL("8B10B"), // "8B10B", "G8B10B", "PCIe", "GbE", "SGMII", "XAUI", "SDI", "CPRI", "JESD204", "10BSER", "8BSER", "eDP"
     .CH1_CDR_CNT4SEL(2'b00), // ?
     .CH1_CDR_CNT8SEL(2'b00), // ?
     .CH1_DCOATDCFG(2'b00), // ?
