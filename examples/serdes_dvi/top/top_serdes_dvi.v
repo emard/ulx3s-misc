@@ -238,13 +238,13 @@ module top_serdes_dvi
     .D_BITCLK_FROM_ND_EN(1'b0), // ? pass clock from neighboring dual (ch0->ch1)
     .D_SYNC_LOCAL_EN(1'b1), // ?
     .D_SYNC_ND_EN(1'b0), // ?
-    .D_TX_MAX_RATE(2.5), // TX max data rate 0.27-3.125/5.0
+    .D_TX_MAX_RATE(0.27), // TX max data rate 0.27-3.125/5.0
     .D_ISETLOS('d0), // ?
-    .D_SETIRPOLY_AUX(2'b10), // ?
-    .D_SETICONST_AUX(2'b01), // ?
-    .D_SETIRPOLY_CH(2'b10), // ?
-    .D_SETICONST_CH(2'b10), // ?
-    .D_REQ_ISET(3'b001), // ?
+    .D_SETIRPOLY_AUX(2'b00), // ?
+    .D_SETICONST_AUX(2'b00), // ?
+    .D_SETIRPOLY_CH(2'b00), // ?
+    .D_SETICONST_CH(2'b00), // ?
+    .D_REQ_ISET(3'b000), // ?
     .D_PD_ISET(2'b00), // ?
     .D_DCO_CALIB_TIME_SEL(2'b00), // ?
     .D_CMUSETISCL4VCO(3'b000), // ?
@@ -253,10 +253,10 @@ module top_serdes_dvi
     .D_CMUSETZGM(3'b000), // ?
     .D_CMUSETP2AGM(3'b000), // ?
     .D_CMUSETP1GM(3'b000), // ?
-    .D_CMUSETI4CPZ('d3), // ?
-    .D_CMUSETI4CPP('d3), // ?
+    .D_CMUSETI4CPZ('d0), // ?
+    .D_CMUSETI4CPP('d0), // ?
     .D_CMUSETICP4Z(3'b101), // ?
-    .D_CMUSETICP4P(2'b01), // ?
+    .D_CMUSETICP4P(2'b11), // ?
     .D_CMUSETBIASI(2'b00), // ?
     .D_SETPLLRC('d1), // ?
     // D_REFCK_MODE: MSB of REFCK_MODE is REFCK25X bit
@@ -265,10 +265,10 @@ module top_serdes_dvi
     // 010: internal high speed bit clock is 16x
     // 011: internal high speed bit clock is  8x
     // 1xx: internal high speed bit clock is 25x
-    .D_REFCK_MODE(3'b100),
+    .D_REFCK_MODE(3'b001),
     // D_TX_VCO_CK_DIV: VCO output frequency select, divide by:
     // 00x: x/1, 01x: x/2, 100: x/4, 101: x/8, 110: x/16, 111:x/32
-    .D_TX_VCO_CK_DIV(3'b000),
+    .D_TX_VCO_CK_DIV(3'b101),
     // D_PLL_LOL_SET: TxPLL loss of lock setting
     //       lock              unlock
     // 00: +- 300 ppm x2     +- 600 ppm x2
@@ -307,8 +307,14 @@ module top_serdes_dvi
     .CH0_CTC_BYPASS(1'b1), // clock toleration compensation: 1: bypass, 0: normal operation
     .CH0_RX_GEAR_BYPASS(1'b0), // PCS Rx gear box: 1: bypass, 0: normal operation
     .CH0_LSM_DISABLE(1'b0), // Rx link state machine: 1: Disable, 0: Enable
+    .CH0_MATCH_2_ENABLE(1'b0), // 1: Enable two character skip matching (using match 4,3)
+    .CH0_MATCH_4_ENABLE(1'b1), // 1: Enable four character skip matching (using match 4,3,2,1)
     .CH0_MIN_IPG_CNT(1'b11), // minimum IPG to enforce
-    .CH0_RX_DCO_CK_DIV(3'b000), // VCO output frequency divide by: 00x: x/1, 01x: x/2, 100: x/4, 101: x/8, 110: x/16, 111: x/32
+    .CH0_CC_MATCH_1(10'h1BC), // user defined clock compensator skip pattern 1 [9]: Disparity error, [8]: K control, [7:0]: pattern
+    .CH0_CC_MATCH_2(10'h11C), // user defined clock compensator skip pattern 2 [9]: Disparity error, [8]: K control, [7:0]: pattern
+    .CH0_CC_MATCH_3(10'h11C), // user defined clock compensator skip pattern 3 [9]: Disparity error, [8]: K control, [7:0]: pattern
+    .CH0_CC_MATCH_4(10'h11C), // user defined clock compensator skip pattern 4 [9]: Disparity error, [8]: K control, [7:0]: pattern
+    .CH0_RX_DCO_CK_DIV(3'b101), // VCO output frequency divide by: 00x: x/1, 01x: x/2, 100: x/4, 101: x/8, 110: x/16, 111: x/32
     .CH0_RCV_DCC_EN(1'b0), // receiver coupling: 1: DC, 0: AC
     .CH0_RATE_MODE_RX(1'b0), // RX rate selection: 0: full rate, 1: half rate
     .CH0_RX_DIV11_SEL(1'b0), // RX rate selection SMPTE: 0: full rate, high definition SMPTE, 1: x/11 rate, standard definition SMPTE
@@ -393,19 +399,19 @@ module top_serdes_dvi
     .CH0_DCOATDCFG(2'b00), // ?
     .CH0_DCOATDDLY(2'b00), // ?
     .CH0_DCOBYPSATD(1'b1), // ?
-    .CH0_DCOCALDIV(3'b000), // ?
-    .CH0_DCOCTLGI(3'b011), // ?
+    .CH0_DCOCALDIV(3'b001), // ?
+    .CH0_DCOCTLGI(3'b010), // ?
     .CH0_DCODISBDAVOID(1'b0), // ?
-    .CH0_DCOFLTDAC(2'b00), // ?
-    .CH0_DCOFTNRG(3'b001), // ?
-    .CH0_DCOIOSTUNE(3'b010), // ?
+    .CH0_DCOFLTDAC(2'b01), // ?
+    .CH0_DCOFTNRG(3'b110), // ?
+    .CH0_DCOIOSTUNE(3'b000), // ?
     .CH0_DCOITUNE(2'b00), // ?
-    .CH0_DCOITUNE4LSB(3'b010), // ?
+    .CH0_DCOITUNE4LSB(3'b111), // ?
     .CH0_DCOIUPDNX2(1'b1), // ?
-    .CH0_DCONUOFLSB(3'b100), // ?
-    .CH0_DCOSCALEI(2'b01), // ?
-    .CH0_DCOSTARTVAL(3'b010), // ?
-    .CH0_DCOSTEP(2'b11), // ?
+    .CH0_DCONUOFLSB(3'b101), // ?
+    .CH0_DCOSCALEI(2'b00), // ?
+    .CH0_DCOSTARTVAL(3'b000), // ?
+    .CH0_DCOSTEP(2'b00), // ?
     .CH0_BAND_THRESHOLD('d0), // ?
     .CH0_AUTO_FACQ_EN(1'b1), // ? reset signal to trigger the DCO frequency acquisition process when it's necessary
     .CH0_AUTO_CALIB_EN(1'b1), // ? reset signal to trigger the DCO calibration process when it's necessary
@@ -446,8 +452,14 @@ module top_serdes_dvi
     .CH1_CTC_BYPASS(1'b1), // clock toleration compensation: 1: bypass, 0: normal operation
     .CH1_RX_GEAR_BYPASS(1'b0), // PCS Rx gear box: 1: bypass, 0: normal operation
     .CH1_LSM_DISABLE(1'b0), // Rx link state machine: 1: Disable, 0: Enable
+    .CH1_MATCH_2_ENABLE(1'b0), // 1: Enable two character skip matching (using match 4,3)
+    .CH1_MATCH_4_ENABLE(1'b1), // 1: Enable four character skip matching (using match 4,3,2,1)
     .CH1_MIN_IPG_CNT(1'b11), // minimum IPG to enforce
-    .CH1_RX_DCO_CK_DIV(3'b000), // VCO output frequency divide by: 00x: x/1, 01x: x/2, 100: x/4, 101: x/8, 110: x/16, 111: x/32
+    .CH1_CC_MATCH_1(10'h1BC), // user defined clock compensator skip pattern 1 [9]: Disparity error, [8]: K control, [7:0]: pattern
+    .CH1_CC_MATCH_2(10'h11C), // user defined clock compensator skip pattern 2 [9]: Disparity error, [8]: K control, [7:0]: pattern
+    .CH1_CC_MATCH_3(10'h11C), // user defined clock compensator skip pattern 3 [9]: Disparity error, [8]: K control, [7:0]: pattern
+    .CH1_CC_MATCH_4(10'h11C), // user defined clock compensator skip pattern 4 [9]: Disparity error, [8]: K control, [7:0]: pattern
+    .CH1_RX_DCO_CK_DIV(3'b101), // VCO output frequency divide by: 00x: x/1, 01x: x/2, 100: x/4, 101: x/8, 110: x/16, 111: x/32
     .CH1_RCV_DCC_EN(1'b0), // receiver coupling: 1: DC, 0: AC
     .CH1_RATE_MODE_RX(1'b0), // RX rate selection: 0: full rate, 1: half rate
     .CH1_RX_DIV11_SEL(1'b0), // RX rate selection SMPTE: 0: full rate, high definition SMPTE, 1: x/11 rate, standard definition SMPTE
@@ -480,7 +492,7 @@ module top_serdes_dvi
     .CH1_RX_LOS_EN(1'b1), // Enables LOS of signal detector: 0: Disabled, 1: Enabled
     // enables boundary scan input path for routing the high speed RX
     // inputs to a lower speed Serdes in the FPGA (for out of band application)
-    .CH1_LDR_RX2CORE_SEL(rx1_ldr_en), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
+    .CH1_LDR_RX2CORE_SEL(rx0_ldr_en), // Low speed serial data RX: 1: Enabled, 0: Disabled (normal operation)
 
     // TX settings
     .CH1_TPWDNB(1'b1), // transmit channel power: 0: power down, 1: power up
@@ -532,19 +544,19 @@ module top_serdes_dvi
     .CH1_DCOATDCFG(2'b00), // ?
     .CH1_DCOATDDLY(2'b00), // ?
     .CH1_DCOBYPSATD(1'b1), // ?
-    .CH1_DCOCALDIV(3'b000), // ?
-    .CH1_DCOCTLGI(3'b011), // ?
+    .CH1_DCOCALDIV(3'b001), // ?
+    .CH1_DCOCTLGI(3'b010), // ?
     .CH1_DCODISBDAVOID(1'b0), // ?
-    .CH1_DCOFLTDAC(2'b00), // ?
-    .CH1_DCOFTNRG(3'b001), // ?
-    .CH1_DCOIOSTUNE(3'b010), // ?
+    .CH1_DCOFLTDAC(2'b01), // ?
+    .CH1_DCOFTNRG(3'b110), // ?
+    .CH1_DCOIOSTUNE(3'b000), // ?
     .CH1_DCOITUNE(2'b00), // ?
-    .CH1_DCOITUNE4LSB(3'b010), // ?
+    .CH1_DCOITUNE4LSB(3'b111), // ?
     .CH1_DCOIUPDNX2(1'b1), // ?
-    .CH1_DCONUOFLSB(3'b100), // ?
-    .CH1_DCOSCALEI(2'b01), // ?
-    .CH1_DCOSTARTVAL(3'b010), // ?
-    .CH1_DCOSTEP(2'b11), // ?
+    .CH1_DCONUOFLSB(3'b101), // ?
+    .CH1_DCOSCALEI(2'b00), // ?
+    .CH1_DCOSTARTVAL(3'b000), // ?
+    .CH1_DCOSTEP(2'b00), // ?
     .CH1_BAND_THRESHOLD('d0), // ?
     .CH1_AUTO_FACQ_EN(1'b1), // ? reset signal to trigger the DCO frequency acquisition process when it's necessary
     .CH1_AUTO_CALIB_EN(1'b1), // ? reset signal to trigger the DCO calibration process when it's necessary
