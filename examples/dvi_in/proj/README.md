@@ -35,8 +35,8 @@ For v3.1.x boards, don't solder, there is already resistor there.
 
 Applying constant logical level 1 to HPD (Hot-Plug Detect) line will
 make PC think it's a monitor connected, it will attempt to read I2C EDID
-EEPROM for a list of supported video modes (currently 640x480)
-and start generating the picture signal.
+EEPROM for a list of supported video modes (currently 640x480@60Hz 25MHz
+pixel clock) and start generating the picture signal.
 
 On linux, "xrandr" command will show that second monitor is detected:
 
