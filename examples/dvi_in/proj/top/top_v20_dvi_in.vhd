@@ -28,7 +28,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 library ecp5u;
 use ecp5u.components.all;
 
-entity top_dvi_in is
+entity top_v20_dvi_in is
 generic
 (
   c_dvi2vga_bypass : natural := 0; -- 0:GPDI->VGA->GPDI, 1: 10-bit bypass
@@ -75,7 +75,7 @@ Port
 );
 end;
 
-architecture Behavioral of top_dvi_in is
+architecture Behavioral of top_v20_dvi_in is
 --    component IDDRX1F
 --      port (D, SCLK, RST: in std_logic; Q0, Q1: out std_logic);
 --    end component;
