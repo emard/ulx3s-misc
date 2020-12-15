@@ -23,7 +23,9 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 # ******* design files *******
 CONSTRAINTS = constraints/ulx3s_v20.lpf
-TOP_MODULE = top_dvi_in
+TOP_MODULE = top_v20_dvi_in
+#CONSTRAINTS = constraints/ulx3s_v31.lpf
+#TOP_MODULE = top_v31_dvi_in
 TOP_MODULE_FILE = top/$(TOP_MODULE).vhd
 
 VHDL_FILES = \
