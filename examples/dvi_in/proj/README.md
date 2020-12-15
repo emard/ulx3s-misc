@@ -11,7 +11,7 @@ demonstrate that signal can be passed thru ULX3S.
 
 DVI clock recovery is not automatic. User should
 manually experiment with BTNs until proper picture appears.
-BTNs dynamically change clock recovery PLL phase delay.
+BTNs dynamically change phase delay of PLL used for clock recovery.
 Blue channel signal is most important, it contains sync signals.
 No Blue - no picture. For Red and Green channels, wrong phase
 is not critical, it will only make colors wrong, noisy or blurred.
