@@ -21,16 +21,17 @@ FPGA lines to onboard connector are not differential input capable,
 and even if they were, additional electrical interface
 network or transciever chip would be needed to capture signal.
 
-With onboard connector it is only possible to test I2C EDID
-EEPROM emulation, so that external PC connectected recognizes
-it as DVI sink and starts generating signal.
+With onboard connector it is only possible to modify PCB
+to test I2C EDID EEPROM emulation, so that external PC connected
+recognizes it as DVI sink and starts generating picture signal.
 
 For v3.0.x boards, a resistor of 0805 inch size, about 1k value,
 (0.47k-2.2k) should be soldered parralel to C37. C37 is the capacitor
-closest to DIP 4-switch, near GPDI connector on top side. It connects
-pin 19 of GPDI connector to FPGA line, labeled gpdi_ethn aka gpdi_hpd.
+closest to DIP 4-switch, near GPDI connector on top side, with wrong
+label C45 on PCB. It connects pin 19 of GPDI connector to FPGA line,
+labeled gpdi_ethn aka gpdi_hpd.
 
-For v3.1.x boards, there is already resistor there.
+For v3.1.x boards, don't solder, there is already resistor there.
 
 Applying constant logical level 1 to HPD (Hot-Plug Detect) line will
 make PC think it's a monitor connected, it will attempt to read I2C EDID
