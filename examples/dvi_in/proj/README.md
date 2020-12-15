@@ -25,7 +25,7 @@ With onboard connector it is only possible to modify PCB
 to test I2C EDID EEPROM emulation, so that external PC connected
 recognizes it as DVI sink and starts generating picture signal.
 
-For v3.0.x boards, a resistor of 0805 inch size, about 1k value,
+For v3.0.x boards, a resistor of 0603 inch size, about 1k value,
 (0.47k-2.2k) should be soldered parallel to C37. C37 is the capacitor
 closest to DIP 4-switch, near GPDI connector on top side, with wrong
 label C45 on PCB. It connects pin 19 of GPDI connector to FPGA line,
