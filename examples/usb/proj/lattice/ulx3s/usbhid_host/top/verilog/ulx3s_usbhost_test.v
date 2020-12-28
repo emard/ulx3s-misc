@@ -322,8 +322,8 @@ assign shutdown = 0;
   assign vga_b = {color[4:0],color[0],color[0],color[0]};
   vga2dvid
   #(
-    .C_ddr(1'b1),
-    .C_shift_clock_synchronizer(1'b0)
+    .c_ddr(1'b1),
+    .c_shift_clock_synchronizer(1'b0)
   )
   vga2dvid_instance
   (
