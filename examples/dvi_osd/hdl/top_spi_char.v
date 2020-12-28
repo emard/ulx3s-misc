@@ -21,7 +21,7 @@ module top_spi_char
   parameter f =   60,      // Hz 60,50,30
   parameter xadjustf =  0, // adjust -3..3 if no picture
   parameter yadjustf =  0, // or to fine-tune f
-  parameter C_ddr    =  1  // 0:SDR 1:DDR
+  parameter c_ddr    =  1  // 0:SDR 1:DDR
 )
 (
   input  clk_25mhz,
@@ -97,7 +97,7 @@ module top_spi_char
   ecp5pll
   #(
       .in_hz(25*1000000),
-    .out0_hz(pixel_f*5*(C_ddr?1:2)),
+    .out0_hz(pixel_f*5*(c_ddr?1:2)),
     .out1_hz(pixel_f)
   )
   ecp5pll_inst
@@ -112,16 +112,16 @@ module top_spi_char
   wire vga_hsync, vga_vsync, vga_blank;
   vga
   #(
-    .C_resolution_x(x),
-    .C_hsync_front_porch(hsync_front_porch),
-    .C_hsync_pulse(hsync_pulse_width),
-    .C_hsync_back_porch(hsync_back_porch),
-    .C_resolution_y(y),
-    .C_vsync_front_porch(vsync_front_porch),
-    .C_vsync_pulse(vsync_pulse_width),
-    .C_vsync_back_porch(vsync_back_porch),
-    .C_bits_x(11),
-    .C_bits_y(11)
+    .c_resolution_x(x),
+    .c_hsync_front_porch(hsync_front_porch),
+    .c_hsync_pulse(hsync_pulse_width),
+    .c_hsync_back_porch(hsync_back_porch),
+    .c_resolution_y(y),
+    .c_vsync_front_porch(vsync_front_porch),
+    .c_vsync_pulse(vsync_pulse_width),
+    .c_vsync_back_porch(vsync_back_porch),
+    .c_bits_x(11),
+    .c_bits_y(11)
   )
   vga_instance
   (
@@ -177,8 +177,8 @@ module top_spi_char
   wire [1:0] tmds[3:0];
   vga2dvid
   #(
-    .C_ddr(C_ddr),
-    .C_shift_clock_synchronizer(1'b1)
+    .c_ddr(c_ddr),
+    .c_shift_clock_synchronizer(1'b1)
   )
   vga2dvid_instance
   (
@@ -197,7 +197,7 @@ module top_spi_char
   );
 
   generate
-    if(C_ddr)
+    if(c_ddr)
     begin
       // vendor specific DDR modules
       // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
