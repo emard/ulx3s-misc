@@ -6,7 +6,7 @@ module top_hex_640x480
   output [3:0] gpdi_dp,
   output wifi_gpio0
 );
-  parameter C_ddr = 1'b1; // 0:SDR 1:DDR
+  parameter c_ddr = 1'b1; // 0:SDR 1:DDR
 
   // wifi_gpio0=1 keeps board from rebooting
   // hold btn0 to let ESP32 take control over the board
@@ -20,7 +20,7 @@ module top_hex_640x480
   ecp5pll
   #(
       .in_hz(25*1000000),
-    .out0_hz(25*5000000*(C_ddr?1:2)),
+    .out0_hz(25*5000000*(c_ddr?1:2)),
     .out1_hz(25*1000000)
   )
   ecp5pll_inst
@@ -30,8 +30,8 @@ module top_hex_640x480
     .locked(clk_locked)
   );
 
-  parameter C_bits = 256;
-  reg [C_bits-1:0] R_display; // something to display
+  parameter c_bits = 256;
+  reg [c_bits-1:0] R_display; // something to display
   always @(posedge clk_25mhz)
   begin
     R_display[0] <= btn[0];
@@ -46,21 +46,21 @@ module top_hex_640x480
     R_display[31+128:128] <= R_display[31+128:128] + 1; // shown in next OLED row
   end
 
-  parameter C_color_bits = 16; 
+  parameter c_color_bits = 16; 
   wire [9:0] x;
   wire [9:0] y;
   // for reverse screen:
   wire [9:0] rx = 636-x;
-  wire [C_color_bits-1:0] color;
+  wire [c_color_bits-1:0] color;
   hex_decoder_v
   #(
-    .c_data_len(C_bits),
+    .c_data_len(c_bits),
     .c_row_bits(5), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256 
     .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
     .c_x_bits(8),
     .c_y_bits(4),
-    .c_color_bits(C_color_bits)
+    .c_color_bits(c_color_bits)
   )
   hex_decoder_v_inst
   (
@@ -101,8 +101,8 @@ module top_hex_640x480
   wire [1:0] tmds[3:0];
   vga2dvid
   #(
-    .C_ddr(C_ddr),
-    .C_shift_clock_synchronizer(1'b1)
+    .c_ddr(c_ddr),
+    .c_shift_clock_synchronizer(1'b1)
   )
   vga2dvid_instance
   (
@@ -121,7 +121,7 @@ module top_hex_640x480
   );
 
   generate
-    if(C_ddr)
+    if(c_ddr)
     begin
       // vendor specific DDR modules
       // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
