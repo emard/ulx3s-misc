@@ -286,8 +286,8 @@ module top_eth_hex_demo
   assign vga_b = {beam_color[4:0],beam_color[0],beam_color[0],beam_color[0]};
   vga2dvid
   #(
-    .C_ddr(1'b1),
-    .C_shift_clock_synchronizer(1'b0)
+    .c_ddr(1'b1),
+    .c_shift_clock_synchronizer(1'b0)
   )
   vga2dvid_instance
   (
