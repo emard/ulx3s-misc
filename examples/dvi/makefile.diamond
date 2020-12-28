@@ -31,7 +31,6 @@ VERILOG_FILES = \
   ../ecp5pll/hdl/sv/ecp5pll.sv \
 
 VHDL_FILES = \
-  hdl/blink.vhd \
   hdl/vga.vhd \
   hdl/vga2dvid.vhd \
   hdl/tmds_encoder.vhd

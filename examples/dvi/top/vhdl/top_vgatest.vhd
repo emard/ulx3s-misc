@@ -17,7 +17,7 @@ entity top_vgatest is
     xadjustf : integer :=    0; -- adjust -3..3 if no picture
     yadjustf : integer :=    0; -- or to fine-tune f
     ext_gpdi : natural :=    1; -- 0:disable 1:enable external gpdi
-    C_ddr    : natural :=    1  -- 0:SDR 1:DDR
+    c_ddr    : natural :=    1  -- 0:SDR 1:DDR
   );
   port
   (
@@ -49,7 +49,7 @@ architecture Behavioral of top_vgatest is
   end record T_video_timing;
   
   type T_possible_freqs is array (natural range <>) of natural;
-  constant C_possible_freqs: T_possible_freqs :=
+  constant c_possible_freqs: T_possible_freqs :=
   (
     25000000,
     27000000,
@@ -69,9 +69,9 @@ architecture Behavioral of top_vgatest is
     return natural is
       variable f0: natural := 0;
     begin
-      for fx in C_possible_freqs'range loop
-        if C_possible_freqs(fx)>f then
-          f0 := C_possible_freqs(fx);
+      for fx in c_possible_freqs'range loop
+        if c_possible_freqs(fx)>f then
+          f0 := c_possible_freqs(fx);
           exit;
         end if;
       end loop;
@@ -148,17 +148,17 @@ begin
   vga_instance: entity work.vga
   generic map
   (
-    C_resolution_x      => video_timing.x,
-    C_hsync_front_porch => video_timing.hsync_front_porch,
-    C_hsync_pulse       => video_timing.hsync_pulse_width,
-    C_hsync_back_porch  => video_timing.hsync_back_porch,
-    C_resolution_y      => video_timing.y,
-    C_vsync_front_porch => video_timing.vsync_front_porch,
-    C_vsync_pulse       => video_timing.vsync_pulse_width,
-    C_vsync_back_porch  => video_timing.vsync_back_porch,
+    c_resolution_x      => video_timing.x,
+    c_hsync_front_porch => video_timing.hsync_front_porch,
+    c_hsync_pulse       => video_timing.hsync_pulse_width,
+    c_hsync_back_porch  => video_timing.hsync_back_porch,
+    c_resolution_y      => video_timing.y,
+    c_vsync_front_porch => video_timing.vsync_front_porch,
+    c_vsync_pulse       => video_timing.vsync_pulse_width,
+    c_vsync_back_porch  => video_timing.vsync_back_porch,
 
-    C_bits_x       =>  12,
-    C_bits_y       =>  11
+    c_bits_x       =>  12,
+    c_bits_y       =>  11
   )
   port map
   (
@@ -183,8 +183,8 @@ begin
   vga2dvid_instance: entity work.vga2dvid
   generic map
   (
-    C_ddr => '1',
-    C_shift_clock_synchronizer => '0'
+    c_ddr => '1',
+    c_shift_clock_synchronizer => '0'
   )
   port map
   (

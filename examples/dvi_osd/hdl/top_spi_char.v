@@ -1,4 +1,4 @@
-module top_vgatest
+module top_spi_char
 #(
   //  modes tested on lenovo monitor
   //  640x400  @50Hz
@@ -21,15 +21,22 @@ module top_vgatest
   parameter f =   60,      // Hz 60,50,30
   parameter xadjustf =  0, // adjust -3..3 if no picture
   parameter yadjustf =  0, // or to fine-tune f
-  parameter c_ddr    =  1  // 0:SDR 1:DDR
+  parameter C_ddr    =  1  // 0:SDR 1:DDR
 )
 (
-  input        clk_25mhz,
+  input  clk_25mhz,
   input  [6:0] btn,
   output [7:0] led,
   output [3:0] gpdi_dp,
-  output       user_programn,
-  output       wifi_gpio0
+  input  wire ftdi_txd,
+  output wire ftdi_rxd,
+  inout  sd_clk, sd_cmd,
+  inout  [3:0] sd_d,
+  input  wifi_txd,
+  output wifi_rxd,
+  input  wifi_gpio16,
+  input  wifi_gpio5,
+  output wifi_gpio0
 );
 
   function integer F_find_next_f(input integer f);
@@ -58,7 +65,7 @@ module top_vgatest
     else if(120000000>f)
       F_find_next_f=120000000; // overclock
   endfunction
-  
+
   localparam xminblank         = x/64; // initial estimate
   localparam yminblank         = y/64; // for minimal blank space
   localparam min_pixel_f       = f*(x+xminblank)*(y+yminblank);
@@ -74,17 +81,13 @@ module top_vgatest
   localparam vsync_pulse_width = yblank/3;
   localparam vsync_back_porch  = yblank-vsync_pulse_width-vsync_front_porch+yadjustf;
 
-  
   // wifi_gpio0=1 keeps board from rebooting
   // hold btn0 to let ESP32 take control over the board
   assign wifi_gpio0 = btn[0];
 
-  // press BTN0 to exit this bitstream
-  reg [19:0] R_delay_reload = 0;
-  always @(posedge clk_25mhz)
-    if(R_delay_reload[19]==0)
-      R_delay_reload <= R_delay_reload+1;
-  assign user_programn = btn[0] | ~R_delay_reload[19];
+  // passthru to ESP32 micropython serial console
+  assign wifi_rxd = ftdi_txd;
+  assign ftdi_rxd = wifi_txd;
 
   // clock generator
   wire clk_locked;
@@ -93,8 +96,8 @@ module top_vgatest
   wire clk_pixel = clocks[1];
   ecp5pll
   #(
-      .in_hz(25000000),
-    .out0_hz(pixel_f*5*(c_ddr?1:2)),
+      .in_hz(25*1000000),
+    .out0_hz(pixel_f*5*(C_ddr?1:2)),
     .out1_hz(pixel_f)
   )
   ecp5pll_inst
@@ -103,21 +106,22 @@ module top_vgatest
     .clk_o(clocks),
     .locked(clk_locked)
   );
+
   // VGA signal generator
   wire [7:0] vga_r, vga_g, vga_b;
   wire vga_hsync, vga_vsync, vga_blank;
   vga
   #(
-    .c_resolution_x(x),
-    .c_hsync_front_porch(hsync_front_porch),
-    .c_hsync_pulse(hsync_pulse_width),
-    .c_hsync_back_porch(hsync_back_porch),
-    .c_resolution_y(y),
-    .c_vsync_front_porch(vsync_front_porch),
-    .c_vsync_pulse(vsync_pulse_width),
-    .c_vsync_back_porch(vsync_back_porch),
-    .c_bits_x(11),
-    .c_bits_y(11)
+    .C_resolution_x(x),
+    .C_hsync_front_porch(hsync_front_porch),
+    .C_hsync_pulse(hsync_pulse_width),
+    .C_hsync_back_porch(hsync_back_porch),
+    .C_resolution_y(y),
+    .C_vsync_front_porch(vsync_front_porch),
+    .C_vsync_pulse(vsync_pulse_width),
+    .C_vsync_back_porch(vsync_back_porch),
+    .C_bits_x(11),
+    .C_bits_y(11)
   )
   vga_instance
   (
@@ -132,29 +136,60 @@ module top_vgatest
     .vga_blank(vga_blank)
   );
 
-  // LED blinky
-  assign led[7:6] = 0;
   assign led[0] = vga_vsync;
   assign led[1] = vga_hsync;
   assign led[2] = vga_blank;
+
+  assign sd_d[3] = 1'bz; // FPGA pin pullup sets SD card inactive at SPI bus
+  assign sd_d[2] = 1'bz;
+  // OSD overlay
+  wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
+  wire osd_vga_hsync, osd_vga_vsync, osd_vga_blank;
+  spi_osd_v
+  #(
+    .c_bits_x(11),
+    .c_bits_y(11),
+    .c_transparency(1)
+  )
+  spi_osd_v_instance
+  (
+    .clk_pixel(clk_pixel),
+    .clk_pixel_ena(1'b1),
+    .i_r(vga_r),
+    .i_g(vga_g),
+    .i_b(vga_b),
+    .i_hsync(vga_hsync),
+    .i_vsync(vga_vsync),
+    .i_blank(vga_blank),
+    .i_csn(~wifi_gpio5),
+    .i_sclk(wifi_gpio16),
+    .i_mosi(sd_d[1]), // wifi_gpio4
+    //.o_miso(sd_d[2]), // wifi_gpio12
+    .o_r(osd_vga_r),
+    .o_g(osd_vga_g),
+    .o_b(osd_vga_b),
+    .o_hsync(osd_vga_hsync),
+    .o_vsync(osd_vga_vsync),
+    .o_blank(osd_vga_blank)
+  );
 
   // VGA to digital video converter
   wire [1:0] tmds[3:0];
   vga2dvid
   #(
-    .c_ddr(c_ddr?1'b1:1'b0),
-    .c_shift_clock_synchronizer(1'b0)
+    .C_ddr(C_ddr),
+    .C_shift_clock_synchronizer(1'b1)
   )
   vga2dvid_instance
   (
     .clk_pixel(clk_pixel),
     .clk_shift(clk_shift),
-    .in_red(vga_r),
-    .in_green(vga_g),
-    .in_blue(vga_b),
-    .in_hsync(vga_hsync),
-    .in_vsync(vga_vsync),
-    .in_blank(vga_blank),
+    .in_red(osd_vga_r),
+    .in_green(osd_vga_g),
+    .in_blue(osd_vga_b),
+    .in_hsync(osd_vga_hsync),
+    .in_vsync(osd_vga_vsync),
+    .in_blank(osd_vga_blank),
     .out_clock(tmds[3]),
     .out_red(tmds[2]),
     .out_green(tmds[1]),
@@ -162,7 +197,7 @@ module top_vgatest
   );
 
   generate
-    if(c_ddr)
+    if(C_ddr)
     begin
       // vendor specific DDR modules
       // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
@@ -180,13 +215,5 @@ module top_vgatest
       assign gpdi_dp[0] = tmds[0][0];
     end
   endgenerate
-
-/*
-  // external GPDI
-  ODDRX1F ddr1_clock (.D0(tmds[3][0]), .D1(tmds[3][1]), .Q(gp[12]), .SCLK(clk_shift), .RST(0));
-  ODDRX1F ddr1_red   (.D0(tmds[2][0]), .D1(tmds[2][1]), .Q(gp[11]), .SCLK(clk_shift), .RST(0));
-  ODDRX1F ddr1_green (.D0(tmds[1][0]), .D1(tmds[1][1]), .Q(gp[10]), .SCLK(clk_shift), .RST(0));
-  ODDRX1F ddr1_blue  (.D0(tmds[0][0]), .D1(tmds[0][1]), .Q(gp[ 9]), .SCLK(clk_shift), .RST(0));
-*/
 
 endmodule

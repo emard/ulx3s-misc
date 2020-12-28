@@ -28,7 +28,6 @@ VERILOG_FILES = \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
-  hdl/blink.vhd \
   hdl/vga.vhd \
   hdl/vga2dvid.vhd \
   hdl/tmds_encoder.vhd

@@ -47,18 +47,18 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity vga2dvid is
 	Generic (
-		C_shift_clock_synchronizer: std_logic := '1'; -- try to get out_clock in sync with clk_pixel
-	        C_parallel: std_logic := '1'; -- default output parallel data
-	        C_serial: std_logic := '1'; -- default output serial data
-		C_ddr: std_logic := '0'; -- default use SDR for serial data
-		C_depth	: integer := 8
+		c_shift_clock_synchronizer: std_logic := '1'; -- try to get out_clock in sync with clk_pixel
+	        c_parallel: std_logic := '1'; -- default output parallel data
+	        c_serial: std_logic := '1'; -- default output serial data
+		c_ddr: std_logic := '0'; -- default use SDR for serial data
+		c_depth	: integer := 8
 	);
 	Port (
 		clk_pixel    : in STD_LOGIC; -- VGA pixel clock, 25 MHz for 640x480
 		clk_shift    : in STD_LOGIC; -- SDR: 10x clk_pixel, DDR: 5x clk_pixel, in phase with clk_pixel
-		in_red       : in STD_LOGIC_VECTOR (C_depth-1 downto 0);
-		in_green     : in STD_LOGIC_VECTOR (C_depth-1 downto 0);
-		in_blue      : in STD_LOGIC_VECTOR (C_depth-1 downto 0);
+		in_red       : in STD_LOGIC_VECTOR (c_depth-1 downto 0);
+		in_green     : in STD_LOGIC_VECTOR (c_depth-1 downto 0);
+		in_blue      : in STD_LOGIC_VECTOR (c_depth-1 downto 0);
 		in_blank     : in STD_LOGIC;
 		in_hsync     : in STD_LOGIC;
 		in_vsync     : in STD_LOGIC;
@@ -76,8 +76,8 @@ architecture Behavioral of vga2dvid is
 	signal encoded_red, encoded_green, encoded_blue : std_logic_vector(9 downto 0);
 	signal latched_red, latched_green, latched_blue : std_logic_vector(9 downto 0) := (others => '0');
 	signal shift_red, shift_green, shift_blue	: std_logic_vector(9 downto 0) := (others => '0');
-	constant C_shift_clock_initial: std_logic_vector(9 downto 0) := "0000011111";
-	signal shift_clock: std_logic_vector(9 downto 0) := C_shift_clock_initial;
+	constant c_shift_clock_initial: std_logic_vector(9 downto 0) := "0000011111";
+	signal shift_clock: std_logic_vector(9 downto 0) := c_shift_clock_initial;
 	signal R_shift_clock_off_sync: std_logic := '0';
 	signal R_shift_clock_synchronizer: std_logic_vector(7 downto 0) := (others => '0');
 	signal R_sync_fail: std_logic_vector(6 downto 0); -- counts sync fails, after too many, reinitialize shift_clock
@@ -92,27 +92,27 @@ architecture Behavioral of vga2dvid is
 begin
 	c_blue <= in_vsync & in_hsync;
 	
-	red_d(7 downto 8-C_depth)   <= in_red(C_depth-1 downto 0);
-	green_d(7 downto 8-C_depth) <= in_green(C_depth-1 downto 0);
-	blue_d(7 downto 8-C_depth)  <= in_blue(C_depth-1 downto 0);
+	red_d(7 downto 8-c_depth)   <= in_red(c_depth-1 downto 0);
+	green_d(7 downto 8-c_depth) <= in_green(c_depth-1 downto 0);
+	blue_d(7 downto 8-c_depth)  <= in_blue(c_depth-1 downto 0);
 
 	-- fill vacant low bits with value repeated (so min/max value is always 0 or 255)
-	G_vacant_bits: if C_depth < 8 generate
-	    G_bits: for i in 0 to 8-C_depth-1 generate
+	G_vacant_bits: if c_depth < 8 generate
+	    G_bits: for i in 0 to 8-c_depth-1 generate
 		red_d(i)   <= in_red(0);
 		green_d(i) <= in_green(0);
 		blue_d(i)  <= in_blue(0);
 	    end generate;
 	end generate;
 
-	G_shift_clock_synchronizer: if C_shift_clock_synchronizer = '1' generate
+	G_shift_clock_synchronizer: if c_shift_clock_synchronizer = '1' generate
 	-- sampler verifies is shift_clock state synchronous with pixel_clock
 	process(clk_pixel)
 	begin
 		if rising_edge(clk_pixel) then
 			-- does 0 to 1 transition at bits 5 downto 4 happen at rising_edge of clk_pixel?
-			-- if shift_clock = C_shift_clock_initial then
-			if shift_clock(5 downto 4) = C_shift_clock_initial(5 downto 4) then -- same as above line but simplified 
+			-- if shift_clock = c_shift_clock_initial then
+			if shift_clock(5 downto 4) = c_shift_clock_initial(5 downto 4) then -- same as above line but simplified
 				R_shift_clock_off_sync <= '0';
 			else
 				R_shift_clock_off_sync <= '1';
@@ -149,18 +149,18 @@ begin
 		end if;
 	end process;
 	
-	G_parallel: if C_parallel = '1' generate
+	G_parallel: if c_parallel = '1' generate
           outp_red   <= latched_red;
           outp_green <= latched_green;
           outp_blue  <= latched_blue;
 	end generate;
 
-	G_SDR: if (C_serial and not C_ddr) = '1' generate
+	G_SDR: if (c_serial and not c_ddr) = '1' generate
 	process(clk_shift)
 	begin
 		if rising_edge(clk_shift) then
 		--if shift_clock = "0000011111" then
-		if shift_clock(5 downto 4) = C_shift_clock_initial(5 downto 4) then -- same as above line but simplified
+		if shift_clock(5 downto 4) = c_shift_clock_initial(5 downto 4) then -- same as above line but simplified
 			shift_red <= latched_red;
 			shift_green <= latched_green;
 			shift_blue <= latched_blue;
@@ -175,7 +175,7 @@ begin
 			-- synchronization failed.
 			-- after too many fails, reinitialize shift_clock
 			if R_sync_fail(R_sync_fail'high) = '1' then
-				shift_clock <= C_shift_clock_initial;
+				shift_clock <= c_shift_clock_initial;
 				R_sync_fail <= (others => '0');
 			else
 				R_sync_fail <= R_sync_fail + 1;
@@ -185,12 +185,12 @@ begin
 	end process;
 	end generate;
 
-	G_DDR: if (C_serial and C_ddr) = '1' generate
+	G_DDR: if (c_serial and c_ddr) = '1' generate
 	process(clk_shift)
 	begin
 		if rising_edge(clk_shift) then 
 		--if shift_clock = "0000011111" then
-		if shift_clock(5 downto 4) = C_shift_clock_initial(5 downto 4) then -- same as above line but simplified
+		if shift_clock(5 downto 4) = c_shift_clock_initial(5 downto 4) then -- same as above line but simplified
 			shift_red   <= latched_red;
 			shift_green <= latched_green;
 			shift_blue  <= latched_blue;
@@ -205,7 +205,7 @@ begin
 			-- synchronization failed.
 			-- after too many fails, reinitialize shift_clock
 			if R_sync_fail(R_sync_fail'high) = '1' then
-				shift_clock <= C_shift_clock_initial;
+				shift_clock <= c_shift_clock_initial;
 				R_sync_fail <= (others => '0');
 			else
 				R_sync_fail <= R_sync_fail + 1;
@@ -218,7 +218,7 @@ begin
 	-- SDR: use only bit 0 from each out_* channel 
 	-- DDR: 2 bits per 1 clock period,
 	-- (one bit output on rising edge, other on falling edge of clk_shift)
-	G_serial: if C_serial = '1' generate
+	G_serial: if c_serial = '1' generate
           out_red   <= shift_red(1 downto 0);
           out_green <= shift_green(1 downto 0);
           out_blue  <= shift_blue(1 downto 0);

@@ -21,18 +21,18 @@ use ieee.numeric_std.all;
 
 entity vga is
   generic(
-    C_resolution_x      : integer := 640;
-    C_hsync_front_porch : integer :=  16;
-    C_hsync_pulse       : integer :=  96;
-    C_hsync_back_porch  : integer :=  44; -- 48
-    C_resolution_y      : integer := 480;
-    C_vsync_front_porch : integer :=  10;
-    C_vsync_pulse       : integer :=   2;
-    C_vsync_back_porch  : integer :=  31; -- 33
-    C_bits_x            : integer :=  10; -- should fit C_resolution_x + C_hsync_front_porch + C_hsync_pulse + C_hsync_back_porch
-    C_bits_y            : integer :=  10; -- should fit C_resolution_y + C_vsync_front_porch + C_vsync_pulse + C_vsync_back_porch
-    C_dbl_x             : integer :=   0; -- 0-normal X, 1-double X
-    C_dbl_y             : integer :=   0  -- 0-normal X, 1-double X
+    c_resolution_x      : integer := 640;
+    c_hsync_front_porch : integer :=  16;
+    c_hsync_pulse       : integer :=  96;
+    c_hsync_back_porch  : integer :=  44; -- 48
+    c_resolution_y      : integer := 480;
+    c_vsync_front_porch : integer :=  10;
+    c_vsync_pulse       : integer :=   2;
+    c_vsync_back_porch  : integer :=  31; -- 33
+    c_bits_x            : integer :=  10; -- should fit c_resolution_x + c_hsync_front_porch + c_hsync_pulse + c_hsync_back_porch
+    c_bits_y            : integer :=  10; -- should fit c_resolution_y + c_vsync_front_porch + c_vsync_pulse + c_vsync_back_porch
+    c_dbl_x             : integer :=   0; -- 0-normal X, 1-double X
+    c_dbl_y             : integer :=   0  -- 0-normal X, 1-double X
   );
   port
   (
@@ -40,8 +40,8 @@ entity vga is
     clk_pixel_ena: in std_logic := '1';  -- pixel clock ena
     test_picture: in std_logic := '0'; -- '1' to show test picture
     fetch_next: out std_logic; -- request FIFO to fetch next pixel data
-    beam_x: out std_logic_vector(C_bits_x-1 downto 0);
-    beam_y: out std_logic_vector(C_bits_y-1 downto 0);
+    beam_x: out std_logic_vector(c_bits_x-1 downto 0);
+    beam_y: out std_logic_vector(c_bits_y-1 downto 0);
     r_i, g_i, b_i: in std_logic_vector(7 downto 0) := (others => '0'); -- pixel data from FIFO
     vga_r, vga_g, vga_b: out std_logic_vector(7 downto 0); -- 8-bit VGA video signal out
     vga_hsync, vga_vsync: out std_logic; -- VGA sync
@@ -58,22 +58,22 @@ architecture syn of vga is
   --    return integer(ceil((log2(real(x)+1.0E-6))-1.0E-6));
   --  end ceil_log2;
 
-  --constant C_bits_x: integer := 13; -- ceil_log2(C_frame_x-1)
-  --constant C_bits_y: integer := 11; -- ceil_log2(C_frame_y-1)
-  signal CounterX: unsigned(C_bits_x-1 downto 0); -- (9 downto 0) is good for up to 1023 frame timing width (resolution 640x480)
-  signal CounterY: unsigned(C_bits_y-1 downto 0); -- (9 downto 0) is good for up to 1023 frame timing width (resolution 640x480)
+  --constant c_bits_x: integer := 13; -- ceil_log2(c_frame_x-1)
+  --constant c_bits_y: integer := 11; -- ceil_log2(c_frame_y-1)
+  signal CounterX: unsigned(c_bits_x-1 downto 0); -- (9 downto 0) is good for up to 1023 frame timing width (resolution 640x480)
+  signal CounterY: unsigned(c_bits_y-1 downto 0); -- (9 downto 0) is good for up to 1023 frame timing width (resolution 640x480)
 
-  constant C_hblank_on:  unsigned(CounterX'range) := to_unsigned(C_resolution_x - 1, C_bits_x);
-  constant C_hsync_on:   unsigned(CounterX'range) := to_unsigned(C_resolution_x + C_hsync_front_porch - 1, C_bits_x);
-  constant C_hsync_off:  unsigned(CounterX'range) := to_unsigned(C_resolution_x + C_hsync_front_porch + C_hsync_pulse - 1, C_bits_x);
-  constant C_hblank_off: unsigned(CounterX'range) := to_unsigned(C_resolution_x + C_hsync_front_porch + C_hsync_pulse + C_hsync_back_porch - 1, C_bits_x);
-  constant C_frame_x:    unsigned(CounterX'range) := to_unsigned(C_resolution_x + C_hsync_front_porch + C_hsync_pulse + C_hsync_back_porch - 1, C_bits_x);
+  constant c_hblank_on:  unsigned(CounterX'range) := to_unsigned(c_resolution_x - 1, c_bits_x);
+  constant c_hsync_on:   unsigned(CounterX'range) := to_unsigned(c_resolution_x + c_hsync_front_porch - 1, c_bits_x);
+  constant c_hsync_off:  unsigned(CounterX'range) := to_unsigned(c_resolution_x + c_hsync_front_porch + c_hsync_pulse - 1, c_bits_x);
+  constant c_hblank_off: unsigned(CounterX'range) := to_unsigned(c_resolution_x + c_hsync_front_porch + c_hsync_pulse + c_hsync_back_porch - 1, c_bits_x);
+  constant c_frame_x:    unsigned(CounterX'range) := to_unsigned(c_resolution_x + c_hsync_front_porch + c_hsync_pulse + c_hsync_back_porch - 1, c_bits_x);
     -- frame_x = 640 + 16 + 96 + 48 = 800;
-  constant C_vblank_on:  unsigned(CounterY'range) := to_unsigned(C_resolution_y - 1, C_bits_y);
-  constant C_vsync_on:   unsigned(CounterY'range) := to_unsigned(C_resolution_y + C_vsync_front_porch - 1, C_bits_y);
-  constant C_vsync_off:  unsigned(CounterY'range) := to_unsigned(C_resolution_y + C_vsync_front_porch + C_vsync_pulse - 1, C_bits_y);
-  constant C_vblank_off: unsigned(CounterY'range) := to_unsigned(C_resolution_y + C_vsync_front_porch + C_vsync_pulse + C_vsync_back_porch - 1, C_bits_y);
-  constant C_frame_y:    unsigned(CounterY'range) := to_unsigned(C_resolution_y + C_vsync_front_porch + C_vsync_pulse + C_vsync_back_porch - 1, C_bits_y);
+  constant c_vblank_on:  unsigned(CounterY'range) := to_unsigned(c_resolution_y - 1, c_bits_y);
+  constant c_vsync_on:   unsigned(CounterY'range) := to_unsigned(c_resolution_y + c_vsync_front_porch - 1, c_bits_y);
+  constant c_vsync_off:  unsigned(CounterY'range) := to_unsigned(c_resolution_y + c_vsync_front_porch + c_vsync_pulse - 1, c_bits_y);
+  constant c_vblank_off: unsigned(CounterY'range) := to_unsigned(c_resolution_y + c_vsync_front_porch + c_vsync_pulse + c_vsync_back_porch - 1, c_bits_y);
+  constant c_frame_y:    unsigned(CounterY'range) := to_unsigned(c_resolution_y + c_vsync_front_porch + c_vsync_pulse + c_vsync_back_porch - 1, c_bits_y);
     -- frame_y = 480 + 10 + 2 + 33 = 525;
     -- refresh_rate = pixel_clock/(frame_x*frame_y) = 25MHz / (800*525) = 59.52Hz
   signal R_hsync, R_vsync, R_blank, R_disp: std_logic; -- disp = not blank
@@ -89,9 +89,9 @@ begin
   begin
     if rising_edge(clk_pixel) then
     if clk_pixel_ena = '1' then
-      if CounterX = C_frame_x then
+      if CounterX = c_frame_x then
         CounterX <= (others => '0');
-        if CounterY = C_frame_y then
+        if CounterY = c_frame_y then
           CounterY <= (others => '0');
         else
           CounterY <= CounterY + 1;
@@ -115,10 +115,10 @@ begin
   process(clk_pixel)
   begin
     if rising_edge(clk_pixel) then
-      if CounterX = C_hblank_on then
+      if CounterX = c_hblank_on then
         R_blank_early <= '1';
         R_disp_early  <= '0';
-      elsif CounterX = C_hblank_off then
+      elsif CounterX = c_hblank_off then
         R_blank_early <= R_vblank;-- "OR" function
         R_disp_early  <= R_vdisp; -- "AND" function
       end if;
@@ -127,9 +127,9 @@ begin
   process(clk_pixel)
   begin
     if rising_edge(clk_pixel) then
-      if CounterX = C_hsync_on then
+      if CounterX = c_hsync_on then
         R_hsync <= '1';
-      elsif CounterX = C_hsync_off then
+      elsif CounterX = c_hsync_off then
         R_hsync <= '0';
       end if;
     end if;
@@ -137,10 +137,10 @@ begin
   process(clk_pixel)
   begin
     if rising_edge(clk_pixel) then
-      if CounterY = C_vblank_on then
+      if CounterY = c_vblank_on then
         R_vblank <= '1';
         R_vdisp  <= '0';
-      elsif CounterY = C_vblank_off then
+      elsif CounterY = c_vblank_off then
         R_vblank <= '0';
         R_vdisp  <= '1';
       end if;
@@ -149,9 +149,9 @@ begin
   process(clk_pixel)
   begin
     if rising_edge(clk_pixel) then
-      if CounterY = C_vsync_on then
+      if CounterY = c_vsync_on then
         R_vsync <= '1';
-      elsif CounterY = C_vsync_off then
+      elsif CounterY = c_vsync_off then
         R_vsync <= '0';
       end if;
     end if;
