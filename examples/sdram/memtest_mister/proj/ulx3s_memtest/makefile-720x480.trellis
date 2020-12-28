@@ -3,7 +3,7 @@
 PROJECT = memtest
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -19,7 +19,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 
 # ******* design files *******
-CONSTRAINTS = ../../../../../constraints/ulx3s_v20_segpdi.lpf
+CONSTRAINTS = ../../../../../constraints/ulx3s_v20.lpf
 TOP_MODULE = top_memtest
 TOP_MODULE_FILE = ../../hdl/top/$(TOP_MODULE).v
 
@@ -31,7 +31,6 @@ VERILOG_FILES = \
   ../../hdl/mem_tester.v \
   ../../hdl/vgaout.v \
   ../../hdl/btn_ecp5pll_phase.v \
-  ../../../../dvi/hdl/fake_differential.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
@@ -55,7 +54,9 @@ VHDL_FILES = \
 # 12F+64MB 170   MHz 0-120 deg PASS (center 60 deg); 135-345 deg FAIL
 
 # synthesis options
-NEXTPNR_OPTIONS = --timing-allow-fail
+YOSYS_OPTIONS = -abc9
+#NEXTPNR_OPTIONS = --timing-allow-fail
+NEXTPNR_OPTIONS = --router router2 --timing-allow-fail --ignore-loops
 #NEXTPNR_OPTIONS = --timing-allow-fail --ignore-loops
 
 SCRIPTS = ../../../../../scripts

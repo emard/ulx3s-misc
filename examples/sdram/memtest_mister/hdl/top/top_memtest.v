@@ -13,7 +13,7 @@ module top_memtest
     input         clk_25mhz,
     input   [6:0] btn,
     output  [7:0] led,
-    output  [3:0] gpdi_dp, gpdi_dn,
+    output  [3:0] gpdi_dp,
     //  SDRAM interface (For use with 16Mx16bit or 32Mx16bit SDR DRAM, depending on version)
     output        sdram_csn,  // chip select
     output        sdram_clk,  // clock to SDRAM
@@ -425,8 +425,8 @@ module top_memtest
     wire [1:0] tmds[3:0];
     vga2dvid
     #(
-      .C_depth(2),
-      .C_ddr(C_ddr)
+      .c_depth(2),
+      .c_ddr(C_ddr)
     )
     vga2dvid_instance
     (
@@ -443,21 +443,25 @@ module top_memtest
       .out_green(tmds[1]),
       .out_blue(tmds[0])
     );
-    
-    // output TMDS SDR/DDR data to fake differential lanes
-    fake_differential
-    #(
-      .C_ddr(C_ddr)
-    )
-    fake_differential_instance
-    (
-      .clk_shift(clk_shift),
-      .in_clock(tmds[3]),
-      .in_red(tmds[2]),
-      .in_green(tmds[1]),
-      .in_blue(tmds[0]),
-      .out_p(gpdi_dp),
-      .out_n(gpdi_dn)
-    );
+
+  generate
+    if(C_ddr)
+    begin
+      // vendor specific DDR modules
+      // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
+      // onboard GPDI
+      ODDRX1F ddr0_clock (.D0(tmds[3][0]), .D1(tmds[3][1]), .Q(gpdi_dp[3]), .SCLK(clk_shift), .RST(0));
+      ODDRX1F ddr0_red   (.D0(tmds[2][0]), .D1(tmds[2][1]), .Q(gpdi_dp[2]), .SCLK(clk_shift), .RST(0));
+      ODDRX1F ddr0_green (.D0(tmds[1][0]), .D1(tmds[1][1]), .Q(gpdi_dp[1]), .SCLK(clk_shift), .RST(0));
+      ODDRX1F ddr0_blue  (.D0(tmds[0][0]), .D1(tmds[0][1]), .Q(gpdi_dp[0]), .SCLK(clk_shift), .RST(0));
+    end
+    else
+    begin
+      assign gpdi_dp[3] = tmds[3][0];
+      assign gpdi_dp[2] = tmds[2][0];
+      assign gpdi_dp[1] = tmds[1][0];
+      assign gpdi_dp[0] = tmds[0][0];
+    end
+  endgenerate
 
 endmodule
