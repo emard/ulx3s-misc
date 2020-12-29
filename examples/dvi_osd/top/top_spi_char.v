@@ -1,3 +1,4 @@
+`default_nettype none
 module top_spi_char
 #(
   //  modes tested on lenovo monitor
@@ -16,27 +17,28 @@ module top_spi_char
   // 1920x1080 @30Hz
   // 1920x1080 @50Hz overclock 540MHz
   // 1920x1200 @50Hz overclock 600MHz
-  parameter x =  640,      // pixels
-  parameter y =  480,      // pixels
-  parameter f =   60,      // Hz 60,50,30
+  parameter x =   640,     // pixels
+  parameter y =   480,     // pixels
+  parameter f =    60,     // Hz 60,50,30
   parameter xadjustf =  0, // adjust -3..3 if no picture
   parameter yadjustf =  0, // or to fine-tune f
   parameter c_ddr    =  1  // 0:SDR 1:DDR
 )
 (
-  input  clk_25mhz,
-  input  [6:0] btn,
-  output [7:0] led,
-  output [3:0] gpdi_dp,
-  input  wire ftdi_txd,
-  output wire ftdi_rxd,
-  inout  sd_clk, sd_cmd,
-  inout  [3:0] sd_d,
-  input  wifi_txd,
-  output wifi_rxd,
-  input  wifi_gpio16,
-  input  wifi_gpio5,
-  output wifi_gpio0
+  input         clk_25mhz,
+  input   [6:0] btn,
+  output  [7:0] led,
+  output  [3:0] gpdi_dp,
+  input         ftdi_txd,
+  output        ftdi_rxd,
+  inout  [27:0] gp, gn,
+  //inout         sd_clk, sd_cmd,
+  //inout   [3:0] sd_d,
+  input         wifi_txd,
+  output        wifi_rxd,
+  input         wifi_gpio16,
+  input         wifi_gpio5,
+  output        wifi_gpio0
 );
 
   function integer F_find_next_f(input integer f);
@@ -81,13 +83,16 @@ module top_spi_char
   localparam vsync_pulse_width = yblank/3;
   localparam vsync_back_porch  = yblank-vsync_pulse_width-vsync_front_porch+yadjustf;
 
-  // wifi_gpio0=1 keeps board from rebooting
-  // hold btn0 to let ESP32 take control over the board
-  assign wifi_gpio0 = btn[0];
-
   // passthru to ESP32 micropython serial console
   assign wifi_rxd = ftdi_txd;
   assign ftdi_rxd = wifi_txd;
+
+  // SPI lines
+  wire spi_csn, spi_sclk, spi_mosi, spi_miso, spi_irq;
+  assign gn[11] = spi_mosi; // wifi_gpio25
+  assign spi_miso = gp[11]; // wifi_gpio26
+  assign wifi_gpio0 = ~spi_irq; // wifi_gpio0 irq active low
+  assign spi_csn = ~wifi_gpio5;
 
   // clock generator
   wire clk_locked;
@@ -140,8 +145,6 @@ module top_spi_char
   assign led[1] = vga_hsync;
   assign led[2] = vga_blank;
 
-  assign sd_d[3] = 1'bz; // FPGA pin pullup sets SD card inactive at SPI bus
-  assign sd_d[2] = 1'bz;
   // OSD overlay
   wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
   wire osd_vga_hsync, osd_vga_vsync, osd_vga_blank;
@@ -161,10 +164,9 @@ module top_spi_char
     .i_hsync(vga_hsync),
     .i_vsync(vga_vsync),
     .i_blank(vga_blank),
-    .i_csn(~wifi_gpio5),
-    .i_sclk(wifi_gpio16),
-    .i_mosi(sd_d[1]), // wifi_gpio4
-    //.o_miso(sd_d[2]), // wifi_gpio12
+    .i_csn(spi_csn),
+    .i_sclk(spi_sclk),
+    .i_mosi(spi_mosi),
     .o_r(osd_vga_r),
     .o_g(osd_vga_g),
     .o_b(osd_vga_b),
