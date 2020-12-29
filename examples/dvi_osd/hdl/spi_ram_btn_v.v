@@ -11,9 +11,10 @@
 // write 00 <MSB_addr> <LSB_addr> <byte0> <byte1>
 // read  01 <MSB_addr> <LSB_addr> <dummy_byte> <byte0> <byte1>
 
+`default_nettype none
 module spi_ram_btn_v
 #(
-  parameter [7:0] c_addr_floppy = 8'hD0, // high addr byte of floppy req type
+  //parameter [7:0] c_addr_floppy = 8'hD0, // high addr byte of floppy req type
   parameter [7:0] c_addr_btn = 8'hFB, // high addr byte of BTNs
   parameter [7:0] c_addr_irq = 8'hF1, // high addr byte of IRQ flag
   parameter c_debounce_bits = 20, // more -> slower BTNs
@@ -78,11 +79,15 @@ module spi_ram_btn_v
     end
   end
 
-  wire [7:0] mux_data_in = addr[c_addr_bits-1:c_addr_bits-8] == c_addr_irq ? {R_btn_irq,6'b0,R_floppy_irq}
+  //wire [7:0] mux_data_in = addr[c_addr_bits-1:c_addr_bits-8] == c_addr_irq ? {R_btn_irq,6'b0,R_floppy_irq}
+  //                       : addr[c_addr_bits-1:c_addr_bits-8] == c_addr_btn ? {1'b0,R_btn}
+  //                       : addr[c_addr_bits-1:c_addr_bits-8] == c_addr_floppy ? R_floppy_req_type
+  //                       : data_in;
+  //assign irq = R_btn_irq | R_floppy_irq;
+  wire [7:0] mux_data_in = addr[c_addr_bits-1:c_addr_bits-8] == c_addr_irq ? {R_btn_irq,7'b0}
                          : addr[c_addr_bits-1:c_addr_bits-8] == c_addr_btn ? {1'b0,R_btn}
-                         //: addr[c_addr_bits-1:c_addr_bits-8] == c_addr_floppy ? R_floppy_req_type
                          : data_in;
-  assign irq = R_btn_irq; // | R_floppy_irq;
+  assign irq = R_btn_irq;
 
   spirw_slave_v
   #(

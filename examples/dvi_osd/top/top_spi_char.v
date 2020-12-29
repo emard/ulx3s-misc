@@ -145,28 +145,43 @@ module top_spi_char
     .rd(spi_ram_rd),
     .addr(spi_ram_addr),
     .data_in(spi_ram_rd_data),
-    //.data_in(8'h5A),
     .data_out(spi_ram_wr_data)
   );
 
+  wire spi_ram_wr_cs = spi_ram_addr[31:24] == 8'h00 ? spi_ram_wr : 0;
   // example BRAM storage for testing
   // osd.poke(0,"12345678")
   // osd.peek(0,8)
-  wire spi_ram_wr_cs = spi_ram_addr[31:24] == 8'h00 ? spi_ram_wr : 0;
   bram_true2p_2clk
   #(
     .dual_port(0),
     .data_width(8),
-    .addr_width(4)  // allocate 2**4=16 bytes
+    .addr_width(4)  // 4 will allocate 2**4=16 bytes
   )
   bram
   (
     .clk_a(clk_cpu),
+    .clken_a(1),
     .addr_a(spi_ram_addr),
     .we_a(spi_ram_wr_cs),
     .data_in_a(spi_ram_wr_data),
     .data_out_a(spi_ram_rd_data)
   );
+
+  /*
+  reg [7:0] ram_mem[0:15];
+  reg [7:0] ram_out;
+  always @(posedge clk_cpu)
+  begin
+    if(spi_ram_wr_cs)
+      ram_mem[spi_ram_addr] <= spi_ram_wr_data;
+    else
+      ram_out <= ram_mem[spi_ram_addr];
+  end
+  assign spi_ram_rd_data = ram_out;
+  */
+
+  assign led = spi_ram_wr_data;
 
   // VGA signal generator
   wire [7:0] vga_r, vga_g, vga_b;
@@ -197,9 +212,9 @@ module top_spi_char
     .vga_blank(vga_blank)
   );
 
-  assign led[0] = vga_vsync;
-  assign led[1] = vga_hsync;
-  assign led[2] = vga_blank;
+  //assign led[0] = vga_vsync;
+  //assign led[1] = vga_hsync;
+  //assign led[2] = vga_blank;
 
   // OSD overlay
   wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
