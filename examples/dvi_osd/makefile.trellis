@@ -23,17 +23,19 @@ TOP_MODULE = top_spi_char
 TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
-  $(TOP_MODULE_FILE) \
-  hdl/spi_osd_v.v \
-  hdl/osd.v \
-  ../ecp5pll/hdl/sv/ecp5pll.sv \
-  ../spi_slave/hdl/spirw_slave_v.v \
+$(TOP_MODULE_FILE) \
+hdl/spi_osd_v.v \
+hdl/spi_ram_btn_v.v \
+hdl/osd.v \
+../ecp5pll/hdl/sv/ecp5pll.sv \
+../spi_slave/hdl/spirw_slave_v.v \
+../bram/hdl/bram_true2p_2clk.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
-  ../dvi/hdl/vga.vhd \
-  ../dvi/hdl/vga2dvid.vhd \
-  ../dvi/hdl/tmds_encoder.vhd
+../dvi/hdl/vga.vhd \
+../dvi/hdl/vga2dvid.vhd \
+../dvi/hdl/tmds_encoder.vhd \
 
 osd.mem: osd.txt
 	hexdump -n 1536 -v -e '1/1 "%02x " "\n"' $< > $@

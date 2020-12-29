@@ -11,7 +11,7 @@ entity spi_osd is
     c_start_x      : natural := 64; -- x1  pixel window h-position
     c_start_y      : natural := 48; -- x1  pixel window v-position
     c_char_bits_x  : natural :=  6; -- chars H-size 2**n (x8 pixels)
-    c_chars_y      : natural := 24; -- chars V-size (x16 pixels)
+    c_chars_y      : natural := 20; -- chars V-size (x16 pixels)
     c_bits_x       : natural := 10; -- bits in X counter
     c_bits_y       : natural := 10; -- bits in Y counter
     c_init_on      : natural :=  1; -- 0:default OFF 1:default ON
@@ -27,7 +27,7 @@ entity spi_osd is
     i_r, i_g, i_b            : in    std_logic_vector(7 downto 0);
     i_hsync, i_vsync, i_blank: in    std_logic;
     i_csn, i_sclk, i_mosi    : in    std_logic;
-    --o_miso                   : inout std_logic;
+    --o_miso                   : inout std_logic; -- simplicity, not needed
     o_r, o_g, o_b            : out   std_logic_vector(7 downto 0);
     o_hsync, o_vsync, o_blank: out   std_logic
   );

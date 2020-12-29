@@ -8,7 +8,7 @@ module spi_osd_v
   parameter        c_start_x      = 64,  // x1 pixel window h-position
   parameter        c_start_y      = 48,  // x1 pixel window v-position
   parameter        c_char_bits_x  =  6,  // chars H-size 2**n (x8 pixels)
-  parameter        c_chars_y      = 24,  // chars V-size (x16 pixels)
+  parameter        c_chars_y      = 20,  // chars V-size (x16 pixels)
   parameter        c_bits_x       = 10,  // bits for X counter
   parameter        c_bits_y       = 10,  // bits for Y counter
   parameter        c_init_on      =  1,  // 0:default OFF 1:default ON

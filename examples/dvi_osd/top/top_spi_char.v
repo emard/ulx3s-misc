@@ -102,6 +102,7 @@ module top_spi_char
   wire [3:0] clocks;
   wire clk_shift = clocks[0];
   wire clk_pixel = clocks[1];
+  wire clk_cpu   = clocks[1]; // can belong to differet clock domain than video
   ecp5pll
   #(
       .in_hz(25*1000000),
@@ -113,6 +114,58 @@ module top_spi_char
     .clk_i(clk_25mhz),
     .clk_o(clocks),
     .locked(clk_locked)
+  );
+
+  // offload BTNs
+  reg [6:0] R_btn_joy;
+  always @(posedge clk_cpu)
+    R_btn_joy <= btn;
+
+  // SPI slave to example BRAM storage
+  wire        spi_ram_wr, spi_ram_rd;
+  wire [31:0] spi_ram_addr;
+  wire  [7:0] spi_ram_wr_data, spi_ram_rd_data;
+
+  wire spi_irq;
+  spi_ram_btn_v
+  #(
+    .c_sclk_capable_pin(1'b0),
+    .c_addr_bits(32)
+  )
+  spi_ram_btn_inst
+  (
+    .clk(clk_cpu),
+    .csn(spi_csn),
+    .sclk(spi_sck),
+    .mosi(spi_mosi),
+    .miso(spi_miso),
+    .btn(R_btn_joy),
+    .irq(spi_irq),
+    .wr(spi_ram_wr),
+    .rd(spi_ram_rd),
+    .addr(spi_ram_addr),
+    .data_in(spi_ram_rd_data),
+    //.data_in(8'h5A),
+    .data_out(spi_ram_wr_data)
+  );
+
+  // example BRAM storage for testing
+  // osd.poke(0,"12345678")
+  // osd.peek(0,8)
+  wire spi_ram_wr_cs = spi_ram_addr[31:24] == 8'h00 ? spi_ram_wr : 0;
+  bram_true2p_2clk
+  #(
+    .dual_port(0),
+    .data_width(8),
+    .addr_width(4)  // allocate 2**4=16 bytes
+  )
+  bram
+  (
+    .clk_a(clk_cpu),
+    .addr_a(spi_ram_addr),
+    .we_a(spi_ram_wr_cs),
+    .data_in_a(spi_ram_wr_data),
+    .data_out_a(spi_ram_rd_data)
   );
 
   // VGA signal generator

@@ -22,7 +22,7 @@ import ecp5
 class osd:
   def __init__(self):
     self.screen_x = const(64)
-    self.screen_y = const(18)
+    self.screen_y = const(20)
     self.cwd = "/"
     self.init_fb()
     self.exp_names = " KMGTE"
