@@ -15,7 +15,7 @@ module bram_true2p_2clk
 (
   input [(data_width-1):0] data_in_a, data_in_b,
   input [(addr_width-1):0] addr_a, addr_b,
-  input we_a, we_b, clk_a, clk_b, clken_a, clken_b,
+  input clken_a, clken_b, clk_a, clk_b, we_a, we_b,
   output reg [(data_width-1):0] data_out_a, data_out_b
 );
   // Declare the RAM variable
