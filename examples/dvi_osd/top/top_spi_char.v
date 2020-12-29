@@ -88,10 +88,10 @@ module top_spi_char
   assign ftdi_rxd = wifi_txd;
 
   // SPI lines
-  wire spi_csn, spi_sclk, spi_mosi, spi_miso, spi_irq;
+  wire spi_csn, spi_sck, spi_mosi, spi_miso, spi_irq;
   // ESP32 -> FPGA
   assign spi_csn = ~wifi_gpio5;
-  assign spi_sclk = gn[11]; // wifi_gpio25
+  assign spi_sck = gn[11]; // wifi_gpio25
   assign spi_miso = gp[11]; // wifi_gpio26
   // FPGA -> ESP32
   assign wifi_gpio16 = spi_mosi;
@@ -168,7 +168,7 @@ module top_spi_char
     .i_vsync(vga_vsync),
     .i_blank(vga_blank),
     .i_csn(spi_csn),
-    .i_sclk(spi_sclk),
+    .i_sclk(spi_sck),
     .i_mosi(spi_mosi),
     .o_r(osd_vga_r),
     .o_g(osd_vga_g),
