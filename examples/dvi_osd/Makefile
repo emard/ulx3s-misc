@@ -1,1 +1,1 @@
-makefile-char.trellis
+makefile.trellis
