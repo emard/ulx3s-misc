@@ -89,10 +89,13 @@ module top_spi_char
 
   // SPI lines
   wire spi_csn, spi_sclk, spi_mosi, spi_miso, spi_irq;
-  assign gn[11] = spi_mosi; // wifi_gpio25
-  assign spi_miso = gp[11]; // wifi_gpio26
-  assign wifi_gpio0 = ~spi_irq; // wifi_gpio0 irq active low
+  // ESP32 -> FPGA
   assign spi_csn = ~wifi_gpio5;
+  assign spi_sclk = gn[11]; // wifi_gpio25
+  assign spi_miso = gp[11]; // wifi_gpio26
+  // FPGA -> ESP32
+  assign wifi_gpio16 = spi_mosi;
+  assign wifi_gpio0 = ~spi_irq; // wifi_gpio0 IRQ active low
 
   // clock generator
   wire clk_locked;
