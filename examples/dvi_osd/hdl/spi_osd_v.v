@@ -16,7 +16,8 @@ module spi_osd_v
   parameter        c_transparency =  1,  // 1:see-thru OSD menu 0:opaque
   parameter [23:0] c_bgcolor      = 24'h503020, // RRGGBB menu background color
   parameter        c_char_file    = "osd.mem",            // initial window content, 2 ASCII HEX digits per line
-  parameter        c_font_file    = "font_bizcat8x16.mem" // font bitmap, 8 ASCII BIN digits per line
+  parameter        c_font_file    = "font_bizcat8x16.mem",// font bitmap, 8 ASCII BIN digits per line
+  parameter c_sclk_capable_pin    =  0
 )
 (
   input  wire clk_pixel, clk_pixel_ena,
@@ -43,7 +44,7 @@ module spi_osd_v
     spirw_slave_v
     #(
         .c_addr_bits(32),
-        .c_sclk_capable_pin(1'b0)
+        .c_sclk_capable_pin(c_sclk_capable_pin)
     )
     spirw_slave_inst
     (

@@ -19,7 +19,8 @@ entity spi_osd is
     c_transparency : natural :=  1; -- 1:see-thru OSD menu 0:opaque
     c_bgcolor      : std_logic_vector(23 downto 0) := x"503020"; -- RRGGBB menu background color
     c_char_file    : string  := "osd.mem"; -- initial window content, 2 ASCII HEX digits per line
-    c_font_file    : string  := "font_bizcat8x16.mem" -- font bitmap, 8 ASCII BIN digits per line
+    c_font_file    : string  := "font_bizcat8x16.mem"; -- font bitmap, 8 ASCII BIN digits per line
+    c_sclk_capable_pin : natural := 0
   );
   port
   (
@@ -50,7 +51,8 @@ architecture syn of spi_osd is
     c_transparency : natural;
     c_bgcolor      : std_logic_vector(23 downto 0);
     c_char_file    : string;
-    c_font_file    : string
+    c_font_file    : string;
+    c_sclk_capable_pin : natural
   );
   port
   (
@@ -81,7 +83,8 @@ begin
     c_transparency => c_transparency,
     c_bgcolor      => c_bgcolor,
     c_char_file    => c_char_file,
-    c_font_file    => c_font_file
+    c_font_file    => c_font_file,
+    c_sclk_capable_pin => c_sclk_capable_pin
   )
   port map
   (
