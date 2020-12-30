@@ -19,7 +19,7 @@ module spi_ram_btn_v
   parameter [7:0] c_addr_irq = 8'hF1, // high addr byte of IRQ flag
   parameter c_debounce_bits = 20, // more -> slower BTNs
   parameter c_addr_bits = 32, // don't touch
-  parameter c_sclk_capable_pin = 0 //, // 0-sclk is generic pin, 1-sclk is clock capable pin
+  parameter c_sclk_capable_pin = 0 // 0-sclk is generic pin, 1-sclk is clock capable pin
 )
 (
   input  wire clk, // faster than SPI clock

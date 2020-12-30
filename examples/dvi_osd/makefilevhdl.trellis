@@ -1,5 +1,5 @@
 # ******* project, board and chip name *******
-PROJECT = dvi
+PROJECT = osd
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
@@ -19,19 +19,25 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 # ******* design files *******
 CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
-TOP_MODULE = top_vgatest
+TOP_MODULE = top_spi_char
 TOP_MODULE_FILE = top/vhdl/$(TOP_MODULE).vhd
 
 VERILOG_FILES = \
-top/empty.v \
+hdl/spi_osd_v.v \
+hdl/spi_ram_btn_v.v \
+hdl/osd.v \
+../spi_slave/hdl/spirw_slave_v.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 GHDL_FILES = \
 $(TOP_MODULE_FILE) \
+hdl/spi_osd.vhd \
+hdl/spi_ram_btn.vhd \
 ../ecp5pll/hdl/vhd/ecp5pll.vhd \
-hdl/vga.vhd \
-hdl/vga2dvid.vhd \
-hdl/tmds_encoder.vhd
+../bram/hdl/bram_true2p_2clk.vhd \
+../dvi/hdl/vga.vhd \
+../dvi/hdl/vga2dvid.vhd \
+../dvi/hdl/tmds_encoder.vhd \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2

@@ -34,7 +34,7 @@ class osd:
     self.spi_enable_osd = bytearray([0,0xFE,0,0,0,1])
     self.spi_write_osd = bytearray([0,0xFD,0,0,0])
     self.spi_channel = const(2)
-    self.spi_freq = const(3000000)
+    self.spi_freq = const(1000000)
     self.init_pinout_sd()
     #self.spi=SPI(self.spi_channel, baudrate=self.spi_freq, polarity=0, phase=0, bits=8, firstbit=SPI.MSB, sck=Pin(self.gpio_sck), mosi=Pin(self.gpio_mosi), miso=Pin(self.gpio_miso))
     self.init_spi()
@@ -63,8 +63,8 @@ class osd:
   def init_pinout_sd(self):
     self.gpio_cs   = const(5)
     self.gpio_sck  = const(25) # gn[11]
-    self.gpio_miso = const(26) # gp[11]
-    self.gpio_mosi = const(16)
+    self.gpio_mosi = const(26) # gp[11]
+    self.gpio_miso = const(16)
     #self.gpio_led  = const(19)
 
   @micropython.viper
@@ -351,14 +351,14 @@ class osd:
     return b
 
   def poke(self,addr,data):
-    self.ctrl(4)
-    self.ctrl(6)
+    #self.ctrl(4)
+    #self.ctrl(6)
     self.cs.on()
     self.spi.write(bytearray([0,(addr >> 24) & 0xFF, (addr >> 16) & 0xFF, (addr >> 8) & 0xFF, addr & 0xFF]))
     self.spi.write(data)
     self.cs.off()
-    self.ctrl(4)
-    self.ctrl(0)
+    #self.ctrl(4)
+    #self.ctrl(0)
 
 def peek(addr,length=1):
   return run.peek(addr,length)

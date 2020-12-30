@@ -27,6 +27,7 @@ TOP_MODULE = top_vgatest
 TOP_MODULE_FILE = top/vhdl/$(TOP_MODULE).vhd
 
 VERILOG_FILES = \
+top/empty.v \
 
 VHDL_FILES = \
   $(TOP_MODULE_FILE) \

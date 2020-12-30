@@ -36,7 +36,7 @@ module top_spi_char
   //inout   [3:0] sd_d,
   input         wifi_txd,
   output        wifi_rxd,
-  input         wifi_gpio16,
+  inout         wifi_gpio16,
   input         wifi_gpio5,
   output        wifi_gpio0
 );
@@ -92,10 +92,12 @@ module top_spi_char
   // ESP32 -> FPGA
   assign spi_csn = ~wifi_gpio5;
   assign spi_sck = gn[11]; // wifi_gpio25
-  assign spi_miso = gp[11]; // wifi_gpio26
+  assign spi_mosi = gp[11]; // wifi_gpio26
   // FPGA -> ESP32
-  assign wifi_gpio16 = spi_mosi;
+  assign wifi_gpio16 = spi_miso;
   assign wifi_gpio0 = ~spi_irq; // wifi_gpio0 IRQ active low
+
+  assign led = {spi_csn, spi_sck, spi_miso, spi_mosi, spi_irq};
 
   // clock generator
   wire clk_locked;
@@ -181,7 +183,6 @@ module top_spi_char
   assign spi_ram_rd_data = ram_out;
   */
 
-  assign led = spi_ram_wr_data;
 
   // VGA signal generator
   wire [7:0] vga_r, vga_g, vga_b;
@@ -221,6 +222,7 @@ module top_spi_char
   wire osd_vga_hsync, osd_vga_vsync, osd_vga_blank;
   spi_osd_v
   #(
+    .c_sclk_capable_pin(1'b0),
     .c_bits_x(11),
     .c_bits_y(11),
     .c_transparency(1)
