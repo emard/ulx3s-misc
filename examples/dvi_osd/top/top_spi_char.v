@@ -97,7 +97,7 @@ module top_spi_char
   assign wifi_gpio16 = spi_miso;
   assign wifi_gpio0 = ~spi_irq; // wifi_gpio0 IRQ active low
 
-  assign led = {spi_csn, spi_sck, spi_miso, spi_mosi, spi_irq};
+  assign led = {spi_irq, spi_csn, spi_sck, spi_mosi, spi_miso};
 
   // clock generator
   wire clk_locked;
@@ -183,7 +183,6 @@ module top_spi_char
   assign spi_ram_rd_data = ram_out;
   */
 
-
   // VGA signal generator
   wire [7:0] vga_r, vga_g, vga_b;
   wire vga_hsync, vga_vsync, vga_blank;
@@ -223,9 +222,14 @@ module top_spi_char
   spi_osd_v
   #(
     .c_sclk_capable_pin(1'b0),
-    .c_bits_x(11),
-    .c_bits_y(11),
-    .c_transparency(1)
+    .c_start_x     (64), .c_start_y(48), // xy centering
+    .c_char_bits_x ( 6), .c_chars_y(20), // xy size, slightly less than full screen
+    .c_bits_x      (11), .c_bits_y ( 9), // xy counters bits
+    .c_inverse     ( 1), 
+    .c_transparency( 1),
+    .c_init_on     ( 1),
+    .c_char_file("osd.mem"),
+    .c_font_file("font_bizcat8x16.mem")
   )
   spi_osd_v_instance
   (

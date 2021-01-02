@@ -263,8 +263,9 @@ begin
   spi_osd_inst: entity work.spi_osd
   generic map
   (
-    c_start_x      =>  6, c_start_y =>  6, -- xy centered
-    c_char_bits_x  =>  6, c_chars_y => 16, -- xy size, slightly less than full screen
+    c_sclk_capable_pin => 0,
+    c_start_x      => 64, c_start_y => 48, -- xy centering
+    c_char_bits_x  =>  6, c_chars_y => 20, -- xy size, slightly less than full screen
     c_bits_x       => 11, c_bits_y  =>  9, -- xy counters bits
     c_inverse      =>  1, -- 1:support inverse video 0:no inverse video
     c_transparency =>  1, -- 1:semi-tranparent 0:opaque
