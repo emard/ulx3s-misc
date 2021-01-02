@@ -192,7 +192,7 @@ begin
   spi_sck <= gn(11); -- wifi_gpio25
   spi_mosi <= gp(11); -- wifi_gpio26
   -- FPGA -> ESP32
-  --wifi_gpio16 <= spi_miso;
+  wifi_gpio16 <= spi_miso;
   wifi_gpio0 <= not spi_irq; -- wifi_gpio0 IRQ active low
   
   --led <= (others => '0');
@@ -218,7 +218,7 @@ begin
     csn => spi_csn,
     sclk => spi_sck,
     mosi => spi_mosi,
-    miso => wifi_gpio16, -- spi_miso,
+    miso => spi_miso,
     btn => R_btn_joy,
     irq => spi_irq,
     wr => spi_ram_wr,
