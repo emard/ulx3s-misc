@@ -21,7 +21,7 @@ entity spi_ram_btn is
     csn, sclk, mosi : in    std_logic;
     miso            : inout std_logic;
     btn             : in    std_logic_vector(6 downto 0);
-    irq             : in    std_logic;
+    irq             : out   std_logic;
     --floppy_req_type : in    std_logic_vector(7 downto 0) := (others => '0');
     --floppy_req      : in    std_logic := '0';
     --floppy_in_drive : in    std_logic_vector(1 downto 0) := (others => '0'); -- future expansion
@@ -49,7 +49,7 @@ architecture syn of spi_ram_btn is
     csn, sclk, mosi : in    std_logic;
     miso            : inout std_logic;
     btn             : in    std_logic_vector(6 downto 0);
-    irq             : in    std_logic;
+    irq             : out   std_logic;
     --floppy_req_type : in    std_logic_vector(7 downto 0);
     --floppy_req      : in    std_logic;
     --floppy_in_drive : in    std_logic_vector(1 downto 0);

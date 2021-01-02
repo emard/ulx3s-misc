@@ -39,9 +39,9 @@ entity top_spi_char is
     -- WiFi additional signaling
     wifi_txd    : in    std_logic;
     wifi_rxd    : out   std_logic;
-    wifi_gpio0  : out   std_logic;
-    wifi_gpio5  : in    std_logic;
     wifi_gpio16 : inout std_logic;
+    wifi_gpio5  : in    std_logic;
+    wifi_gpio0  : out   std_logic;
     --wifi_gpio17 : inout std_logic;
 
     -- Digital Video (differential outputs)
@@ -194,6 +194,17 @@ begin
   -- FPGA -> ESP32
   --wifi_gpio16 <= spi_miso;
   wifi_gpio0 <= not spi_irq; -- wifi_gpio0 IRQ active low
+  
+  --led <= (others => '0');
+  --led <= spi_ram_wr_data;
+  --led <= spi_ram_addr(7 downto 0);
+  led(7 downto 5) <= (others => '0');
+  led(4) <= spi_irq;
+  led(3) <= spi_csn;
+  led(2) <= spi_sck;
+  led(1) <= spi_mosi;
+  led(0) <= spi_miso;
+  --led(6 downto 0) <= R_btn_joy;
 
   spi_slave_ram_btn: entity work.spi_ram_btn
   generic map
@@ -207,24 +218,15 @@ begin
     csn => spi_csn,
     sclk => spi_sck,
     mosi => spi_mosi,
-    miso => wifi_gpio16,
+    miso => wifi_gpio16, -- spi_miso,
     btn => R_btn_joy,
     irq => spi_irq,
     wr => spi_ram_wr,
     rd => spi_ram_rd,
     addr => spi_ram_addr,
-    data_in => spi_ram_wr_data,
-    data_out => spi_ram_rd_data
+    data_in => spi_ram_rd_data,
+    data_out => spi_ram_wr_data
   );
-
-  --led <= (others => '0');
-  --led <= spi_ram_wr_data;
-  --led <= spi_ram_addr(7 downto 0);
-  --led(7 downto 3) <= (others => '0');
-  --led(2) <= spi_csn;
-  --led(1) <= spi_sck;
-  --led(0) <= spi_mosi;
-  led(6 downto 0) <= R_btn_joy;
 
   vga_instance: entity work.vga
   generic map
