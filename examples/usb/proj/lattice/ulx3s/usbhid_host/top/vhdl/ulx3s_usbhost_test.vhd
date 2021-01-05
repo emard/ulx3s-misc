@@ -5,8 +5,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-library ecp5u;
-use ecp5u.components.all;
+-- diamond only
+--library ecp5u;
+--use ecp5u.components.all;
 
 use work.usbh_setup_pack.all;
 
@@ -27,11 +28,6 @@ entity ulx3s_usbhost_test is
   -- UART0 (FTDI USB slave serial)
   ftdi_rxd: out   std_logic;
   ftdi_txd: in    std_logic;
-  -- FTDI additional signaling
-  ftdi_ndtr: inout  std_logic;
-  ftdi_ndsr: inout  std_logic;
-  ftdi_nrts: inout  std_logic;
-  ftdi_txden: inout std_logic;
 
   -- UART1 (WiFi serial)
   wifi_rxd: out   std_logic;
@@ -39,9 +35,6 @@ entity ulx3s_usbhost_test is
   -- WiFi additional signaling
   wifi_en: inout  std_logic := 'Z'; -- '0' will disable wifi by default
   wifi_gpio0: inout std_logic;
-  wifi_gpio2: inout std_logic;
-  wifi_gpio15: inout std_logic;
-  wifi_gpio16: inout std_logic;
 
   -- Onboard blinky
   led: out std_logic_vector(7 downto 0);
@@ -122,6 +115,9 @@ architecture Behavioral of ulx3s_usbhost_test is
   signal vga_hsync, vga_vsync, vga_blank: std_logic;
   signal vga_r, vga_g, vga_b: std_logic_vector(7 downto 0);
   signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
+  component ODDRX1F
+    port (D0, D1, SCLK, RST: in std_logic; Q: out std_logic);
+  end component;
 begin
   clkgen_inst: entity work.ecp5pll
   generic map
@@ -161,7 +157,7 @@ begin
   G_us2: if C_us2 generate
   usb_fpga_pu_dp <= '0';
   usb_fpga_pu_dn <= '0';
-  us2_hid_host_inst: entity usbh_host_hid
+  us2_hid_host_inst: entity work.usbh_host_hid
   generic map
   (
     C_report_length_strict => C_report_length_strict,
@@ -191,7 +187,7 @@ begin
   us3_fpga_pu_dp <= '0';
   us3_fpga_pu_dn <= '0';
   --us3_fpga_dp <= not us3_fpga_n_dp; -- flat cable
-  us3_hid_host_inst: entity usbh_host_hid
+  us3_hid_host_inst: entity work.usbh_host_hid
   generic map
   (
     C_report_length_strict => C_report_length_strict,
@@ -221,7 +217,7 @@ begin
   us4_fpga_pu_dp <= '0';
   us4_fpga_pu_dn <= '0';
   --us4_fpga_dp <= not us4_fpga_n_dp; -- flat cable
-  us4_hid_host_inst: entity usbh_host_hid
+  us4_hid_host_inst: entity work.usbh_host_hid
   generic map
   (
     C_report_length_strict => C_report_length_strict,
