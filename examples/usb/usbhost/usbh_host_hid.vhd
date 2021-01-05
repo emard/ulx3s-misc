@@ -231,6 +231,7 @@ architecture Behavioral of usbh_host_hid is
                       R_retry <= R_retry + 1;
                     end if;
                   end if;
+                when others =>
               end case;
             else -- transmission is going on -- advance address
               if tx_pop_o = '1' then
@@ -333,6 +334,7 @@ architecture Behavioral of usbh_host_hid is
               R_wLength(7 downto 0) <= tx_data_i;
             when "111" => -- every 8 bytes, 8th byte wLength high byte currently forced to 0
               R_wLength(15 downto 8) <= x"00"; -- tx_data_i;
+            when others =>
           end case;
         when others =>
           R_wLength <= x"0000";
