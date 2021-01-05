@@ -13,8 +13,8 @@ VERILOG_FILES ?=
 # implicit list of *.vhd VHDL files to be converted to verilog *.v
 # files here are list as *.v but user should
 # edit original source which has *.vhd extension (vhdl_blink.vhd)
+VHD2VL_FILES ?=
 VHDL_FILES ?=
-GHDL_FILES ?=
 
 # ******* tools installation paths *******
 # https://github.com/ldoolitt/vhd2vl
@@ -104,7 +104,7 @@ all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf
 
 # VHDL to VERILOG conversion
 # convert all *.vhd filenames to .v extension
-VHDL_TO_VERILOG_FILES = $(VHDL_FILES:.vhd=.v)
+VHDL_TO_VERILOG_FILES = $(VHD2VL_FILES:.vhd=.v)
 # implicit conversion rule
 %.v: %.vhd
 	$(VHDL2VL) $< $@
@@ -122,9 +122,9 @@ VHDL_TO_VERILOG_FILES = $(VHDL_FILES:.vhd=.v)
 
 #	-p "read -vlog2k $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)"
 
-$(PROJECT).json: $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES) $(GHDL_FILES)
+$(PROJECT).json: $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES) $(VHDL_FILES)
 	$(YOSYS) \
-	-p "ghdl --ieee=synopsys --std=08 -fexplicit -frelaxed-rules $(GHDL_FILES) -e $(TOP_MODULE)" \
+	-p "ghdl --ieee=synopsys --std=08 -fexplicit -frelaxed-rules $(VHDL_FILES) -e $(TOP_MODULE)" \
 	-p "read_verilog -sv $(VERILOG_FILES)" \
 	-p "hierarchy -top ${TOP_MODULE}" \
 	-p "synth_ecp5 ${YOSYS_OPTIONS} -json ${PROJECT}.json"

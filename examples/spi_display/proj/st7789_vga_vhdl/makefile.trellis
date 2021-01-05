@@ -22,16 +22,17 @@ CONSTRAINTS = ../../../../constraints/ulx3s_v20.lpf
 TOP_MODULE = top_vgatest
 TOP_MODULE_FILE = top/$(TOP_MODULE).vhd
 
-VERILOG_FILES = \
-
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
-GHDL_FILES = \
-  $(TOP_MODULE_FILE) \
-  ../../../ecp5pll/hdl/vhd/ecp5pll.vhd \
-  ../../../dvi/hdl/vga.vhd \
-  ../../hdl/spi_display_vhdl/spi_display.vhd \
-  ../../hdl/spi_display_vhdl/spi_display_init_pack.vhd \
-  ../../hdl/spi_display_vhdl/st7789_init_pack.vhd \
+VHDL_FILES = \
+$(TOP_MODULE_FILE) \
+../../../ecp5pll/hdl/vhd/ecp5pll.vhd \
+../../../dvi/hdl/vga.vhd \
+../../hdl/spi_display_vhdl/spi_display.vhd \
+../../hdl/spi_display_vhdl/spi_display_init_pack.vhd \
+../../hdl/spi_display_vhdl/st7789_init_pack.vhd \
+
+VERILOG_FILES = \
+../../../dvi/top/empty.v \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2

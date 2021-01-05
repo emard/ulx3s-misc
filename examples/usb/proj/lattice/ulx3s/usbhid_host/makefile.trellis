@@ -1,9 +1,8 @@
 # ******* project, board and chip name *******
-PROJECT = osd
+PROJECT = usbhost_test
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
-FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -18,32 +17,17 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
-TOP_MODULE = top_spi_char
+CONSTRAINTS = constraints/ulx3s_v20.lpf
+TOP_MODULE = ulx3s_usbhost_test
 TOP_MODULE_FILE = top/vhdl/$(TOP_MODULE).vhd
 
-VERILOG_FILES = \
-hdl/spi_osd_v.v \
-hdl/spi_ram_btn_v.v \
-hdl/osd.v \
-../spi_slave/hdl/spirw_slave_v.v \
+include files.mk
 
-# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
-VHDL_FILES = \
-$(TOP_MODULE_FILE) \
-hdl/spi_osd.vhd \
-hdl/spi_ram_btn.vhd \
-../ecp5pll/hdl/vhd/ecp5pll.vhd \
-../bram/hdl/bram_true2p_2clk.vhd \
-../dvi/hdl/vga.vhd \
-../dvi/hdl/vga2dvid.vhd \
-../dvi/hdl/tmds_encoder.vhd \
+#YOSYS_OPTIONS = -abc9
+NEXTPNR_OPTIONS = --router router2
+#NEXTPNR_OPTIONS = --timing-allow-fail
 
-# synthesis options
-#YOSYS_OPTIONS = -noccu2
-NEXTPNR_OPTIONS = --timing-allow-fail
-
-SCRIPTS = ../../scripts
+SCRIPTS = ../../../../../../scripts
 include $(SCRIPTS)/diamond_path.mk
 include $(SCRIPTS)/trellis_path.mk
 include $(SCRIPTS)/trellis_main_ghdl.mk

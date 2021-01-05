@@ -22,13 +22,16 @@ TOP_MODULE = top_lvds_passthru
 TOP_MODULE_FILE = hdl/$(TOP_MODULE).vhd
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
-GHDL_FILES = \
-  $(TOP_MODULE_FILE) \
-  ../ecp5pll/hdl/vhd/ecp5pll.vhd \
-  ../lvds/hdl/lvds2vga.vhd \
-  ../lvds/hdl/vga2lvds.vhd \
-  ../dvi/hdl/vga2dvid.vhd \
-  ../dvi/hdl/tmds_encoder.vhd \
+VHDL_FILES = \
+$(TOP_MODULE_FILE) \
+../ecp5pll/hdl/vhd/ecp5pll.vhd \
+../lvds/hdl/lvds2vga.vhd \
+../lvds/hdl/vga2lvds.vhd \
+../dvi/hdl/vga2dvid.vhd \
+../dvi/hdl/tmds_encoder.vhd \
+
+VERILOG_FILES = \
+../dvi/top/empty.v
 
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail --lpf-allow-unconstrained

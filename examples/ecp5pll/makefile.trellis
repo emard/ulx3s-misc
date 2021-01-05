@@ -22,9 +22,12 @@ TOP_MODULE = top_ecp5pll
 TOP_MODULE_FILE = top/vhd/$(TOP_MODULE).vhd
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
-GHDL_FILES = \
-  $(TOP_MODULE_FILE) \
-  hdl/vhd/ecp5pll.vhd \
+VHDL_FILES = \
+$(TOP_MODULE_FILE) \
+hdl/vhd/ecp5pll.vhd \
+
+VERILOG_FILES = \
+../dvi/top/empty.v
 
 # synthesis options
 NEXTPNR_OPTIONS = --timing-allow-fail
