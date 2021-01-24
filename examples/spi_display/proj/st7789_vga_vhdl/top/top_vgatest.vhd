@@ -120,8 +120,6 @@ architecture Behavioral of top_vgatest is
   signal beam_x, beam_y: std_logic_vector(12 downto 0);
   
   signal S_pixel: std_logic_vector(15 downto 0);
-  signal R_clk_pixel: std_logic_vector(1 downto 0);
-  signal S_clk_pixel_edge: std_logic;
 
   component ODDRX1F
     port (D0, D1, SCLK, RST: in std_logic; Q: out std_logic);
@@ -177,14 +175,6 @@ begin
   led(0) <= vga_hsync;
   led(1) <= vga_vsync;
   led(7) <= vga_blank;
-
-  process(clk_shift)
-  begin
-    if rising_edge(clk_shift) then
-      R_clk_pixel <= clk_pixel & R_clk_pixel(1); -- shift
-    end if;
-  end process;
-  S_clk_pixel_edge <= '1' when R_clk_pixel = "10" else '0';
 
   S_pixel <= vga_r(7 downto 3) & vga_g(7 downto 2) & vga_b(7 downto 3);
   spi_display_instance: entity work.spi_display
