@@ -264,12 +264,13 @@ assign shutdown = 0;
   #(
     .c_init_file("st7789_linit_xflip.mem"),
     .c_init_size(38),
-    .c_clk_mhz(125)
+    .c_clk_spi_mhz(125)
   )
   lcd_video_inst
   (
-    .clk(clk_125MHz),
     .reset(~btn[0]),
+    .clk_pixel(clk_125MHz),
+    .clk_spi(clk_125MHz),
     .x(disp_x),
     .y(disp_y),
     .color(disp_color),
