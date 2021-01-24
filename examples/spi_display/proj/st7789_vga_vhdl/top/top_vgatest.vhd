@@ -190,7 +190,7 @@ begin
   spi_display_instance: entity work.spi_display
   generic map
   (
-    c_clk_mhz      => C_clk_shift_hz/1000000,
+    c_clk_spi_mhz  => C_clk_shift_hz/1000000,
     c_reset_us     => 1,
     c_color_bits   => 16,
     c_clk_phase    => '0',
@@ -203,8 +203,10 @@ begin
   port map
   (
     reset          => not btn(0),
-    clk            => clk_shift, -- 125 MHz
-    clk_pixel_ena  => S_clk_pixel_edge,
+    clk_pixel      => clk_pixel, -- 25 MHz
+    clk_pixel_ena  => '1',
+    clk_spi        => clk_shift, -- 125 MHz
+    clk_spi_ena    => '1',
     vsync          => vga_vsync,
     blank          => vga_blank,
     color          => S_pixel,
