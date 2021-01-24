@@ -16,7 +16,7 @@ use work.spi_display_init_pack.all;
 entity spi_display is
 generic
 (
-  c_clk_mhz      : natural   := 25;     -- MHz clk freq (125 MHz max for st7789)
+  c_clk_spi_mhz  : natural   := 25;     -- MHz clk freq (125 MHz max for st7789)
   c_reset_us     : natural   := 150000; -- us holding hardware reset
   c_color_bits   : natural   := 16;     -- RGB565
   c_clk_phase    : std_logic := '0';    -- spi_clk phase
@@ -31,8 +31,9 @@ generic
 port
 (
   reset          : in std_logic; -- clk synchronous
-  clk            : in std_logic; -- 1-150 MHz clock
+  clk_pixel      : in std_logic; -- 1-150 MHz pixel clock
   clk_pixel_ena  : in std_logic := '1'; -- input pixel clock ena, same clk ena from VGA generator module
+  clk_spi        : in std_logic; -- 1-150 MHz spi clock
   clk_spi_ena    : in std_logic := '1'; -- output SPI clock ena
   vsync, blank   : in std_logic;
   color          : in std_logic_vector(C_color_bits-1 downto 0);
@@ -52,7 +53,7 @@ architecture rtl of spi_display is
   signal byte_toggle: std_logic; -- alternates data byte for 16-bit mode
   signal init: std_logic := '1';
   signal num_args: unsigned(4 downto 0);
-  constant C_delay_cnt_init: unsigned(27 downto 0) := to_unsigned(c_clk_mhz*c_reset_us,28); -- initial delay fits 1.3s at 100MHz
+  constant C_delay_cnt_init: unsigned(27 downto 0) := to_unsigned(c_clk_spi_mhz*c_reset_us,28); -- initial delay fits 1.3s at 100MHz
   signal delay_cnt: unsigned(C_delay_cnt_init'range) := C_delay_cnt_init;
   signal arg: unsigned(5 downto 0);
   signal delay_set: std_logic := '0';
@@ -77,9 +78,9 @@ begin
   S_x_in_next <= S_x_in_inc when blank = '0' else (others => '0');
   S_y_in_inc  <= R_y_in+1 when R_x_in = c_x_size-1 else R_y_in;
   S_y_in_next <= S_y_in_inc when vsync = '0' else (others => '1');
-  process(clk)
+  process(clk_pixel)
   begin
-    if rising_edge(clk) then
+    if rising_edge(clk_pixel) then
       if clk_pixel_ena = '1' then
         if blank = '0' then
           R_scanline(to_integer(R_x_in)) <= color;
@@ -94,9 +95,9 @@ begin
   -- The next byte in the initialisation sequence
   next_byte <= c_init_seq(to_integer(index(c_init_index_bits+3 downto 4)));
 
-  process(clk)
+  process(clk_spi)
   begin
-    if rising_edge(clk) and clk_spi_ena = '1' then
+    if rising_edge(clk_spi) and clk_spi_ena = '1' then
       if reset = '1' then
         delay_cnt <= C_delay_cnt_init;
         delay_set <= '0';
@@ -139,7 +140,7 @@ begin
                 arg <= (others => '0');
               end if;
             elsif delay_set = '1' then -- delay
-              delay_cnt <= to_unsigned(c_clk_mhz,delay_cnt'length) sll to_integer(unsigned(next_byte(4 downto 0))); -- shift left 2^n us delay
+              delay_cnt <= to_unsigned(c_clk_spi_mhz,delay_cnt'length) sll to_integer(unsigned(next_byte(4 downto 0))); -- shift left 2^n us delay
               data <= c_nop;
               clken <= '0';
               delay_set <= '0';
