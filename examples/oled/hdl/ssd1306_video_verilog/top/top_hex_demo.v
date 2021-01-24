@@ -69,8 +69,9 @@ begin
     )
     lcd_video_inst
     (
-        .clk(clk),
         .reset(~btn[0]),
+        .clk_pixel(clk),
+        .clk_spi(clk),
         .x(x),
         .y(y),
         .color(color),
