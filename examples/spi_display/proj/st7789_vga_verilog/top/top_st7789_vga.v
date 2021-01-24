@@ -38,16 +38,16 @@ module top_st7789_vga
   wire [7:0] vga_r_test, vga_g_test, vga_b_test;
   vga
   #(
-    .C_resolution_x(240),
-    .C_hsync_front_porch(1800),
-    .C_hsync_pulse(1),
-    .C_hsync_back_porch(1800),
-    .C_resolution_y(240),
-    .C_vsync_front_porch(1),
-    .C_vsync_pulse(1),
-    .C_vsync_back_porch(1),
-    .C_bits_x(12),
-    .C_bits_y(8)
+    .c_resolution_x(240),
+    .c_hsync_front_porch(1800),
+    .c_hsync_pulse(1),
+    .c_hsync_back_porch(1800),
+    .c_resolution_y(240),
+    .c_vsync_front_porch(1),
+    .c_vsync_pulse(1),
+    .c_vsync_back_porch(1),
+    .c_bits_x(12),
+    .c_bits_y(8)
   )
   vga_instance
   (
@@ -68,15 +68,9 @@ module top_st7789_vga
   assign led[2] = vga_vsync_test;
   assign led[7:3] = 0;
   
-  // clk_pixel edge detection
-  reg [1:0] R_clk_pixel;
-  always @(posedge clk_lcd)
-    R_clk_pixel <= {clk_pixel,R_clk_pixel[1]}; 
-  wire clk_pixel_ena = R_clk_pixel == 2'b10 ? 1 : 0;
-  
   lcd_video
   #(
-    .c_clk_mhz(125),
+    .c_clk_spi_mhz(125),
     .c_vga_sync(1),
     .c_x_size(240),
     .c_y_size(240),
@@ -84,9 +78,11 @@ module top_st7789_vga
   )
   lcd_video_instance
   (
-    .clk(clk_lcd), // 125 MHz
     .reset(S_reset),
-    .clk_pixel_ena(clk_pixel_ena), // edge detection
+    .clk_pixel(clk_pixel), // 25 MHz
+    .clk_pixel_ena(1),
+    .clk_spi(clk_lcd), // 125 MHz
+    .clk_spi_ena(1),
     .blank(vga_blank_test),
     .hsync(vga_hsync_test),
     .vsync(vga_vsync_test),
