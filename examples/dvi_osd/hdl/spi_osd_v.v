@@ -103,13 +103,13 @@ module spi_osd_v
     // OSD overlay
     osd
     #(
-      .C_x_start(c_start_x),
-      .C_x_stop (c_start_x+8*c_chars_x-1),
-      .C_y_start(c_start_y),
-      .C_x_bits(c_bits_x),
-      .C_y_bits(c_bits_y),
-      .C_y_stop (c_start_y+16*c_chars_y-1),
-      .C_transparency(c_transparency)
+      .c_x_start(c_start_x),
+      .c_x_stop (c_start_x+8*c_chars_x-1),
+      .c_y_start(c_start_y),
+      .c_x_bits(c_bits_x),
+      .c_y_bits(c_bits_y),
+      .c_y_stop (c_start_y+16*c_chars_y-1),
+      .c_transparency(c_transparency)
     )
     osd_instance
     (
