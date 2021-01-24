@@ -10,8 +10,6 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --use ecp5u.components.all;
 
 use work.usbh_setup_pack.all;
-use work.st7789_init_pack.all;
---use work.ssd1331_init_pack.all;
 
 entity ulx3s_usbhost_test is
   generic
@@ -315,9 +313,9 @@ begin
       clk_pixel_ena  => '1',
       clk_spi        => clk_shift,
       clk_spi_ena    => '1',
-      hsync          => open,
-      vsync          => open,
-      blank          => open,
+      hsync          => '-',
+      vsync          => '-',
+      blank          => '-',
       x              => disp_x,
       y              => disp_y,
       next_pixel     => next_pixel,
