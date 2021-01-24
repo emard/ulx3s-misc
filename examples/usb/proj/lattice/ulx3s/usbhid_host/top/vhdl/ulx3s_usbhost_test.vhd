@@ -10,12 +10,16 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --use ecp5u.components.all;
 
 use work.usbh_setup_pack.all;
+use work.st7789_init_pack.all;
+--use work.ssd1331_init_pack.all;
 
 entity ulx3s_usbhost_test is
   generic
   (
     C_usb_speed: std_logic := '0'; -- 0:6 MHz 1:48 MHz
     C_report_length_strict: std_logic := '0'; -- require exact report length
+    C_display: string := "ST7789"; -- "SSD1331", "ST7789"
+    C_disp_bits: integer := 256;
     -- enable only one US2/US3/US4
     C_us2: boolean := true; -- onboard micro USB with OTG adapter
     C_us3: boolean := true; -- PMOD US3 at GP,GN 25,22,21
@@ -144,8 +148,9 @@ begin
   --wifi_rxd <= ftdi_txd;
 
   wifi_en <= '1';
-  wifi_gpio0 <= R_rst_btn;
-  
+  wifi_gpio0 <= '1';
+  R_rst_btn <= not btn(0);
+
   G_low_speed: if C_usb_speed='0' generate
   clk_usb <= clk_6MHz;
   end generate;
@@ -244,6 +249,7 @@ begin
   end generate;
 
 
+  gen_oled_ssd1331: if C_display="SSD1331" generate
   oled_inst: entity work.oled_hex_decoder
   generic map
   (
@@ -260,7 +266,72 @@ begin
     spi_dc => oled_dc,
     spi_mosi => oled_mosi
   );
-  
+  end generate;
+
+  gen_lcd_st7789: if C_display="ST7789" generate
+  blk_lcd_st7789: block
+    signal disp_x, disp_y: std_logic_vector(7 downto 0);
+    signal disp_color, r_disp_color: std_logic_vector(15 downto 0);
+    signal next_pixel, w_oled_csn: std_logic;
+  begin
+    lcd_hex_decoder_inst: entity work.hex_decoder
+    generic map
+    (
+      c_data_len   => c_disp_bits,
+      c_row_bits   => 4,
+      c_grid_6x8   => 1,
+      c_font_file  => "hex_font.mem",
+      c_x_bits     => 7,
+      c_y_bits     => 6,
+      c_color_bits => 16
+    )
+    port map
+    (
+      clk   => clk_shift,
+      data  => S_disp,
+      x     => disp_x(7 downto 1),
+      y     => disp_y(6 downto 1),
+      color => disp_color
+    );
+    process(clk_shift)
+    begin
+      if rising_edge(clk_shift) then
+        if next_pixel = '1' then
+          r_disp_color <= disp_color;
+        end if;
+      end if;
+    end process;
+    lcd_video_inst: entity work.lcd_video_vhd
+    generic map
+    (
+      c_clk_spi_mhz  => 125,
+      c_init_file    => "st7789_linit_xflip.mem",
+      c_init_size    => 38
+    )
+    port map
+    (
+      reset          => R_rst_btn,
+      clk_pixel      => clk_shift,
+      clk_pixel_ena  => '1',
+      clk_spi        => clk_shift,
+      clk_spi_ena    => '1',
+      hsync          => open,
+      vsync          => open,
+      blank          => open,
+      x              => disp_x,
+      y              => disp_y,
+      next_pixel     => next_pixel,
+      color          => r_disp_color,
+      spi_clk        => oled_clk,
+      spi_mosi       => oled_mosi,
+      spi_dc         => oled_dc,
+      spi_resn       => oled_resn,
+      spi_csn        => w_oled_csn
+    );
+    oled_csn <= '1'; -- w_oled_csn for 8-pin ST7789
+  end block;
+  end generate;
+
   beam_rx <= 636-beam_x; -- HEX decoder needs reverse X-scan, few pixels adjustment for pipeline delay
   hex_decoder_instance: entity work.hex_decoder
   generic map
