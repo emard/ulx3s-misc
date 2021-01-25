@@ -27,7 +27,7 @@ module lcd_video #(
   input  wire clk_pixel_ena = 1,
   input  wire clk_spi, // SPI display clock rate will be half of this clock rate
   input  wire clk_spi_ena = 1,
-  input  wire hsync, vsync, blank,
+  input  wire hsync, vsync, blank, // hsync not used
   input  wire [c_color_bits-1:0] color,
 
   output reg  [c_x_bits-1:0] x,
@@ -60,8 +60,8 @@ module lcd_video #(
       begin
         if(blank == 0)
           R_scanline[R_x_in] <= color;
-        R_x_in <= blank == 0 ? R_x_in+1 : 0;
-        R_y_in <= vsync == 1 || R_y_in == c_y_size-1 ? -1 : (R_x_in == c_x_size-1 ? R_y_in+1 : R_y_in);
+        R_x_in <= blank ?  0 : (R_x_in != c_x_size   ? R_x_in+1 : R_x_in);
+        R_y_in <= vsync ? -1 : (R_x_in == c_x_size-1 ? R_y_in+1 : R_y_in);
       end // clk_pixel_ena
     end // posedge clk
     assign S_color = R_scanline[x];
