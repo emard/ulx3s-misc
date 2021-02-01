@@ -24,10 +24,11 @@ module top_adxl355
   input         clk_25mhz,
   input   [6:0] btn,
   output  [7:0] led,
-  inout  [27:0] gp,gn,
+  //inout  [27:0] gp,gn,
+  output        gp13,
+  input         gp14,gp15,gp17,
   input         gn15,
-  //output        gp13, gn24, gn25, gn27,
-  //input         gp24, gp26, gp27, gn26,
+  output        gn14,gn16,gn17,
   output        ftdi_rxd,
   input         ftdi_txd,
   output        wifi_rxd,
@@ -37,26 +38,26 @@ module top_adxl355
   assign wifi_rxd = ftdi_txd;
   assign ftdi_rxd = wifi_txd;
 
-  wire int1     = gp[17];
-  wire int2     = gp[15];
-  wire drdy     = gp[14];
-  
+  wire int1 = gp17;
+  wire int2 = gp15;
+  wire drdy = gp14;
+
   wire csn, mosi, miso, sclk;
 
   // ADXL355 connections
-  assign gn[17] = csn;
-  assign gn[16] = mosi;
+  assign gn17 = csn;
+  assign gn16 = mosi;
   assign miso = gn15;
-  assign gn[14] = sclk;
+  assign gn14 = sclk;
 
   // ESP32 connections
   assign csn  = wifi_gpio17;
   assign mosi = wifi_gpio16;
-  assign gp[13] = miso; // wifi_gpio35 v2.1.2
+  assign gp13 = miso; // wifi_gpio35 v2.1.2
   assign sclk = wifi_gpio0;
 
   // LED monitoring
-  assign led[7:4] = {gp[14],gp[15],1'b0,gp[17]};
+  assign led[7:4] = {drdy,int2,int1,1'b0};
   //assign led[3:0] = {gn27,gn26,gn25,gn24};
   //assign led[3:0] = {sclk,gp13,mosi,csn};
   assign led[3:0] = {sclk,miso,mosi,csn};
