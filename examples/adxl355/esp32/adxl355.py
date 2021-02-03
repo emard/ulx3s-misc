@@ -202,9 +202,9 @@ def fifo(i:int)->int:
   return p32buf[i]
 
 def prfifo():
-  if spi_fifoentries[1]==0:
+  if spi_fifoentries[1]<3:
     return
-  for i in range(spi_fifoentries[1]):
+  for i in range(spi_fifoentries[1]//3*3):
     e=""
     if (i%9)==8:
       e="\n"
@@ -215,7 +215,11 @@ def prfifo():
 def v():
   rdaccel()
   return sqrt(a(0)*a(0)+a(1)*a(1)+a(2)*a(2))
-  
+
+def multird(i=1000):
+  for i in range(i):
+    rdfifo()
+    prfifo()
   
 #reset()
 #sleep_ms(1000)
@@ -224,7 +228,5 @@ on()
 range(1)
 print(temp())
 print(v())
-filter(6)
-for i in range(1000):
-  rdfifo()
-  prfifo()
+filter(5)
+multird()
