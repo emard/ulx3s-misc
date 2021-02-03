@@ -64,8 +64,8 @@ csn.on()
 pin_sck=const(0)
 pin_mosi=const(16)
 pin_miso=const(35)
-spi_channel=const(2) # the hardware available, sometimes stops working
-#spi_channel=const(-1) # soft-spi
+#spi_channel=const(2) # the hardware available, sometimes stops working
+spi_channel=const(-1) # soft-spi, lower latency
 # baudrate in Hz, range 0.1-10 MHz
 bps=const(1000000)
 # two initializations for reliabile start after ctrl-D
@@ -77,6 +77,9 @@ req=bytearray(1)
 val=bytearray(1)
 accelb=bytearray(9)
 acceli=bytearray(12)
+spi_fifoentries=bytearray(2)
+spi_rdfifo=bytearray(10)
+fifobuf=bytearray(96*4)
 
 @micropython.viper
 def wr(addr:int,data):
@@ -155,6 +158,60 @@ def a(i:int)->int:
   p32a=ptr32(addressof(acceli))
   return p32a[i]>>4
 
+@micropython.viper
+def rdfifo():
+  p8ent=ptr8(addressof(spi_fifoentries))
+  p8rdf=ptr8(addressof(spi_rdfifo))
+  p8buf=ptr8(addressof(fifobuf))
+  # read number of entries in the fifo
+  p8ent[0]=11 # FIFO_ENTRIES*2+1 read request
+  csn.off()
+  spi.write_readinto(spi_fifoentries,spi_fifoentries)
+  csn.on()
+  # read until first x-mark
+  #while p8rdf[1]&1:
+  #  p8rdf[0]=0x23 # FIFO_DATA*2+1
+  #  csn.off()
+  #  spi.write_readinto(spi_rdfifo,spi_rdfifo)
+  #  csn.on()
+  for i in range(p8ent[1]//3):
+    p8rdf[0]=0x23 # FIFO_DATA*2+1 read request
+    csn.off()
+    spi.write_readinto(spi_rdfifo,spi_rdfifo)
+    csn.on()
+    for j in range(3):
+      a=i*12+j*4
+      b=1+j*3
+      if p8rdf[b]&0x80:
+        p8buf[a+3]=0xFF
+      else:
+        p8buf[a+3]=0
+      for k in range(3):
+        p8buf[a+2-k]=p8rdf[b+k]
+
+# sample rate i=0-10, 4kHz/2^i, 0:4kHz ... 10:3.906Hz
+@micropython.viper
+def filter(i:int):
+  p8v=ptr8(addressof(val))
+  p8v[0]=i
+  wr(FILTER,val)
+
+@micropython.viper
+def fifo(i:int)->int:
+  p32buf=ptr32(addressof(fifobuf))
+  return p32buf[i]
+
+def prfifo():
+  if spi_fifoentries[1]==0:
+    return
+  for i in range(spi_fifoentries[1]):
+    e=""
+    if (i%9)==8:
+      e="\n"
+    print("%08x " % fifo(i), end=e)
+  if (i%9)!=8:
+    print("")
+
 def v():
   rdaccel()
   return sqrt(a(0)*a(0)+a(1)*a(1)+a(2)*a(2))
@@ -166,3 +223,8 @@ test()
 on()
 range(1)
 print(temp())
+print(v())
+filter(6)
+for i in range(1000):
+  rdfifo()
+  prfifo()
