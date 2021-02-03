@@ -80,6 +80,7 @@ acceli=bytearray(12)
 spi_fifoentries=bytearray(2)
 spi_rdfifo=bytearray(10)
 fifobuf32=bytearray(96*4)
+fifobuf16=bytearray(96*2)
 
 @micropython.viper
 def wr(addr:int,data):
@@ -197,30 +198,57 @@ def rdfifo32()->int:
         p8buf[a+2-k]=p8rdf[b+k]
   return n
 
-# read value from 32-bit buffer
+# read fifo to 16-bit signed buffer
 @micropython.viper
-def fifo32(i:int)->int:
-  p32buf=ptr32(addressof(fifobuf32))
-  return p32buf[i]
+def rdfifo16()->int:
+  p8ent=ptr8(addressof(spi_fifoentries))
+  p8rdf=ptr8(addressof(spi_rdfifo))
+  p8buf=ptr8(addressof(fifobuf16))
+  # read number of entries in the fifo
+  p8ent[0]=11 # FIFO_ENTRIES*2+1 read request
+  csn.off()
+  spi.write_readinto(spi_fifoentries,spi_fifoentries)
+  csn.on()
+  n=p8ent[1]//3
+  for i in range(n):
+    p8rdf[0]=0x23 # FIFO_DATA*2+1 read request
+    csn.off()
+    spi.write_readinto(spi_rdfifo,spi_rdfifo)
+    csn.on()
+    for j in range(3):
+      a=i*6+j*2
+      b=1+j*3
+      for k in range(2):
+        p8buf[a+1-k]=p8rdf[b+k]
+  return n
 
-# print 32-bit buffer
-def prfifo32():
+# read value from 16-bit buffer
+@micropython.viper
+def fifo16(i:int)->int:
+  p16buf=ptr16(addressof(fifobuf16))
+  if p16buf[i]<0x8000:
+    return p16buf[i]
+  else:
+    return p16buf[i]-0x10000
+
+# print 16-bit buffer
+def prfifo16():
   if spi_fifoentries[1]<3:
     return
   for i in range(spi_fifoentries[1]//3*3):
     e=""
     if (i%12)==11:
       e="\n"
-    print("%08x " % fifo32(i), end=e)
+    print("%6d " % fifo16(i), end=e)
   if (i%12)!=11:
     print("")
 
-def multird32(i=1000):
+def multird16(i=1000):
   for i in range(i):
-    print(rdfifo32(),end=" ")
+    print(rdfifo16(),end=" ")
     #prfifo32()
   print("")
-  prfifo32()
+  prfifo16()
 
 #reset()
 #sleep_ms(1000)
@@ -230,4 +258,4 @@ range(1)
 print(temp())
 print(v())
 filter(5)
-multird32()
+multird16()
