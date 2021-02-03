@@ -64,8 +64,8 @@ csn.on()
 pin_sck=const(0)
 pin_mosi=const(16)
 pin_miso=const(35)
-#spi_channel=const(2) # the hardware available, sometimes stops working
-spi_channel=const(-1) # soft-spi, lower latency
+spi_channel=const(2) # the hardware available, sometimes stops working
+#spi_channel=const(-1) # soft-spi, lower latency
 # baudrate in Hz, range 0.1-10 MHz
 bps=const(1000000)
 # two initializations for reliabile start after ctrl-D
@@ -79,7 +79,7 @@ accelb=bytearray(9)
 acceli=bytearray(12)
 spi_fifoentries=bytearray(2)
 spi_rdfifo=bytearray(10)
-fifobuf=bytearray(96*4)
+fifobuf32=bytearray(96*4)
 
 @micropython.viper
 def wr(addr:int,data):
@@ -153,28 +153,35 @@ def range(i:int):
   p8v[0]=0xC0|i
   wr(RANGE,val)
 
+# sample rate i=0-10, 4kHz/2^i, 0:4kHz ... 10:3.906Hz
+@micropython.viper
+def filter(i:int):
+  p8v=ptr8(addressof(val))
+  p8v[0]=i
+  wr(FILTER,val)
+
 @micropython.viper
 def a(i:int)->int:
   p32a=ptr32(addressof(acceli))
   return p32a[i]>>4
 
+def v():
+  rdaccel()
+  return sqrt(a(0)*a(0)+a(1)*a(1)+a(2)*a(2))
+
+# read fifo to 32-bit signed buffer
 @micropython.viper
-def rdfifo():
+def rdfifo32()->int:
   p8ent=ptr8(addressof(spi_fifoentries))
   p8rdf=ptr8(addressof(spi_rdfifo))
-  p8buf=ptr8(addressof(fifobuf))
+  p8buf=ptr8(addressof(fifobuf32))
   # read number of entries in the fifo
   p8ent[0]=11 # FIFO_ENTRIES*2+1 read request
   csn.off()
   spi.write_readinto(spi_fifoentries,spi_fifoentries)
   csn.on()
-  # read until first x-mark
-  #while p8rdf[1]&1:
-  #  p8rdf[0]=0x23 # FIFO_DATA*2+1
-  #  csn.off()
-  #  spi.write_readinto(spi_rdfifo,spi_rdfifo)
-  #  csn.on()
-  for i in range(p8ent[1]//3):
+  n=p8ent[1]//3
+  for i in range(n):
     p8rdf[0]=0x23 # FIFO_DATA*2+1 read request
     csn.off()
     spi.write_readinto(spi_rdfifo,spi_rdfifo)
@@ -188,39 +195,33 @@ def rdfifo():
         p8buf[a+3]=0
       for k in range(3):
         p8buf[a+2-k]=p8rdf[b+k]
+  return n
 
-# sample rate i=0-10, 4kHz/2^i, 0:4kHz ... 10:3.906Hz
+# read value from 32-bit buffer
 @micropython.viper
-def filter(i:int):
-  p8v=ptr8(addressof(val))
-  p8v[0]=i
-  wr(FILTER,val)
-
-@micropython.viper
-def fifo(i:int)->int:
-  p32buf=ptr32(addressof(fifobuf))
+def fifo32(i:int)->int:
+  p32buf=ptr32(addressof(fifobuf32))
   return p32buf[i]
 
-def prfifo():
+# print 32-bit buffer
+def prfifo32():
   if spi_fifoentries[1]<3:
     return
   for i in range(spi_fifoentries[1]//3*3):
     e=""
-    if (i%9)==8:
+    if (i%12)==11:
       e="\n"
-    print("%08x " % fifo(i), end=e)
-  if (i%9)!=8:
+    print("%08x " % fifo32(i), end=e)
+  if (i%12)!=11:
     print("")
 
-def v():
-  rdaccel()
-  return sqrt(a(0)*a(0)+a(1)*a(1)+a(2)*a(2))
-
-def multird(i=1000):
+def multird32(i=1000):
   for i in range(i):
-    rdfifo()
-    prfifo()
-  
+    print(rdfifo32(),end=" ")
+    #prfifo32()
+  print("")
+  prfifo32()
+
 #reset()
 #sleep_ms(1000)
 test()
@@ -229,4 +230,4 @@ range(1)
 print(temp())
 print(v())
 filter(5)
-multird()
+multird32()
