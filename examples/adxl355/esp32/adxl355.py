@@ -250,6 +250,20 @@ def multird16(i=1000):
   print("")
   prfifo16()
 
+# write 3-channel 16-bit signed PCM file
+def store16(m=500):
+  f=open("accel.pcm","wb")
+  mv=memoryview(fifobuf16)
+  t=0
+  while t<m:
+    n=rdfifo16()
+    if(n):
+      f.write(mv[0:6*n])
+      t+=n
+      #print(n,end=" ")
+  f.close()
+  print("")
+
 #reset()
 #sleep_ms(1000)
 test()
