@@ -154,6 +154,13 @@ def range(i:int):
   p8v[0]=0xC0|i
   wr(RANGE,val)
 
+# sync: 0:internal 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
+@micropython.viper
+def sync(i:int):
+  p8v=ptr8(addressof(val))
+  p8v[0]=i
+  wr(SYNC,val)
+
 # sample rate i=0-10, 4kHz/2^i, 0:4kHz ... 10:3.906Hz
 @micropython.viper
 def filter(i:int):
@@ -251,16 +258,20 @@ def multird16(i=1000):
   prfifo16()
 
 # write 3-channel 16-bit signed PCM file
-def store16(m=500):
-  f=open("accel.pcm","wb")
+# default store 1000 samples
+def store16(m=1000):
+  f=open("/sd/tmp/accel.pcm","wb")
   mv=memoryview(fifobuf16)
   t=0
+  maxn=0
   while t<m:
     n=rdfifo16()
     if(n):
       f.write(mv[0:6*n])
       t+=n
-      #print(n,end=" ")
+      if t>200 and n>maxn:
+        maxn=n
+  print("t>200 maxn=", n)
   f.close()
   print("")
 
@@ -271,5 +282,6 @@ on()
 range(1)
 print(temp())
 print(v())
-filter(5)
+filter(0)
+sync(6)
 multird16()
