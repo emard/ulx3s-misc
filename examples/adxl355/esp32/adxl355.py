@@ -283,5 +283,5 @@ range(1)
 print(temp())
 print(v())
 filter(0)
-sync(6)
+sync(6) # needs external clock
 multird16()
