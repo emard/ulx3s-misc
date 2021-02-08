@@ -70,7 +70,6 @@ module top_adxl355log
   assign mosi = wifi_gpio16;
   assign gp13 = miso; // wifi_gpio35 v2.1.2
   assign sclk = wifi_gpio0;
-
   
   // base clock for making 1024 kHz for ADXL355
   wire [3:0] clocks;
@@ -86,8 +85,8 @@ module top_adxl355log
   );
   wire clk = clocks[0]; // 40 MHz system clock
 
+  /*
   localparam divider1024kHz=clk_out0_hz*2/clk_adxl_hz; // default 78125 for half-period 2048 kHz from 40 MHz
-
   // the divider
   reg clk_sync; // 1.024kHz, must become 1 cca 25ns (1 clk cycle) before clk_adxl and keep 1 for at least 4 clk cycles
   reg clk_adxl; // 1024 kHz, toggle reg
@@ -126,8 +125,22 @@ module top_adxl355log
     clk_adxl_25ns <= { clk_adxl_25ns[clk_25ns_bits-2:0], clk_adxl };
     clk_sync_25ns <= { clk_sync_25ns[clk_25ns_bits-2:0], clk_sync };
   end
-  assign int2 = clk_adxl_25ns[1]; // 1024 kHz, n*25ns delayed
-  assign drdy = clk_sync_25ns[0]; // 1 kHz, n*25ns delayed
+  */
+
+  adxl355_clk
+  #(
+    .clk_out0_hz(40*1000000), // Hz, 40 MHz, PLL internal clock divisible by 512 to make 2*clk_adxl_hz=2048 kHz
+    .clk_pps_hz(1),           // Hz, 1 Hz, TODO not used
+    .clk_adxl_hz(1024*1000),  // Hz, 1024 kHz, LUT-generated adxl clock
+    .clk_sync_hz(1000)        // Hz, 1 kHz SYNC clock, sample rate
+  )
+  adxl355_clk_inst
+  (
+    .i_clk(clk),
+    .i_pps(0),
+    .o_clk_adxl(int2),
+    .o_clk_sync(drdy)
+  );
 
   // LED monitoring
   assign led[7:4] = {drdy,int2,int1,1'b0};
@@ -136,6 +149,7 @@ module top_adxl355log
   //assign led[3:0] = {sclk,miso,mosi,csn};
   
   assign oled_csn = 0; // st7789 backlight off
+  
 
 endmodule
 `default_nettype wire
