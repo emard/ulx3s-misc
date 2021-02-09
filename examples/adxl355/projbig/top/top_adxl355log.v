@@ -26,7 +26,10 @@ Pin 12      Digital Power        VDD
 module top_adxl355log
 #(
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
-  clk_sync_hz  = 1000        // Hz, 1 kHz SYNC pulse, sample rate
+  pps_n        = 1,          // N, 1 Hz, number of PPS pulses per interval
+  pps_s        = 1,          // s, 1 s, PPS interval
+  clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
+  pa_corr_step = 2           // experimentally adjust for good convergence
 )
 (
   input         clk_25mhz,
@@ -44,6 +47,7 @@ module top_adxl355log
   input         ftdi_txd,
   output        wifi_rxd,
   input         wifi_txd,
+  input         wifi_gpio5,
   input         wifi_gpio0, wifi_gpio16, wifi_gpio17
 );
   assign wifi_rxd = ftdi_txd;
@@ -83,7 +87,7 @@ module top_adxl355log
   wire clk = clocks[0]; // 40 MHz system clock
 
   // generate PPS signal (1 Hz, 100 ms duty cycle)
-  localparam pps_cnt_max = clk_out0_hz; // +-20 kHz tolerance
+  localparam pps_cnt_max = clk_out0_hz*pps_s/pps_n; // cca +-20000 tolerance
   localparam pps_width   = pps_cnt_max/10;   
   reg [$clog2(pps_cnt_max)-1:0] pps_cnt;
   reg pps;
@@ -100,34 +104,40 @@ module top_adxl355log
   end
   
   wire pps_btn = pps & ~btn[1];
-  
+  //wire pps_btn = wifi_gpio5 & ~btn[1];
+
   wire pps_valid;
   adxl355_clk
   #(
     .clk_out0_hz(clk_out0_hz), // Hz, 40 MHz, PLL internal clock
-    .pps_hz(1),                // Hz, 1 Hz when pps_s=1
-    .pps_s(1),                 // s, 1 s when pps_hz=1
+    .pps_n(pps_n),             // N, 1 Hz when pps_s=1
+    .pps_s(pps_s),             // s, 1 s PPS interval
     .pps_tol_us(500),          // us, 500 us, default +- tolerance for pulse rising edge
+    .pa_corr_step(pa_corr_step), // PA correction step
     .clk_sync_hz(clk_sync_hz)  // Hz, 1 kHz SYNC clock, sample rate
   )
   adxl355_clk_inst
   (
     .i_clk(clk),
     .i_pps(pps_btn), // rising edge sensitive
+    .i_faster(btn[6]),
+    .i_slower(btn[5]),
+    .o_cnt(led),
     .o_pps_valid(pps_valid),
     .o_clk_sync(drdy)
   );
 
   // LED monitoring
+  /*
   assign led[7:4] = {drdy,int2,int1,1'b0};
   //assign led[3:0] = {gn27,gn26,gn25,gn24};
   //assign led[3:0] = {sclk,gp13,mosi,csn};
   //assign led[3:0] = {sclk,miso,mosi,csn};
   assign led[3:3] = 0;
-  assign led[2] = ~btn[1];
+  assign led[2] = btn[1]; // btn will stop pps
   assign led[1] = pps_valid;
   assign led[0] = pps;
-  
+  */
   assign oled_csn = 0; // st7789 backlight off
   
 
