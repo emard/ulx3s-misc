@@ -32,18 +32,17 @@ module adxl355_clk
   localparam integer pps_min_cnt = re_pps_min_cnt;
   localparam integer pps_max_cnt = re_pps_max_cnt;
   localparam cnt_pps_bits = 32;
-  reg [cnt_pps_bits-1:0] cnt_pps, cnt_pps_prev;
-  reg [1:0] pps_shift; // for PPS edge detection
-  reg pps_valid_tmp, pps_valid;
+  reg [cnt_pps_bits-1:0] cnt_pps;
   wire cnt_pps_min = cnt_pps == pps_min_cnt;
   wire cnt_pps_max = cnt_pps == pps_max_cnt;
+  reg [1:0] pps_shift; // for PPS edge detection
+  reg pps_valid_tmp, pps_valid;
   always @(posedge i_clk)
   begin
     pps_shift <= {i_pps, pps_shift[1]};
     if(pps_shift == 2'b10 || cnt_pps_max == 1) // rising edge of PPS or PPS too late
     begin
       pps_valid <= cnt_pps_max ? 0 : pps_valid_tmp;
-      cnt_pps_prev <= cnt_pps;
       cnt_pps <= 0;
     end
     else
