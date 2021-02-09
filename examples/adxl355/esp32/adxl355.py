@@ -154,7 +154,7 @@ def range(i:int):
   p8v[0]=0xC0|i
   wr(RANGE,val)
 
-# sync: 0:internal 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
+# sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
 @micropython.viper
 def sync(i:int):
   p8v=ptr8(addressof(val))
@@ -283,5 +283,5 @@ range(1)
 print(temp())
 print(v())
 filter(0)
-sync(6) # needs external clock
+sync(2) # takes external sync to drdy pin
 multird16()
