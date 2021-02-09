@@ -98,19 +98,22 @@ module top_adxl355log
     else if(pps_cnt == pps_width-1)
       pps <= 0;
   end
-
+  
+  wire pps_btn = pps & ~btn[1];
+  
   wire pps_valid;
   adxl355_clk
   #(
     .clk_out0_hz(clk_out0_hz), // Hz, 40 MHz, PLL internal clock
-    .pps_hz(1),                // Hz, 1 Hz
+    .pps_hz(1),                // Hz, 1 Hz when pps_s=1
+    .pps_s(1),                 // s, 1 s when pps_hz=1
     .pps_tol_us(500),          // us, 500 us, default +- tolerance for pulse rising edge
     .clk_sync_hz(clk_sync_hz)  // Hz, 1 kHz SYNC clock, sample rate
   )
   adxl355_clk_inst
   (
     .i_clk(clk),
-    .i_pps(pps), // rising edge sensitive
+    .i_pps(pps_btn), // rising edge sensitive
     .o_pps_valid(pps_valid),
     .o_clk_sync(drdy)
   );
@@ -120,7 +123,8 @@ module top_adxl355log
   //assign led[3:0] = {gn27,gn26,gn25,gn24};
   //assign led[3:0] = {sclk,gp13,mosi,csn};
   //assign led[3:0] = {sclk,miso,mosi,csn};
-  assign led[3:2] = 0;
+  assign led[3:3] = 0;
+  assign led[2] = ~btn[1];
   assign led[1] = pps_valid;
   assign led[0] = pps;
   
