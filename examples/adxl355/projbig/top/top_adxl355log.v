@@ -103,9 +103,10 @@ module top_adxl355log
       pps <= 0;
   end
   
-  wire pps_btn = pps & ~btn[1];
-  //wire pps_btn = wifi_gpio5 & ~btn[1];
+  //wire pps_btn = pps & ~btn[1];
+  wire pps_btn = wifi_gpio5 & ~btn[1];
 
+  wire [7:0] phase;
   wire pps_valid;
   adxl355_clk
   #(
@@ -122,24 +123,24 @@ module top_adxl355log
     .i_pps(pps_btn), // rising edge sensitive
     .i_faster(btn[6]),
     .i_slower(btn[5]),
-    .o_cnt(led),
+    .o_cnt(phase), // monitor phase angle
     .o_pps_valid(pps_valid),
     .o_clk_sync(drdy)
   );
 
   // LED monitoring
-  /*
-  assign led[7:4] = {drdy,int2,int1,1'b0};
+
+  assign led[7:4] = phase[3:0];
+  //assign led[7:4] = {drdy,int2,int1,1'b0};
   //assign led[3:0] = {gn27,gn26,gn25,gn24};
   //assign led[3:0] = {sclk,gp13,mosi,csn};
   //assign led[3:0] = {sclk,miso,mosi,csn};
-  assign led[3:3] = 0;
-  assign led[2] = btn[1]; // btn will stop pps
+  assign led[3:2] = 0;
   assign led[1] = pps_valid;
-  assign led[0] = pps;
-  */
+  assign led[0] = pps_btn;
+
   assign oled_csn = 0; // st7789 backlight off
-  
+
 
 endmodule
 `default_nettype wire
