@@ -3,6 +3,7 @@
 // 1. adjusts PA increment up/down to keep required sample count between PPS
 // 2. when same sample count between PPS, lock phase by maintaining same captured PA value at each PPS pulse
 // PA = phase accumulator
+// FIXME: lock is lost 2-3 times during initial few minutes until fine correction holds the phase
 
 `default_nettype none
 module adxl355_clk
@@ -13,7 +14,6 @@ module adxl355_clk
   pps_tol_us   = 500,        // us, 500 us, PPS input +-tolerance
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC clock, sample rate
   pa_limit_ppm = 1000,       // 1/1e6 phase accumulator +- limit range of PA inc
-  fine_bits    = 4,          // when cnt of this bit width is 0, apply fine correction. more->smaller steps
   pa_corr_step = 1,          // PA coarse correction step (experimentally adjust), more->larger steps
   pa_sync_bits = 32          // SYNC phase accumulator bits
 )
@@ -26,26 +26,16 @@ module adxl355_clk
   output o_locked,    // 1 when sync makes required number of samples between PPS pulses
   output o_clk_sync   // 1 kHz
 );
-  localparam div_fine_corr = 2**fine_bits;
-  localparam real inc_rate = (div_fine_corr-1)/div_fine_corr;
-  localparam real re_pa_inc = 1.0 * clk_sync_hz * 2**16 * 2**(pa_sync_bits-16) / clk_out0_hz * inc_rate; // 2**16 separated to avoid 32-bit signed overflow
+  localparam real re_pa_inc = 1.0 * clk_sync_hz * 2**16 * 2**(pa_sync_bits-16) / clk_out0_hz; // 2**16 separated to avoid 32-bit signed overflow
   localparam integer int_pa_inc = re_pa_inc; // 107374 for 1kHz
   wire [pa_sync_bits-1:0] pa_inc_min = int_pa_inc - int_pa_inc*pa_limit_ppm/1000000; // phase accumulator min limit
   wire [pa_sync_bits-1:0] pa_inc_max = int_pa_inc + int_pa_inc*pa_limit_ppm/1000000; // phase accumulator max limit
   reg [pa_sync_bits-1:0] reg_pa_inc = int_pa_inc; // sample rate frequency adjust reg implicit real->integer
   reg [pa_sync_bits-1:0] pa_sync; // phase accumulator for sync signal
-  wire [pa_sync_bits-1:0] pa_sync_next = pa_sync + reg_pa_inc; // one bit more for carry
-  reg [fine_bits-1:0] cnt_fine;
-  always @(posedge i_clk)
-    cnt_fine <= cnt_fine + 1;
-  reg fine1up0dn; // 1-up, 0-down fine correction register
-  wire [pa_sync_bits-1:0] pa_sync_next_fine = fine1up0dn ? pa_sync + 1 : pa_sync - 1; // fine correction
+  wire [pa_sync_bits-1:0] pa_sync_next = fine1up0dn ? pa_sync + reg_pa_inc + 1 : pa_sync + reg_pa_inc;
   always @(posedge i_clk)
   begin
-    if(cnt_fine == 0)
-      pa_sync <= pa_sync_next_fine;
-    else  // cnt_fine != 0
-      pa_sync <= pa_sync_next;
+    pa_sync <= pa_sync_next;
   end
   assign o_clk_sync = pa_sync[pa_sync_bits-1]; // 1 kHz
 
@@ -129,13 +119,13 @@ module adxl355_clk
       begin
         locked <= 1;
         // cnt_difference zero, fine freq adjustment
-        // tight lock, keep PA at 1/4 or 3/4, away from edge of sync
+        // tight lock, keep PA around 0, away from rising edge of sync at 1/2
         // PA value is used to lock the phase
-        if(pa_sync[pa_sync_bits-2]) // if PA > 1/4 or 3/4
-          fine1up0dn <= 0; // PA > 1/4 or 3/4 -> fine dec
+        if(pa_sync[pa_sync_bits-1]) // if PA > 1/2
+          fine1up0dn <= 1; // PA > 1/2 -> fine inc
         else
-          fine1up0dn <= 1; // PA < 1/4 or 3/4 -> fine inc
-        // when locked, pa_sync should fluctuate around 1/4 or 3/4 of its full range
+          fine1up0dn <= 0; // PA < 1/2 -> fine dec
+        // when locked, pa_sync should fluctuate around +-0
       end
       else
       begin
@@ -172,6 +162,7 @@ module adxl355_clk
   //assign o_cnt = cnt_sample_pps_capture; // show sample number captured at PPS (coarse)
   //assign o_cnt = reg_pa_inc[7:0]; // show PA increment
   assign o_cnt = pa_sync_capture[31:24]; // show PA value captured at PPS (fine)
+  //assign o_cnt = pa_sync[31:24]; // show current PA value
   
   // manual btns
   /*

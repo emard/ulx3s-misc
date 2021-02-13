@@ -29,14 +29,14 @@ module top_adxl355log
   pps_n        = 1,          // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
-  fine_bits    = 4,          // experimentally adjust for good fine convergence, more->smaller steps
-  pa_corr_step = 2           // experimentally adjust for good coarse convergence, more->larger steps
+  pa_corr_step = 1           // experimentally adjust for good coarse convergence, more->larger steps
 )
 (
   input         clk_25mhz,
   input   [6:0] btn,
   output  [7:0] led,
   output        oled_csn, // LCD ST7789 backlight off
+  output  [3:0] audio_l, audio_r,
   //inout  [27:0] gp,gn,
   output        gp13, // ESP32   MISO
   output        gp14, // ADXL355 DRDY
@@ -116,7 +116,6 @@ module top_adxl355log
     .pps_s(pps_s),             // s, 1 s PPS interval
     .pps_tol_us(500),          // us, 500 us, default +- tolerance for pulse rising edge
     .pa_corr_step(pa_corr_step), // PA coarse correction step
-    .fine_bits(fine_bits),     // PA fine correction divider
     .clk_sync_hz(clk_sync_hz)  // Hz, 1 kHz SYNC clock, sample rate
   )
   adxl355_clk_inst
@@ -130,6 +129,28 @@ module top_adxl355log
     .o_locked(sync_locked),
     .o_clk_sync(drdy)
   );
+  
+  // sync counter
+  reg [11:0] cnt_sync, cnt_sync_prev;
+  reg [1:0] sync_shift, pps_shift;
+  always @(posedge clk)
+  begin
+    pps_shift <= {pps_btn, pps_shift[1]};
+    //if(pps_shift == 2'b10)
+    if(0)
+    begin
+      cnt_sync_prev <= cnt_sync;
+      cnt_sync <= cnt_sync+1;
+    end
+    else
+    begin
+      sync_shift <= {drdy, sync_shift[1]};
+      if(sync_shift == 2'b10)
+      begin
+        cnt_sync <= cnt_sync+1;
+      end
+    end
+  end
 
   // LED monitoring
 
@@ -145,6 +166,12 @@ module top_adxl355log
   assign led[0] = pps_btn;
   
   //assign led = phase;
+  //assign led = cnt_sync[7:0];
+  
+  assign audio_l[3:1] = 0;
+  assign audio_l[0] = drdy;
+  assign audio_r[3:1] = 0;
+  assign audio_r[0] = pps_btn;
 
   assign oled_csn = 0; // st7789 backlight off
 
