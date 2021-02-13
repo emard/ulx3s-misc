@@ -29,8 +29,8 @@ module top_adxl355log
   pps_n        = 1,          // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
-  pa_corr_fine = 1,
-  pa_corr_step = 2           // experimentally adjust for good convergence
+  fine_bits    = 4,          // experimentally adjust for good fine convergence, more->smaller steps
+  pa_corr_step = 2           // experimentally adjust for good coarse convergence, more->larger steps
 )
 (
   input         clk_25mhz,
@@ -115,7 +115,8 @@ module top_adxl355log
     .pps_n(pps_n),             // N, 1 Hz when pps_s=1
     .pps_s(pps_s),             // s, 1 s PPS interval
     .pps_tol_us(500),          // us, 500 us, default +- tolerance for pulse rising edge
-    .pa_corr_step(pa_corr_step), // PA correction step
+    .pa_corr_step(pa_corr_step), // PA coarse correction step
+    .fine_bits(fine_bits),     // PA fine correction divider
     .clk_sync_hz(clk_sync_hz)  // Hz, 1 kHz SYNC clock, sample rate
   )
   adxl355_clk_inst
