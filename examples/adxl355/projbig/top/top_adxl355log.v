@@ -29,6 +29,7 @@ module top_adxl355log
   pps_n        = 1,          // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
+  pa_corr_fine = 1,
   pa_corr_step = 2           // experimentally adjust for good convergence
 )
 (
@@ -107,7 +108,7 @@ module top_adxl355log
   wire pps_btn = wifi_gpio5 & ~btn[1];
 
   wire [7:0] phase;
-  wire pps_valid;
+  wire pps_valid, sync_locked;
   adxl355_clk
   #(
     .clk_out0_hz(clk_out0_hz), // Hz, 40 MHz, PLL internal clock
@@ -125,19 +126,24 @@ module top_adxl355log
     .i_slower(btn[5]),
     .o_cnt(phase), // monitor phase angle
     .o_pps_valid(pps_valid),
+    .o_locked(sync_locked),
     .o_clk_sync(drdy)
   );
 
   // LED monitoring
 
-  assign led[7:4] = phase[3:0];
   //assign led[7:4] = {drdy,int2,int1,1'b0};
   //assign led[3:0] = {gn27,gn26,gn25,gn24};
   //assign led[3:0] = {sclk,gp13,mosi,csn};
   //assign led[3:0] = {sclk,miso,mosi,csn};
-  assign led[3:2] = 0;
+  
+  assign led[7:4] = phase[7:4];
+  assign led[3] = 0;
+  assign led[2] = sync_locked;
   assign led[1] = pps_valid;
   assign led[0] = pps_btn;
+  
+  //assign led = phase;
 
   assign oled_csn = 0; // st7789 backlight off
 
