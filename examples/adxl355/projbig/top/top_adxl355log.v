@@ -29,7 +29,7 @@ module top_adxl355log
   pps_n        = 1,          // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
-  pa_corr_step = 1           // experimentally adjust for good coarse convergence, more->larger steps
+  pa_sync_bits = 30          // bit size of phase accumulator, less->faster convergence larger jitter , more->slower convergence less jitter
 )
 (
   input         clk_25mhz,
@@ -115,8 +115,8 @@ module top_adxl355log
     .pps_n(pps_n),             // N, 1 Hz when pps_s=1
     .pps_s(pps_s),             // s, 1 s PPS interval
     .pps_tol_us(500),          // us, 500 us, default +- tolerance for pulse rising edge
-    .pa_corr_step(pa_corr_step), // PA coarse correction step
-    .clk_sync_hz(clk_sync_hz)  // Hz, 1 kHz SYNC clock, sample rate
+    .clk_sync_hz(clk_sync_hz), // Hz, 1 kHz SYNC clock, sample rate
+    .pa_sync_bits(pa_sync_bits)// PA bit size
   )
   adxl355_clk_inst
   (
@@ -136,16 +136,15 @@ module top_adxl355log
   always @(posedge clk)
   begin
     pps_shift <= {pps_btn, pps_shift[1]};
-    //if(pps_shift == 2'b10)
-    if(0)
+    if(pps_shift == 2'b10) // rising
     begin
       cnt_sync_prev <= cnt_sync;
-      cnt_sync <= cnt_sync+1;
+      cnt_sync <= 0;
     end
     else
     begin
       sync_shift <= {drdy, sync_shift[1]};
-      if(sync_shift == 2'b10)
+      if(sync_shift == 2'b01) // falling to avoid sampling near edge
       begin
         cnt_sync <= cnt_sync+1;
       end
@@ -158,15 +157,15 @@ module top_adxl355log
   //assign led[3:0] = {gn27,gn26,gn25,gn24};
   //assign led[3:0] = {sclk,gp13,mosi,csn};
   //assign led[3:0] = {sclk,miso,mosi,csn};
-  
+
   assign led[7:4] = phase[7:4];
   assign led[3] = 0;
   assign led[2] = sync_locked;
   assign led[1] = pps_valid;
   assign led[0] = pps_btn;
-  
+
   //assign led = phase;
-  //assign led = cnt_sync[7:0];
+  //assign led = cnt_sync_prev[7:0]; // should show 0xE8 from 1000 = 0x3E8
   
   assign audio_l[3:1] = 0;
   assign audio_l[0] = drdy;
@@ -174,7 +173,6 @@ module top_adxl355log
   assign audio_r[0] = pps_btn;
 
   assign oled_csn = 0; // st7789 backlight off
-
 
 endmodule
 `default_nettype wire
