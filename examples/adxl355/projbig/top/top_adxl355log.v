@@ -109,7 +109,7 @@ module top_adxl355log
 
   wire [7:0] phase;
   wire pps_valid, sync_locked;
-  adxl355_clk
+  adxl355_sync
   #(
     .clk_out0_hz(clk_out0_hz), // Hz, 40 MHz, PLL internal clock
     .pps_n(pps_n),             // N, 1 Hz when pps_s=1

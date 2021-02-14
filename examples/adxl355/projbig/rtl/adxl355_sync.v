@@ -8,7 +8,7 @@
 // 1 phase = 360 deg
 
 `default_nettype none
-module adxl355_clk
+module adxl355_sync
 #(
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL internal clock
   pps_n        = 1,          // n, 1 Hz when pps_s = 1 number of PPS pulse per time interval
