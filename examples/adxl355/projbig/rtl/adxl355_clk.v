@@ -3,7 +3,9 @@
 // 1. adjusts PA increment up/down to keep required sample count between PPS
 // 2. when same sample count between PPS, lock phase by maintaining same captured PA value at each PPS pulse
 // PA = phase accumulator
-// FIXME: lock is lost 2-3 times during initial few minutes until fine correction holds the phase
+// during first few minutes it can bounce few times
+// between 1/4 and 3/4 phase and it should lock around 1/2 phase
+// 1 phase = 360 deg
 
 `default_nettype none
 module adxl355_clk
@@ -105,53 +107,61 @@ module adxl355_clk
   reg [cnt_sample_pps_bits-1:0] cnt_sample_pps_capture, cnt_sample_pps_capture_prev;
   reg [cnt_sample_pps_bits-1:0] cnt_difference;
   reg [pa_sync_bits-1:0] pa_sync_capture;
+  reg faster, slower;
   reg locked;
   always @(posedge i_clk)
   begin
     if(pps_valid)
     begin // PPS valid
-    if(pps_rising)
-    begin // PPS rising
-      pa_sync_capture <= pa_sync;
-      cnt_sample_pps_capture_prev <= cnt_sample_pps_capture;
-      cnt_sample_pps_capture <= cnt_sample_pps;
-      if(cnt_difference == 0)
-      begin
-        locked <= 1;
-        // cnt_difference zero, fine freq adjustment
-        // tight lock, keep PA around 1/2, away from falling edge of sync at 0
-        // PA value is used to lock the phase
-        if(pa_sync[pa_sync_bits-1]) // if PA > 1/2
-          fine1up0dn <= 0; // PA > 1/2 -> fine dec
-        else
-          fine1up0dn <= 1; // PA < 1/2 -> fine inc
-        // when locked, pa_sync should fluctuate around 1/2
-      end
-      else
-      begin
-        locked <= 0;
-        // cnt_difference nonzero, coarse freq adjustment
-        //if(cnt_difference==1 || cnt_difference==-1) // -1 or +1 exactly, more LUTs
-        if(cnt_difference[cnt_sample_pps_bits-1] || cnt_difference[0]) // simplified -1 or +1, glitches possible and hopefully tolerated
+      if(pps_rising)
+      begin // PPS rising
+        pa_sync_capture <= pa_sync;
+        cnt_sample_pps_capture_prev <= cnt_sample_pps_capture;
+        cnt_sample_pps_capture <= cnt_sample_pps;
+        if(cnt_difference == 0)
         begin
-          if(cnt_difference[cnt_sample_pps_bits-1]) // negative?
+          locked <= 1;
+          // at the edges of phase stability, change reg_pa_inc
+          faster <= pa_sync[pa_sync_bits-1:pa_sync_bits-2] == 3'b00; // if PA < 1/4, faster
+          slower <= pa_sync[pa_sync_bits-1:pa_sync_bits-2] == 3'b11; // if PA > 3/4, slower
+          // cnt_difference zero, fine freq adjustment
+          // tight lock, keep PA around 1/2, away from falling edge of sync at 0
+          // PA value is used to lock the phase
+          if(pa_sync[pa_sync_bits-1]) // if PA > 1/2
+            fine1up0dn <= 0; // PA > 1/2 -> fine dec
+          else
+            fine1up0dn <= 1; // PA < 1/2 -> fine inc
+          // when locked, pa_sync should fluctuate around 1/2
+        end
+        else
+        begin
+          locked <= 0;
+          // cnt_difference nonzero, coarse freq adjustment
+          //if(cnt_difference==1 || cnt_difference==-1) // -1 or +1 exactly, more LUTs
+          if(cnt_difference[cnt_sample_pps_bits-1] || cnt_difference[0]) // simplified -1 or +1, glitches possible and hopefully tolerated
           begin
-            if(reg_pa_inc < pa_inc_max) // uses LUTs, prevents runaway
-              reg_pa_inc <= reg_pa_inc + pa_corr_step;
+            faster <=  cnt_difference[cnt_sample_pps_bits-1]; // negative -> faster
+            slower <= ~cnt_difference[cnt_sample_pps_bits-1]; // positive -> slower
+            cnt_correct_prev <= cnt_correct;
+            cnt_correct <= 0;
           end
           else
           begin
-            if(reg_pa_inc > pa_inc_min) // uses LUTs, prevents runaway
-              reg_pa_inc <= reg_pa_inc - pa_corr_step;
+            faster <= 0;
+            slower <= 0;
           end
-          cnt_correct_prev <= cnt_correct;
-          cnt_correct <= 0;
         end
+      end // PPS rising
+      else // PPS not rising
+      begin
+        faster <= 0;
+        slower <= 0;
       end
-    end // PPS rising
     end // PPS valid
     else // PPS not valid
     begin
+      faster <= 0;
+      slower <= 0;
       locked <= 0;
     end // PPS not valid
     cnt_difference <= cnt_sample_pps_capture - cnt_sample_pps_capture_prev;
@@ -161,29 +171,25 @@ module adxl355_clk
   // debug
   //assign o_cnt = cnt_sample_pps_capture; // show sample number captured at PPS (coarse)
   //assign o_cnt = reg_pa_inc[7:0]; // show PA increment
-  assign o_cnt = pa_sync_capture[31:24]; // show PA value captured at PPS (fine)
-  //assign o_cnt = pa_sync[31:24]; // show current PA value
+  assign o_cnt = pa_sync_capture[pa_sync_bits-1:pa_sync_bits-8]; // show PA value captured at PPS (fine)
+  //assign o_cnt = pa_sync[pa_sync_bits-1:pa_sync_bits-8]; // show current PA value
   
-  // manual btns
-  /*
+  // control faster/slower reg_pa_inc
   always @(posedge i_clk)
   begin
-    if(pps_rising)
+    if(faster && ~slower)
     begin
-      if(i_faster)
-      begin
-        if(reg_pa_inc != pa_inc_max)
-          reg_pa_inc <= reg_pa_inc + 1; // run faster
-      end
-      else
-        if(i_slower)
-        begin
-          if(reg_pa_inc != pa_inc_min)
-            reg_pa_inc <= reg_pa_inc - 1; // run slower
-        end
+      if(reg_pa_inc < pa_inc_max)
+        reg_pa_inc <= reg_pa_inc + pa_corr_step; // run faster
     end
+    else
+      if(slower && ~faster)
+      begin
+        if(reg_pa_inc > pa_inc_min)
+          reg_pa_inc <= reg_pa_inc - pa_corr_step; // run slower
+      end
   end
-  */
+
   // debug
   //assign o_cnt = cnt_difference;
   //assign o_cnt = cnt_correct_prev; // index to pa_inc correction
