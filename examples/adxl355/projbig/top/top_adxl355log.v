@@ -44,6 +44,7 @@ module top_adxl355log
   input         gp17, // ADXL355 INT1
   input         gn15, // ADXL355 MISO
   output        gn14,gn16,gn17, // ADXL355 SCLK,MOSI,CSn
+  input         ftdi_nrts,
   output        ftdi_rxd,
   input         ftdi_txd,
   output        wifi_rxd,
@@ -105,7 +106,8 @@ module top_adxl355log
   end
   
   //wire pps_btn = pps & ~btn[1];
-  wire pps_btn = wifi_gpio5 & ~btn[1];
+  //wire pps_btn = wifi_gpio5 & ~btn[1];
+  wire pps_btn = ftdi_nrts & ~btn[1];
 
   wire [7:0] phase;
   wire pps_valid, sync_locked;
@@ -114,7 +116,7 @@ module top_adxl355log
     .clk_out0_hz(clk_out0_hz), // Hz, 40 MHz, PLL internal clock
     .pps_n(pps_n),             // N, 1 Hz when pps_s=1
     .pps_s(pps_s),             // s, 1 s PPS interval
-    .pps_tol_us(500),          // us, 500 us, default +- tolerance for pulse rising edge
+    .pps_tol_us(500),         // us, 500 us, default +- tolerance for pulse rising edge
     .clk_sync_hz(clk_sync_hz), // Hz, 1 kHz SYNC clock, sample rate
     .pa_sync_bits(pa_sync_bits)// PA bit size
   )
