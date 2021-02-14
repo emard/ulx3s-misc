@@ -44,7 +44,7 @@ module adxl355_clk
   always @(posedge i_clk)
     sync_shift <= {pa_sync[pa_sync_bits-1], sync_shift[1]};
   wire sync_rising = sync_shift == 2'b10; // rising edge detection of pa_sync MSB bit
-  //wire sync_falling = sync_shift == 2'b01; // falling edge detection of pa_sync MSB bit
+  wire sync_falling = sync_shift == 2'b01; // falling edge detection of pa_sync MSB bit
 
   // check PPS for tolerance
   localparam real re_pps_min_cnt = 1.0 * clk_out0_hz*pps_s/pps_n - 1.0 * pps_tol_us*clk_out0_hz/1000000;
@@ -92,7 +92,7 @@ module adxl355_clk
   reg [cnt_sample_pps_bits-1:0] cnt_sample_pps = 0; // sample counter
   always @(posedge i_clk)
   begin
-    if(sync_rising)
+    if(sync_falling)
     begin
       if(cnt_sample_pps == cnt_sample_pps_n-1)
         cnt_sample_pps <= 0;
@@ -119,13 +119,13 @@ module adxl355_clk
       begin
         locked <= 1;
         // cnt_difference zero, fine freq adjustment
-        // tight lock, keep PA around 0, away from rising edge of sync at 1/2
+        // tight lock, keep PA around 1/2, away from falling edge of sync at 0
         // PA value is used to lock the phase
         if(pa_sync[pa_sync_bits-1]) // if PA > 1/2
-          fine1up0dn <= 1; // PA > 1/2 -> fine inc
+          fine1up0dn <= 0; // PA > 1/2 -> fine dec
         else
-          fine1up0dn <= 0; // PA < 1/2 -> fine dec
-        // when locked, pa_sync should fluctuate around +-0
+          fine1up0dn <= 1; // PA < 1/2 -> fine inc
+        // when locked, pa_sync should fluctuate around 1/2
       end
       else
       begin
