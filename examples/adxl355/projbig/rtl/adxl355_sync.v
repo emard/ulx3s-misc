@@ -17,7 +17,7 @@ module adxl355_sync
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC clock, sample rate
   pa_limit_ppm = 1000,       // 1/1e6 phase accumulator +- limit range of PA inc
   pa_corr_step = 1,          // PA coarse correction step (experimentally adjust), more->larger steps
-  pa_sync_bits = 32          // SYNC phase accumulator bits
+  pa_sync_bits = 32          // SYNC phase accumulator bits, less->faster convergence, more->smaller jitter
 )
 (
   input  i_clk,       // 40 kHz system clock
