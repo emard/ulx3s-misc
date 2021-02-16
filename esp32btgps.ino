@@ -65,16 +65,27 @@ void reconnect()
 void loop()
 {
   static uint16_t tprev, t;
+  char nmea[256];
+  int i;
   t = millis();
   int16_t tms = (int16_t)(t-tprev);
   
   if (connected && SerialBT.available())
   {
-    // read returns char or -1 if unavailable
-    char b = SerialBT.read();
-    Serial.print(b);
-    digitalWrite(PIN_LED,1);
-    tprev=t;
+    i = 0;
+    while(SerialBT.available() && i < 255)
+    {
+      // read returns char or -1 if unavailable
+      nmea[i++]=SerialBT.read();
+      //Serial.print(b);
+    }
+    if(i)
+    {
+      nmea[i]=0;
+      Serial.print(nmea);
+      digitalWrite(PIN_LED,1);
+      tprev=t;
+    }
   }
   else
   {
