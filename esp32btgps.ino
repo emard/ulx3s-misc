@@ -65,26 +65,32 @@ void reconnect()
 void loop()
 {
   static uint16_t tprev, t;
-  char nmea[256];
-  int i;
+  static char nmea[256];
+  static char c;
+  static int i = 0;
   t = millis();
   int16_t tms = (int16_t)(t-tprev);
-  
+
   if (connected && SerialBT.available())
   {
-    i = 0;
-    while(SerialBT.available() && i < 255)
+    c=0;
+    while(SerialBT.available() && c != '\n')
     {
       // read returns char or -1 if unavailable
-      nmea[i++]=SerialBT.read();
-      //Serial.print(b);
+      c = SerialBT.read();
+      if(i < 255)
+        nmea[i++]=c;
     }
-    if(i)
+    if(i > 3 && c == '\n') // line complete
     {
-      nmea[i]=0;
-      Serial.print(nmea);
+      if(nmea[1]=='G' && nmea[3]=='R') // print only GPRMC
+      {
+        nmea[i]=0;
+        Serial.print(nmea);
+      }
       digitalWrite(PIN_LED,1);
       tprev=t;
+      i=0;
     }
   }
   else
@@ -94,6 +100,7 @@ void loop()
       digitalWrite(PIN_LED,0);
       reconnect();
       tprev = millis();
+      i=0;
     }
   }
 }
