@@ -17,6 +17,13 @@ String name = "Garmin GLO #4352e";
 char *pin = "1234"; //<- standard pin would be provided by default
 bool connected = false;
 
+// read raw 32-bit CPU ticks, running at 240 MHz, wraparound 18s
+inline uint32_t IRAM_ATTR cputix()
+{
+  uint32_t ccount;
+  asm volatile ( "rsr %0, ccount" : "=a" (ccount) );
+  return ccount;
+}
 
 // connect MCPWM PPS pin output to some input pin for interrupt
 // workaround to create interrupt at each MCPWM cycle
@@ -70,6 +77,7 @@ void loop()
   static int i = 0;
   t = millis();
   int16_t tms = (int16_t)(t-tprev);
+  uint32_t ct = cputix();
 
   if (connected && SerialBT.available())
   {
@@ -86,7 +94,8 @@ void loop()
       if(nmea[1]=='G' && nmea[3]=='R') // print only GPRMC
       {
         nmea[i]=0;
-        Serial.print(nmea);
+        //Serial.print(nmea);
+        Serial.println(ct, HEX);
       }
       digitalWrite(PIN_LED,1);
       tprev=t;
