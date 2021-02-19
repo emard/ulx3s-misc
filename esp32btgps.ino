@@ -91,11 +91,12 @@ void loop()
     }
     if(i > 3 && c == '\n') // line complete
     {
+      //if(nmea[1]=='P' && nmea[3]=='R') // print only PGRMT, we need Version 3.00
       if(nmea[1]=='G' && nmea[3]=='R') // print only GPRMC
       {
         nmea[i]=0;
-        //Serial.print(nmea);
-        Serial.println(ct, HEX);
+        Serial.print(nmea);
+        //Serial.println(ct, HEX);
       }
       digitalWrite(PIN_LED,1);
       tprev=t;
