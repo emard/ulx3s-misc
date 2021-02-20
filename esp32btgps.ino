@@ -54,9 +54,22 @@ static void IRAM_ATTR isr_handler()
   int32_t delta = t - nmealog_ct[idx]; // ms time passed from log timestamp to irq
   uint32_t t0 = 100*nmealog_dt[idx]+delta; // more precise nmea time when this irq happened +-40ms precision
   int32_t ctdelta2 = (ct - ctprev)/ctMHz; // us time between irq's
+  int i;
   ctprev = ct;
-  //Serial.print(idx, DEC);
-  //Serial.print(" ");
+  // average of recent n measurements
+  const int n = 100;
+  uint32_t sct = 0, sdt = 0;
+  uint8_t i2;
+  for(i = 0; i < n; i++)
+  {
+    i2 = idx-i;
+    sct += nmealog_ct[i2];
+    sdt += nmealog_dt[i2];
+  }
+  uint32_t avg = (100*sdt-sct)/n;
+  
+  Serial.print(avg, DEC);
+  Serial.print(" ");
   //Serial.print(ctdelta2, DEC); // microseconds from log to irq
   //Serial.print(" ");
   Serial.print(t0, DEC);
