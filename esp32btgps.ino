@@ -30,7 +30,7 @@ inline uint32_t IRAM_ATTR cputix()
 // cputix related
 #define M 1000000
 #define G 1000000000
-#define ctMHz = 240
+#define ctMHz 240
 
 // rotated log of 256 NMEA timestamps and their cputix timestamps
 uint8_t inmealog = 0;
@@ -47,9 +47,14 @@ uint32_t nmea2sx[8] = { 360000,36000,6000,600,100,10,0,1 };
 static void IRAM_ATTR isr_handler()
 {
   uint8_t idx = inmealog-2;
+  uint32_t ct = cputix();
+  static uint32_t ctprev;
+  int32_t delta = ct - nmealog_ct[idx]; // time passed from log to irq
+  int32_t delta2 = ct - ctprev; // time between irq's
+  ctprev = ct;
   Serial.print(idx, DEC);
   Serial.print(" ");
-  Serial.print(nmealog_ct[idx], DEC);
+  Serial.print(delta/ctMHz, DEC); // microseconds from log to irq
   Serial.print(" ");
   Serial.print(nmealog_dt[idx], DEC);
   Serial.println(" irq");
