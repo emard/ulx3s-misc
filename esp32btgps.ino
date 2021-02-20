@@ -34,7 +34,7 @@ inline uint32_t IRAM_ATTR cputix()
 
 // rotated log of 256 NMEA timestamps and their cputix timestamps
 uint8_t inmealog = 0;
-uint32_t nmealog_ct[256]; // cputix timestamp of nmealog
+uint32_t nmealog_ct[256]; // ms timestamp of nmealog
 uint32_t nmealog_dt[256]; // nmea daytime in seconds x10 (resolution 0.1s)
 
 // nmea timestamp string (day time) from conversion factors to 10x seconds
@@ -46,17 +46,18 @@ uint32_t nmea2sx[8] = { 360000,36000,6000,600,100,10,0,1 };
 // MCPWM period correction to make PLL to GPS time
 static void IRAM_ATTR isr_handler()
 {
-  uint8_t idx = inmealog-2;
-  uint32_t ct = cputix();
+  uint32_t ct = cputix(); // hi-resolution timer 18s wraparound
   static uint32_t ctprev;
-  int32_t delta = (ct - nmealog_ct[idx])/ctMHz; // us time passed from log timestamp to irq
-  uint64_t t0l = (uint64_t)(100000)*nmealog_dt[idx]+delta;
-  uint32_t t0 = t0l/1000;
-  int32_t delta2 = (ct - ctprev)/ctMHz; // us time between irq's
+  uint8_t idx = inmealog-2;
+  uint32_t t = millis();
+  static uint32_t tprev;
+  int32_t delta = t - nmealog_ct[idx]; // ms time passed from log timestamp to irq
+  uint32_t t0 = 100*nmealog_dt[idx]+delta; // more precise nmea time when this irq happened +-40ms precision
+  int32_t ctdelta2 = (ct - ctprev)/ctMHz; // us time between irq's
   ctprev = ct;
   //Serial.print(idx, DEC);
   //Serial.print(" ");
-  //Serial.print(delta, DEC); // microseconds from log to irq
+  //Serial.print(ctdelta2, DEC); // microseconds from log to irq
   //Serial.print(" ");
   Serial.print(t0, DEC);
   Serial.println(" irq");
@@ -122,14 +123,13 @@ int nmea2s(char *nmea)
 
 void loop()
 {
-  static uint16_t tprev;
-  uint16_t t = millis();
+  static uint32_t tprev;
+  uint32_t t = millis();
   static char nmea[256];
   static char c;
   static int i = 0;
-  int16_t tms = (int16_t)(t-tprev);
-  uint32_t ct = cputix();
-  static uint32_t ct0; // first char in line cputix timestamp
+  int32_t tdelta = t-tprev;
+  static uint32_t ct0; // first char in line millis timestamp
 
   if (connected && SerialBT.available())
   {
@@ -137,7 +137,7 @@ void loop()
     while(SerialBT.available() && c != '\n')
     {
       if(i == 0)
-        ct0 = cputix();
+        ct0 = millis();
       // read returns char or -1 if unavailable
       c = SerialBT.read();
       if(i < 255)
@@ -163,7 +163,7 @@ void loop()
   }
   else
   {
-    if(tms > 4000) // 4 seconds of serial silence
+    if(tdelta > 4000) // 4 seconds of serial silence
     {
       digitalWrite(PIN_LED,0);
       reconnect();
