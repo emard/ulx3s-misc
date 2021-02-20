@@ -36,6 +36,8 @@ inline uint32_t IRAM_ATTR cputix()
 uint8_t inmealog = 0;
 uint32_t nmealog_ct[256]; // ms timestamp of nmealog
 uint32_t nmealog_dt[256]; // nmea daytime in seconds x10 (resolution 0.1s)
+int32_t nmea2ms_log[256]; // difference nmea-millis() log
+int64_t nmea2ms_sum;
 
 // nmea timestamp string (day time) from conversion factors to 10x seconds
 uint32_t nmea2sx[8] = { 360000,36000,6000,600,100,10,0,1 };
@@ -56,22 +58,13 @@ static void IRAM_ATTR isr_handler()
   int32_t ctdelta2 = (ct - ctprev)/ctMHz; // us time between irq's
   int i;
   ctprev = ct;
-  // average of recent n measurements
-  const int n = 100;
-  uint32_t sct = 0, sdt = 0;
-  uint8_t i2;
-  for(i = 0; i < n; i++)
-  {
-    i2 = idx-i;
-    sct += nmealog_ct[i2];
-    sdt += nmealog_dt[i2];
-  }
-  uint32_t avg = (100*sdt-sct)/n;
+  // average of logged 256 measurements
+  int32_t avg2 = nmea2ms_sum/256;
   
-  Serial.print(avg, DEC);
+  Serial.print(avg2, DEC);
   Serial.print(" ");
-  //Serial.print(ctdelta2, DEC); // microseconds from log to irq
-  //Serial.print(" ");
+  Serial.print(ctdelta2, DEC); // microseconds from log to irq
+  Serial.print(" ");
   Serial.print(t0, DEC);
   Serial.println(" irq");
 }
@@ -110,6 +103,10 @@ void setup() {
   MCPWM0.channel[0].generator[0].utea = 1;      // Clear on compare match
   MCPWM0.timer[0].mode.mode = 1;                // Set timer 0 to increment
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
+  // initialize nmea to millis() statistics sum
+  nmea2ms_sum = 0;
+  for(int i = 0; i < 256; i++)
+    nmea2ms_log[i] = 0;
 }
 
 void reconnect()
@@ -164,6 +161,9 @@ void loop()
         nmea[i]=0;
         //Serial.print(nmea);
         int daytime = nmea2s(nmea+7);
+        int32_t nmea2ms = daytime*100-ct0;
+        nmea2ms_sum += nmea2ms-nmea2ms_log[inmealog]; // moving sum
+        nmea2ms_log[inmealog] = nmea2ms;        
         nmealog_dt[inmealog] = daytime;
         nmealog_ct[inmealog++] = ct0;
         //Serial.println(daytime, DEC);
