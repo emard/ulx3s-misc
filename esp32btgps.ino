@@ -5,6 +5,8 @@
 #define PIN_BTN 0
 #define PIN_LED 2
 #define PIN_PPS 27
+#define PIN_IRQ 26
+// PPS and IRQ connected with wire
 
 #include "soc/mcpwm_reg.h"
 #include "soc/mcpwm_struct.h"
@@ -25,6 +27,19 @@ inline uint32_t IRAM_ATTR cputix()
   return ccount;
 }
 
+// cputix related
+#define M 1000000
+#define G 1000000000
+#define ctMHz = 240
+
+// rotated log of 256 NMEA timestamps and their cputix timestamps
+uint8_t inmealog = 0;
+uint32_t nmealog_ct[256]; // cputix timestamp of nmealog
+uint32_t nmealog_t[256]; // nmea day time in seconds x10 (resolution 0.1s)
+
+// nmea timestamp string (day time) from conversion factors to 10x seconds
+uint32_t nmea2sx[8] = { 360000,36000,6000,600,100,10,0,1 };
+
 // connect MCPWM PPS pin output to some input pin for interrupt
 // workaround to create interrupt at each MCPWM cycle
 // the ISR should sample GPS tracking timer and calculate
@@ -34,12 +49,26 @@ static void IRAM_ATTR isr_handler()
   Serial.println("interrupt");
 }
 
+/* test 64-bit functions */
+#if 0
+void test64()
+{
+  uint64_t G = 1000000000; // 1e9 giga
+  uint64_t x = 72*G; // 72e9
+  uint64_t r = x+1234;
+  uint32_t y = x/G;
+  uint32_t z = r%G;
+  Serial.println(z, DEC);
+}
+#endif
 
 void setup() {
   Serial.begin(115200);
   pinMode(PIN_LED, OUTPUT);
-  pinMode(PIN_BTN, INPUT);
-  attachInterrupt(PIN_BTN, isr_handler, FALLING);
+  //pinMode(PIN_BTN, INPUT);
+  //attachInterrupt(PIN_BTN, isr_handler, FALLING);
+  pinMode(PIN_IRQ, INPUT);
+  attachInterrupt(PIN_IRQ, isr_handler, RISING);
   digitalWrite(PIN_LED, 0);
   SerialBT.begin("ESP32", true);
   SerialBT.setPin(pin);
@@ -69,21 +98,33 @@ void reconnect()
   // it is sometimes true even if not connected.
 }
 
+// convert nmea GPRMC daytime to seconds since midnight x10 (0.1 s resolution)
+int gprmc2s(char *nmea)
+{
+  int s = 0;
+  for(int i = 0; i < 8; i++)
+  s += (nmea[i+7]-'0')*nmea2sx[i];
+  return s;
+}
+
 void loop()
 {
-  static uint16_t tprev, t;
+  static uint16_t tprev;
+  uint16_t t = millis();
   static char nmea[256];
   static char c;
   static int i = 0;
-  t = millis();
   int16_t tms = (int16_t)(t-tprev);
   uint32_t ct = cputix();
+  static uint32_t ct0; // first char in line cputix timestamp
 
   if (connected && SerialBT.available())
   {
     c=0;
     while(SerialBT.available() && c != '\n')
     {
+      if(i == 0)
+        ct0 = cputix();
       // read returns char or -1 if unavailable
       c = SerialBT.read();
       if(i < 255)
@@ -96,6 +137,8 @@ void loop()
       {
         nmea[i]=0;
         Serial.print(nmea);
+        int daytime = gprmc2s(nmea);
+        Serial.println(daytime, DEC);
         //Serial.println(ct, HEX);
       }
       digitalWrite(PIN_LED,1);
