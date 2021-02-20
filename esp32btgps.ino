@@ -49,14 +49,16 @@ static void IRAM_ATTR isr_handler()
   uint8_t idx = inmealog-2;
   uint32_t ct = cputix();
   static uint32_t ctprev;
-  int32_t delta = ct - nmealog_ct[idx]; // time passed from log to irq
-  int32_t delta2 = ct - ctprev; // time between irq's
+  int32_t delta = (ct - nmealog_ct[idx])/ctMHz; // us time passed from log timestamp to irq
+  uint64_t t0l = (uint64_t)(100000)*nmealog_dt[idx]+delta;
+  uint32_t t0 = t0l/1000;
+  int32_t delta2 = (ct - ctprev)/ctMHz; // us time between irq's
   ctprev = ct;
-  Serial.print(idx, DEC);
-  Serial.print(" ");
-  Serial.print(delta/ctMHz, DEC); // microseconds from log to irq
-  Serial.print(" ");
-  Serial.print(nmealog_dt[idx], DEC);
+  //Serial.print(idx, DEC);
+  //Serial.print(" ");
+  //Serial.print(delta, DEC); // microseconds from log to irq
+  //Serial.print(" ");
+  Serial.print(t0, DEC);
   Serial.println(" irq");
 }
 
