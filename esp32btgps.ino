@@ -35,7 +35,7 @@ inline uint32_t IRAM_ATTR cputix()
 // rotated log of 256 NMEA timestamps and their cputix timestamps
 uint8_t inmealog = 0;
 uint32_t nmealog_ct[256]; // cputix timestamp of nmealog
-uint32_t nmealog_t[256]; // nmea day time in seconds x10 (resolution 0.1s)
+uint32_t nmealog_dt[256]; // nmea daytime in seconds x10 (resolution 0.1s)
 
 // nmea timestamp string (day time) from conversion factors to 10x seconds
 uint32_t nmea2sx[8] = { 360000,36000,6000,600,100,10,0,1 };
@@ -46,7 +46,13 @@ uint32_t nmea2sx[8] = { 360000,36000,6000,600,100,10,0,1 };
 // MCPWM period correction to make PLL to GPS time
 static void IRAM_ATTR isr_handler()
 {
-  Serial.println("interrupt");
+  uint8_t idx = inmealog-2;
+  Serial.print(idx, DEC);
+  Serial.print(" ");
+  Serial.print(nmealog_ct[idx], DEC);
+  Serial.print(" ");
+  Serial.print(nmealog_dt[idx], DEC);
+  Serial.println(" irq");
 }
 
 /* test 64-bit functions */
@@ -136,9 +142,11 @@ void loop()
       if(nmea[1]=='G' && nmea[3]=='R') // print only GPRMC
       {
         nmea[i]=0;
-        Serial.print(nmea);
+        //Serial.print(nmea);
         int daytime = nmea2s(nmea+7);
-        Serial.println(daytime, DEC);
+        nmealog_dt[inmealog] = daytime;
+        nmealog_ct[inmealog++] = ct0;
+        //Serial.println(daytime, DEC);
         //Serial.println(ct, HEX);
       }
       digitalWrite(PIN_LED,1);
