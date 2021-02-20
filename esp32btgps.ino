@@ -98,12 +98,12 @@ void reconnect()
   // it is sometimes true even if not connected.
 }
 
-// convert nmea GPRMC daytime to seconds since midnight x10 (0.1 s resolution)
-int gprmc2s(char *nmea)
+// convert nmea daytime HHMMSS.S to seconds since midnight x10 (0.1 s resolution)
+int nmea2s(char *nmea)
 {
   int s = 0;
   for(int i = 0; i < 8; i++)
-  s += (nmea[i+7]-'0')*nmea2sx[i];
+  s += (nmea[i]-'0')*nmea2sx[i];
   return s;
 }
 
@@ -137,7 +137,7 @@ void loop()
       {
         nmea[i]=0;
         Serial.print(nmea);
-        int daytime = gprmc2s(nmea);
+        int daytime = nmea2s(nmea+7);
         Serial.println(daytime, DEC);
         //Serial.println(ct, HEX);
       }
