@@ -4,7 +4,7 @@
 // BTN has inverted logic, 0 when pressed
 #define PIN_BTN 0
 #define PIN_LED 2
-#define PIN_PPS 27
+#define PIN_PPS 25
 #define PIN_IRQ 26
 // PPS and IRQ connected with wire
 
