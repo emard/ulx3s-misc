@@ -2,10 +2,21 @@
 // set Board->ESP32 Arduino->ESP32 Dev Module
 
 // BTN has inverted logic, 0 when pressed
+#if 0
+// devkit esp32
 #define PIN_BTN 0
 #define PIN_LED 2
 #define PIN_PPS 25
 #define PIN_IRQ 26
+#endif
+#if 1
+// ulx3s
+#define PIN_BTN 32
+#define PIN_LED 5
+#define PIN_PPS 25
+#define PIN_IRQ 26
+#endif
+
 // PPS and IRQ connected with wire
 
 #include "soc/mcpwm_reg.h"
