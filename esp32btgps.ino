@@ -31,6 +31,8 @@ inline uint32_t IRAM_ATTR cputix()
 #define M 1000000
 #define G 1000000000
 #define ctMHz 240
+// nominal period for 1Hz
+#define Period1Hz 63999
 
 // rotated log of 256 NMEA timestamps and their cputix timestamps
 uint8_t inmealog = 0;
@@ -38,6 +40,7 @@ uint32_t nmealog_ct[256]; // ms timestamp of nmealog
 uint32_t nmealog_dt[256]; // nmea daytime in seconds x10 (resolution 0.1s)
 int32_t nmea2ms_log[256]; // difference nmea-millis() log
 int64_t nmea2ms_sum;
+int32_t nmea2ms_dif;
 
 // nmea timestamp string (day time) from conversion factors to 10x seconds
 uint32_t nmea2sx[8] = { 360000,36000,6000,600,100,10,0,1 };
@@ -50,22 +53,23 @@ static void IRAM_ATTR isr_handler()
 {
   uint32_t ct = cputix(); // hi-resolution timer 18s wraparound
   static uint32_t ctprev;
-  uint8_t idx = inmealog-2;
   uint32_t t = millis();
   static uint32_t tprev;
-  int32_t delta = t - nmealog_ct[idx]; // ms time passed from log timestamp to irq
-  uint32_t t0 = 100*nmealog_dt[idx]+delta; // more precise nmea time when this irq happened +-40ms precision
   int32_t ctdelta2 = (ct - ctprev)/ctMHz; // us time between irq's
-  int i;
   ctprev = ct;
-  // average of logged 256 measurements
-  int32_t avg2 = nmea2ms_sum/256;
-  
-  Serial.print(avg2, DEC);
+  const int16_t phase_target = 0;
+  int16_t phase = (nmea2ms_dif+t)%1000;
+  int16_t period_correction = (phase_target-phase+2500)%1000-500;
+  if(period_correction < -15 || period_correction > 15)
+    period_correction *= 4; // faster convergence
+  if(period_correction > 1530) // upper limit to prevent 16-bit wraparound
+    period_correction = 1530;  
+  MCPWM0.timer[0].period.period = Period1Hz+period_correction;
+  Serial.print(nmea2ms_dif, DEC);
   Serial.print(" ");
   Serial.print(ctdelta2, DEC); // microseconds from log to irq
   Serial.print(" ");
-  Serial.print(t0, DEC);
+  Serial.print(phase, DEC);
   Serial.println(" irq");
 }
 
@@ -163,6 +167,7 @@ void loop()
         int daytime = nmea2s(nmea+7);
         int32_t nmea2ms = daytime*100-ct0;
         nmea2ms_sum += nmea2ms-nmea2ms_log[inmealog]; // moving sum
+        nmea2ms_dif = nmea2ms_sum/256;
         nmea2ms_log[inmealog] = nmea2ms;        
         nmealog_dt[inmealog] = daytime;
         nmealog_ct[inmealog++] = ct0;
