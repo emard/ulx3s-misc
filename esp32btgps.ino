@@ -69,9 +69,9 @@ static void IRAM_ATTR isr_handler()
   if(period_correction > 1530) // upper limit to prevent 16-bit wraparound
     period_correction = 1530;  
   MCPWM0.timer[0].period.period = Period1Hz+period_correction;
-  Serial.print(nmea2ms_dif, DEC);
+  Serial.print(nmea2ms_dif, DEC); // average nmea time - millis() time
   Serial.print(" ");
-  Serial.print(ctdelta2, DEC); // microseconds from log to irq
+  Serial.print(ctdelta2, DEC); // microseconds between each irq measured by CPU timer
   Serial.print(" ");
   Serial.print(phase, DEC); // less:PPS early, more:PPS late
   Serial.println(" irq");
