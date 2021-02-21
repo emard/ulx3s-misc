@@ -31,7 +31,7 @@ inline uint32_t IRAM_ATTR cputix()
 #define M 1000000
 #define G 1000000000
 #define ctMHz 240
-#define PPSHz 1
+#define PPSHz 10
 // nominal period for PPSHz
 #define Period1Hz 63999
 // constants to help PLL
