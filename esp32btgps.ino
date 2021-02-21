@@ -73,7 +73,7 @@ static void IRAM_ATTR isr_handler()
   Serial.print(" ");
   Serial.print(ctdelta2, DEC); // microseconds from log to irq
   Serial.print(" ");
-  Serial.print(phase, DEC);
+  Serial.print(phase, DEC); // less:PPS early, more:PPS late
   Serial.println(" irq");
 }
 
