@@ -34,11 +34,13 @@ inline uint32_t IRAM_ATTR cputix()
 #define PPSHz 1
 // nominal period for PPSHz
 #define Period1Hz 63999
+// constants to help PLL
+const int16_t phase_target = 0;
+const int16_t period = 1000/PPSHz;
+const int16_t halfperiod = period/2;
 
 // rotated log of 256 NMEA timestamps and their cputix timestamps
 uint8_t inmealog = 0;
-uint32_t nmealog_ct[256]; // ms timestamp of nmealog
-uint32_t nmealog_dt[256]; // nmea daytime in seconds x10 (resolution 0.1s)
 int32_t nmea2ms_log[256]; // difference nmea-millis() log
 int64_t nmea2ms_sum;
 int32_t nmea2ms_dif;
@@ -58,9 +60,6 @@ static void IRAM_ATTR isr_handler()
   static uint32_t tprev;
   int32_t ctdelta2 = (ct - ctprev)/ctMHz; // us time between irq's
   ctprev = ct;
-  const int16_t phase_target = 0;
-  const int16_t period = 1000/PPSHz;
-  const int16_t halfperiod = period/2;
   int16_t phase = (nmea2ms_dif+t)%period;
   int16_t period_correction = (phase_target-phase+2*period+halfperiod)%period-halfperiod;
   if(period_correction < -15 || period_correction > 15)
@@ -170,12 +169,10 @@ void loop()
         nmea[i]=0;
         //Serial.print(nmea);
         int daytime = nmea2s(nmea+7);
-        int32_t nmea2ms = daytime*100-ct0;
+        int32_t nmea2ms = daytime*100-ct0; // difference from nmea to timer
         nmea2ms_sum += nmea2ms-nmea2ms_log[inmealog]; // moving sum
         nmea2ms_dif = nmea2ms_sum/256;
-        nmea2ms_log[inmealog] = nmea2ms;        
-        nmealog_dt[inmealog] = daytime;
-        nmealog_ct[inmealog++] = ct0;
+        nmea2ms_log[inmealog++] = nmea2ms;        
         //Serial.println(daytime, DEC);
         //Serial.println(ct, HEX);
       }
