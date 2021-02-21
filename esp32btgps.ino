@@ -31,7 +31,8 @@ inline uint32_t IRAM_ATTR cputix()
 #define M 1000000
 #define G 1000000000
 #define ctMHz 240
-// nominal period for 1Hz
+#define PPSHz 1
+// nominal period for PPSHz
 #define Period1Hz 63999
 
 // rotated log of 256 NMEA timestamps and their cputix timestamps
@@ -58,10 +59,14 @@ static void IRAM_ATTR isr_handler()
   int32_t ctdelta2 = (ct - ctprev)/ctMHz; // us time between irq's
   ctprev = ct;
   const int16_t phase_target = 0;
-  int16_t phase = (nmea2ms_dif+t)%1000;
-  int16_t period_correction = (phase_target-phase+2500)%1000-500;
+  const int16_t period = 1000/PPSHz;
+  const int16_t halfperiod = period/2;
+  int16_t phase = (nmea2ms_dif+t)%period;
+  int16_t period_correction = (phase_target-phase+2*period+halfperiod)%period-halfperiod;
   if(period_correction < -15 || period_correction > 15)
-    period_correction *= 4; // faster convergence
+    period_correction *= 4; // fast convergence
+  else
+    period_correction /= 4; // slow convergence and hysteresis around 0
   if(period_correction > 1530) // upper limit to prevent 16-bit wraparound
     period_correction = 1530;  
   MCPWM0.timer[0].period.period = Period1Hz+period_correction;
@@ -100,7 +105,7 @@ void setup() {
 
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS); // Initialise channel MCPWM0A on PPS pin
   MCPWM0.clk_cfg.prescale = 24;                 // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
-  MCPWM0.timer[0].period.prescale = 99;         // Set timer 0 prescaler to 99 (6.4MHz/(99+1))=64kHz)
+  MCPWM0.timer[0].period.prescale = 100/PPSHz-1;// Set timer 0 prescaler to 99 (6.4MHz/(99+1))=64kHz)
   MCPWM0.timer[0].period.period = 63999;        // Set the PWM period to 1Hz (64kHz/(63999+1)=1Hz) 
   MCPWM0.channel[0].cmpr_value[0].val = 6400;   // Set the counter compare for 10% duty-cycle
   MCPWM0.channel[0].generator[0].utez = 2;      // Set the PWM0A ouput to go high at the start of the timer period
