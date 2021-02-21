@@ -26,7 +26,7 @@ Pin 12      Digital Power        VDD
 module top_adxl355log
 #(
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
-  pps_n        = 1,          // N, 1 Hz, number of PPS pulses per interval
+  pps_n        = 10,         // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
   pa_sync_bits = 30          // bit size of phase accumulator, less->faster convergence larger jitter , more->slower convergence less jitter
@@ -44,16 +44,27 @@ module top_adxl355log
   input         gp17, // ADXL355 INT1
   input         gn15, // ADXL355 MISO
   output        gn14,gn16,gn17, // ADXL355 SCLK,MOSI,CSn
+  input         gn11, // ESP32 wifi_gpio26 PPS to FPGA
+  output        gp11, // ESP32 wifi_gpio26 PPS feedback
   input         ftdi_nrts,
+  input         ftdi_ndtr,
   output        ftdi_rxd,
   input         ftdi_txd,
+  output        wifi_en,
   output        wifi_rxd,
   input         wifi_txd,
   input         wifi_gpio5,
-  input         wifi_gpio0, wifi_gpio16, wifi_gpio17
+  output        wifi_gpio0, 
+  input         wifi_gpio16, wifi_gpio17
 );
+  // usb-serial console
   assign wifi_rxd = ftdi_txd;
   assign ftdi_rxd = wifi_txd;
+  // programming esp32
+  assign wifi_en    = ~ftdi_ndtr |  ftdi_nrts;
+  assign wifi_gpio0 =  ftdi_ndtr | ~ftdi_nrts;
+  // todo make wifi_gpio0 bidirectional when not programming
+  // so esp32-spi -> fpga-adxl is possible
 
   wire int1 = gp17;
   wire int2 = gp15;
@@ -105,9 +116,16 @@ module top_adxl355log
       pps <= 0;
   end
   
+  assign wifi_gpio25 = gn11;
+  assign gp11 = wifi_gpio26;
+
   //wire pps_btn = pps & ~btn[1];
   //wire pps_btn = wifi_gpio5 & ~btn[1];
-  wire pps_btn = ftdi_nrts & ~btn[1];
+  wire pps_btn = wifi_gpio25 & ~btn[1];
+  //wire pps_btn = ftdi_nrts & ~btn[1];
+  wire pps_feedback;
+  assign wifi_gpio26 = pps_feedback;
+  assign pps_feedback = pps_btn; // ESP32 needs its own PPS feedback
 
   wire [7:0] phase;
   wire pps_valid, sync_locked;
@@ -116,7 +134,7 @@ module top_adxl355log
     .clk_out0_hz(clk_out0_hz), // Hz, 40 MHz, PLL internal clock
     .pps_n(pps_n),             // N, 1 Hz when pps_s=1
     .pps_s(pps_s),             // s, 1 s PPS interval
-    .pps_tol_us(500),         // us, 500 us, default +- tolerance for pulse rising edge
+    .pps_tol_us(500),          // us, 500 us, default +- tolerance for pulse rising edge
     .clk_sync_hz(clk_sync_hz), // Hz, 1 kHz SYNC clock, sample rate
     .pa_sync_bits(pa_sync_bits)// PA bit size
   )
