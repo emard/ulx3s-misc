@@ -90,6 +90,15 @@ void test64()
 }
 #endif
 
+// fill sum and log with given difference d
+void init_nmea2ms(int32_t d)
+{
+  // initialize nmea to millis() statistics sum
+  nmea2ms_sum = d*256;
+  for(int i = 0; i < 256; i++)
+    nmea2ms_log[i] = d; 
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(PIN_LED, OUTPUT);
@@ -111,10 +120,7 @@ void setup() {
   MCPWM0.channel[0].generator[0].utea = 1;      // Clear on compare match
   MCPWM0.timer[0].mode.mode = 1;                // Set timer 0 to increment
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
-  // initialize nmea to millis() statistics sum
-  nmea2ms_sum = 0;
-  for(int i = 0; i < 256; i++)
-    nmea2ms_log[i] = 0;
+  init_nmea2ms(0);
 }
 
 void reconnect()
@@ -170,6 +176,8 @@ void loop()
         //Serial.print(nmea);
         int daytime = nmea2s(nmea+7);
         int32_t nmea2ms = daytime*100-ct0; // difference from nmea to timer
+        if(nmea2ms_sum == 0) // sum is 0 only at reboot
+          init_nmea2ms(nmea2ms); // speeds up convergence
         nmea2ms_sum += nmea2ms-nmea2ms_log[inmealog]; // moving sum
         nmea2ms_dif = nmea2ms_sum/256;
         nmea2ms_log[inmealog++] = nmea2ms;        
