@@ -59,7 +59,7 @@ module esp32_passthru
   end
   // wifi_gpio2 for programming must go together with wifi_gpio0
   // wifi_gpio12 (must be 0 for esp32 fuse unprogrammed)
-  assign sd_d  = R_prog_release[C_prog_release_timeout] == 0 ? { 3'b101, S_prog_out[0] } : 4'hz; // wifi_gpio 13,12,4,2
+  assign sd_d  = R_prog_release[C_prog_release_timeout] ? 4'hz : { 3'b101, S_prog_out[0] }; // wifi_gpio 13,12,4,2
   assign sd_wp  = sd_clk | sd_cmd | wifi_gpio5 | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
 
