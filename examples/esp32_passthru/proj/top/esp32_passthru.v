@@ -19,6 +19,7 @@ module esp32_passthru
   output       wifi_rxd,
   output       wifi_en,
   output       wifi_gpio0,
+  input        wifi_gpio5, // to enable pull down for programming
   inout  [3:0] sd_d, // wifi_gpio 13,12,4,2
   input        sd_cmd, sd_clk,
   output       sd_wp // BGA pin exists but not connected on PCB
@@ -45,13 +46,13 @@ module esp32_passthru
   //assign wifi_en = S_prog_out[1] & btn[0]; // holding BTN0 disables ESP32, releasing BTN0 reboots ESP32
   //assign wifi_gpio0 = S_prog_out[0];
 
-  // detecting programming ESP32 and reset timeout
+  // detecting start of programming ESP32 and reset timeout
   reg [C_prog_release_timeout:0] R_prog_release;
   always @(posedge clk_25mhz)
   begin
     R_prog_in <= S_prog_in;
     if(S_prog_out == 2'b01 && R_prog_in == 2'b11)
-      R_prog_release <= 0; // keep resetting during ESP32 programming
+      R_prog_release <= 0; // keep resetting during start of ESP32 programming
     else
       if(R_prog_release[C_prog_release_timeout] == 1'b0)
         R_prog_release <= R_prog_release + 1; // increment until MSB=0
@@ -59,7 +60,7 @@ module esp32_passthru
   // wifi_gpio2 for programming must go together with wifi_gpio0
   // wifi_gpio12 (must be 0 for esp32 fuse unprogrammed)
   assign sd_d  = R_prog_release[C_prog_release_timeout] == 0 ? { 3'b101, S_prog_out[0] } : 4'hz; // wifi_gpio 13,12,4,2
-  assign sd_wp  = sd_clk | sd_cmd | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
+  assign sd_wp  = sd_clk | sd_cmd | wifi_gpio5 | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
 
   assign led[7] = 0;
