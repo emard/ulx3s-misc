@@ -12,9 +12,11 @@
 #if 1
 // ulx3s
 #define PIN_BTN 32
-#define PIN_LED 5
+#define PIN_LED  5
 #define PIN_PPS 25
 #define PIN_IRQ 26
+#define LED_ON   0
+#define LED_OFF  1
 #endif
 
 // PPS and IRQ connected with wire
@@ -112,12 +114,10 @@ void init_nmea2ms(int32_t d)
 
 void setup() {
   Serial.begin(115200);
-  pinMode(PIN_LED, OUTPUT);
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
   pinMode(PIN_IRQ, INPUT);
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
-  digitalWrite(PIN_LED, 0);
   SerialBT.begin("ESP32", true);
   SerialBT.setPin(pin);
   Serial.println("Bluetooth master started");
@@ -195,7 +195,8 @@ void loop()
         //Serial.println(daytime, DEC);
         //Serial.println(ct, HEX);
       }
-      digitalWrite(PIN_LED,1);
+      pinMode(PIN_LED, OUTPUT);
+      digitalWrite(PIN_LED, LED_ON);
       tprev=t;
       i=0;
     }
@@ -204,7 +205,8 @@ void loop()
   {
     if(tdelta > 4000) // 4 seconds of serial silence
     {
-      digitalWrite(PIN_LED,0);
+      pinMode(PIN_LED, INPUT);
+      digitalWrite(PIN_LED, LED_OFF);
       reconnect();
       tprev = millis();
       i=0;
