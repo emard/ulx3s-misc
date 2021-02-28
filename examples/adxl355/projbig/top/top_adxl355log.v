@@ -107,17 +107,18 @@ module top_adxl355log
   assign gp14 = drdy;
 
   wire csn, mosi, miso, sclk;
-
   // ADXL355 connections
   assign gn17 = csn;
   assign gn16 = mosi;
   assign miso = gn15;
   assign gn14 = sclk;
 
-  // ESP32 connections
+  // ESP32 connections direct to ADXL355
   assign csn  = wifi_gpio17;
   assign mosi = wifi_gpio16;
   assign gp13 = miso; // wifi_gpio35 v2.1.2
+  //assign gp13 = 0; // debug, should print 00
+  //assign gp13 = 1; // debug, should print FF
   assign sclk = wifi_gpio0;
   
   // base clock for making 1024 kHz for ADXL355
