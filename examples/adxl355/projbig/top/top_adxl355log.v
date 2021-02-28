@@ -53,7 +53,7 @@ module top_adxl355log
   output        wifi_en,
   output        wifi_rxd,
   input         wifi_txd,
-  output        wifi_gpio0, 
+  inout         wifi_gpio0,
   input         wifi_gpio5,
   input         wifi_gpio16, wifi_gpio17,
   inout   [3:0] sd_d, // wifi_gpio 13,12,4,2
@@ -96,7 +96,7 @@ module top_adxl355log
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
 
   assign wifi_en = S_prog_out[1];
-  assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'b1 : S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
+  assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
 
   //assign wifi_en = S_prog_out[1] & btn[0]; // holding BTN0 disables ESP32, releasing BTN0 reboots ESP32
   //assign wifi_gpio0 = S_prog_out[0];
@@ -107,20 +107,20 @@ module top_adxl355log
   assign gp14 = drdy;
 
   wire csn, mosi, miso, sclk;
-  // ADXL355 connections
+  // ADXL355 connections (FPGA is master to ADXL355)
   assign gn17 = csn;
   assign gn16 = mosi;
   assign miso = gn15;
   assign gn14 = sclk;
 
-  // ESP32 connections direct to ADXL355
+  // ESP32 connections direct to ADXL355 (FPGA is slave for ESP32)
   assign csn  = wifi_gpio17;
   assign mosi = wifi_gpio16;
   assign gp13 = miso; // wifi_gpio35 v2.1.2
   //assign gp13 = 0; // debug, should print 00
   //assign gp13 = 1; // debug, should print FF
   assign sclk = wifi_gpio0;
-  
+
   // base clock for making 1024 kHz for ADXL355
   wire [3:0] clocks;
   ecp5pll
