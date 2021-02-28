@@ -77,6 +77,8 @@ void open_logs(void)
   file_gps   = SD_MMC.open("/gps.log",   FILE_APPEND);
   file_accel = SD_MMC.open("/accel.log", FILE_APPEND);
   #else
+  //SD_MMC.remove("/test.txt");
+  //SD_MMC.remove("/foo.txt");
   file_gps   = SD_MMC.open("/gps.log",   FILE_WRITE);
   file_accel = SD_MMC.open("/accel.log", FILE_WRITE);
   #endif
