@@ -11,19 +11,20 @@
 #endif
 #if 1
 // ulx3s
-#define PIN_BTN 32
-#define PIN_LED  5
 #define PIN_PPS 25
 #define PIN_IRQ 26
-#define LED_ON   0
-#define LED_OFF  1
+#define PIN_BTN 32
+#define PIN_LED  5
+#define LED_ON   1
+#define LED_OFF  0
 #endif
 
 // PPS and IRQ connected with wire
-
 #include "soc/mcpwm_reg.h"
 #include "soc/mcpwm_struct.h"
 #include "driver/mcpwm.h"
+// SD card 4-bit mode
+#include "sdcard.h"
 
 BluetoothSerial SerialBT;
 
@@ -82,12 +83,14 @@ static void IRAM_ATTR isr_handler()
   if(period_correction > 1530) // upper limit to prevent 16-bit wraparound
     period_correction = 1530;  
   MCPWM0.timer[0].period.period = Period1Hz+period_correction;
+  #if 0
   Serial.print(nmea2ms_dif, DEC); // average nmea time - millis() time
   Serial.print(" ");
   Serial.print(ctdelta2, DEC); // microseconds between each irq measured by CPU timer
   Serial.print(" ");
   Serial.print(phase, DEC); // less:PPS early, more:PPS late
   Serial.println(" irq");
+  #endif
 }
 
 /* test 64-bit functions */
@@ -132,6 +135,13 @@ void setup() {
   MCPWM0.timer[0].mode.mode = 1;                // Set timer 0 to increment
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
   init_nmea2ms(0);
+  mount();
+  /*
+  open_logs();
+  write_logs();
+  close_logs();
+  ls();
+  */
 }
 
 void reconnect()
@@ -191,12 +201,14 @@ void loop()
           init_nmea2ms(nmea2ms); // speeds up convergence
         nmea2ms_sum += nmea2ms-nmea2ms_log[inmealog]; // moving sum
         nmea2ms_dif = nmea2ms_sum/256;
-        nmea2ms_log[inmealog++] = nmea2ms;        
+        nmea2ms_log[inmealog++] = nmea2ms;
+        write_logs();
         //Serial.println(daytime, DEC);
         //Serial.println(ct, HEX);
       }
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
+      open_logs();
       tprev=t;
       i=0;
     }
@@ -207,6 +219,8 @@ void loop()
     {
       pinMode(PIN_LED, INPUT);
       digitalWrite(PIN_LED, LED_OFF);
+      close_logs();
+      ls();
       reconnect();
       tprev = millis();
       i=0;
