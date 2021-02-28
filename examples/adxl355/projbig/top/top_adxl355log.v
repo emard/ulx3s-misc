@@ -76,11 +76,7 @@ module top_adxl355log
   wire [1:0] S_prog_in  = { ftdi_ndtr, ftdi_nrts };
   wire [1:0] S_prog_out = S_prog_in == 2'b10 ? 2'b01 
                         : S_prog_in == 2'b01 ? 2'b10 : 2'b11;
-  assign wifi_en = S_prog_out[1];
-  assign wifi_gpio0 = S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
 
-  //assign wifi_en = S_prog_out[1] & btn[0]; // holding BTN0 disables ESP32, releasing BTN0 reboots ESP32
-  //assign wifi_gpio0 = S_prog_out[0];
 
   // detecting programming ESP32 and reset timeout
   reg [C_prog_release_timeout:0] R_prog_release;
@@ -98,6 +94,12 @@ module top_adxl355log
   assign sd_d  = R_prog_release[C_prog_release_timeout] ? 4'hz : { 3'b101, S_prog_out[0] }; // wifi_gpio 13,12,4,2
   assign sd_wp = sd_clk | sd_cmd | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
+
+  assign wifi_en = S_prog_out[1];
+  assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'b1 : S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
+
+  //assign wifi_en = S_prog_out[1] & btn[0]; // holding BTN0 disables ESP32, releasing BTN0 reboots ESP32
+  //assign wifi_gpio0 = S_prog_out[0];
 
   wire int1 = gp17;
   wire int2 = gp15;
