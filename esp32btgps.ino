@@ -1,23 +1,7 @@
+#include "pins.h"
+
 #include "BluetoothSerial.h"
 // set Board->ESP32 Arduino->ESP32 Dev Module
-
-// BTN has inverted logic, 0 when pressed
-#if 0
-// devkit esp32
-#define PIN_BTN 0
-#define PIN_LED 2
-#define PIN_PPS 25
-#define PIN_IRQ 26
-#endif
-#if 1
-// ulx3s
-#define PIN_PPS 25
-#define PIN_IRQ 26
-#define PIN_BTN 32
-#define PIN_LED  5
-#define LED_ON   1
-#define LED_OFF  0
-#endif
 
 // PPS and IRQ connected with wire
 #include "soc/mcpwm_reg.h"
@@ -136,6 +120,8 @@ void setup() {
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
   init_nmea2ms(0);
   mount();
+  spi_init();
+  adxl355_init();
   /*
   open_logs();
   write_logs();
@@ -225,5 +211,7 @@ void loop()
       tprev = millis();
       i=0;
     }
+    else
+      write_logs();
   }
 }

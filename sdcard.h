@@ -1,6 +1,9 @@
 #include "FS.h"
 #include "SD_MMC.h"
 void mount(void);
+void spi_init(void);
+void adxl355_init(void);
+uint8_t adxl355_available(void);
 void ls(void);
 void open_logs(void);
 void write_logs(void);
