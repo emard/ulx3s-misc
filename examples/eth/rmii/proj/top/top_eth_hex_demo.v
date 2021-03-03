@@ -218,7 +218,7 @@ module top_eth_hex_demo
   wire w_oled_csn;
   lcd_video
   #(
-    .c_clk_mhz(125),
+    .c_clk_spi_mhz(125),
     .c_init_file("st7789_linit_xflip.mem"),
     .c_clk_phase(0),
     .c_clk_polarity(1),
@@ -226,7 +226,8 @@ module top_eth_hex_demo
   )
   lcd_video_inst
   (
-    .clk(clk),
+    .clk_pixel(clk),
+    .clk_spi(clk),
     .reset(~btn[0]),
     .x(x),
     .y(y),
