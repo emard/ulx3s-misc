@@ -64,6 +64,7 @@ module top_eth_hex_demo
 
   wire rmii_clk   = rmii_nint;
   assign rmii_mdc = 0; // management clock held 0
+  // assign gn[13] = 0; // not necessary to hold data 0
 
   reg [1:0] R_data[0:2**(datab2n-1)-1]; // collects data
   reg [1:0] preamble = 1; // 0:data, 1:wait 5, 2:wait non-5, 3:skip 
