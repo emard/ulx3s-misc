@@ -184,7 +184,7 @@ void write_logs(void)
   if(logs_are_open == 0)
     return;
   #if 0
-  // reading ID and printing
+  // begin reading ID and printing
   spi_master_tx_buf[0] = DEVID_AD*2+1; // read ID (4 bytes expected)
   //digitalWrite(PIN_CSN, 0);
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 5);
@@ -195,8 +195,10 @@ void write_logs(void)
     Serial.print(" ");
   }
   Serial.println("");
+  // begin reading ID and printing
   #endif
   #if 1
+  // begin read fifo and write to SD
   if(adxl355_available()<8)
     return;
   uint8_t n = adxl355_rdfifo16();
@@ -216,6 +218,7 @@ void write_logs(void)
   }
   #endif
   Serial.println("");
+  // end read fifo and write to SD
   #endif
 }
 
