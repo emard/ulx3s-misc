@@ -183,7 +183,11 @@ void write_logs(void)
   if(logs_are_open == 0)
     return;
   #if 0
-  // begin reading ID and printing
+  // begin spi ram test
+  // end spi ram test
+  #endif
+  #if 0
+  // begin debug reading ID and printing
   spi_master_tx_buf[0] = DEVID_AD*2+1; // read ID (4 bytes expected)
   //digitalWrite(PIN_CSN, 0);
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 5);
@@ -194,7 +198,7 @@ void write_logs(void)
     Serial.print(" ");
   }
   Serial.println("");
-  // begin reading ID and printing
+  // end debug reading ID and printing
   #endif
   #if 1
   // begin read fifo and write to SD
