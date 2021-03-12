@@ -75,7 +75,7 @@ module spirw_slave_v
           end // csn = 0, rising sclk edge
       end // always
     end // generate
-    else // sclk is not CLK capable pin
+    else // sclk is not clock capable pin
     begin
       // sclk is generic pin
       // it needs clock synchronous edge detection
