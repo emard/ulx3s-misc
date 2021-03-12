@@ -140,8 +140,7 @@ module top_adxl355log
         .data_out(ram_di)
     );
     //assign ram_do = ram_addr[7:0];
-    assign ram_do = 8'h5A;
-    /*
+    //assign ram_do = 8'h5A;
     reg [7:0] ram[0:255];
     reg [7:0] R_ram_do;
     always @(posedge clk)
@@ -152,7 +151,6 @@ module top_adxl355log
         R_ram_do <= ram[ram_addr];
     end
     assign ram_do = R_ram_do;
-    */
   end
   endgenerate
 
