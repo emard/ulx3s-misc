@@ -26,6 +26,7 @@ Pin 12      Digital Power        VDD
 module top_adxl355log
 #(
   C_prog_release_timeout = 26, // esp32 programming default n=26, 2^n / 25MHz = 2.6s
+  spi_direct   = 1,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1)
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
   pps_n        = 10,         // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
@@ -77,7 +78,6 @@ module top_adxl355log
   wire [1:0] S_prog_out = S_prog_in == 2'b10 ? 2'b01 
                         : S_prog_in == 2'b01 ? 2'b10 : 2'b11;
 
-
   // detecting programming ESP32 and reset timeout
   reg [C_prog_release_timeout:0] R_prog_release;
   always @(posedge clk_25mhz)
@@ -107,11 +107,54 @@ module top_adxl355log
   assign gp14 = drdy;
 
   wire csn, mosi, miso, sclk;
-  // ADXL355 connections (FPGA is master to ADXL355)
-  assign gn17 = csn;
-  assign gn16 = mosi;
-  assign miso = gn15;
-  assign gn14 = sclk;
+
+  generate
+  if(spi_direct)
+  begin
+    // ADXL355 connections (FPGA is master to ADXL355)
+    assign gn17 = csn;
+    assign gn16 = mosi;
+    assign miso = gn15;
+    assign gn14 = sclk;
+  end
+  else
+  begin
+    wire        ram_wr;
+    wire [31:0] ram_addr;
+    wire  [7:0] ram_di, ram_do;
+    spirw_slave_v
+    #(
+        .c_addr_bits(32),
+        .c_sclk_capable_pin(1'b0)
+    )
+    spirw_slave_v_inst
+    (
+        .clk(clk),
+        .csn(csn),
+        .sclk(sclk),
+        .mosi(mosi),
+        .miso(miso),
+        .wr(ram_wr),
+        .addr(ram_addr),
+        .data_in(ram_do),
+        .data_out(ram_di)
+    );
+    //assign ram_do = ram_addr[7:0];
+    assign ram_do = 8'h5A;
+    /*
+    reg [7:0] ram[0:255];
+    reg [7:0] R_ram_do;
+    always @(posedge clk)
+    begin
+      if(ram_wr)
+        ram[ram_addr] <= ram_di;
+      else
+        R_ram_do <= ram[ram_addr];
+    end
+    assign ram_do = R_ram_do;
+    */
+  end
+  endgenerate
 
   // ESP32 connections direct to ADXL355 (FPGA is slave for ESP32)
   assign csn  = wifi_gpio17;

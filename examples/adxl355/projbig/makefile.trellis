@@ -25,6 +25,7 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   ../../ecp5pll/hdl/sv/ecp5pll.sv \
+  ../../spi_slave/hdl/spirw_slave_v.v \
   rtl/adxl355_sync.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
