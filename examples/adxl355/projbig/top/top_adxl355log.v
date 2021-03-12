@@ -107,15 +107,16 @@ module top_adxl355log
   assign gp14 = drdy;
 
   wire csn, mosi, miso, sclk;
+  wire rd_csn, rd_mosi, rd_miso, rd_sclk; // spi reader
 
   generate
   if(spi_direct)
   begin
     // ADXL355 connections (FPGA is master to ADXL355)
-    assign gn17 = csn;
-    assign gn16 = mosi;
-    assign miso = gn15;
-    assign gn14 = sclk;
+    assign gn17 = rd_csn;
+    assign gn16 = rd_mosi;
+    assign rd_miso = gn15;
+    assign gn14 = rd_sclk;
   end
   else
   begin
@@ -247,7 +248,7 @@ module top_adxl355log
       end
     end
   end
-
+  /*
   // LED monitoring
 
   //assign led[7:4] = {drdy,int2,int1,1'b0};
@@ -263,7 +264,43 @@ module top_adxl355log
 
   //assign led = phase;
   //assign led = cnt_sync_prev[7:0]; // should show 0xE8 from 1000 = 0x3E8
-  
+  */
+
+  // SPI reader
+  // counter for very slow clock
+  localparam slowdown = 18;
+  reg [slowdown:0] r_sclk_en;
+  always @(posedge clk)
+  begin
+    if(r_sclk_en[slowdown])
+      r_sclk_en <= 0;
+    else
+      r_sclk_en <= r_sclk_en+1;
+  end
+  wire sclk_en = r_sclk_en[slowdown];
+
+  wire [7:0] wrdata;
+  adxl355rd
+  #(
+    .cmd_read(1),
+    .len_read(4)
+  )
+  adxl355rd_inst
+  (
+    .clk(clk), .clk_en(sclk_en),
+    .direct(0),
+    .sync(btn[1]),
+    .adxl_csn(rd_csn),
+    .adxl_sclk(rd_sclk),
+    .adxl_mosi(rd_mosi),
+    .adxl_miso(rd_miso),
+    .wrdata(wrdata),
+    .wr(),
+    .x()
+  );
+  //assign led = {rd_miso, rd_mosi, rd_sclk, rd_csn};
+  assign led = wrdata;
+
   assign audio_l[3:1] = 0;
   assign audio_l[0] = drdy;
   assign audio_r[3:1] = 0;
