@@ -8,3 +8,4 @@ void ls(void);
 void open_logs(void);
 void write_logs(void);
 void close_logs(void);
+void spi_slave_test(void);

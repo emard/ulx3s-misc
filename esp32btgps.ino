@@ -162,6 +162,7 @@ void loop()
   int32_t tdelta = t-tprev;
   static uint32_t ct0; // first char in line millis timestamp
 
+  #if 1
   if (connected && SerialBT.available())
   {
     c=0;
@@ -188,7 +189,7 @@ void loop()
         nmea2ms_sum += nmea2ms-nmea2ms_log[inmealog]; // moving sum
         nmea2ms_dif = nmea2ms_sum/256;
         nmea2ms_log[inmealog++] = nmea2ms;
-        write_logs();
+        write_logs(); // use SPI_MODE1
         //Serial.println(daytime, DEC);
         //Serial.println(ct, HEX);
       }
@@ -214,4 +215,10 @@ void loop()
     else
       write_logs();
   }
+  #endif
+
+  #if 0
+  spi_slave_test(); // use SPI_MODE3
+  delay(100);
+  #endif
 }
