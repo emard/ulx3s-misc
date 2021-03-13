@@ -268,7 +268,7 @@ module top_adxl355log
 
   // SPI reader
   // counter for very slow clock
-  localparam slowdown = 16;
+  localparam slowdown = 22;
   reg [slowdown:0] r_sclk_en;
   always @(posedge clk)
   begin
@@ -282,14 +282,12 @@ module top_adxl355log
   wire [7:0] wrdata;
   wire wr, x;
   adxl355rd
-  #(
-    .cmd_read(1),
-    .len_read(4)
-  )
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
     .direct(0),
+    .cmd(1),
+    .len(5),
     .sync(btn[1]),
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),

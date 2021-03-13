@@ -4,10 +4,6 @@
 
 `default_nettype none
 module adxl355rd
-#(
-  cmd_read     = 8*2+1,      // SPI byte command that starts reading: 8*2+1=XDATA3, 17*2+1=FIFO_DATa
-  len_read     = 9           // number of bytes to read
-)
 (
   input         clk, clk_en, // clk_en should be 1-clk pulse slower than 20 MHz
   // from esp23
@@ -16,6 +12,8 @@ module adxl355rd
   //output        direct_miso, // no mux, adxl_mosi can be always used
   // synchronous reading, start of 9-byte xyz sequence
   input         sync,
+  input   [7:0] cmd, // SPI command byte, first to send
+  input   [3:0] len, // bytes length, including cmd byte
   // to ADXL355 chip
   output        adxl_mosi, adxl_sclk, adxl_csn, // max sclk = clk/2 or clk_en/2
   input         adxl_miso,
@@ -23,10 +21,10 @@ module adxl355rd
   output  [7:0] wrdata,
   output        wr, x // x is set together with wr at start of new 9-byte xyz sequence, x-axis
 );
-  reg r_direct; // allow switch when idle
+  reg [7:0] cmd_read  = 1; // holds the spi command byte 1:read id
+  reg [3:0] bytes_len = 5; // holds the spi transfer length including command byte
 
-  localparam index_total = (len_read+1)*16+5; // total index run for one xyz reading (cycles)
-  localparam index_csn0 = 1;
+  reg r_direct; // allow switch when idle
   reg [7:0] index; // running index
 
   // internal wiring, before multiplexer  
@@ -39,12 +37,16 @@ module adxl355rd
 
   always @(posedge clk)
   begin
-    if(index == index_total-1)
+    if(index == {bytes_len, 4'h4}) // end of sequence
     begin
       if(sync && ~r_direct)
+      begin
         index <= 0; // start new cycle
+        cmd_read <= cmd;
+        bytes_len <= len;
+      end
     end
-    else // index != index_total-1
+    else // end not yet
     begin
       if(clk_en)
         index <= index+1;
@@ -57,21 +59,21 @@ module adxl355rd
   always @(posedge clk)
   if(clk_en)
   begin
-    r_csn     <= index == 1 ? 0 : index == index_total-2 ? 1 : r_csn;
-    r_sclk_en <= index == 2 ? 1 : index == index_total-3 ? 0 : r_sclk_en;
+    r_csn     <= index == 1 ? 0 : index == {bytes_len, 4'h3} ? 1 : r_csn;
+    r_sclk_en <= index == 2 ? 1 : index == {bytes_len, 4'h2} ? 0 : r_sclk_en;
     r_sclk    <= r_sclk_en  ? index[0] : 0;
-    r_direct  <= index == index_total-2 ? direct : r_direct;
+    r_direct  <= index == {bytes_len, 4'h3} ? direct : r_direct;
   end
 
   always @(posedge clk)
   if(clk_en && ~index[0])
   begin
-    r_mosi    <= index == 2 ? cmd_read : {r_mosi[6:0], 1'b0};
-    r_shift   <= index == 2 ? 8'h01 : {r_shift[6:0], r_shift[7]};
+    r_mosi    <= index[7:1] == 1 ? cmd_read : {r_mosi[6:0], 1'b0};
+    r_shift   <= index[7:1] == 1 ? 8'h01 : {r_shift[6:0], r_shift[7]};
     r_miso    <= {r_miso[6:0], adxl_miso};
     r_wrdata  <= r_shift[7] ? {r_miso[6:0], adxl_miso} : r_wrdata;
     r_wr      <= r_shift[7] ? r_sclk_en : 0;
-    r_x       <= index == 18; // should trigger at the same time as r_wr
+    r_x       <= index[7:1] == 9; // should trigger at the same time as r_wr
   end
   assign w_mosi = r_mosi[7];
   assign w_csn  = r_csn;
