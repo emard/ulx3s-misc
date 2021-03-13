@@ -83,7 +83,7 @@ module adxl355rd
 
   assign wrdata = r_wrdata;
   assign wr     = r_wr;
-  assign wr16   = r_wr16;
+  assign wr16   = r_wr16 & clk_en & index[0]; // FIXME could be done better
   assign x      = r_x;
 
 endmodule

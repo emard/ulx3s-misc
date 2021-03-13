@@ -26,7 +26,7 @@ Pin 12      Digital Power        VDD
 module top_adxl355log
 #(
   C_prog_release_timeout = 26, // esp32 programming default n=26, 2^n / 25MHz = 2.6s
-  spi_direct   = 1,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1)
+  spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1)
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
   pps_n        = 10,         // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
@@ -106,23 +106,50 @@ module top_adxl355log
   wire drdy; // gp14;
   assign gp14 = drdy;
 
+  // base clock for making 1024 kHz for ADXL355
+  wire [3:0] clocks;
+  ecp5pll
+  #(
+      .in_hz(25*1000000),
+    .out0_hz(clk_out0_hz)
+  )
+  ecp5pll_inst
+  (
+    .clk_i(clk_25mhz),
+    .clk_o(clocks)
+  );
+  wire clk = clocks[0]; // 40 MHz system clock
+
   wire csn, mosi, miso, sclk;
   wire rd_csn, rd_mosi, rd_miso, rd_sclk; // spi reader
 
+  wire        ram_wr;
+  wire [31:0] ram_addr;
+  wire  [7:0] ram_di, ram_do;
+
+  localparam ram_len = 6*1024;
+  wire spi_ram_wr;
+  wire  [7:0] spi_ram_data;
+  reg [12:0] spi_ram_addr = 0;
+  reg [7:0] ram[0:ram_len-1];
+  reg [7:0] R_ram_do;
+
   generate
   if(spi_direct)
+  begin
+    // ADXL355 connections (FPGA is master to ADXL355)
+    assign gn17 = csn;
+    assign gn16 = mosi;
+    assign miso = gn15;
+    assign gn14 = sclk;
+  end
+  else
   begin
     // ADXL355 connections (FPGA is master to ADXL355)
     assign gn17 = rd_csn;
     assign gn16 = rd_mosi;
     assign rd_miso = gn15;
     assign gn14 = rd_sclk;
-  end
-  else
-  begin
-    wire        ram_wr;
-    wire [31:0] ram_addr;
-    wire  [7:0] ram_di, ram_do;
     spirw_slave_v
     #(
         .c_addr_bits(32),
@@ -142,16 +169,21 @@ module top_adxl355log
     );
     //assign ram_do = ram_addr[7:0];
     //assign ram_do = 8'h5A;
-    reg [7:0] ram[0:255];
-    reg [7:0] R_ram_do;
     always @(posedge clk)
     begin
-      if(ram_wr)
-        ram[ram_addr] <= ram_di;
-      else
-        R_ram_do <= ram[ram_addr];
+      if(spi_ram_wr)
+      begin
+        ram[spi_ram_addr] <= spi_ram_data;
+        if(spi_ram_addr == ram_len-1)
+          spi_ram_addr <= 0;
+        else
+          spi_ram_addr <= spi_ram_addr + 1;
+      end
+      R_ram_do <= ram[ram_addr];
     end
     assign ram_do = R_ram_do;
+    //assign ram_do = spi_ram_data;
+    //assign ram_do = 8'h77;
   end
   endgenerate
 
@@ -162,20 +194,6 @@ module top_adxl355log
   //assign gp13 = 0; // debug, should print 00
   //assign gp13 = 1; // debug, should print FF
   assign sclk = wifi_gpio0;
-
-  // base clock for making 1024 kHz for ADXL355
-  wire [3:0] clocks;
-  ecp5pll
-  #(
-      .in_hz(25*1000000),
-    .out0_hz(clk_out0_hz)
-  )
-  ecp5pll_inst
-  (
-    .clk_i(clk_25mhz),
-    .clk_o(clocks)
-  );
-  wire clk = clocks[0]; // 40 MHz system clock
 
   // generate PPS signal (1 Hz, 100 ms duty cycle)
   localparam pps_cnt_max = clk_out0_hz*pps_s/pps_n; // cca +-20000 tolerance
@@ -266,9 +284,18 @@ module top_adxl355log
   //assign led = cnt_sync_prev[7:0]; // should show 0xE8 from 1000 = 0x3E8
   */
 
+  // rising edge detection of drdy (sync)
+  reg [1:0] r_sync_shift;
+  reg sync_pulse;
+  always @(posedge clk)
+  begin
+    r_sync_shift <= {drdy, r_sync_shift[0]};
+    sync_pulse <= r_sync_shift == 2'b10 ? 1 : 0;
+  end
+
   // SPI reader
   // counter for very slow clock
-  localparam slowdown = 22;
+  localparam slowdown = 0;
   reg [slowdown:0] r_sclk_en;
   always @(posedge clk)
   begin
@@ -279,30 +306,29 @@ module top_adxl355log
   end
   wire sclk_en = r_sclk_en[slowdown];
 
-  wire [7:0] wrdata;
-  wire wr, x;
+  wire x;
   adxl355rd
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
     .direct(0),
     .cmd(1),
-    .len(5),
-    .sync(btn[1]),
+    .len(10),
+    .sync(sync_pulse),
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),
     .adxl_mosi(rd_mosi),
     .adxl_miso(rd_miso),
-    .wrdata(wrdata),
-    .wr16(wr),
+    .wrdata(spi_ram_data),
+    .wr16(spi_ram_wr), // skips every 3rd byte
     .x(x)
   );
   // test memory write cycle
   reg [7:0] r_wrdata;
   always @(posedge clk)
   begin
-    if(wr)
-      r_wrdata <= wrdata;
+    if(spi_ram_wr)
+      r_wrdata <= spi_ram_data;
   end
 
   //assign led = {x, wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
