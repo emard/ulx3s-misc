@@ -25,7 +25,7 @@ module adxl355rd
 );
   reg r_direct; // allow switch when idle
 
-  localparam index_total = (len_read+1)*16+4; // total index run for one xyz reading (cycles)
+  localparam index_total = (len_read+1)*16+5; // total index run for one xyz reading (cycles)
   localparam index_csn0 = 1;
   reg [7:0] index; // running index
 
@@ -61,8 +61,6 @@ module adxl355rd
     r_sclk_en <= index == 2 ? 1 : index == index_total-3 ? 0 : r_sclk_en;
     r_sclk    <= r_sclk_en  ? index[0] : 0;
     r_direct  <= index == index_total-2 ? direct : r_direct;
-    r_wr      <= r_sclk_en  ? r_shift[7] : 0;
-    r_x       <= r_sclk_en && index == 3;
   end
 
   always @(posedge clk)
@@ -72,6 +70,8 @@ module adxl355rd
     r_shift   <= index == 2 ? 8'h01 : {r_shift[6:0], r_shift[7]};
     r_miso    <= {r_miso[6:0], adxl_miso};
     r_wrdata  <= r_shift[7] ? {r_miso[6:0], adxl_miso} : r_wrdata;
+    r_wr      <= r_shift[7] ? r_sclk_en : 0;
+    r_x       <= index == 18; // should trigger at the same time as r_wr
   end
   assign w_mosi = r_mosi[7];
   assign w_csn  = r_csn;

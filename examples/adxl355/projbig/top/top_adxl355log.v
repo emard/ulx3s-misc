@@ -268,7 +268,7 @@ module top_adxl355log
 
   // SPI reader
   // counter for very slow clock
-  localparam slowdown = 18;
+  localparam slowdown = 16;
   reg [slowdown:0] r_sclk_en;
   always @(posedge clk)
   begin
@@ -280,6 +280,7 @@ module top_adxl355log
   wire sclk_en = r_sclk_en[slowdown];
 
   wire [7:0] wrdata;
+  wire wr, x;
   adxl355rd
   #(
     .cmd_read(1),
@@ -295,11 +296,19 @@ module top_adxl355log
     .adxl_mosi(rd_mosi),
     .adxl_miso(rd_miso),
     .wrdata(wrdata),
-    .wr(),
-    .x()
+    .wr(wr),
+    .x(x)
   );
-  //assign led = {rd_miso, rd_mosi, rd_sclk, rd_csn};
-  assign led = wrdata;
+  // test memory write cycle
+  reg [7:0] r_wrdata;
+  always @(posedge clk)
+  begin
+    if(wr)
+      r_wrdata <= wrdata;
+  end
+
+  //assign led = {x, wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
+  assign led = r_wrdata;
 
   assign audio_l[3:1] = 0;
   assign audio_l[0] = drdy;
