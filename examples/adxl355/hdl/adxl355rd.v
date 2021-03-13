@@ -72,8 +72,8 @@ module adxl355rd
     r_shift   <= index[7:1] == 1 ? 8'h01 : {r_shift[6:0], r_shift[7]};
     r_miso    <= {r_miso[6:0], adxl_miso};
     r_wrdata  <= r_shift[7] ? {r_miso[6:0], adxl_miso} : r_wrdata;
-    r_wr      <= r_shift[7] ? r_sclk_en : 0;
-    r_x       <= index[7:1] == 9; // should trigger at the same time as r_wr
+    r_wr      <= r_shift[7] && index[7:1] != 9 && r_sclk_en ? 1 : 0;
+    r_x       <= index[7:1] == 17; // should trigger at the same time as r_wr
   end
   assign w_mosi = r_mosi[7];
   assign w_csn  = r_csn;
