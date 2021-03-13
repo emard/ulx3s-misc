@@ -294,7 +294,7 @@ module top_adxl355log
     .adxl_mosi(rd_mosi),
     .adxl_miso(rd_miso),
     .wrdata(wrdata),
-    .wr(wr),
+    .wr16(wr),
     .x(x)
   );
   // test memory write cycle

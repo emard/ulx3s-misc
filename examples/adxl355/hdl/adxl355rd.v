@@ -19,7 +19,8 @@ module adxl355rd
   input         adxl_miso,
   // to BRAM for buffering
   output  [7:0] wrdata,
-  output        wr, x // x is set together with wr at start of new 9-byte xyz sequence, x-axis
+  output        wr, wr16, // wr writes every byte, wr16 is for 16-bit accel, skips every 3rd byte
+  output        x // x is set together with wr at start of new 9-byte xyz sequence, x-axis
 );
   reg [7:0] cmd_read  = 1; // holds the spi command byte 1:read id
   reg [3:0] bytes_len = 5; // holds the spi transfer length including command byte
@@ -53,7 +54,7 @@ module adxl355rd
     end
   end
 
-  reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr, r_x;
+  reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr, r_wr16, r_x;
   reg [7:0] r_mosi, r_miso, r_shift, r_wrdata;
 
   always @(posedge clk)
@@ -72,8 +73,9 @@ module adxl355rd
     r_shift   <= index[7:1] == 1 ? 8'h01 : {r_shift[6:0], r_shift[7]};
     r_miso    <= {r_miso[6:0], adxl_miso};
     r_wrdata  <= r_shift[7] ? {r_miso[6:0], adxl_miso} : r_wrdata;
-    r_wr      <= r_shift[7] && index[7:1] != 9 && r_sclk_en ? 1 : 0;
-    r_x       <= index[7:1] == 17; // should trigger at the same time as r_wr
+    r_wr      <= r_shift[7] && index[7:1] != 9 && r_sclk_en ? 1 : 0; // every byte
+    r_wr16    <= r_shift[7] && index[7:1] != 9 && index[7:1] != 33 && index[7:1] != 57 && index[7:1] != 81 && r_sclk_en ? 1 : 0; // 16-bit accel, skip every 3rd byte
+    r_x       <= index[7:1] == 17; // should trigger at the same time as first r_wr and r_wr16
   end
   assign w_mosi = r_mosi[7];
   assign w_csn  = r_csn;
@@ -81,6 +83,7 @@ module adxl355rd
 
   assign wrdata = r_wrdata;
   assign wr     = r_wr;
+  assign wr16   = r_wr16;
   assign x      = r_x;
 
 endmodule
