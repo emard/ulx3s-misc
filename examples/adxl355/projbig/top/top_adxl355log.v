@@ -128,7 +128,7 @@ module top_adxl355log
   wire  [7:0] ram_di, ram_do;
 
   localparam ram_len = 6*1024;
-  wire spi_ram_wr;
+  wire spi_ram_wr, spi_ram_x;
   wire  [7:0] spi_ram_data;
   reg [12:0] spi_ram_addr = 0;
   reg [7:0] ram[0:ram_len-1];
@@ -173,7 +173,7 @@ module top_adxl355log
     begin
       if(spi_ram_wr)
       begin
-        ram[spi_ram_addr] <= spi_ram_data;
+        ram[spi_ram_addr] <= spi_ram_data; // normal
         if(spi_ram_addr == ram_len-1)
           spi_ram_addr <= 0;
         else
@@ -306,13 +306,12 @@ module top_adxl355log
   end
   wire sclk_en = r_sclk_en[slowdown];
 
-  wire x;
   adxl355rd
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
     .direct(0),
-    .cmd(1),
+    .cmd(0*2+1),
     .len(10),
     .sync(sync_pulse),
     .adxl_csn(rd_csn),
@@ -321,7 +320,7 @@ module top_adxl355log
     .adxl_miso(rd_miso),
     .wrdata(spi_ram_data),
     .wr16(spi_ram_wr), // skips every 3rd byte
-    .x(x)
+    .x(spi_ram_x)
   );
   // test memory write cycle
   reg [7:0] r_wrdata;
@@ -331,7 +330,7 @@ module top_adxl355log
       r_wrdata <= spi_ram_data;
   end
 
-  //assign led = {x, wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
+  //assign led = {spi_ram_x, spi_ram_wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
   assign led = r_wrdata;
 
   assign audio_l[3:1] = 0;
