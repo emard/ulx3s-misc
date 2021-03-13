@@ -162,7 +162,7 @@ void loop()
   int32_t tdelta = t-tprev;
   static uint32_t ct0; // first char in line millis timestamp
 
-  #if 1
+  #if 0
   if (connected && SerialBT.available())
   {
     c=0;
@@ -217,7 +217,7 @@ void loop()
   }
   #endif
 
-  #if 0
+  #if 1
   spi_slave_test(); // use SPI_MODE3
   delay(100);
   #endif

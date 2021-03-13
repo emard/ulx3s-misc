@@ -83,7 +83,7 @@ void spi_init(void)
 
     // adxl355   needs SPI_MODE1
     // spi_slave needs SPI_MODE3
-    master.setDataMode(SPI_MODE1); // for DMA, only 1 or 3 is available
+    master.setDataMode(SPI_MODE3); // for DMA, only 1 or 3 is available
     // master.setFrequency(SPI_MASTER_FREQ_8M); // too fast for bread board...
     master.setFrequency(8000000); // Hz
     master.setMaxTransferSize(BUFFER_SIZE); // bytes
@@ -235,7 +235,7 @@ void close_logs(void)
 void spi_slave_test(void)
 {
   static uint8_t count = 0;
-  #if 1
+  #if 0
   // begin spi slave test (use SPI_MODE3)
   spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0; // addr [31:24] msb
@@ -247,19 +247,19 @@ void spi_slave_test(void)
   spi_master_tx_buf[7] = 0x33; // data
   spi_master_tx_buf[8] = count++; // data
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 9); // write
+  #endif // end writing
   spi_master_tx_buf[0] = 1; // 1: read ram
   spi_master_tx_buf[1] = 0; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   spi_master_tx_buf[5] = 0; // dummy
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 10); // read
-  for(int i = 6; i <= 9; i++)
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 30); // read
+  for(int i = 6; i < 30; i++)
   {
     Serial.print(spi_master_rx_buf[i], HEX);
     Serial.print(" ");
   }
   Serial.println("");
   // end spi slave test
-  #endif
 }
