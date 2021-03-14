@@ -141,7 +141,7 @@ module top_adxl355log
     assign gn17 = csn;
     assign gn16 = mosi;
     assign miso = gn15;
-    assign gn14 = sclk;
+    assign gn14 = ~sclk; // invert sclk to use SPI_MODE3 instead of SPI_MODE1
   end
   else
   begin
@@ -289,7 +289,7 @@ module top_adxl355log
   reg sync_pulse;
   always @(posedge clk)
   begin
-    r_sync_shift <= {drdy, r_sync_shift[0]};
+    r_sync_shift <= {drdy, r_sync_shift[1]};
     sync_pulse <= r_sync_shift == 2'b10 ? 1 : 0;
   end
 
@@ -311,7 +311,7 @@ module top_adxl355log
   (
     .clk(clk), .clk_en(sclk_en),
     .direct(0),
-    .cmd(0*2+1),
+    .cmd(0*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10),
     .sync(sync_pulse),
     .adxl_csn(rd_csn),
