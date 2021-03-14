@@ -9,3 +9,4 @@ void open_logs(void);
 void write_logs(void);
 void close_logs(void);
 void spi_slave_test(void);
+void spi_direct_test(void);

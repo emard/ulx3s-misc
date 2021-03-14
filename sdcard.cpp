@@ -81,8 +81,8 @@ void spi_init(void)
     spi_master_tx_buf = master.allocDMABuffer(BUFFER_SIZE);
     spi_master_rx_buf = master.allocDMABuffer(BUFFER_SIZE);
 
-    // adxl355   needs SPI_MODE1
-    // spi_slave needs SPI_MODE3
+    // adxl355   needs SPI_MODE1 (all lines directly connected)
+    // spi_slave needs SPI_MODE3 (adxl355 can use SPI_MODE3 with sclk inverted)
     master.setDataMode(SPI_MODE3); // for DMA, only 1 or 3 is available
     // master.setFrequency(SPI_MASTER_FREQ_8M); // too fast for bread board...
     master.setFrequency(8000000); // Hz
@@ -184,20 +184,6 @@ void write_logs(void)
   static uint8_t gps[64];
   if(logs_are_open == 0)
     return;
-  #if 0
-  // begin debug reading ID and printing
-  spi_master_tx_buf[0] = DEVID_AD*2+1; // read ID (4 bytes expected)
-  //digitalWrite(PIN_CSN, 0);
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 5);
-  //digitalWrite(PIN_CSN, 1);
-  for(int i = 1; i <= 4; i++)
-  {
-    Serial.print(spi_master_rx_buf[i], HEX);
-    Serial.print(" ");
-  }
-  Serial.println("");
-  // end debug reading ID and printing
-  #endif
   #if 1
   // begin read fifo and write to SD
   if(adxl355_available()<8)
@@ -262,4 +248,20 @@ void spi_slave_test(void)
   }
   Serial.println("");
   // end spi slave test
+}
+
+void spi_direct_test(void)
+{
+  // begin debug reading ID and printing
+  spi_master_tx_buf[0] = DEVID_AD*2+1; // read ID (4 bytes expected)
+  //digitalWrite(PIN_CSN, 0);
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 5);
+  //digitalWrite(PIN_CSN, 1);
+  for(int i = 1; i <= 4; i++)
+  {
+    Serial.print(spi_master_rx_buf[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println("");
+  // end debug reading ID and printing
 }
