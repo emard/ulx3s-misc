@@ -26,7 +26,7 @@ Pin 12      Digital Power        VDD
 module top_adxl355log
 #(
   C_prog_release_timeout = 26, // esp32 programming default n=26, 2^n / 25MHz = 2.6s
-  spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1)
+  spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1 or SPI_MODE3)
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
   pps_n        = 10,         // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
@@ -150,6 +150,7 @@ module top_adxl355log
     assign gn16 = rd_mosi;
     assign rd_miso = gn15;
     assign gn14 = rd_sclk;
+    //assign miso = rd_miso;
     spirw_slave_v
     #(
         .c_addr_bits(32),
@@ -314,6 +315,9 @@ module top_adxl355log
     .cmd(0*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10),
     .sync(sync_pulse),
+    .direct_csn(csn),
+    .direct_sclk(~sclk),
+    .direct_mosi(mosi),
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),
     .adxl_mosi(rd_mosi),
