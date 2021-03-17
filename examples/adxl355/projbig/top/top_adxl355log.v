@@ -133,6 +133,9 @@ module top_adxl355log
   reg [12:0] spi_ram_addr = 0;
   reg [7:0] ram[0:ram_len-1];
   reg [7:0] R_ram_do;
+  wire spi_ram_miso; // muxed
+
+  wire direct_en; // mux switch
 
   generate
   if(spi_direct)
@@ -146,11 +149,11 @@ module top_adxl355log
   else
   begin
     // ADXL355 connections (FPGA is master to ADXL355)
-    assign gn17 = rd_csn;
-    assign gn16 = rd_mosi;
-    assign rd_miso = gn15;
-    assign gn14 = rd_sclk;
-    //assign miso = rd_miso;
+    assign gn17 = direct_en ?  csn  : rd_csn;
+    assign gn14 = direct_en ? ~sclk : rd_sclk;
+    assign gn16 = direct_en ?  mosi : rd_mosi;
+    assign miso = direct_en ?  gn15 : spi_ram_miso; // mux miso to esp32
+    assign rd_miso = gn15; // adxl miso directly to reader core
     spirw_slave_v
     #(
         .c_addr_bits(32),
@@ -162,7 +165,7 @@ module top_adxl355log
         .csn(csn),
         .sclk(sclk),
         .mosi(mosi),
-        .miso(miso),
+        .miso(spi_ram_miso), // muxed for direct
         .wr(ram_wr),
         .addr(ram_addr),
         .data_in(ram_do),
@@ -312,6 +315,7 @@ module top_adxl355log
   (
     .clk(clk), .clk_en(sclk_en),
     .direct(0),
+    .direct_en(direct_en),
     .cmd(0*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10),
     .sync(sync_pulse),

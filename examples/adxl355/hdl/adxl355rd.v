@@ -8,6 +8,7 @@ module adxl355rd
   input         clk, clk_en, // clk_en should be 1-clk pulse slower than 20 MHz
   // from esp23
   input         direct, // request direct: 0:buffering, 1:direct to ADXL355
+  output        direct_en, // grant direct access (signal for mux)
   input         direct_mosi, direct_sclk, direct_csn,
   //output        direct_miso, // no mux, adxl_mosi can be always used
   // synchronous reading, start of 9-byte xyz sequence
@@ -32,9 +33,9 @@ module adxl355rd
   wire w_mosi, w_sclk, w_csn, w_miso;
 
   // direct/internal multiplex
-  assign adxl_csn    = r_direct ? direct_csn  : w_csn;
-  assign adxl_sclk   = r_direct ? direct_sclk : w_sclk;
-  assign adxl_mosi   = r_direct ? direct_mosi : w_mosi;
+  assign adxl_csn    = /* r_direct ? direct_csn  : */ w_csn;
+  assign adxl_sclk   = /* r_direct ? direct_sclk : */ w_sclk;
+  assign adxl_mosi   = /* r_direct ? direct_mosi : */ w_mosi;
 
   always @(posedge clk)
   begin
@@ -85,6 +86,8 @@ module adxl355rd
   assign wr     = r_wr;
   assign wr16   = r_wr16 & clk_en & index[0]; // FIXME could be done better
   assign x      = r_x;
+  
+  assign direct_en = r_direct;
 
 endmodule
 `default_nettype wire
