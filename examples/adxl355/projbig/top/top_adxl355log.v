@@ -319,9 +319,6 @@ module top_adxl355log
     .cmd(0*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10),
     .sync(sync_pulse),
-    .direct_csn(csn),
-    .direct_sclk(~sclk),
-    .direct_mosi(mosi),
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),
     .adxl_mosi(rd_mosi),
