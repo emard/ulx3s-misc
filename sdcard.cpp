@@ -21,10 +21,23 @@ void adxl355_write_reg(uint8_t a, uint8_t v)
   //digitalWrite(PIN_CSN, 1);
 }
 
+// write ctrl byte to spi ram slave addr 0xFF000000
+void adxl355_ctrl(uint8_t x)
+{
+  spi_master_tx_buf[0] = 0;    // cmd write to spi ram slave
+  spi_master_tx_buf[1] = 0xFF; // address 0xFF ...
+  spi_master_tx_buf[2] = 0x00; // adresss
+  spi_master_tx_buf[3] = 0x00; // adresss
+  spi_master_tx_buf[4] = 0x00; // adresss
+  spi_master_tx_buf[5] = x;
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 6);
+}
+
 void adxl355_init(void)
 {
-  //Serial.println("initializing ADXL");
-  //delay(100);
+  Serial.println("initializing ADXL");
+  adxl355_ctrl(2); // request core direct mode
+  delay(2); // wait for request to be accepted
   adxl355_write_reg(POWER_CTL, 0); // turn device ON
   // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
   // high speed i2c, INT1,INT2 active high
@@ -36,7 +49,8 @@ void adxl355_init(void)
   // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
   //delay(100);
   adxl355_write_reg(SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
-  //delay(100);
+  adxl355_ctrl(0); // request core indirect mode
+  delay(2); // wait for direct mode to finish
 }
 
 uint8_t adxl355_available(void)
@@ -84,7 +98,6 @@ void spi_init(void)
     // adxl355   needs SPI_MODE1 (all lines directly connected)
     // spi_slave needs SPI_MODE3 (adxl355 can use SPI_MODE3 with sclk inverted)
     master.setDataMode(SPI_MODE3); // for DMA, only 1 or 3 is available
-    // master.setFrequency(SPI_MASTER_FREQ_8M); // too fast for bread board...
     master.setFrequency(8000000); // Hz
     master.setMaxTransferSize(BUFFER_SIZE); // bytes
     master.setDMAChannel(1); // 1 or 2 only
