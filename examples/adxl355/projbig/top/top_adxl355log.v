@@ -134,8 +134,11 @@ module top_adxl355log
   reg [7:0] ram[0:ram_len-1];
   reg [7:0] R_ram_do;
   wire spi_ram_miso; // muxed
-
-  wire direct_en; // mux switch
+  wire spi_bram_cs; // "chip" select line for address detection of bram buffer addr 0x00...
+  wire spi_ctrl_cs; // control byte select addr 0xFF..
+  reg [7:0] r_ctrl = 8'h00; // control byte, r_ctrl[7:2]:reserved, r_ctrl[1]:direct_en, r_ctrl[0]:reserved
+  wire direct_req = r_ctrl[1]; // mux switch 1:direct, 0:reader core
+  wire direct_en;
 
   generate
   if(spi_direct)
@@ -171,23 +174,30 @@ module top_adxl355log
         .data_in(ram_do),
         .data_out(ram_di)
     );
+    assign spi_bram_cs = ram_addr[31:24] == 8'h00 ? 1 : 0; // currently unused
+    assign spi_ctrl_cs = ram_addr[31:24] == 8'hFF ? 1 : 0;
     //assign ram_do = ram_addr[7:0];
     //assign ram_do = 8'h5A;
     always @(posedge clk)
     begin
-      if(spi_ram_wr)
+      if(spi_ram_wr) // SPI reader core writes
       begin
-        ram[spi_ram_addr] <= spi_ram_data; // normal
-        if(spi_ram_addr == ram_len-1)
+        ram[spi_ram_addr] <= spi_ram_data; // SPI reader core provided write address
+        if(spi_ram_addr == ram_len-1) // auto-increment and wraparound
           spi_ram_addr <= 0;
         else
           spi_ram_addr <= spi_ram_addr + 1;
       end
-      R_ram_do <= ram[ram_addr];
+      R_ram_do <= ram[ram_addr]; // SPI slave core provided read address
     end
     assign ram_do = R_ram_do;
     //assign ram_do = spi_ram_data;
     //assign ram_do = 8'h77;
+    always @(posedge clk)
+    begin
+      if(ram_wr && spi_ctrl_cs) // spi slave writes ctrl byte
+        r_ctrl <= ram_di;
+    end
   end
   endgenerate
 
@@ -314,9 +324,9 @@ module top_adxl355log
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
-    .direct(0),
+    .direct(direct_req),
     .direct_en(direct_en),
-    .cmd(0*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
+    .cmd(8*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10),
     .sync(sync_pulse),
     .adxl_csn(rd_csn),
@@ -336,7 +346,8 @@ module top_adxl355log
   end
 
   //assign led = {spi_ram_x, spi_ram_wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
-  assign led = r_wrdata;
+  //assign led = r_wrdata;
+  assign led = r_ctrl;
 
   assign audio_l[3:1] = 0;
   assign audio_l[0] = drdy;
