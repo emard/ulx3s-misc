@@ -188,11 +188,13 @@ module top_adxl355log
         else
           spi_ram_addr <= spi_ram_addr + 1;
       end
-      R_ram_do <= ram[ram_addr]; // SPI slave core provided read address
+      // ram_addr: SPI slave core provided read address
+      // spi_ram_addr: SPI reader core autoincrementing address
+      R_ram_do <= ram_addr[31:24] == 8'h00 ? ram[ram_addr] : (ram_addr[0] ? spi_ram_addr[12:8] : spi_ram_addr[7:0]);
     end
     assign ram_do = R_ram_do;
-    //assign ram_do = spi_ram_data;
-    //assign ram_do = 8'h77;
+    //assign ram_do = spi_ram_data; // debug
+    //assign ram_do = 8'h5A; // debug
     always @(posedge clk)
     begin
       if(ram_wr && spi_ctrl_cs) // spi slave writes ctrl byte
