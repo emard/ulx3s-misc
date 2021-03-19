@@ -231,6 +231,19 @@ void close_logs(void)
   logs_are_open = 0;
 }
 
+// read current write pointer of the spi slave
+uint16_t spi_slave_ptr(void)
+{
+  spi_master_tx_buf[0] = 1; // 1: read ram
+  spi_master_tx_buf[1] = 1; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  spi_master_tx_buf[5] = 0; // dummy
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 8); // read, last 2 bytes are ptr value
+  return spi_master_rx_buf[6]+(spi_master_rx_buf[7]<<8);
+}
+
 void spi_slave_test(void)
 {
   static uint8_t count = 0;
@@ -259,6 +272,7 @@ void spi_slave_test(void)
     Serial.print(spi_master_rx_buf[i], HEX);
     Serial.print(" ");
   }
+  Serial.print(spi_slave_ptr(), DEC);
   Serial.println("");
   // end spi slave test
 }
