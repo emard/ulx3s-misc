@@ -182,7 +182,8 @@ module top_adxl355log
     begin
       if(spi_ram_wr) // SPI reader core writes
       begin
-        ram[spi_ram_addr] <= spi_ram_data; // SPI reader core provided write address
+        // invert bit[0] to swap lsb/msb byte for wav format
+        ram[spi_ram_addr^1] <= spi_ram_data; // SPI reader core provided write address
         if(spi_ram_addr == ram_len-1) // auto-increment and wraparound
           spi_ram_addr <= 0;
         else
