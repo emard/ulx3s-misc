@@ -213,26 +213,46 @@ void ls(void)
   listDir(SD_MMC, "/", 0);
 }
 
+void write_wav_header(void)
+{
+  uint8_t wavhdr[44] =
+  {
+    'R', 'I', 'F', 'F',
+    0x00, 0x00, 0x00, 0x00, // chunk size bytes (len, including hdr), file growing, not yet known
+    'W', 'A', 'W', 'E',
+    // subchunk1: fmt
+    'f', 'm', 't', ' ',
+    0x10, 0x00, 0x00, 0x00, // subchunk 1 size 16 bytes
+    0x01, 0x00, // audio format = 1 (PCM)
+    0x06, 0x00, // num channels = 6
+    0x00, 0x04, 0x00, 0x00, // sample rate = 1024 Hz
+    0x00, 0x30, 0x00, 0x00, // byte rate = 12*1024 = 12288
+    0x0C, 0x00, // block align = 12 bytes
+    0x10, 0x00, // bits per sample = 16 bits
+    // subchunk2: data    
+    'd', 'a', 't', 'a',
+    0x00, 0x00, 0x00, 0x00, // chunk size bytes (len), file growing, not yet known       
+  };
+  file_accel.write(wavhdr, sizeof(wavhdr));
+}
+
 void open_logs(void)
 {
   if(logs_are_open != 0)
     return;
   #if 0
   file_gps   = SD_MMC.open("/gps.log",   FILE_APPEND);
-  file_accel = SD_MMC.open("/accel.log", FILE_APPEND);
+  file_accel = SD_MMC.open("/accel.wav", FILE_APPEND);
+  // check appending file position (SEEK_CUR) and if 0 then write header
   #else
   //SD_MMC.remove("/test.txt");
   //SD_MMC.remove("/foo.txt");
+  SD_MMC.remove("/accel.log");
   file_gps   = SD_MMC.open("/gps.log",   FILE_WRITE);
-  file_accel = SD_MMC.open("/accel.log", FILE_WRITE);
+  file_accel = SD_MMC.open("/accel.wav", FILE_WRITE);
+  write_wav_header();
   #endif
   logs_are_open = 1;
-}
-
-void write_wav_header(void)
-{
-  uint8_t wavhdr[44];
-  
 }
 
 void write_logs_old(void)
