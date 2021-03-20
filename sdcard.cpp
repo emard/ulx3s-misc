@@ -326,7 +326,8 @@ void write_logs(void)
   }
 }
 
-// this function doesn't work because seek() is not working
+// this function doesn't work
+// seek() is not working
 void finalize_wav_header(void)
 {
   uint32_t pos = file_accel.position();
@@ -350,7 +351,7 @@ void close_logs(void)
   if(logs_are_open == 0)
     return;
   file_gps.close();
-  finalize_wav_header();
+  //finalize_wav_header();
   file_accel.close();
   logs_are_open = 0;
 }
