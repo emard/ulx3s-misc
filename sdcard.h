@@ -1,5 +1,6 @@
 #include "FS.h"
 #include "SD_MMC.h"
+#define SPI_READER_BUF_SIZE 6144
 void mount(void);
 void spi_init(void);
 void adxl355_init(void);

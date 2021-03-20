@@ -74,6 +74,19 @@ uint8_t adxl355_available(void)
   return spi_master_rx_buf[1]/3;
 }
 
+// read current write pointer of the spi slave
+uint16_t spi_slave_ptr(void)
+{
+  spi_master_tx_buf[0] = 1; // 1: read ram
+  spi_master_tx_buf[1] = 1; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  spi_master_tx_buf[5] = 0; // dummy
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 8); // read, last 2 bytes are ptr value
+  return spi_master_rx_buf[6]+(spi_master_rx_buf[7]<<8);
+}
+
 // read fifo to 16-buffer
 uint8_t adxl355_rdfifo16(void)
 {
@@ -203,7 +216,7 @@ void open_logs(void)
   logs_are_open = 1;
 }
 
-void write_logs(void)
+void write_logs_old(void)
 {
   static uint8_t gps[64];
   if(logs_are_open == 0)
@@ -233,6 +246,24 @@ void write_logs(void)
   #endif
 }
 
+void write_logs(void)
+{
+  static uint16_t prev_ptr = 0;
+  uint16_t ptr, dif;
+
+  ptr = (SPI_READER_BUF_SIZE + spi_slave_ptr() - 2) % SPI_READER_BUF_SIZE; // written content is 2 bytes behind pointer
+  ptr -= ptr % 12; // trim to even number of samples (12 bytes is one full sample)
+  dif = (SPI_READER_BUF_SIZE + ptr - prev_ptr) % SPI_READER_BUF_SIZE;
+  if(dif > 2048)
+  {
+    Serial.print("ptr ");
+    Serial.print(ptr, DEC);
+    Serial.print(" write buf size ");
+    Serial.println(dif, DEC);
+    prev_ptr = ptr;
+  }
+}
+
 void close_logs(void)
 {
   if(logs_are_open == 0)
@@ -240,19 +271,6 @@ void close_logs(void)
   file_gps.close();
   file_accel.close();
   logs_are_open = 0;
-}
-
-// read current write pointer of the spi slave
-uint16_t spi_slave_ptr(void)
-{
-  spi_master_tx_buf[0] = 1; // 1: read ram
-  spi_master_tx_buf[1] = 1; // addr [31:24] msb
-  spi_master_tx_buf[2] = 0; // addr [23:16]
-  spi_master_tx_buf[3] = 0; // addr [15: 8]
-  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
-  spi_master_tx_buf[5] = 0; // dummy
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 8); // read, last 2 bytes are ptr value
-  return spi_master_rx_buf[6]+(spi_master_rx_buf[7]<<8);
 }
 
 void spi_slave_test(void)
