@@ -122,8 +122,11 @@ void setup() {
   mount();
 
   spi_init();
-  adxl355_init();
-  
+  for(int i = 0; i < 5; i++)
+  {
+    adxl355_init();
+    delay(500);
+  }
   /*
   open_logs();
   write_logs();
