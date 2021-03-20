@@ -123,14 +123,14 @@ module top_adxl355log
   wire csn, mosi, miso, sclk;
   wire rd_csn, rd_mosi, rd_miso, rd_sclk; // spi reader
 
-  wire        ram_wr;
+  wire        ram_rd, ram_wr;
   wire [31:0] ram_addr;
   wire  [7:0] ram_di, ram_do;
 
   localparam ram_len = 6*1024;
   wire spi_ram_wr, spi_ram_x;
   wire  [7:0] spi_ram_data;
-  reg [12:0] spi_ram_addr = 0;
+  reg [12:0] spi_ram_addr = 0, r_spi_ram_addr;
   reg [7:0] ram[0:ram_len-1];
   reg [7:0] R_ram_do;
   wire spi_ram_miso; // muxed
@@ -169,6 +169,7 @@ module top_adxl355log
         .sclk(sclk),
         .mosi(mosi),
         .miso(spi_ram_miso), // muxed for direct
+        .rd(ram_rd),
         .wr(ram_wr),
         .addr(ram_addr),
         .data_in(ram_do),
@@ -189,9 +190,17 @@ module top_adxl355log
         else
           spi_ram_addr <= spi_ram_addr + 1;
       end
-      // ram_addr: SPI slave core provided read address
-      // spi_ram_addr: SPI reader core autoincrementing address
-      R_ram_do <= ram_addr[31:24] == 8'h00 ? ram[ram_addr] : (ram_addr[0] ? spi_ram_addr[12:8] : spi_ram_addr[7:0]);
+      if(ram_rd)
+      begin
+        if(ram_addr[31:24] == 8'h01 && ram_addr[0] == 1'b0)
+          r_spi_ram_addr <= spi_ram_addr; // latch address MSB
+        // ram_addr: SPI slave core provided read address
+        // spi_ram_addr: SPI reader core autoincrementing address
+        R_ram_do <= ram_addr[31:24] == 8'h00 ? ram[ram_addr]
+                  : ram_addr[31:24] == 8'h01 ? (ram_addr[0] ? r_spi_ram_addr[12:8] : r_spi_ram_addr[7:0])
+                  //: ram_addr[31:24] == 8'h02 ? (ram_addr[0] ?   spi_ram_addr[12:8] :   spi_ram_addr[7:0]) // debug to check latched values
+                  : 0;
+      end
     end
     assign ram_do = R_ram_do;
     //assign ram_do = spi_ram_data; // debug
