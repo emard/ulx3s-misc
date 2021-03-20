@@ -104,6 +104,9 @@ void setup() {
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
   pinMode(PIN_IRQ, INPUT);
+  delay(1000);
+  spi_init();
+  adxl355_init();
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
   SerialBT.begin("ESP32", true);
   SerialBT.setPin(pin);
@@ -120,8 +123,6 @@ void setup() {
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
   init_nmea2ms(0);
   mount();
-  spi_init();
-  adxl355_init();
   /*
   open_logs();
   write_logs();

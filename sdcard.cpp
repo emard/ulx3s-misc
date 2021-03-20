@@ -14,11 +14,20 @@ int logs_are_open = 0;
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
-  spi_master_tx_buf[0] = a*2; // write range
+  spi_master_tx_buf[0] = a*2; // write reg addr a
   spi_master_tx_buf[1] = v;
   //digitalWrite(PIN_CSN, 0);
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 2);
   //digitalWrite(PIN_CSN, 1);
+}
+
+uint8_t adxl355_read_reg(uint8_t a)
+{
+  spi_master_tx_buf[0] = a*2+1; // read reg addr a
+  //digitalWrite(PIN_CSN, 0);
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 2);
+  //digitalWrite(PIN_CSN, 1);
+  return spi_master_rx_buf[1];
 }
 
 // write ctrl byte to spi ram slave addr 0xFF000000
@@ -38,6 +47,8 @@ void adxl355_init(void)
   Serial.println("initializing ADXL");
   adxl355_ctrl(2); // request core direct mode
   delay(2); // wait for request to be accepted
+  for(int i = 0; i < 4; i++)
+    adxl355_read_reg(i);
   adxl355_write_reg(POWER_CTL, 0); // turn device ON
   // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
   // high speed i2c, INT1,INT2 active high
@@ -247,6 +258,7 @@ uint16_t spi_slave_ptr(void)
 void spi_slave_test(void)
 {
   static uint8_t count = 0;
+  uint16_t wptr;
   #if 0
   // begin spi slave test (use SPI_MODE3)
   spi_master_tx_buf[0] = 0; // 0: write ram
@@ -260,6 +272,7 @@ void spi_slave_test(void)
   spi_master_tx_buf[8] = count++; // data
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 9); // write
   #endif // end writing
+  wptr = spi_slave_ptr();
   spi_master_tx_buf[0] = 1; // 1: read ram
   spi_master_tx_buf[1] = 0; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
@@ -272,7 +285,7 @@ void spi_slave_test(void)
     Serial.print(spi_master_rx_buf[i], HEX);
     Serial.print(" ");
   }
-  Serial.print(spi_slave_ptr(), DEC);
+  Serial.print(wptr, DEC);
   Serial.println("");
   // end spi slave test
 }
