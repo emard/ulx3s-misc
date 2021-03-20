@@ -240,18 +240,23 @@ void open_logs(void)
 {
   if(logs_are_open != 0)
     return;
-  #if 0
+  #if 1
+  SD_MMC.remove("/accel.wav");
   file_gps   = SD_MMC.open("/gps.log",   FILE_APPEND);
   file_accel = SD_MMC.open("/accel.wav", FILE_APPEND);
   // check appending file position (SEEK_CUR) and if 0 then write header
+  if(file_accel.position() == 0)
+    write_wav_header();
   #else
   //SD_MMC.remove("/test.txt");
   //SD_MMC.remove("/foo.txt");
-  SD_MMC.remove("/accel.log");
+  //SD_MMC.remove("/accel.log");
   file_gps   = SD_MMC.open("/gps.log",   FILE_WRITE);
   file_accel = SD_MMC.open("/accel.wav", FILE_WRITE);
   write_wav_header();
   #endif
+  Serial.print("file position (expect 44) ");
+  Serial.println(file_accel.position(), DEC);
   logs_are_open = 1;
 }
 
@@ -321,11 +326,31 @@ void write_logs(void)
   }
 }
 
+// this function doesn't work because seek() is not working
+void finalize_wav_header(void)
+{
+  uint32_t pos = file_accel.position();
+  uint32_t subchunk2size = pos - 44;
+  uint8_t subchunk2size_bytes[4] = {subchunk2size, subchunk2size>>8, subchunk2size>>16, subchunk2size>>24};
+  uint32_t chunksize = pos - 8;
+  uint8_t chunksize_bytes[4] = {chunksize, chunksize>>8, chunksize>>16, chunksize>>24};
+  // FIXME file_accel.seek() is not working
+  file_accel.seek(8);
+  file_accel.write(chunksize_bytes, 4);
+  file_accel.seek(40);
+  file_accel.write(subchunk2size_bytes, 4);
+  Serial.print("finalization hdr position ");
+  Serial.print(file_accel.position(), DEC);
+  Serial.print(" logs finalized at pos ");
+  Serial.println(pos, DEC);  
+}
+
 void close_logs(void)
 {
   if(logs_are_open == 0)
     return;
   file_gps.close();
+  finalize_wav_header();
   file_accel.close();
   logs_are_open = 0;
 }
