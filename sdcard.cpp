@@ -7,7 +7,7 @@
 ESP32DMASPI::Master master;
 uint8_t* spi_master_tx_buf;
 uint8_t* spi_master_rx_buf;
-static const uint32_t BUFFER_SIZE = 1024;
+static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
 File file_gps, file_accel;
 int logs_are_open = 0;
@@ -85,6 +85,19 @@ uint16_t spi_slave_ptr(void)
   spi_master_tx_buf[5] = 0; // dummy
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 8); // read, last 2 bytes are ptr value
   return spi_master_rx_buf[6]+(spi_master_rx_buf[7]<<8);
+}
+
+// read n bytes from SPI address a and write to dst
+// result will appear at spi_master_rx_buf at offset 6
+void spi_slave_read(uint16_t a, uint16_t n)
+{
+  spi_master_tx_buf[0] = 1; // 1: read ram
+  spi_master_tx_buf[1] = 0; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = a >> 8; // addr [15: 8]
+  spi_master_tx_buf[4] = a; // addr [ 7: 0] lsb
+  spi_master_tx_buf[5] = 0; // dummy
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 6+n); // read, last 2 bytes are ptr value
 }
 
 // read fifo to 16-buffer
@@ -256,11 +269,29 @@ void write_logs(void)
   dif = (SPI_READER_BUF_SIZE + ptr - prev_ptr) % SPI_READER_BUF_SIZE;
   if(dif > 2048)
   {
-    Serial.print("ptr ");
+    if(ptr > prev_ptr)
+    {
+      // 1-part read
+      spi_slave_read(prev_ptr, dif);
+      file_accel.write(spi_master_rx_buf+6, dif);
+      Serial.print("1");
+    }
+    else
+    {
+      uint16_t part1len = SPI_READER_BUF_SIZE - prev_ptr;
+      uint16_t part2len = dif - part1len;
+      // 2-part read
+      spi_slave_read(prev_ptr, part1len);
+      file_accel.write(spi_master_rx_buf+6, part1len);
+      spi_slave_read(0, part2len);
+      file_accel.write(spi_master_rx_buf+6, part2len);
+      Serial.print("2");
+    }
+    prev_ptr = ptr;
+    Serial.print(" part ptr ");
     Serial.print(ptr, DEC);
     Serial.print(" write buf size ");
     Serial.println(dif, DEC);
-    prev_ptr = ptr;
   }
 }
 
