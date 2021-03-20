@@ -229,6 +229,12 @@ void open_logs(void)
   logs_are_open = 1;
 }
 
+void write_wav_header(void)
+{
+  uint8_t wavhdr[44];
+  
+}
+
 void write_logs_old(void)
 {
   static uint8_t gps[64];
