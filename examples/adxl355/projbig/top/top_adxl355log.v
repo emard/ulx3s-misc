@@ -292,7 +292,7 @@ module top_adxl355log
       end
     end
   end
-  /*
+
   // LED monitoring
 
   //assign led[7:4] = {drdy,int2,int1,1'b0};
@@ -308,7 +308,7 @@ module top_adxl355log
 
   //assign led = phase;
   //assign led = cnt_sync_prev[7:0]; // should show 0xE8 from 1000 = 0x3E8
-  */
+
 
   // rising edge detection of drdy (sync)
   reg [1:0] r_sync_shift;
@@ -359,7 +359,7 @@ module top_adxl355log
 
   //assign led = {spi_ram_x, spi_ram_wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
   //assign led = r_wrdata;
-  assign led = r_ctrl;
+  //assign led = r_ctrl;
 
   assign audio_l[3:1] = 0;
   assign audio_l[0] = drdy;
