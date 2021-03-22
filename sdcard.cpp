@@ -219,7 +219,7 @@ void write_wav_header(void)
   {
     'R', 'I', 'F', 'F',
     0x00, 0x00, 0x00, 0x00, // chunk size bytes (len, including hdr), file growing, not yet known
-    'W', 'A', 'W', 'E',
+    'W', 'A', 'V', 'E',
     // subchunk1: fmt
     'f', 'm', 't', ' ',
     0x10, 0x00, 0x00, 0x00, // subchunk 1 size 16 bytes
