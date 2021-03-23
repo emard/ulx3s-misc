@@ -344,7 +344,8 @@ module top_adxl355log
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),
     .adxl_mosi(rd_mosi),
-    .adxl_miso(rd_miso),
+    .adxl0_miso(rd_miso),
+    .adxl1_miso(rd_miso),
     .wrdata(spi_ram_data),
     .wr16(spi_ram_wr), // skips every 3rd byte
     .x(spi_ram_x)

@@ -16,7 +16,7 @@ module adxl355rd
   input   [3:0] len, // bytes length, including cmd byte
   // to ADXL355 chip
   output        adxl_mosi, adxl_sclk, adxl_csn, // max sclk = clk/2 or clk_en/2
-  input         adxl_miso,
+  input         adxl0_miso, adxl1_miso,
   // to BRAM for buffering
   output  [7:0] wrdata,
   output        wr, wr16, // wr writes every byte, wr16 is for 16-bit accel, skips every 3rd byte
@@ -55,7 +55,7 @@ module adxl355rd
   end
 
   reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr = 0, r_wr16 = 0, r_x = 0;
-  reg [7:0] r_mosi, r_miso, r_shift, r_wrdata;
+  reg [7:0] r_mosi, r_miso, r1_miso, r_shift, r_wrdata, r1_wrdata;
 
   always @(posedge clk)
   if(clk_en)
@@ -71,8 +71,10 @@ module adxl355rd
   begin
     r_mosi    <= index[7:1] == 1 ? cmd_read : {r_mosi[6:0], 1'b0};
     r_shift   <= index[7:1] == 1 ? 8'h01 : {r_shift[6:0], r_shift[7]};
-    r_miso    <= {r_miso[6:0], adxl_miso};
-    r_wrdata  <= r_shift[7] ? {r_miso[6:0], adxl_miso} : r_wrdata;
+    r_miso    <= {r_miso[6:0], adxl0_miso};
+    r_wrdata  <= r_shift[7] ? {r_miso[6:0], adxl0_miso} : r_wrdata;
+    r1_miso   <= {r1_miso[6:0], adxl1_miso};
+    r1_wrdata <= r_shift[7] ? {r1_miso[6:0], adxl1_miso} : r1_wrdata;
     r_wr      <= r_shift[7] && index[7:1] != 9 && r_sclk_en ? 1 : 0; // every byte
     r_wr16    <= r_shift[7] && index[7:1] != 9 && index[7:1] != 33 && index[7:1] != 57 && index[7:1] != 81 && r_sclk_en ? 1 : 0; // 16-bit accel, skip every 3rd byte
     r_x       <= index[7:1] == 17; // should trigger at the same time as first r_wr and r_wr16
