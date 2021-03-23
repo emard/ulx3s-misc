@@ -55,7 +55,7 @@ module adxl355rd
   end
 
   reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr = 0, r_wr16 = 0, r_x = 0;
-  reg [7:0] r_mosi, r_miso, r1_miso, r_shift, r_wrdata, r1_wrdata;
+  reg [7:0] r_mosi, r0_miso, r1_miso, r_shift, r0_wrdata, r1_wrdata;
 
   always @(posedge clk)
   if(clk_en)
@@ -71,21 +71,26 @@ module adxl355rd
   begin
     r_mosi    <= index[7:1] == 1 ? cmd_read : {r_mosi[6:0], 1'b0};
     r_shift   <= index[7:1] == 1 ? 8'h01 : {r_shift[6:0], r_shift[7]};
-    r_miso    <= {r_miso[6:0], adxl0_miso};
-    r_wrdata  <= r_shift[7] ? {r_miso[6:0], adxl0_miso} : r_wrdata;
+    r0_miso   <= {r0_miso[6:0], adxl0_miso};
+    r0_wrdata <= r_shift[7] ? {r0_miso[6:0], adxl0_miso} : r0_wrdata;
     r1_miso   <= {r1_miso[6:0], adxl1_miso};
     r1_wrdata <= r_shift[7] ? {r1_miso[6:0], adxl1_miso} : r1_wrdata;
     r_wr      <= r_shift[7] && index[7:1] != 9 && r_sclk_en ? 1 : 0; // every byte
     r_wr16    <= r_shift[7] && index[7:1] != 9 && index[7:1] != 33 && index[7:1] != 57 && index[7:1] != 81 && r_sclk_en ? 1 : 0; // 16-bit accel, skip every 3rd byte
     r_x       <= index[7:1] == 17; // should trigger at the same time as first r_wr and r_wr16
   end
+  else
+  begin
+    r_wr16    <= 0; // only 1-clk-cycle write
+  end
+  
   assign w_mosi = r_mosi[7];
   assign w_csn  = r_csn;
   assign w_sclk = r_sclk;
 
-  assign wrdata = r_wrdata;
+  assign wrdata = r1d_wr16 ? r1_wrdata : r0_wrdata;
   assign wr     = r_wr;
-  assign wr16   = r_wr16 & clk_en & index[0]; // FIXME could be done better
+  assign wr16   = r_wr16;
   assign x      = r_x;
   
   assign direct_en = r_direct;
