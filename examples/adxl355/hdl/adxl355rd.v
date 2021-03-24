@@ -81,9 +81,21 @@ module adxl355rd
   end
   else
   begin
-    r_wr16    <= 0; // only 1-clk-cycle write
+    // only 1-clk-cycle write
+    r_wr      <= 0;
+    r_wr16    <= 0;
   end
-  
+
+  // 12-byte buffer
+  reg [7:0] r1_wrbuf[0:11]; // 12-byte buffer for adxl1_miso
+  reg [3:0] r1_index = 0;
+  always @(posedge clk)
+  begin
+    if(r_wr16)
+      r1_wrbuf[r1_index] <= r1_wrdata;
+    r1_index <= index[7:1] == 1 ? 0 : r_wr16 ? r1_index + 1 : r1_index;
+  end
+
   assign w_mosi = r_mosi[7];
   assign w_csn  = r_csn;
   assign w_sclk = r_sclk;
