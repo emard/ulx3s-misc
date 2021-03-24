@@ -87,22 +87,46 @@ module adxl355rd
   end
 
   // 12-byte buffer
-  reg [7:0] r1_wrbuf[0:11]; // 12-byte buffer for adxl1_miso
-  reg [3:0] r1_index = 0;
+  reg [7:0] r1_wrbuf[0:5]; // 12-byte buffer for adxl1_miso
+  reg [2:0] r1_windex = 0; // this core writes
   always @(posedge clk)
   begin
     if(r_wr16)
-      r1_wrbuf[r1_index] <= r1_wrdata;
-    r1_index <= index[7:1] == 1 ? 0 : r_wr16 ? r1_index + 1 : r1_index;
+      r1_wrbuf[r1_windex] <= r1_wrdata; // normal
+    r1_windex <= index[7:1] == 1 ? 0 : r_wr16 ? r1_windex + 1 : r1_windex;
+  end
+
+  // 6-byte buffer read process (to get buffer content written by top core)
+  reg [3:0] prev_index4 = 4'h4; // running LSB hex digit of index, start as finished
+  reg [2:0] r1_rindex = 6; // this core reads, toplevel should write to BRAM buffer: 6-end
+  reg r_wr1 = 0; // second adxl channel write
+  always @(posedge clk)
+  begin
+    prev_index4 <= index[3:0];
+    if(r1_rindex == 6) // stopeed
+    begin
+      if(index[7:4] == bytes_len && index[3:0] == 4'h4 && prev_index4 == 4'h3)
+      begin
+        // index just switched to end position, start writing adxl1
+        r1_rindex <= 0;
+        r_wr1 <= 1;
+      end
+    end
+    else
+    begin
+      r1_rindex <= r1_rindex + 1;
+      if(r1_rindex == 5)
+        r_wr1 <= 0;
+    end
   end
 
   assign w_mosi = r_mosi[7];
   assign w_csn  = r_csn;
   assign w_sclk = r_sclk;
 
-  assign wrdata = r1d_wr16 ? r1_wrdata : r0_wrdata;
+  assign wrdata = r_wr1 ? r1_wrbuf[r1_rindex] : r0_wrdata;
   assign wr     = r_wr;
-  assign wr16   = r_wr16;
+  assign wr16   = r_wr16 | r_wr1;
   assign x      = r_x;
   
   assign direct_en = r_direct;
