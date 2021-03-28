@@ -447,8 +447,8 @@ module top_ffm_memtest
     wire [1:0] tmds[3:0];
     vga2dvid
     #(
-      .C_depth(2),
-      .C_ddr(C_ddr)
+      .c_depth(2),
+      .c_ddr(C_ddr)
     )
     vga2dvid_instance
     (
