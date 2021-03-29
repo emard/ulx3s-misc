@@ -40,6 +40,7 @@ Pin 12      Digital Power        VDD
 `default_nettype none
 module top_adxl355log
 #(
+  ram_len      = 9*1024,    // buffer size 3,6,9,12,15
   C_prog_release_timeout = 26, // esp32 programming default n=26, 2^n / 25MHz = 2.6s
   spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1 or SPI_MODE3)
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
@@ -148,10 +149,10 @@ module top_adxl355log
   wire [31:0] ram_addr;
   wire  [7:0] ram_di, ram_do;
 
-  localparam ram_len = 6*1024;
   wire spi_ram_wr, spi_ram_x;
   wire  [7:0] spi_ram_data;
-  reg [12:0] spi_ram_addr = 0, r_spi_ram_addr;
+  localparam ram_addr_bits = $clog2(ram_len-1);
+  reg [ram_addr_bits-1:0] spi_ram_addr = 0, r_spi_ram_addr;
   reg [7:0] ram[0:ram_len-1];
   reg [7:0] R_ram_do;
   wire spi_ram_miso; // muxed
@@ -225,8 +226,8 @@ module top_adxl355log
         // ram_addr: SPI slave core provided read address
         // spi_ram_addr: SPI reader core autoincrementing address
         R_ram_do <= ram_addr[31:24] == 8'h00 ? ram[ram_addr]
-                  : ram_addr[31:24] == 8'h01 ? (ram_addr[0] ? r_spi_ram_addr[12:8] : r_spi_ram_addr[7:0])
-                  //: ram_addr[31:24] == 8'h02 ? (ram_addr[0] ?   spi_ram_addr[12:8] :   spi_ram_addr[7:0]) // debug to check latched values
+                  : ram_addr[31:24] == 8'h01 ? (ram_addr[0] ? r_spi_ram_addr[ram_addr_bits-1:8] : r_spi_ram_addr[7:0])
+                  //: ram_addr[31:24] == 8'h02 ? (ram_addr[0] ?   spi_ram_addr[ram_addr_bits-1:8] :   spi_ram_addr[7:0]) // debug to check latched values
                   : 0;
       end
     end
