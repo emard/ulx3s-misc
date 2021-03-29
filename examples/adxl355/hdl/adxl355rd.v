@@ -4,12 +4,18 @@
 
 `default_nettype none
 module adxl355rd
+#(
+  tag_addr_bits = 7  // 2**n number of chars in tag FIFO buffer (number of RAM address bits)
+)
 (
   input         clk, clk_en, // clk_en should be 1-clk pulse slower than 20 MHz
-  // from esp23
+  // from esp32
   input         direct, // request direct: 0:buffering, 1:direct to ADXL355
   output        direct_en, // grant direct access (signal for mux)
-  //output        direct_miso, // no mux, adxl_mosi can be always used
+  // from tagger to internal FIFO
+  //input         pulse_tag, // pulse tag (edge detected) inserts char "!"=0x21 with higher priority than tag_en
+  input         tag_en, // 1-clk cycle to push one 6-bit char to tag buffer
+  input   [5:0] tag, // input data going to tag FIFO buffer
   // synchronous reading, start of 9-byte xyz sequence
   input         sync,
   input   [7:0] cmd, // SPI command byte, first to send: 0*2+1: reads id, 8*2+1: reads current, 17*2+1: read fifio
@@ -22,6 +28,33 @@ module adxl355rd
   output        wr, wr16, // wr writes every byte, wr16 is for 16-bit accel, skips every 3rd byte
   output        x // x is set together with wr at start of new 9-byte xyz sequence, x-axis
 );
+  reg [5:0] tag_fifo[0:2**tag_addr_bits-1];
+  reg [tag_addr_bits-1:0] r_wtag = 0, r_rtag = 0;
+  always @(posedge clk)
+  begin
+    if(tag_en)
+    begin // push to FIFO
+      tag_fifo[r_wtag] <= tag;
+      r_wtag <= r_wtag+1;
+    end
+  end
+
+  wire tag_latch; // signal to latch tag data (pop from FIFO)
+  reg [5:0] tag_data; // latched tag data to send
+  always @(posedge clk)
+  begin
+    if(tag_latch)
+    begin
+      if(r_wtag == r_rtag) // FIFO empty?
+        tag_data <= 6'h20; // space char " " when FIFO empty
+      else // data in FIFO, pop one
+      begin
+        tag_data <= tag_fifo[r_rtag]; // normal
+        r_rtag <= r_rtag+1;
+      end
+    end
+  end
+
   reg [7:0] cmd_read  = 1; // holds the spi command byte 1:read id
   reg [3:0] bytes_len = 10; // holds the spi transfer length including command byte
 
@@ -54,6 +87,8 @@ module adxl355rd
     end
   end
 
+  reg [2:0] r_tag_data_i = 0; // bit-index for reading latched tag data
+  reg r_tag_data_en = 0; // toggled at wr16 for LSB to be tagged
   reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr = 0, r_wr16 = 0, r_x = 0;
   reg [7:0] r_mosi, r0_miso, r1_miso, r_shift, r0_wrdata, r1_wrdata;
 
@@ -66,15 +101,17 @@ module adxl355rd
     r_direct  <= index == {bytes_len, 4'h4} ? direct : r_direct;
   end
 
+  wire [7:0] w0_miso = {r0_miso[6:0], adxl0_miso};
+  wire [7:0] w1_miso = {r1_miso[6:0], adxl1_miso};
   always @(posedge clk)
   if(clk_en && ~index[0])
   begin
     r_mosi    <= index[7:1] == 1 ? cmd_read : {r_mosi[6:0], 1'b0};
     r_shift   <= index[7:1] == 1 ? 8'h01 : {r_shift[6:0], r_shift[7]};
-    r0_miso   <= {r0_miso[6:0], adxl0_miso};
-    r0_wrdata <= r_shift[7] ? {r0_miso[6:0], adxl0_miso} : r0_wrdata;
-    r1_miso   <= {r1_miso[6:0], adxl1_miso};
-    r1_wrdata <= r_shift[7] ? {r1_miso[6:0], adxl1_miso} : r1_wrdata;
+    r0_miso   <= w0_miso;
+    r0_wrdata <= r_shift[7] ? (r_tag_data_en ? {w0_miso[7:1], tag_data[r_tag_data_i]  } : w0_miso) : r0_wrdata;
+    r1_miso   <= w1_miso;
+    r1_wrdata <= r_shift[7] ? (r_tag_data_en ? {w1_miso[7:1], tag_data[r_tag_data_i+3]} : w1_miso) : r1_wrdata;
     r_wr      <= r_shift[7] && index[7:1] != 9 && r_sclk_en ? 1 : 0; // every byte
     r_wr16    <= r_shift[7] && index[7:1] != 9 && index[7:1] != 33 && index[7:1] != 57 && index[7:1] != 81 && r_sclk_en ? 1 : 0; // 16-bit accel, skip every 3rd byte
     r_x       <= index[7:1] == 17; // should trigger at the same time as first r_wr and r_wr16
@@ -83,8 +120,11 @@ module adxl355rd
   begin
     // only 1-clk-cycle write
     r_wr      <= 0;
+    r_tag_data_en <= index[7:1] == 0 ? 0 : r_wr16 ? ~r_tag_data_en : r_tag_data_en;
+    r_tag_data_i  <= index[7:1] == 0 ? 0 : r_wr16 &  r_tag_data_en ? r_tag_data_i+1 : r_tag_data_i;
     r_wr16    <= 0;
   end
+  assign tag_latch = r_wr16 & ~r_tag_data_en;
 
   // 6-byte buffer
   localparam r1_wrbuf_len = 6;
