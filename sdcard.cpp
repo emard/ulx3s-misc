@@ -226,7 +226,7 @@ void write_wav_header(void)
     0x01, 0x00, // audio format = 1 (PCM)
     0x06, 0x00, // num channels = 6
     0x00, 0x04, 0x00, 0x00, // sample rate = 1024 Hz
-    0x00, 0x30, 0x00, 0x00, // byte rate = 12*1024 = 12288
+    0x00, 0x30, 0x00, 0x00, // byte rate = 12*1024 = 12288 byte/s
     0x0C, 0x00, // block align = 12 bytes
     0x10, 0x00, // bits per sample = 16 bits
     // subchunk2: data    
