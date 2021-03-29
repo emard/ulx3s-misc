@@ -86,8 +86,9 @@ module adxl355rd
     r_wr16    <= 0;
   end
 
-  // 12-byte buffer
-  reg [7:0] r1_wrbuf[0:5]; // 12-byte buffer for adxl1_miso
+  // 6-byte buffer
+  localparam r1_wrbuf_len = 6;
+  reg [7:0] r1_wrbuf[0:r1_wrbuf_len-1]; // 6-byte buffer for adxl1_miso
   reg [2:0] r1_windex = 0; // this core writes
   always @(posedge clk)
   begin
@@ -98,12 +99,12 @@ module adxl355rd
 
   // 6-byte buffer read process (to get buffer content written by top core)
   reg [3:0] prev_index4 = 4'h4; // running LSB hex digit of index, start as finished
-  reg [2:0] r1_rindex = 6; // this core reads, toplevel should write to BRAM buffer: 6-end
+  reg [$clog2(r1_wrbuf_len-1)-1:0] r1_rindex = r1_wrbuf_len; // this core reads, toplevel should write to BRAM buffer: 6-end
   reg r_wr1 = 0; // second adxl channel write
   always @(posedge clk)
   begin
     prev_index4 <= index[3:0];
-    if(r1_rindex == 6) // stopeed
+    if(r1_rindex == r1_wrbuf_len) // stopeed
     begin
       if(index[7:4] == bytes_len && index[3:0] == 4'h4 && prev_index4 == 4'h3)
       begin
@@ -115,7 +116,7 @@ module adxl355rd
     else
     begin
       r1_rindex <= r1_rindex + 1;
-      if(r1_rindex == 5)
+      if(r1_rindex == r1_wrbuf_len-1)
         r_wr1 <= 0;
     end
   end
