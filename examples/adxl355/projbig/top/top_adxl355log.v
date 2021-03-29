@@ -254,7 +254,7 @@ module top_adxl355log
   localparam pps_cnt_max = clk_out0_hz*pps_s/pps_n; // cca +-20000 tolerance
   localparam pps_width   = pps_cnt_max/10;   
   reg [$clog2(pps_cnt_max)-1:0] pps_cnt;
-  reg pps;
+  reg pps, pps_pulse;
   always @(posedge clk)
   begin
     if(pps_cnt == pps_cnt_max-1)
@@ -265,6 +265,7 @@ module top_adxl355log
       pps <= 1;
     else if(pps_cnt == pps_width-1)
       pps <= 0;
+    pps_pulse <= pps_cnt == 0;
   end
   
   assign wifi_gpio25 = gn11;
@@ -369,12 +370,16 @@ module top_adxl355log
     .direct_en(direct_en),
     .cmd(8*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10), // 10 = 1+9, 1 byte transmitted and 9 bytes received
+    .tag_en(pps_pulse),
+    .tag(6'h21), // char "!"
     .sync(sync_pulse),
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),
     .adxl_mosi(rd_mosi),
-    .adxl0_miso(rd0_miso),
-    .adxl1_miso(rd1_miso),
+    .adxl0_miso(rd0_miso), // normal
+    .adxl1_miso(rd1_miso), // normal
+    //.adxl0_miso(0), // debug
+    //.adxl1_miso(0), // debug
     .wrdata(spi_ram_data),
     .wr16(spi_ram_wr), // skips every 3rd byte
     .x(spi_ram_x)
