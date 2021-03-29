@@ -60,14 +60,14 @@ static void IRAM_ATTR isr_handler()
   ctprev = ct;
   int16_t phase = (nmea2ms_dif+t)%period;
   int16_t period_correction = (phase_target-phase+2*period+halfperiod)%period-halfperiod;
-  if(period_correction < -15 || period_correction > 15)
-    period_correction *= 4; // fast convergence
-  else
+  //if(period_correction < -30 || period_correction > 30)
+  //  period_correction /= 2; // fast convergence
+  //else
     period_correction /= 4; // slow convergence and hysteresis around 0
   if(period_correction > 1530) // upper limit to prevent 16-bit wraparound
     period_correction = 1530;  
   MCPWM0.timer[0].period.period = Period1Hz+period_correction;
-  #if 0
+  #if 1
   Serial.print(nmea2ms_dif, DEC); // average nmea time - millis() time
   Serial.print(" ");
   Serial.print(ctdelta2, DEC); // microseconds between each irq measured by CPU timer
@@ -207,7 +207,7 @@ void loop()
   }
   else
   {
-    if(tdelta > 4000) // 4 seconds of serial silence
+    if(tdelta > 6000) // 6 seconds of serial silence
     {
       pinMode(PIN_LED, INPUT);
       digitalWrite(PIN_LED, LED_OFF);
