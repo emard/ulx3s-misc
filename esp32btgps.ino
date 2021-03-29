@@ -223,6 +223,7 @@ void loop()
   #endif
 
   #if 0
+  // print adxl data
   spi_slave_test(); // use SPI_MODE3
   //spi_direct_test(); // use SPI_MODE3 if sclk inverted, otherwise SPI_MODE1
   delay(100);
