@@ -20,6 +20,21 @@ Pin 9       Interrupt 2          INT2      GP15  LED6
 Pin 10      Data Ready           DRDY      GP14  LED7
 Pin 11      Digital Ground       DGND
 Pin 12      Digital Power        VDD
+
+PMOD connected to GP,GN 21-24 (add +7 to previous GP,GN numbers)
+Pin Number  Pin Function         Mnemonic  ULX3S
+Pin 1       Chip Select          CS        GN24  LED0
+Pin 2       Master Out Slave In  MOSI      GN23  LED1
+Pin 3       Master In Slave Out  MISO      GN22  LED2
+Pin 4       Serial Clock         SCLK      GN21  LED3
+Pin 5       Digital Ground       DGND
+Pin 6       Digital Power        VDD
+Pin 7       Interrupt 1          INT1      GP24  LED4
+Pin 8       Not Connected        NC        GP23
+Pin 9       Interrupt 2          INT2      GP22  LED6
+Pin 10      Data Ready           DRDY      GP21  LED7
+Pin 11      Digital Ground       DGND
+Pin 12      Digital Power        VDD
 */
 
 `default_nettype none
@@ -45,6 +60,11 @@ module top_adxl355log
   input         gp17, // ADXL355 INT1
   input         gn15, // ADXL355 MISO
   output        gn14,gn16,gn17, // ADXL355 SCLK,MOSI,CSn
+  output        gp21, // ADXL355 DRDY
+  input         gp22, // ADXL355 INT2
+  input         gp24, // ADXL355 INT1
+  input         gn22, // ADXL355 MISO
+  output        gn21,gn23,gn24, // ADXL355 SCLK,MOSI,CSn
   input         gn11, // ESP32 wifi_gpio26 PPS to FPGA
   output        gp11, // ESP32 wifi_gpio26 PPS feedback
   input         ftdi_nrts,
@@ -104,7 +124,8 @@ module top_adxl355log
   wire int1 = gp17;
   wire int2 = gp15;
   wire drdy; // gp14;
-  assign gp14 = drdy;
+  assign gp14 = drdy; // adxl0 
+  assign gp21 = drdy; // adxl1
 
   // base clock for making 1024 kHz for ADXL355
   wire [3:0] clocks;
@@ -121,7 +142,7 @@ module top_adxl355log
   wire clk = clocks[0]; // 40 MHz system clock
 
   wire csn, mosi, miso, sclk;
-  wire rd_csn, rd_mosi, rd_miso, rd_sclk; // spi reader
+  wire rd_csn, rd_mosi, rd0_miso, rd1_miso, rd_sclk; // spi reader
 
   wire        ram_rd, ram_wr;
   wire [31:0] ram_addr;
@@ -151,12 +172,19 @@ module top_adxl355log
   end
   else
   begin
-    // ADXL355 connections (FPGA is master to ADXL355)
+    // ADXL355 0 connections (FPGA is master to ADXL355)
     assign gn17 = direct_en ?  csn  : rd_csn;
     assign gn14 = direct_en ? ~sclk : rd_sclk;
     assign gn16 = direct_en ?  mosi : rd_mosi;
     assign miso = direct_en ?  gn15 : spi_ram_miso; // mux miso to esp32
-    assign rd_miso = gn15; // adxl miso directly to reader core
+    assign rd0_miso = gn15; // adxl0 miso directly to reader core
+
+    // ADXL355 1 connections (FPGA is master to ADXL355)
+    assign gn24 = direct_en ?  csn  : rd_csn;
+    assign gn21 = direct_en ? ~sclk : rd_sclk;
+    assign gn23 = direct_en ?  mosi : rd_mosi;
+    assign rd1_miso = gn22; // adxl1 miso directly to reader core
+
     spirw_slave_v
     #(
         .c_addr_bits(32),
@@ -344,8 +372,8 @@ module top_adxl355log
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),
     .adxl_mosi(rd_mosi),
-    .adxl0_miso(rd_miso),
-    .adxl1_miso(rd_miso),
+    .adxl0_miso(rd0_miso),
+    .adxl1_miso(rd1_miso),
     .wrdata(spi_ram_data),
     .wr16(spi_ram_wr), // skips every 3rd byte
     .x(spi_ram_x)
