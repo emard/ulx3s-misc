@@ -67,7 +67,7 @@ static void IRAM_ATTR isr_handler()
   if(period_correction > 1530) // upper limit to prevent 16-bit wraparound
     period_correction = 1530;  
   MCPWM0.timer[0].period.period = Period1Hz+period_correction;
-  #if 1
+  #if 0
   Serial.print(nmea2ms_dif, DEC); // average nmea time - millis() time
   Serial.print(" ");
   Serial.print(ctdelta2, DEC); // microseconds between each irq measured by CPU timer
@@ -207,7 +207,7 @@ void loop()
   }
   else
   {
-    if(tdelta > 6000) // 6 seconds of serial silence
+    if(tdelta > 5000) // 5 seconds of serial silence
     {
       pinMode(PIN_LED, INPUT);
       digitalWrite(PIN_LED, LED_OFF);
