@@ -298,7 +298,7 @@ void write_logs(void)
   ptr = (SPI_READER_BUF_SIZE + spi_slave_ptr() - 2) % SPI_READER_BUF_SIZE; // written content is 2 bytes behind pointer
   ptr -= ptr % 12; // trim to even number of samples (12 bytes is one full sample)
   dif = (SPI_READER_BUF_SIZE + ptr - prev_ptr) % SPI_READER_BUF_SIZE;
-  if(dif > 2048)
+  if(dif > BUF_DATA_WRITE)
   {
     if(ptr > prev_ptr)
     {
@@ -336,7 +336,7 @@ void finalize_wav_header(void)
   uint32_t chunksize = pos - 8;
   uint8_t chunksize_bytes[4] = {chunksize, chunksize>>8, chunksize>>16, chunksize>>24};
   // FIXME file_accel.seek() is not working
-  file_accel.seek(8);
+  file_accel.seek(4);
   file_accel.write(chunksize_bytes, 4);
   file_accel.seek(40);
   file_accel.write(subchunk2size_bytes, 4);
