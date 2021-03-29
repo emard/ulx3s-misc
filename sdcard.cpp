@@ -300,29 +300,32 @@ void write_logs(void)
   dif = (SPI_READER_BUF_SIZE + ptr - prev_ptr) % SPI_READER_BUF_SIZE;
   if(dif > BUF_DATA_WRITE)
   {
-    if(ptr > prev_ptr)
+    if(logs_are_open)
     {
-      // 1-part read
-      spi_slave_read(prev_ptr, dif);
-      file_accel.write(spi_master_rx_buf+6, dif);
-      Serial.print("1");
-    }
-    else
-    {
-      uint16_t part1len = SPI_READER_BUF_SIZE - prev_ptr;
-      uint16_t part2len = dif - part1len;
-      // 2-part read
-      spi_slave_read(prev_ptr, part1len);
-      file_accel.write(spi_master_rx_buf+6, part1len);
-      spi_slave_read(0, part2len);
-      file_accel.write(spi_master_rx_buf+6, part2len);
-      Serial.print("2");
+      if(ptr > prev_ptr)
+      {
+        // 1-part read
+        spi_slave_read(prev_ptr, dif);
+        file_accel.write(spi_master_rx_buf+6, dif);
+        Serial.print("1");
+      }
+      else
+      {
+        uint16_t part1len = SPI_READER_BUF_SIZE - prev_ptr;
+        uint16_t part2len = dif - part1len;
+        // 2-part read
+        spi_slave_read(prev_ptr, part1len);
+        file_accel.write(spi_master_rx_buf+6, part1len);
+        spi_slave_read(0, part2len);
+        file_accel.write(spi_master_rx_buf+6, part2len);
+        Serial.print("2");
+      }
+      Serial.print(" part ptr ");
+      Serial.print(ptr, DEC);
+      Serial.print(" write buf size ");
+      Serial.println(dif, DEC);
     }
     prev_ptr = ptr;
-    Serial.print(" part ptr ");
-    Serial.print(ptr, DEC);
-    Serial.print(" write buf size ");
-    Serial.println(dif, DEC);
   }
 }
 
@@ -350,10 +353,10 @@ void close_logs(void)
 {
   if(logs_are_open == 0)
     return;
+  logs_are_open = 0;
   file_gps.close();
   //finalize_wav_header();
   file_accel.close();
-  logs_are_open = 0;
 }
 
 void spi_slave_test(void)

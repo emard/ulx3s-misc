@@ -2,7 +2,7 @@
 #include "SD_MMC.h"
 #define SPI_READER_BUF_SIZE 6144
 // write to SD when more than BUF_DATA_WRITE bytes are collected
-#define BUF_DATA_WRITE 3000
+#define BUF_DATA_WRITE 2000
 void mount(void);
 void spi_init(void);
 void adxl355_init(void);
