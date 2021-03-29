@@ -242,7 +242,7 @@ void open_logs(void)
     return;
   #if 1
   SD_MMC.remove("/accel.wav");
-  file_gps   = SD_MMC.open("/gps.log",   FILE_APPEND);
+  //file_gps   = SD_MMC.open("/gps.log",   FILE_APPEND);
   file_accel = SD_MMC.open("/accel.wav", FILE_APPEND);
   // check appending file position (SEEK_CUR) and if 0 then write header
   if(file_accel.position() == 0)
@@ -251,7 +251,7 @@ void open_logs(void)
   //SD_MMC.remove("/test.txt");
   //SD_MMC.remove("/foo.txt");
   //SD_MMC.remove("/accel.log");
-  file_gps   = SD_MMC.open("/gps.log",   FILE_WRITE);
+  //file_gps   = SD_MMC.open("/gps.log",   FILE_WRITE);
   file_accel = SD_MMC.open("/accel.wav", FILE_WRITE);
   write_wav_header();
   #endif
@@ -260,7 +260,9 @@ void open_logs(void)
   logs_are_open = 1;
 }
 
-void write_logs_old(void)
+#if 0
+// using ADXL 32-sample buffer is too small, overruns
+void write_logs_old1(void)
 {
   static uint8_t gps[64];
   if(logs_are_open == 0)
@@ -289,7 +291,12 @@ void write_logs_old(void)
   // end read fifo and write to SD
   #endif
 }
+#endif
 
+#if 0
+// too complex code
+// write to SD when more than BUF_DATA_WRITE bytes are collected
+#define BUF_DATA_WRITE 2000
 void write_logs(void)
 {
   static uint16_t prev_ptr = 0;
@@ -328,6 +335,30 @@ void write_logs(void)
     prev_ptr = ptr;
   }
 }
+#endif
+
+#if 1
+void write_logs(void)
+{
+  static uint8_t prev_half = 0;
+  uint8_t half;
+  uint16_t ptr;
+
+  ptr = (SPI_READER_BUF_SIZE + spi_slave_ptr() - 2) % SPI_READER_BUF_SIZE; // written content is 2 bytes behind pointer
+  half = ptr >= SPI_READER_BUF_SIZE/2;
+  if(half != prev_half)
+  {
+    if(logs_are_open)
+    {
+      spi_slave_read(half ? 0 : SPI_READER_BUF_SIZE/2, SPI_READER_BUF_SIZE/2);
+      file_accel.write(spi_master_rx_buf+6, SPI_READER_BUF_SIZE/2);
+      Serial.print("ptr ");
+      Serial.println(ptr, DEC);
+    }
+    prev_half = half;
+  }
+}
+#endif
 
 // this function doesn't work
 // seek() is not working
@@ -354,7 +385,7 @@ void close_logs(void)
   if(logs_are_open == 0)
     return;
   logs_are_open = 0;
-  file_gps.close();
+  //file_gps.close();
   //finalize_wav_header();
   file_accel.close();
 }

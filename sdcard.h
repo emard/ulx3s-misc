@@ -1,8 +1,8 @@
 #include "FS.h"
 #include "SD_MMC.h"
-#define SPI_READER_BUF_SIZE 6144
-// write to SD when more than BUF_DATA_WRITE bytes are collected
-#define BUF_DATA_WRITE 2000
+// hardware buffer size in bytes at fpga core (must be divisible by 12)
+// 3072, 6144, 9216, 12288, 15360
+#define SPI_READER_BUF_SIZE 9216
 void mount(void);
 void spi_init(void);
 void adxl355_init(void);
