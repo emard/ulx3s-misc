@@ -39,11 +39,11 @@ module adxl355rd
     end
   end
 
-  wire tag_latch; // signal to latch tag data (pop from FIFO)
+  reg r_tag_latch = 0; // signal to latch tag data (pop from FIFO)
   reg [5:0] tag_data; // latched tag data to send
   always @(posedge clk)
   begin
-    if(tag_latch)
+    if(r_tag_latch)
     begin
       if(r_wtag == r_rtag) // FIFO empty?
         tag_data <= 6'h20; // space char " " when FIFO empty
@@ -78,12 +78,14 @@ module adxl355rd
         index <= 0; // start new cycle
         cmd_read <= cmd;
         bytes_len <= len;
+        r_tag_latch <= 1;
       end
     end
     else // end not yet
     begin
       if(clk_en)
         index <= index+1;
+      r_tag_latch <= 0;
     end
   end
 
@@ -120,11 +122,15 @@ module adxl355rd
   begin
     // only 1-clk-cycle write
     r_wr      <= 0;
-    r_tag_data_en <= index[7:1] == 0 ? 0 : r_wr16 ? ~r_tag_data_en : r_tag_data_en;
-    r_tag_data_i  <= index[7:1] == 0 ? 0 : r_wr16 &  r_tag_data_en ? r_tag_data_i+1 : r_tag_data_i;
     r_wr16    <= 0;
   end
-  assign tag_latch = r_wr16 & ~r_tag_data_en;
+
+  always @(posedge clk)
+  begin
+    r_tag_data_en <= index[7:1] == 0 ? 0 : r_wr16 ? ~r_tag_data_en : r_tag_data_en;
+    r_tag_data_i  <= index[7:1] == 0 ? 0 : r_wr16 &  r_tag_data_en ? r_tag_data_i+1 : r_tag_data_i;
+    //r_tag_latch   <= index == 0 && clk_en == 1;
+  end
 
   // 6-byte buffer
   localparam r1_wrbuf_len = 6;
