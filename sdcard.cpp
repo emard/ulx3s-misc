@@ -352,8 +352,11 @@ void write_logs(void)
     {
       spi_slave_read(half ? 0 : SPI_READER_BUF_SIZE/2, SPI_READER_BUF_SIZE/2);
       file_accel.write(spi_master_rx_buf+6, SPI_READER_BUF_SIZE/2);
+      #if 0
+      // print buffer ptr
       Serial.print("ptr ");
       Serial.println(ptr, DEC);
+      #endif
     }
     prev_half = half;
   }
