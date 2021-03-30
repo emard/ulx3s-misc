@@ -17,6 +17,18 @@ String name = "Garmin GLO #4352e";
 char *pin = "1234"; //<- standard pin would be provided by default
 bool connected = false;
 
+// int64_t esp_timer_get_time() returns system microseconds
+int64_t IRAM_ATTR us()
+{
+  return esp_timer_get_time();
+}
+
+// better millis
+uint32_t IRAM_ATTR ms()
+{
+  return (uint32_t) (esp_timer_get_time() / 1000LL);
+}
+
 // read raw 32-bit CPU ticks, running at 240 MHz, wraparound 18s
 inline uint32_t IRAM_ATTR cputix()
 {
@@ -39,7 +51,7 @@ const int16_t halfperiod = period/2;
 
 // rotated log of 256 NMEA timestamps and their cputix timestamps
 uint8_t inmealog = 0;
-int32_t nmea2ms_log[256]; // difference nmea-millis() log
+int32_t nmea2ms_log[256]; // difference nmea-ms() log
 int64_t nmea2ms_sum;
 int32_t nmea2ms_dif;
 
@@ -54,7 +66,7 @@ static void IRAM_ATTR isr_handler()
 {
   uint32_t ct = cputix(); // hi-resolution timer 18s wraparound
   static uint32_t ctprev;
-  uint32_t t = millis();
+  uint32_t t = ms();
   static uint32_t tprev;
   int32_t ctdelta2 = (ct - ctprev)/ctMHz; // us time between irq's
   ctprev = ct;
@@ -68,11 +80,13 @@ static void IRAM_ATTR isr_handler()
     period_correction = 1530;  
   MCPWM0.timer[0].period.period = Period1Hz+period_correction;
   #if 0
-  Serial.print(nmea2ms_dif, DEC); // average nmea time - millis() time
+  Serial.print(nmea2ms_dif, DEC); // average nmea time - ms() time
   Serial.print(" ");
   Serial.print(ctdelta2, DEC); // microseconds between each irq measured by CPU timer
   Serial.print(" ");
   Serial.print(phase, DEC); // less:PPS early, more:PPS late
+  //Serial.print(" ");
+  //Serial.print((uint32_t)us(), DEC);
   Serial.println(" irq");
   #endif
 }
@@ -93,7 +107,7 @@ void test64()
 // fill sum and log with given difference d
 void init_nmea2ms(int32_t d)
 {
-  // initialize nmea to millis() statistics sum
+  // initialize nmea to ms() statistics sum
   nmea2ms_sum = d*256;
   for(int i = 0; i < 256; i++)
     nmea2ms_log[i] = d; 
@@ -111,8 +125,8 @@ void setup() {
 
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS); // Initialise channel MCPWM0A on PPS pin
   MCPWM0.clk_cfg.prescale = 24;                 // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
-  MCPWM0.timer[0].period.prescale = 100/PPSHz-1;// Set timer 0 prescaler to 99 (6.4MHz/(99+1))=64kHz)
-  MCPWM0.timer[0].period.period = 63999;        // Set the PWM period to 1Hz (64kHz/(63999+1)=1Hz) 
+  MCPWM0.timer[0].period.prescale = 100/PPSHz-1;// Set timer 0 prescaler to 9 (6.4MHz/(9+1))=640kHz)
+  MCPWM0.timer[0].period.period = 63999;        // Set the PWM period to 10Hz (640kHz/(63999+1)=10Hz) 
   MCPWM0.channel[0].cmpr_value[0].val = 6400;   // Set the counter compare for 10% duty-cycle
   MCPWM0.channel[0].generator[0].utez = 2;      // Set the PWM0A ouput to go high at the start of the timer period
   MCPWM0.channel[0].generator[0].utea = 1;      // Clear on compare match
@@ -160,7 +174,7 @@ int nmea2s(char *nmea)
 void loop()
 {
   static uint32_t tprev;
-  uint32_t t = millis();
+  uint32_t t = ms();
   static char nmea[256];
   static char c;
   static int i = 0;
@@ -174,7 +188,7 @@ void loop()
     while(SerialBT.available() && c != '\n')
     {
       if(i == 0)
-        ct0 = millis();
+        ct0 = ms();
       // read returns char or -1 if unavailable
       c = SerialBT.read();
       if(i < 255)
@@ -196,7 +210,7 @@ void loop()
         nmea2ms_log[inmealog++] = nmea2ms;
         write_logs(); // use SPI_MODE1
         //Serial.println(daytime, DEC);
-        //Serial.println(ct, HEX);
+        //Serial.println(ct0, HEX);
       }
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
@@ -214,7 +228,7 @@ void loop()
       close_logs();
       ls();
       reconnect();
-      tprev = millis();
+      tprev = ms();
       i=0;
     }
     else
