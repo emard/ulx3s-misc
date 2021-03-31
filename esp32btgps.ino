@@ -80,6 +80,7 @@ static void IRAM_ATTR isr_handler()
     period_correction = 1530;  
   MCPWM0.timer[0].period.period = Period1Hz+period_correction;
   #if 0
+  // debug PPS sync
   Serial.print(nmea2ms_dif, DEC); // average nmea time - ms() time
   Serial.print(" ");
   Serial.print(ctdelta2, DEC); // microseconds between each irq measured by CPU timer
