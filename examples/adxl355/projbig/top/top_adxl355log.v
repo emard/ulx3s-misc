@@ -258,14 +258,19 @@ module top_adxl355log
   always @(posedge clk)
   begin
     if(pps_cnt == pps_cnt_max-1)
+    begin
       pps_cnt <= 0;
+      pps_pulse <= 1;
+    end
     else
+    begin
       pps_cnt <= pps_cnt+1;
+      pps_pulse <= 0;
+    end
     if(pps_cnt == 0)
       pps <= 1;
     else if(pps_cnt == pps_width-1)
       pps <= 0;
-    pps_pulse <= pps_cnt == 0;
   end
   
   assign wifi_gpio25 = gn11;
