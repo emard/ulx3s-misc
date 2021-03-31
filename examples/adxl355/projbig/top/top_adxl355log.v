@@ -373,8 +373,9 @@ module top_adxl355log
     .direct_en(direct_en),
     .cmd(8*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10), // 10 = 1+9, 1 byte transmitted and 9 bytes received
-    .tag_en(pps_pulse),
-    .tag(6'h21), // char "!"
+    .tag_pulse(pps_pulse),
+    .tag_en(0),  // TODO write signal from SPI
+    .tag(6'h30), // TODO 6-bit char from SPI
     .sync(sync_pulse),
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),

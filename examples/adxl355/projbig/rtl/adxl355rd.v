@@ -13,7 +13,7 @@ module adxl355rd
   input         direct, // request direct: 0:buffering, 1:direct to ADXL355
   output        direct_en, // grant direct access (signal for mux)
   // from tagger to internal FIFO
-  //input         pulse_tag, // pulse tag (edge detected) inserts char "!"=0x21 with higher priority than tag_en
+  input         tag_pulse, // pulse 1-clk-cycle inserts char "!"=0x21 with higher priority than tag_en
   input         tag_en, // 1-clk cycle to push one 6-bit char to tag buffer
   input   [5:0] tag, // input data going to tag FIFO buffer
   // synchronous reading, start of 9-byte xyz sequence
@@ -28,6 +28,22 @@ module adxl355rd
   output        wr, wr16, // wr writes every byte, wr16 is for 16-bit accel, skips every 3rd byte
   output        x // x is set together with wr at start of new 9-byte xyz sequence, x-axis
 );
+  reg r_tag_latch = 0; // signal to latch tag data (pop from FIFO) or get pending pulse tag
+
+  // tag_pulse has higher priority than tag_en
+  reg r_pulse_tag = 0;
+  always @(posedge clk)
+  begin
+    if(tag_pulse)
+      r_pulse_tag <= 1;
+    else
+    begin
+      if(r_tag_latch)
+        r_pulse_tag <= 0;
+    end
+  end
+
+  // tag_en for NMEA 6-bit data
   reg [5:0] tag_fifo[0:2**tag_addr_bits-1];
   reg [tag_addr_bits-1:0] r_wtag = 0, r_rtag = 0;
   always @(posedge clk)
@@ -39,18 +55,22 @@ module adxl355rd
     end
   end
 
-  reg r_tag_latch = 0; // signal to latch tag data (pop from FIFO)
   reg [5:0] tag_data; // latched tag data to send
   always @(posedge clk)
   begin
     if(r_tag_latch)
     begin
-      if(r_wtag == r_rtag) // FIFO empty?
-        tag_data <= 6'h20; // space char " " when FIFO empty
-      else // data in FIFO, pop one
+      if(r_pulse_tag)
+        tag_data <= 6'h21;
+      else
       begin
-        tag_data <= tag_fifo[r_rtag]; // normal
-        r_rtag <= r_rtag+1;
+        if(r_wtag == r_rtag) // FIFO empty?
+          tag_data <= 6'h20; // space char " " when FIFO empty
+        else // data in FIFO, pop one
+        begin
+          tag_data <= tag_fifo[r_rtag]; // normal
+          r_rtag <= r_rtag+1;
+        end
       end
     end
   end
