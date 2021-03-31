@@ -299,8 +299,6 @@ module top_adxl355log
   (
     .i_clk(clk),
     .i_pps(pps_btn), // rising edge sensitive
-    .i_faster(btn[6]),
-    .i_slower(btn[5]),
     .o_cnt(phase), // monitor phase angle
     .o_pps_valid(pps_valid),
     .o_locked(sync_locked),

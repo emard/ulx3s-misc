@@ -22,7 +22,6 @@ module adxl355_sync
 (
   input  i_clk,       // 40 kHz system clock
   input  i_pps,       // 1 Hz pulse per second from GPS TODO not used
-  input  i_faster, i_slower,
   output [7:0] o_cnt, // debug output sample counter captured each rising edge of PPS
   output o_pps_valid, // 1 when pps in +-clk_pps_tol_us
   output o_locked,    // 1 when sync makes required number of samples between PPS pulses
