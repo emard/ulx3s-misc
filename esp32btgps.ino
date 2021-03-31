@@ -201,6 +201,7 @@ void loop()
       if(nmea[1]=='G' && nmea[3]=='R') // print only GPRMC
       {
         nmea[i]=0;
+        write_tag(nmea);
         //Serial.print(nmea);
         int daytime = nmea2s(nmea+7);
         int32_t nmea2ms = daytime*100-ct0; // difference from nmea to timer

@@ -208,6 +208,11 @@ void mount(void)
   logs_are_open = 0;
 }
 
+void umount(void)
+{
+  SD_MMC.end();
+}
+
 void ls(void)
 {
   listDir(SD_MMC, "/", 0);
@@ -362,6 +367,19 @@ void write_logs(void)
   }
 }
 #endif
+
+void write_tag(char *a)
+{
+  int i;
+  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[1] = 6; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  for(i = 5; *a != 0; i++, a++)
+    spi_master_tx_buf[i] = *a; // write tag char
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, i); // write tag string
+}
 
 // this function doesn't work
 // seek() is not working
