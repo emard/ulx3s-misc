@@ -205,6 +205,7 @@ module top_adxl355log
         .data_out(ram_di)
     );
     assign spi_bram_cs = ram_addr[31:24] == 8'h00 ? 1 : 0; // currently unused
+    assign spi_tag_cs  = ram_addr[31:24] == 8'h06 ? 1 : 0; // write to 0x06xxxxxx writes 6-bit tags
     assign spi_ctrl_cs = ram_addr[31:24] == 8'hFF ? 1 : 0;
     //assign ram_do = ram_addr[7:0];
     //assign ram_do = 8'h5A;
@@ -364,7 +365,12 @@ module top_adxl355log
       r_sclk_en <= r_sclk_en+1;
   end
   wire sclk_en = r_sclk_en[slowdown];
-
+  
+  reg r_tag_en = 0;
+  always @(posedge clk)
+    r_tag_en <= ram_wr & spi_tag_cs;
+  wire tag_en = ram_wr & spi_tag_cs & ~r_tag_en;
+  wire [5:0] w_tag = ram_di[6:5] == 0 ? 6'h20 : ram_di[5:0]; // control chars<32 convert to space 32 " "
   adxl355rd
   adxl355rd_inst
   (
@@ -374,8 +380,8 @@ module top_adxl355log
     .cmd(8*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10), // 10 = 1+9, 1 byte transmitted and 9 bytes received
     .tag_pulse(pps_pulse),
-    .tag_en(0),  // TODO write signal from SPI
-    .tag(6'h30), // TODO 6-bit char from SPI
+    .tag_en(tag_en),  // write signal from SPI
+    .tag(w_tag), // 6-bit char from SPI
     .sync(sync_pulse),
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),
