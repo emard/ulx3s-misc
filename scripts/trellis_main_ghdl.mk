@@ -8,7 +8,10 @@ FPGA_PACKAGE ?= CABGA381
 
 # ******* design files *******
 CONSTRAINTS ?= board_constraints.lpf
+# top for main design
 TOP_MODULE ?= top
+# top for ghdl compiler, not for main design
+TOP_VHDL_MODULE ?= $(TOP_MODULE)
 VERILOG_FILES ?= 
 # implicit list of *.vhd VHDL files to be converted to verilog *.v
 # files here are list as *.v but user should
@@ -124,7 +127,7 @@ VHDL_TO_VERILOG_FILES = $(VHD2VL_FILES:.vhd=.v)
 
 $(PROJECT).json: $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES) $(VHDL_FILES)
 	$(YOSYS) \
-	-p "ghdl --ieee=synopsys --std=08 -fexplicit -frelaxed-rules $(VHDL_FILES) -e $(TOP_MODULE)" \
+	-p "ghdl --ieee=synopsys --std=08 -fexplicit -frelaxed-rules $(VHDL_FILES) -e $(TOP_VHDL_MODULE)" \
 	-p "read_verilog -sv $(VERILOG_FILES)" \
 	-p "hierarchy -top ${TOP_MODULE}" \
 	-p "synth_ecp5 ${YOSYS_OPTIONS} -json ${PROJECT}.json"
