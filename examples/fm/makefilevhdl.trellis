@@ -1,0 +1,52 @@
+# ******* project, board and chip name *******
+PROJECT = fm
+BOARD = ulx3s
+# 12 25 45 85
+FPGA_SIZE = 12
+FPGA_PACKAGE = CABGA381
+
+# ******* if programming with OpenOCD *******
+# using local latest openocd until in linux distribution
+#OPENOCD=openocd_ft232r
+# default onboard usb-jtag
+OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
+# ulx3s-jtag-passthru
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft231x2.ocd
+# ulx2s
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft232r.ocd
+# external jtag
+#OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
+
+# ******* design files *******
+CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
+TOP_MODULE = top_fm
+TOP_MODULE_FILE = top/$(TOP_MODULE).v
+
+VERILOG_FILES = \
+$(TOP_MODULE_FILE) \
+../ecp5pll/hdl/sv/ecp5pll.sv \
+
+# ghdl will compile
+# ghdl needs to have some top entity
+# if toplevel is written in vhdl, then use:
+# TOP_GHDL_MODULE = $(TOP_MODULE)
+# otherwise specify any non-top vhdl module
+TOP_VHDL_MODULE = fmgen_test
+VHDL_FILES = \
+hdl/test/fmgen_test.vhd \
+hdl/fmgen.vhd \
+hdl/rds.vhd \
+hdl/lowpass.vhd \
+hdl/bram_rds.vhd \
+hdl/message.vhd \
+
+# top/vhdl/led_demo.vhd \
+
+# synthesis options
+#YOSYS_OPTIONS = -noccu2
+NEXTPNR_OPTIONS = --timing-allow-fail
+
+SCRIPTS = ../../scripts
+include $(SCRIPTS)/diamond_path.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main_ghdl.mk
