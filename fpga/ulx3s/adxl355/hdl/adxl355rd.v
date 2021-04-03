@@ -5,7 +5,7 @@
 `default_nettype none
 module adxl355rd
 #(
-  tag_addr_bits = 7  // 2**n number of chars in tag FIFO buffer (number of RAM address bits)
+  tag_addr_bits = 11  // 2**n number of chars in tag FIFO buffer (number of RAM address bits)
 )
 (
   input         clk, clk_en, // clk_en should be 1-clk pulse slower than 20 MHz
