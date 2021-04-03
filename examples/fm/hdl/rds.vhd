@@ -90,7 +90,7 @@ architecture RTL of rds is
     signal R_rds_cdiv: std_logic_vector(5 downto 0); -- 6-bit divisor 0..47
     signal R_rds_pcm: signed(C_dbpsk_bits-1 downto 0); -- 7 bit ADC value for RDS waveform
     signal R_rds_msg_index: std_logic_vector(c_addr_bits-1 downto 0); -- addr index for message
-    constant C_rds_msg_disable: std_logic_vector(c_addr_bits-1 downto 0) := (others => '1'); -- message len -1 disables
+    constant C_rds_msg_disable: std_logic_vector(c_addr_bits-1 downto 0) := (others => '0'); -- message len -1 disables
     signal R_rds_byte: std_logic_vector(7 downto 0); -- current byte to send
     signal R_rds_bit_index: std_logic_vector(2 downto 0); -- current bit index 0..7
     signal R_rds_bit: std_logic; -- current bit to send
@@ -271,7 +271,7 @@ begin
                      -- when bit index is at LSB bit pos 0
                      -- for next clock cycle prepare next byte
                      -- (byte sending start at MSB bit pos 7)
-                     if R_rds_msg_index >= rds_msg_len then
+                     if R_rds_msg_index = rds_msg_len-1 then
                        R_rds_msg_index <= (others => '0');
                      else
                        R_rds_msg_index <= R_rds_msg_index + 1;
