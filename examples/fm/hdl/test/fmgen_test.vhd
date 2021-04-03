@@ -22,9 +22,11 @@ entity fmgen_test is
         -- RT: 16 groups, long display 64 characters
         -- CT:  1 group,  time information
         -- 1 group is 13 bytes long
-        C_fmdds_hz:           integer := 250000000; -- Hz clk_fmdds (>2*108 MHz, e.g. 250 MHz)
-        C_rds_clock_multiply: integer := 228; -- multiply and divide from clk 25 MHz
-        C_rds_clock_divide:   integer := 3125 -- to get 1.824 MHz for RDS logic
+        C_fmdds_hz:           integer := 240000000; -- Hz clk_fmdds (>2*108 MHz, e.g. 250 MHz)
+        --C_rds_clock_multiply: integer := 228; -- multiply and divide from clk 25 MHz
+        --C_rds_clock_divide:   integer := 3125 -- to get 1.824 MHz for RDS logic
+        C_rds_clock_multiply: integer := 57; -- multiply and divide from clk 40 MHz
+        C_rds_clock_divide:   integer := 1250 -- to get 1.824 MHz for RDS logic
     );
     port
     (
@@ -81,9 +83,6 @@ begin
       data => rds_data,
       pcm_in_left => pcm_in_left,
       pcm_in_right => pcm_in_right,
-      --debug => from_fmrds,
-      --out_l => pwm_out_left,
-      --out_r => pwm_out_right,
       pcm_out => rds_pcm
     );
 
