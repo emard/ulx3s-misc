@@ -202,7 +202,7 @@ void loop()
       {
         nmea[i]=0;
         write_tag(nmea);
-        if(i < 60 || i > 80)
+        if(i < 60 || i > 90)
           Serial.print(nmea);
         int daytime = nmea2s(nmea+7);
         int32_t nmea2ms = daytime*100-ct0; // difference from nmea to timer
