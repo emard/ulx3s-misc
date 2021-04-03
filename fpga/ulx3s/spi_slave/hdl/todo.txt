@@ -1,0 +1,5 @@
+[ ] configurable address (16-24-32) and data (8-16-32)
+[ ] first byte for chip select as parameter
+[ ] output '1' to MISO until first byte matches
+[ ] don't have 3-state driver but separate MISO and OE
+[ ] input default byte(s) when reading 2nd and 3rd byte
