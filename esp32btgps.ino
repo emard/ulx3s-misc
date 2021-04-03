@@ -195,12 +195,12 @@ void loop()
       if(i < 255)
         nmea[i++]=c;
     }
-    if(i > 3 && c == '\n') // line complete
+    if(i > 5 && c == '\n') // line complete
     {
       //if(nmea[1]=='P' && nmea[3]=='R') // print only PGRMT, we need Version 3.00
       if((i > 50 && i < 90) // accept lines of expected length
       && (nmea[1]=='G' // accept 1st letter is G
-      && (nmea[3]=='R' || nmea[3]=='G'))) // accept 3rd letter is R or G, accept GPRMC and GPGGA
+      && (nmea[4]=='M' || nmea[4]=='G'))) // accept 4th letter is M or G, accept GPRMC and GPGGA
       {
         nmea[i]=0;
         write_tag(nmea);
