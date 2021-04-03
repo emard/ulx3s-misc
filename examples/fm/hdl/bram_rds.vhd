@@ -96,9 +96,9 @@ begin
     begin
 	if rising_edge(clk) then
 	    if dmem_write = '1' then
-		bram_0(conv_integer(dmem_addr)) <= dmem_data_in(7 downto 0);
+            --    bram_0(conv_integer(dmem_addr)) <= dmem_data_in(7 downto 0);
 	    end if;
-	    dbram_0 <= bram_0(conv_integer(dmem_addr));
+	    --dbram_0 <= bram_0(conv_integer(dmem_addr));
 	    ibram_0 <= bram_0(conv_integer(imem_addr));
 	end if;
     end process;
