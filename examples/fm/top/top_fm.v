@@ -18,8 +18,8 @@ module top_fm
   ecp5pll
   #(
       .in_hz( 25*1000000),
-    .out0_hz( 25*1000000),
-    .out1_hz(250*1000000)
+    .out0_hz( 40*1000000),
+    .out1_hz(240*1000000)
   )
   ecp5pll_inst
   (
