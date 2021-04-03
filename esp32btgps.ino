@@ -198,12 +198,13 @@ void loop()
     if(i > 3 && c == '\n') // line complete
     {
       //if(nmea[1]=='P' && nmea[3]=='R') // print only PGRMT, we need Version 3.00
-      if(nmea[1]=='G' && nmea[3]=='R') // print only GPRMC
+      if((i > 50 && i < 90) // accept lines of expected length
+      && (nmea[1]=='G' // accept 1st letter is G
+      && (nmea[3]=='R' || nmea[3]=='G'))) // accept 3rd letter is R or G, accept GPRMC and GPGGA
       {
         nmea[i]=0;
         write_tag(nmea);
-        if(i < 60 || i > 90)
-          Serial.print(nmea);
+        //Serial.print(nmea);
         int daytime = nmea2s(nmea+7);
         int32_t nmea2ms = daytime*100-ct0; // difference from nmea to timer
         if(nmea2ms_sum == 0) // sum is 0 only at reboot
@@ -224,7 +225,10 @@ void loop()
   }
   else
   {
-    if(tdelta > 5000) // 5 seconds of serial silence
+    // check for serial line silence to determine if
+    // GPS needs to be reconnected
+    // reported 15s silence is possible http://4river.a.la9.jp/gps/report/GLO.htm
+    if(tdelta > 15000) // 15 seconds of serial silence then reconnect
     {
       pinMode(PIN_LED, INPUT);
       digitalWrite(PIN_LED, LED_OFF);
