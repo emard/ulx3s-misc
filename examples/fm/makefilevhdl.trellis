@@ -37,10 +37,6 @@ hdl/test/fmgen_test.vhd \
 hdl/fmgen.vhd \
 hdl/rds.vhd \
 hdl/lowpass.vhd \
-hdl/bram_rds.vhd \
-hdl/message.vhd \
-
-# top/vhdl/led_demo.vhd \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
