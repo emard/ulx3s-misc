@@ -68,12 +68,12 @@ begin
       -- example settings for 40 MHz clock
       -- c_rds_clock_multiply => 57,
       -- c_rds_clock_divide   => 1250,
-      -- settings for super slow (100Hz debug) clock
+      -- settings for super slow (100 Hz debug) clock
       -- c_rds_clock_multiply => 1,
       -- c_rds_clock_divide => 812500,
-      c_filter => true,
+      c_filter => false,
       c_downsample => false,
-      c_stereo => true
+      c_stereo => false
     )
     port map
     (
