@@ -381,6 +381,20 @@ void write_tag(char *a)
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, i); // write tag string
 }
 
+// play 8-bit PCM sample
+void play_pcm(int n)
+{
+  int i;
+  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[1] = 5; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  for(i = 0; i < n; i++)
+    spi_master_tx_buf[i+5] = ((i+8)&15)<<4; // create wav
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, n+5); // write tag string
+}
+
 // this function doesn't work
 // seek() is not working
 void finalize_wav_header(void)

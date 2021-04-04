@@ -12,6 +12,7 @@ void ls(void);
 void open_logs(void);
 void write_logs(void);
 void write_tag(char *a);
+void play_pcm(int n);
 void close_logs(void);
 void spi_slave_test(void);
 void spi_direct_test(void);

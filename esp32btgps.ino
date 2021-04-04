@@ -181,6 +181,8 @@ void loop()
   static int i = 0;
   int32_t tdelta = t-tprev;
   static uint32_t ct0; // first char in line millis timestamp
+  static uint32_t tprev_wav;
+  int32_t tdelta_wav = t-tprev_wav;
 
   #if 1
   if (connected && SerialBT.available())
@@ -228,7 +230,8 @@ void loop()
     // check for serial line silence to determine if
     // GPS needs to be reconnected
     // reported 15s silence is possible http://4river.a.la9.jp/gps/report/GLO.htm
-    if(tdelta > 15000) // 15 seconds of serial silence then reconnect
+    // for practical debugging we wait only 5s here
+    if(tdelta > 5000) // 5 seconds of serial silence? then reconnect
     {
       pinMode(PIN_LED, INPUT);
       digitalWrite(PIN_LED, LED_OFF);
@@ -242,6 +245,11 @@ void loop()
       write_logs();
   }
   #endif
+  if(tdelta_wav > 1000)
+  {
+    play_pcm(200);
+    tprev_wav = t;
+  }
 
   #if 0
   // print adxl data
