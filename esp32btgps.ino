@@ -239,22 +239,21 @@ void loop()
       ls();
       reconnect();
       tprev = ms();
-      tprev_wav = t-15000; // reset timer to say immediately chekam na gps
       i=0;
     }
     else
       write_logs();
   }
   #endif
-#if 1
+
   tdelta_wav = t-tprev_wav;
-  if(tdelta_wav > 5000 && are_logs_open() == 0)
+  if(tdelta_wav > 7000 && tdelta < 2000 && are_logs_open() == 0)
   {
     open_pcm("/speak/cekam.wav");
     tprev_wav = t;
     tprev_wavp = t; // reset play timer
   }
-#endif
+
   // wav play refill buffer
   tdelta_wavp = t-tprev_wavp; // how many ms have passed since last refill
   if(tdelta_wavp > 200)
