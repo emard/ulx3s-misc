@@ -40,7 +40,8 @@ Pin 12      Digital Power        VDD
 `default_nettype none
 module top_adxl355log
 #(
-  ram_len      = 9*1024,    // buffer size 3,6,9,12,15
+  ram_len      = 9*1024,     // buffer size 3,6,9,12,15
+  wav_addr_bits= 13,         // 2**n, default 2**13 = 8192 bytes = 8 KB audio PCM FIFO buffer
   C_prog_release_timeout = 26, // esp32 programming default n=26, 2^n / 25MHz = 2.6s
   spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1 or SPI_MODE3)
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
@@ -415,7 +416,7 @@ module top_adxl355log
 
   // FM/RDS transmitter
   
-  // triangle wave beep
+  // DEBUG: triangle wave beep
   reg [15:0] beep;
   reg beep_dir;
   always @(posedge clk)
@@ -442,7 +443,6 @@ module top_adxl355log
   always @(posedge clk)
     r_wav_en <= ram_wr & spi_wav_cs;
   wire wav_en = ram_wr & spi_wav_cs & ~r_wav_en;
-  localparam wav_addr_bits = 13; // 2**13 = 8192 bytes = 8 KB
   reg [7:0] wav_fifo[0:2**wav_addr_bits-1];
   reg [wav_addr_bits-1:0] r_wwav = 0, r_rwav = 0;
   always @(posedge clk)
@@ -457,7 +457,7 @@ module top_adxl355log
   localparam wav_hz = 11025; // Hz wav sample rate normal
   localparam wav_cnt_max = clk_out0_hz / wav_hz;
   reg r_wav_latch = 0;
-  reg [15:0] wav_cnt; // counter to divide 40 MHz -> 11025 Hu
+  reg [15:0] wav_cnt; // counter to divide 40 MHz -> 11025 Hz
   // r_wav_latch pulses at 11025 Hz rate
   always @(posedge clk)
   begin
@@ -503,8 +503,10 @@ module top_adxl355log
   (
     .clk(clk),
     .clk_fmdds(clk_fmdds),
-    .pcm_in_left( btn[1] ? beep[15:1] : wav_data_signed),
-    .pcm_in_right(btn[2] ? beep[15:1] : wav_data_signed),
+    //.pcm_in_left( btn[1] ? beep[15:1] : wav_data_signed), // debug
+    //.pcm_in_right(btn[2] ? beep[15:1] : wav_data_signed), // debug
+    .pcm_in_left( wav_data_signed), // normal
+    .pcm_in_right(wav_data_signed), // normal
     .cw_freq(107900000),
     .rds_addr(rds_addr),
     .rds_data(rds_data),
