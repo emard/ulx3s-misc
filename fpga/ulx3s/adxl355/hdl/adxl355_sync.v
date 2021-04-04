@@ -27,6 +27,7 @@ module adxl355_sync
   output o_locked,    // 1 when sync makes required number of samples between PPS pulses
   output o_clk_sync   // 1 kHz
 );
+  reg fine1up0dn = 0;
   localparam real re_pa_inc = 1.0 * clk_sync_hz * 2**16 * 2**(pa_sync_bits-16) / clk_out0_hz; // 2**16 separated to avoid 32-bit signed overflow
   localparam integer int_pa_inc = re_pa_inc; // 107374 for 1kHz
   wire [pa_sync_bits-1:0] pa_inc_min = int_pa_inc - int_pa_inc*pa_limit_ppm/1000000; // phase accumulator min limit
@@ -141,8 +142,8 @@ module adxl355_sync
           begin
             faster <=  cnt_difference[cnt_sample_pps_bits-1]; // negative -> faster
             slower <= ~cnt_difference[cnt_sample_pps_bits-1]; // positive -> slower
-            cnt_correct_prev <= cnt_correct;
-            cnt_correct <= 0;
+            //cnt_correct_prev <= cnt_correct;
+            //cnt_correct <= 0;
           end
           else
           begin
