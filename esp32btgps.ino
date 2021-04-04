@@ -247,7 +247,7 @@ void loop()
   #endif
 
   tdelta_wav = t-tprev_wav;
-  if(tdelta_wav > 7000 && tdelta < 2000 && are_logs_open() == 0)
+  if(tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
   {
     open_pcm("/speak/cekam.wav");
     tprev_wav = t;
