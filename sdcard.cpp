@@ -9,8 +9,9 @@ uint8_t* spi_master_tx_buf;
 uint8_t* spi_master_rx_buf;
 static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
-File file_gps, file_accel;
+File file_gps, file_accel, file_pcm;
 int logs_are_open = 0;
+int pcm_is_open = 0;
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
@@ -381,7 +382,26 @@ void write_tag(char *a)
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, i); // write tag string
 }
 
-// play 8-bit PCM sample
+void open_pcm(void)
+{
+  //if(pcm_is_open)
+  //  return;
+  // to generate wav files:
+  // espeak-ng -v hr -f speak.txt --stdout | sox - --no-dither -r 11025 -b 8 speak.wav
+  file_pcm = SD_MMC.open("/speak/12.wav", FILE_READ);
+  file_pcm.seek(44); // skip header to get data
+  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[1] = 5; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  int nsamples = 4000;
+  file_pcm.read(spi_master_tx_buf+5, nsamples);
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, nsamples+5); // write pcm to play
+  file_pcm.close();
+}
+
+// play 8-bit PCM beep sample
 void play_pcm(int n)
 {
   int i;
@@ -392,7 +412,7 @@ void play_pcm(int n)
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   for(i = 0; i < n; i++)
     spi_master_tx_buf[i+5] = ((i+8)&15)<<4; // create wav
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, n+5); // write tag string
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, n+5); // write pcm to play
 }
 
 // this function doesn't work

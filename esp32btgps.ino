@@ -247,9 +247,10 @@ void loop()
   #endif
 
   tdelta_wav = t-tprev_wav;
-  if(tdelta_wav > 1000)
+  if(tdelta_wav > 5000)
   {
-    play_pcm(200);
+    //play_pcm(128);
+    open_pcm();
     tprev_wav = t;
   }
 
