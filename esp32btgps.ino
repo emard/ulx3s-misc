@@ -179,10 +179,10 @@ void loop()
   static char nmea[256];
   static char c;
   static int i = 0;
-  int32_t tdelta = t-tprev;
+  uint32_t tdelta = t-tprev;
   static uint32_t ct0; // first char in line millis timestamp
   static uint32_t tprev_wav;
-  int32_t tdelta_wav = t-tprev_wav;
+  uint32_t tdelta_wav;
 
   #if 1
   if (connected && SerialBT.available())
@@ -245,6 +245,8 @@ void loop()
       write_logs();
   }
   #endif
+
+  tdelta_wav = t-tprev_wav;
   if(tdelta_wav > 1000)
   {
     play_pcm(200);
