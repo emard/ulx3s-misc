@@ -395,7 +395,7 @@ void open_pcm(void)
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
-  int nsamples = 4000;
+  int nsamples = 8190;
   file_pcm.read(spi_master_tx_buf+5, nsamples);
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, nsamples+5); // write pcm to play
   file_pcm.close();
