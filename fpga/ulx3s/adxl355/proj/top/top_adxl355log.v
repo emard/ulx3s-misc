@@ -209,6 +209,7 @@ module top_adxl355log
         .data_out(ram_di)
     );
     assign spi_bram_cs = ram_addr[31:24] == 8'h00 ? 1 : 0; // currently unused
+    assign spi_wav_cs  = ram_addr[31:24] == 8'h05 ? 1 : 0; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
     assign spi_tag_cs  = ram_addr[31:24] == 8'h06 ? 1 : 0; // write to 0x06xxxxxx writes 6-bit tags
     assign spi_ctrl_cs = ram_addr[31:24] == 8'hFF ? 1 : 0;
     //assign ram_do = ram_addr[7:0];
@@ -433,6 +434,62 @@ module top_adxl355log
     end
   end
 
+  // unsigned 8-bit 11025 Hz WAV data FIFO buffer
+  // espeak-ng -v hr -f speak.txt --stdout | sox - --no-dither -r 11025 -b 8 speak.wav
+  reg r_wav_en = 0;
+  always @(posedge clk)
+    r_wav_en <= ram_wr & spi_wav_cs;
+  wire wav_en = ram_wr & spi_wav_cs & ~r_wav_en;
+
+  localparam wav_addr_bits = 12; // 2**12 = 4096 bytes = 4 KB
+  reg [7:0] wav_fifo[0:2**wav_addr_bits-1];
+  reg [wav_addr_bits-1:0] r_wwav = 0, r_rwav = 0;
+  always @(posedge clk)
+  begin
+    if(wav_en)
+    begin // push to FIFO
+      wav_fifo[r_wwav] <= ram_di;
+      r_wwav <= r_wwav+1;
+    end
+  end
+
+  localparam wav_hz = 11025; // Hz wav sample rate normal
+  localparam wav_cnt_max = clk_out0_hz / wav_hz;
+  reg r_wav_latch = 0;
+  reg [15:0] wav_cnt; // counter to divide 40 MHz -> 11025 Hu
+  // r_wav_latch pulses at 11025 Hz rate
+  always @(posedge clk)
+  begin
+    if(wav_cnt == wav_cnt_max-1)
+    begin
+      wav_cnt <= 0;
+      r_wav_latch <= 1;
+    end
+    else
+    begin
+      wav_cnt <= wav_cnt+1;
+      r_wav_latch <= 0;
+    end
+  end
+
+  reg [7:0] wav_data; // latched wav data to be played by FM
+  always @(posedge clk)
+  begin
+    if(r_wav_latch)
+    begin
+      if(r_wwav == r_rwav) // FIFO empty?
+      begin
+        wav_data <= 8'h80; // silence (unsigned 8-bit)
+      end
+      else // data in FIFO, pop one
+      begin
+        wav_data <= wav_fifo[r_rwav]; // normal
+        r_rwav <= r_rwav+1;
+      end
+    end
+  end
+
+  wire [15:0] wav_data_signed = {~wav_data[7],wav_data[6:0],8'h00}; // unsigned 8-bit to signed 16-bit
   reg [7:0] rds_ram[0:51];
   initial
     $readmemh("message_ps.mem", rds_ram);
@@ -445,14 +502,13 @@ module top_adxl355log
   (
     .clk(clk),
     .clk_fmdds(clk_fmdds),
-    .pcm_in_left( btn[1] ? beep[15:1] : 0),
-    .pcm_in_right(btn[2] ? beep[15:1] : 0),
+    .pcm_in_left( btn[1] ? beep[15:1] : wav_data_signed),
+    .pcm_in_right(btn[2] ? beep[15:1] : wav_data_signed),
     .cw_freq(107900000),
     .rds_addr(rds_addr),
     .rds_data(rds_data),
     .fm_antenna(ant_433mhz)
   );
-
 
   assign audio_l[3:1] = 0;
   assign audio_l[0] = drdy;
