@@ -17,7 +17,7 @@ use ieee.math_real.all;
 
 entity rds is
 generic (
-    -- c_rds_msg_len: integer range 1 to 512 := 260; -- circlar message length in bytes
+    -- c_rds_msg_len: integer range 1 to 512 := 260; -- circular message length in bytes
     -- we need to generate 1.824 MHz for RDS clock strobe
     -- input clock frequency * multiply / divide = 1.824 MHz
     -- example 25 MHz * 228 / 3125 = 1.824 MHz
