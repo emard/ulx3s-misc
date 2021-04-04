@@ -382,27 +382,59 @@ void write_tag(char *a)
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, i); // write tag string
 }
 
-void open_pcm(void)
+// repeatedly call this to refill buffer with PCM data from file
+// play n bytes (samples) from open PCM file
+void play_pcm(int n)
 {
-  //if(pcm_is_open)
-  //  return;
+  if(pcm_is_open == 0)
+    return;
+  if(n > SPI_READER_BUF_SIZE)
+    n = SPI_READER_BUF_SIZE;
+  int a = file_pcm.available(); // number of bytes available
+  if(a > 0 && a < n)
+    n = a; // clamp n to available bytes
+  if(a < 0)
+    n = 0;
+  if(n)
+  {
+    spi_master_tx_buf[0] = 0; // 1: write ram
+    spi_master_tx_buf[1] = 5; // addr [31:24] msb
+    spi_master_tx_buf[2] = 0; // addr [23:16]
+    spi_master_tx_buf[3] = 0; // addr [15: 8]
+    spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+    file_pcm.read(spi_master_tx_buf+5, n);
+    master.transfer(spi_master_tx_buf, spi_master_rx_buf, n+5); // write pcm to play
+    #if 0
+    // debug print sending PCM packets
+    Serial.print("PCM ");
+    Serial.println(n, DEC);
+    #endif
+  }
+  if(n == a)
+  {
+    file_pcm.close();
+    pcm_is_open = 0;
+  }
+}
+
+void open_pcm(char *wav)
+{
+  if(pcm_is_open)
+    return;
   // to generate wav files:
-  // espeak-ng -v hr -f speak.txt --stdout | sox - --no-dither -r 11025 -b 8 speak.wav
-  file_pcm = SD_MMC.open("/speak/12.wav", FILE_READ);
+  // espeak-ng -v hr -f speak.txt -w speak.wav; sox speak.wav --no-dither -r 11025 -b 8 output.wav reverse trim 1s reverse
+  // "--no-dither" reduces noise
+  // "-r 11025 -b 8" is sample rate 11025 Hz, 8 bits per sample
+  // "reverse trim 1s reverse" cuts off 1 sample from the end, to avoid click
+  file_pcm = SD_MMC.open(wav, FILE_READ);
   file_pcm.seek(44); // skip header to get data
-  spi_master_tx_buf[0] = 0; // 1: write ram
-  spi_master_tx_buf[1] = 5; // addr [31:24] msb
-  spi_master_tx_buf[2] = 0; // addr [23:16]
-  spi_master_tx_buf[3] = 0; // addr [15: 8]
-  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
-  int nsamples = 8190;
-  file_pcm.read(spi_master_tx_buf+5, nsamples);
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, nsamples+5); // write pcm to play
-  file_pcm.close();
+  pcm_is_open = 1;
+  play_pcm(4096); // initially fill the play buffer
+  Serial.println(wav); // debug which file is open now
 }
 
 // play 8-bit PCM beep sample
-void play_pcm(int n)
+void beep_pcm(int n)
 {
   int i;
   spi_master_tx_buf[0] = 0; // 1: write ram
@@ -443,6 +475,11 @@ void close_logs(void)
   //file_gps.close();
   //finalize_wav_header();
   file_accel.close();
+}
+
+int are_logs_open()
+{
+  return logs_are_open;
 }
 
 void spi_slave_test(void)

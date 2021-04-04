@@ -181,8 +181,8 @@ void loop()
   static int i = 0;
   uint32_t tdelta = t-tprev;
   static uint32_t ct0; // first char in line millis timestamp
-  static uint32_t tprev_wav;
-  uint32_t tdelta_wav;
+  static uint32_t tprev_wav, tprev_wavp;
+  uint32_t tdelta_wav, tdelta_wavp;
 
   #if 1
   if (connected && SerialBT.available())
@@ -239,19 +239,28 @@ void loop()
       ls();
       reconnect();
       tprev = ms();
+      tprev_wav = t-15000; // reset timer to say immediately chekam na gps
       i=0;
     }
     else
       write_logs();
   }
   #endif
-
+#if 1
   tdelta_wav = t-tprev_wav;
-  if(tdelta_wav > 5000)
+  if(tdelta_wav > 5000 && are_logs_open() == 0)
   {
-    //play_pcm(128);
-    open_pcm();
+    open_pcm("/speak/cekam.wav");
     tprev_wav = t;
+    tprev_wavp = t; // reset play timer
+  }
+#endif
+  // wav play refill buffer
+  tdelta_wavp = t-tprev_wavp; // how many ms have passed since last refill
+  if(tdelta_wavp > 200)
+  {
+    play_pcm(tdelta_wavp*11); // approx 11 samples per ms at 11025 rate
+    tprev_wavp = t;
   }
 
   #if 0
