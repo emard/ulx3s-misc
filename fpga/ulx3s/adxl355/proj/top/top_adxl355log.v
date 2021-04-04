@@ -166,6 +166,11 @@ module top_adxl355log
   wire direct_req = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire direct_en;
 
+  wire spi_bram_cs = ram_addr[31:24] == 8'h00; // currently unused
+  wire spi_wav_cs  = ram_addr[31:24] == 8'h05; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
+  wire spi_tag_cs  = ram_addr[31:24] == 8'h06; // write to 0x06xxxxxx writes 6-bit tags
+  wire spi_ctrl_cs = ram_addr[31:24] == 8'hFF;
+
   generate
   if(spi_direct)
   begin
@@ -208,10 +213,6 @@ module top_adxl355log
         .data_in(ram_do),
         .data_out(ram_di)
     );
-    assign spi_bram_cs = ram_addr[31:24] == 8'h00 ? 1 : 0; // currently unused
-    assign spi_wav_cs  = ram_addr[31:24] == 8'h05 ? 1 : 0; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
-    assign spi_tag_cs  = ram_addr[31:24] == 8'h06 ? 1 : 0; // write to 0x06xxxxxx writes 6-bit tags
-    assign spi_ctrl_cs = ram_addr[31:24] == 8'hFF ? 1 : 0;
     //assign ram_do = ram_addr[7:0];
     //assign ram_do = 8'h5A;
     always @(posedge clk)
@@ -279,7 +280,8 @@ module top_adxl355log
       pps <= 0;
   end
   
-  assign wifi_gpio25 = gn11;
+  wire wifi_gpio25 = gn11;
+  wire wifi_gpio26;
   assign gp11 = wifi_gpio26;
 
   //wire pps_btn = pps & ~btn[1];
@@ -440,8 +442,7 @@ module top_adxl355log
   always @(posedge clk)
     r_wav_en <= ram_wr & spi_wav_cs;
   wire wav_en = ram_wr & spi_wav_cs & ~r_wav_en;
-
-  localparam wav_addr_bits = 12; // 2**12 = 4096 bytes = 4 KB
+  localparam wav_addr_bits = 13; // 2**13 = 8192 bytes = 8 KB
   reg [7:0] wav_fifo[0:2**wav_addr_bits-1];
   reg [wav_addr_bits-1:0] r_wwav = 0, r_rwav = 0;
   always @(posedge clk)
