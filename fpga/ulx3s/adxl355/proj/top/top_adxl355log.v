@@ -41,7 +41,7 @@ Pin 12      Digital Power        VDD
 module top_adxl355log
 #(
   ram_len      = 9*1024,     // buffer size 3,6,9,12,15
-  wav_addr_bits= 12,         // 2**n, default 2**13 = 8192 bytes = 8 KB audio PCM FIFO buffer
+  wav_addr_bits= 12,         // 2**n, default 2**12 = 4096 bytes = 4 KB audio PCM FIFO buffer
   C_prog_release_timeout = 26, // esp32 programming default n=26, 2^n / 25MHz = 2.6s
   spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1 or SPI_MODE3)
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
@@ -341,13 +341,13 @@ module top_adxl355log
   //assign led[3:0] = {gn27,gn26,gn25,gn24};
   //assign led[3:0] = {sclk,gp13,mosi,csn};
   //assign led[3:0] = {sclk,miso,mosi,csn};
-/*
+
   assign led[7:4] = phase[7:4];
   assign led[3] = 0;
   assign led[2] = sync_locked;
   assign led[1] = pps_valid;
   assign led[0] = pps_btn;
-*/
+
   //assign led = phase;
   //assign led = cnt_sync_prev[7:0]; // should show 0xE8 from 1000 = 0x3E8
 
@@ -478,11 +478,7 @@ module top_adxl355log
   begin
     if(r_wav_latch)
     begin
-      if(r_wwav == r_rwav) // FIFO empty?
-      begin
-        //wav_data <= 8'h80; // silence (unsigned 8-bit)
-      end
-      else // data in FIFO, pop one
+      if(r_wwav != r_rwav) // FIFO empty?
       begin
         wav_data <= wav_fifo[r_rwav]; // normal
         r_rwav <= r_rwav+1;
@@ -512,7 +508,7 @@ module top_adxl355log
     .rds_data(rds_data),
     .fm_antenna(ant_433mhz)
   );
-  assign led = wav_data_signed[15:8];
+  //assign led = wav_data_signed[15:8];
 
   assign audio_l[3:1] = 0;
   assign audio_l[0] = drdy;
