@@ -277,10 +277,12 @@ void loop()
         //Serial.println(daytime, DEC);
         //Serial.println(ct0, HEX);
         // isolate date
+        #if 0
         char *date_begin = nthchar(nmea, 9, ',');
         char *date_end = nthchar(nmea, 10, ',');
         date_end[0]=0;
         Serial.println(date_begin);
+        #endif
       }
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
