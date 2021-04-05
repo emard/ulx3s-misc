@@ -377,8 +377,10 @@ void write_tag(char *a)
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
-  for(i = 5; *a != 0; i++, a++)
-    spi_master_tx_buf[i] = *a; // write tag char
+  char *b;
+  b = a;
+  for(i = 5; *b != 0; i++, b++)
+    spi_master_tx_buf[i] = *b; // write tag char
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, i); // write tag string
 }
 
@@ -429,7 +431,7 @@ void open_pcm(char *wav)
   file_pcm = SD_MMC.open(wav, FILE_READ);
   file_pcm.seek(44); // skip header to get data
   pcm_is_open = 1;
-  play_pcm(4096); // initially fill the play buffer
+  play_pcm(3584); // initially fill the play buffer
   Serial.println(wav); // debug which file is open now
 }
 
