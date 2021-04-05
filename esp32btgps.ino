@@ -246,8 +246,8 @@ void loop()
     // check for serial line silence to determine if
     // GPS needs to be reconnected
     // reported 15s silence is possible http://4river.a.la9.jp/gps/report/GLO.htm
-    // for practical debugging we wait only 5s here
-    if(tdelta > 5000) // 5 seconds of serial silence? then reconnect
+    // for practical debugging we wait for less here
+    if(tdelta > 10000) // 10 seconds of serial silence? then reconnect
     {
       pinMode(PIN_LED, INPUT);
       digitalWrite(PIN_LED, LED_OFF);
