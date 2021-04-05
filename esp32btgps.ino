@@ -200,6 +200,20 @@ int nmea2s(char *nmea)
   return s;
 }
 
+// find position of nth char (used as CSV parser)
+char *nthchar(char *a, int n, char c)
+{
+  int i;
+  for(i=0; *a; a++)
+  {
+    if(*a == c)
+      i++;
+    if(i == n)
+      return a;
+  }
+  return NULL;
+}
+
 #if 0
 // debug tagger: constant test string
 char tag_test[256] = "$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*00\n";
@@ -262,6 +276,11 @@ void loop()
         write_logs(); // use SPI_MODE1
         //Serial.println(daytime, DEC);
         //Serial.println(ct0, HEX);
+        // isolate date
+        char *date_begin = nthchar(nmea, 9, ',');
+        char *date_end = nthchar(nmea, 10, ',');
+        date_end[0]=0;
+        Serial.println(date_begin);
       }
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
