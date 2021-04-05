@@ -172,11 +172,16 @@ int nmea2s(char *nmea)
   return s;
 }
 
+#if 0
+// debug tagger: constant test string
+char tag_test[256] = "$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*00\n";
+#endif
+
 void loop()
 {
   static uint32_t tprev;
   uint32_t t = ms();
-  static char nmea[256];
+  static char nmea[128];
   static char c;
   static int i = 0;
   uint32_t tdelta = t-tprev;
@@ -185,28 +190,39 @@ void loop()
   uint32_t tdelta_wav, tdelta_wavp;
 
   #if 1
-  if (connected && SerialBT.available())
+  if (connected && SerialBT.available()>0)
   {
     c=0;
-    while(SerialBT.available() && c != '\n')
+    #if 1
+    while(SerialBT.available()>0 && c != '\n')
     {
       if(i == 0)
         ct0 = ms();
       // read returns char or -1 if unavailable
       c = SerialBT.read();
-      if(i < 255)
+      if(i < sizeof(nmea)-3)
         nmea[i++]=c;
     }
+    #endif
     if(i > 5 && c == '\n') // line complete
     {
-      //if(nmea[1]=='P' && nmea[3]=='R') // print only PGRMT, we need Version 3.00
+      //if(nmea[1]=='P' && nmea[3]=='R') // print only $PGRMT, we need Version 3.00
       if((i > 50 && i < 90) // accept lines of expected length
       && (nmea[1]=='G' // accept 1st letter is G
-      && (nmea[4]=='M' || nmea[4]=='G'))) // accept 4th letter is M or G, accept GPRMC and GPGGA
+      && (nmea[4]=='M' /*|| nmea[4]=='G'*/))) // accept 4th letter is M or G, accept $GPRMC and $GPGGA
       {
         nmea[i]=0;
+        // there's bandwidth for only one NMEA sentence at 10Hz (not two sentences)
         write_tag(nmea);
-        //Serial.print(nmea);
+        #if 0
+        // debug tagger with constant test string
+        if(nmea[4]=='M')
+          write_tag(tag_test);
+        #endif
+        #if 0
+        // debug NMEA data
+        Serial.print(nmea);
+        #endif
         int daytime = nmea2s(nmea+7);
         int32_t nmea2ms = daytime*100-ct0; // difference from nmea to timer
         if(nmea2ms_sum == 0) // sum is 0 only at reboot
