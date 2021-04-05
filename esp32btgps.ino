@@ -213,6 +213,7 @@ void loop()
       {
         nmea[i]=0;
         // there's bandwidth for only one NMEA sentence at 10Hz (not two sentences)
+        // time calculation here should receive no more than one NMEA sentence for one timestamp
         write_tag(nmea);
         #if 0
         // debug tagger with constant test string
