@@ -55,6 +55,10 @@ module adxl355rd
     end
   end
 
+  reg [5:0] tag_fifo_rdata;
+  always @(posedge clk)
+    tag_fifo_rdata <= tag_fifo[r_rtag];
+
   reg [5:0] tag_data; // latched tag data to send
   always @(posedge clk)
   begin
@@ -68,7 +72,8 @@ module adxl355rd
           tag_data <= 6'h20; // space char " " when FIFO empty
         else // data in FIFO, pop one
         begin
-          tag_data <= tag_fifo[r_rtag]; // normal
+          //tag_data <= tag_fifo[r_rtag]; // was working before
+          tag_data <= tag_fifo_rdata; // will it work now
           r_rtag <= r_rtag+1;
         end
       end
