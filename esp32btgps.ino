@@ -1,4 +1,5 @@
 #include "pins.h"
+#include <sys/time.h>
 
 #include "BluetoothSerial.h"
 // set Board->ESP32 Arduino->ESP32 Dev Module
@@ -114,8 +115,35 @@ void init_nmea2ms(int32_t d)
     nmea2ms_log[i] = d; 
 }
 
+// file creation times should work with this
+void set_system_time(time_t seconds_since_1980)
+{
+  timeval epoch = {seconds_since_1980, 0};
+  const timeval *tv = &epoch;
+  timezone utc = {0, 0};
+  const timezone *tz = &utc;
+  settimeofday(tv, tz);
+}
+
+void set_date_time(int year, int month, int day, int h, int m, int s)
+{
+  time_t t_of_day; 
+  struct tm t;
+
+  t.tm_year = year-1900;  // year since 1900
+  t.tm_mon  = month-1;    // Month, 0 - jan
+  t.tm_mday = day;        // Day of the month
+  t.tm_hour = h;
+  t.tm_min  = m;
+  t.tm_sec  = s;
+  t_of_day  = mktime(&t);
+  set_system_time(t_of_day);
+}
+
 void setup() {
   Serial.begin(115200);
+  //set_system_time(1527469964);
+  set_date_time(2021,4,1,12,30,45);
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
   pinMode(PIN_IRQ, INPUT);
