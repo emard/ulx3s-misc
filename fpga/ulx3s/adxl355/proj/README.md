@@ -25,3 +25,4 @@
     [ ] speak each 100 m
     [ ] speak raw measurement estimate
     [ ] speak erasing old data
+    [ ] fix bugs described in http://4river.a.la9.jp/gps/report/GLO.htm
