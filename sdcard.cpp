@@ -181,6 +181,8 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
 
 void mount(void)
 {
+  if(card_is_mounted)
+    return;
   if(!SD_MMC.begin()){
         Serial.println("Card Mount Failed");
         return;
@@ -206,6 +208,8 @@ void mount(void)
 
   uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
   Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
+  Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
+  Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
 
   card_is_mounted = 1;
   logs_are_open = 0;
