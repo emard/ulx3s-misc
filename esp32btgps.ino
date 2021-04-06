@@ -199,6 +199,25 @@ int nmea2s(char *nmea)
   return s;
 }
 
+inline uint8_t hex2int(char a)
+{
+  return a <= '9' ? a-'0' : a-'A'+10;
+}
+
+int check_nmea_crc(char *a)
+{
+  int i;
+  if(a[0] != '$')
+    return 0;
+  a++;
+  uint8_t crc = 0;
+  for(i = 1; a[0] != '\0' && a[0] != '*'; i++, a++)
+    crc ^= a[0];
+  if(a[0] != '*')
+    return 0;
+  return crc == ( (hex2int(a[1])<<4) | hex2int(a[2]) );
+}
+
 // find position of nth char (used as CSV parser)
 char *nthchar(char *a, int n, char c)
 {
@@ -251,6 +270,7 @@ void loop()
       if((i > 50 && i < 90) // accept lines of expected length
       && (nmea[1]=='G' // accept 1st letter is G
       && (nmea[4]=='M' /*|| nmea[4]=='G'*/))) // accept 4th letter is M or G, accept $GPRMC and $GPGGA
+      if(check_nmea_crc(nmea)) // filter out NMEA sentences with bad CRC
       {
         nmea[i]=0;
         // there's bandwidth for only one NMEA sentence at 10Hz (not two sentences)
