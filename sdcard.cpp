@@ -437,10 +437,17 @@ void open_pcm(char *wav)
   // "-r 11025 -b 8" is sample rate 11025 Hz, 8 bits per sample
   // "reverse trim 1s reverse" cuts off 1 sample from the end, to avoid click
   file_pcm = SD_MMC.open(wav, FILE_READ);
-  file_pcm.seek(44); // skip header to get data
-  pcm_is_open = 1;
-  play_pcm(3584); // initially fill the play buffer
-  Serial.println(wav); // debug which file is open now
+  if(file_pcm)
+  {
+    file_pcm.seek(44); // skip header to get data
+    pcm_is_open = 1;
+    play_pcm(3584); // initially fill the play buffer, max buffer is 4KB
+  }
+  else
+  {
+    Serial.print("can't open file ");
+  }
+  Serial.println(wav); // print which file is playing now
 }
 
 // play 8-bit PCM beep sample

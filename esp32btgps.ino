@@ -162,7 +162,6 @@ void setup() {
   MCPWM0.timer[0].mode.mode = 1;                // Set timer 0 to increment
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
   init_nmea2ms(0);
-  mount();
 
   spi_init();
   for(int i = 0; i < 5; i++)
@@ -286,6 +285,7 @@ void loop()
       }
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
+      mount();
       open_logs();
       tprev=t;
       i=0;
@@ -303,6 +303,7 @@ void loop()
       digitalWrite(PIN_LED, LED_OFF);
       close_logs();
       ls();
+      umount();
       reconnect();
       tprev = ms();
       i=0;
@@ -315,19 +316,23 @@ void loop()
   tdelta_wav = t-tprev_wav;
   if(tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
   {
-    open_pcm("/speak/cekam.wav");
-    tprev_wav = t;
-    tprev_wavp = t; // reset play timer
+    // start speech
+    mount();
+    open_pcm("/speak/cekam.wav"); // load buffer with start of the file
+    tprev_wavp = ms(); // reset play timer from now, after start of PCM file
+    tprev_wav = t; // prevent too often starting of the speech
   }
-
-  // wav play refill buffer
-  tdelta_wavp = t-tprev_wavp; // how many ms have passed since last refill
-  if(tdelta_wavp > 200)
+  else
   {
-    play_pcm(tdelta_wavp*11); // approx 11 samples per ms at 11025 rate
-    tprev_wavp = t;
+    // continue speaking from remaining parts of the file
+    // refill wav-play buffer
+    tdelta_wavp = t-tprev_wavp; // how many ms have passed since last refill
+    if(tdelta_wavp > 200) // 200 ms is about 2.2KB to refill
+    {
+      play_pcm(tdelta_wavp*11); // approx 11 samples per ms at 11025 rate
+      tprev_wavp = t;
+    }
   }
-
   #if 0
   // print adxl data
   spi_slave_test(); // use SPI_MODE3
