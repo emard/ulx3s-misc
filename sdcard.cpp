@@ -149,6 +149,8 @@ void spi_init(void)
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
+    if(card_is_mounted == 0)
+      return;
     Serial.printf("Listing directory: %s\n", dirname);
 
     File root = fs.open(dirname);
