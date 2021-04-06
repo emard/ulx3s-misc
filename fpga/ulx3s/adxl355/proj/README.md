@@ -9,8 +9,8 @@
     [x] write to SPI IO for audio message
     [ ] write to SPI IO for RDS display
     [ ] generate RDS message
-    [ ] try to mount sandisk SD card
-    [ ] SD card hotplug
+    [x] mount sandisk SD card
+    [x] SD card hotplug
     [ ] sensors hotplug
     [ ] stop logging below minimal speed (hysteresis 2-7 km/h)
     [ ] check NMEA crc
