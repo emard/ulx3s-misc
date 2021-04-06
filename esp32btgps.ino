@@ -232,6 +232,31 @@ char *nthchar(char *a, int n, char c)
   return NULL;
 }
 
+static uint8_t datetime_is_set = 0;
+void set_date_from_nmea(char *a)
+{
+  uint16_t year;
+  uint8_t month, day, h, m, s;
+  if(datetime_is_set)
+    return;
+  char *b = nthchar(a, 9, ',');
+  if(b == NULL)
+    return;
+  year  = (b[ 5]-'0')*10 + (b[ 6]-'0') + 2000;
+  month = (b[ 3]-'0')*10 + (b[ 4]-'0');
+  day   = (b[ 1]-'0')*10 + (b[ 2]-'0');
+  h     = (a[ 7]-'0')*10 + (a[ 8]-'0');
+  m     = (a[ 9]-'0')*10 + (a[10]-'0');
+  s     = (a[11]-'0')*10 + (a[12]-'0');
+  char pr[80];
+  sprintf(pr, "datetime %04d-%02d-%02d %02d:%02d:%02d", year, month, day, h, m, s);
+  Serial.println(pr);
+  if(year < 2021)
+    return;
+  set_date_time(year,month,day,h,m,s);
+  datetime_is_set = 1;
+}
+
 #if 0
 // debug tagger: constant test string
 char tag_test[256] = "$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*00\n";
@@ -302,6 +327,7 @@ void loop()
         date_end[0]=0;
         Serial.println(date_begin);
         #endif
+        set_date_from_nmea(nmea);
       }
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
@@ -325,6 +351,7 @@ void loop()
       ls();
       umount();
       reconnect();
+      datetime_is_set = 0; // set datetime again
       tprev = ms();
       i=0;
     }
