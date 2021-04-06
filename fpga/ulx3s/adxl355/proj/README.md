@@ -15,7 +15,9 @@
     [ ] stop logging below minimal speed (hysteresis 2-7 km/h)
     [ ] check NMEA crc
     [ ] parse NMEA to get time and date
-    [ ] set system time and file names with creation time
+    [x] set system time from NMEA
+    [ ] create log directory
+    [ ] file names with creation time string
     [ ] at low disk space, erase oldest data until 100 MB free
     [ ] more audio messages
     [ ] speak waiting for GPS signal
