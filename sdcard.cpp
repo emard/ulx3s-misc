@@ -10,6 +10,7 @@ uint8_t* spi_master_rx_buf;
 static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
 File file_gps, file_accel, file_pcm;
+int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
 
@@ -18,7 +19,7 @@ void adxl355_write_reg(uint8_t a, uint8_t v)
   spi_master_tx_buf[0] = a*2; // write reg addr a
   spi_master_tx_buf[1] = v;
   //digitalWrite(PIN_CSN, 0);
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 2);
+  master.transfer(spi_master_tx_buf, 2);
   //digitalWrite(PIN_CSN, 1);
 }
 
@@ -40,7 +41,7 @@ void adxl355_ctrl(uint8_t x)
   spi_master_tx_buf[3] = 0x00; // adresss
   spi_master_tx_buf[4] = 0x00; // adresss
   spi_master_tx_buf[5] = x;
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 6);
+  master.transfer(spi_master_tx_buf, 6);
 }
 
 void adxl355_init(void)
@@ -206,12 +207,15 @@ void mount(void)
   uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
   Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
 
+  card_is_mounted = 1;
   logs_are_open = 0;
 }
 
 void umount(void)
 {
   SD_MMC.end();
+  card_is_mounted = 0;
+  logs_are_open = 0;
 }
 
 void ls(void)
@@ -381,7 +385,7 @@ void write_tag(char *a)
   b = a;
   for(i = 5; *b != 0; i++, b++)
     spi_master_tx_buf[i] = *b; // write tag char
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, i); // write tag string
+  master.transfer(spi_master_tx_buf, i); // write tag string
 }
 
 // repeatedly call this to refill buffer with PCM data from file
@@ -405,7 +409,7 @@ void play_pcm(int n)
     spi_master_tx_buf[3] = 0; // addr [15: 8]
     spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
     file_pcm.read(spi_master_tx_buf+5, n);
-    master.transfer(spi_master_tx_buf, spi_master_rx_buf, n+5); // write pcm to play
+    master.transfer(spi_master_tx_buf, n+5); // write pcm to play
     #if 0
     // debug print sending PCM packets
     Serial.print("PCM ");
@@ -446,7 +450,7 @@ void beep_pcm(int n)
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   for(i = 0; i < n; i++)
     spi_master_tx_buf[i+5] = ((i+8)&15)<<4; // create wav
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, n+5); // write pcm to play
+  master.transfer(spi_master_tx_buf, n+5); // write pcm to play
 }
 
 // this function doesn't work
@@ -499,7 +503,7 @@ void spi_slave_test(void)
   spi_master_tx_buf[6] = 0x22; // data
   spi_master_tx_buf[7] = 0x33; // data
   spi_master_tx_buf[8] = count++; // data
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 9); // write
+  master.transfer(spi_master_tx_buf, 9); // write
   #endif // end writing
   wptr = spi_slave_ptr();
   spi_master_tx_buf[0] = 1; // 1: read ram
