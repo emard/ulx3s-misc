@@ -14,8 +14,9 @@ void open_logs(void);
 void write_logs(void);
 void write_tag(char *a);
 void play_pcm(int n);
-void open_pcm(char *wav);
+void open_pcm(char *wav); // open wav filename
 void beep_pcm(int n);
+void write_rds(uint8_t *a, int n);
 void close_logs(void);
 int are_logs_open(void);
 void spi_slave_test(void);

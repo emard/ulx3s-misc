@@ -388,10 +388,8 @@ void write_tag(char *a)
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
-  char *b;
-  b = a;
-  for(i = 5; *b != 0; i++, b++)
-    spi_master_tx_buf[i] = *b; // write tag char
+  for(i = 5; *a != 0; i++, a++)
+    spi_master_tx_buf[i] = *a; // write tag char
   master.transfer(spi_master_tx_buf, i); // write tag string
 }
 
@@ -466,6 +464,21 @@ void beep_pcm(int n)
     spi_master_tx_buf[i+5] = ((i+8)&15)<<4; // create wav
   master.transfer(spi_master_tx_buf, n+5); // write pcm to play
 }
+
+// write n bytes to 52-byte RDS memory
+void write_rds(uint8_t *a, int n)
+{
+  int i;
+  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  for(i = 0; i < n; i++, a++)
+    spi_master_tx_buf[i+5] = *a; // write RDS byte
+  master.transfer(spi_master_tx_buf, n+5); // write tag string
+}
+
 
 // this function doesn't work
 // seek() is not working
