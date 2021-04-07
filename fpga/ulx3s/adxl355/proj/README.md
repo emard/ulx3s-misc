@@ -7,7 +7,7 @@
         consistent 16-bit reading
     [x] write to SPI IO for tagging
     [x] write to SPI IO for audio message
-    [ ] write to SPI IO for RDS display
+    [x] write to SPI IO for RDS display
     [ ] generate RDS message
     [x] mount sandisk SD card
     [x] SD card hotplug
@@ -15,7 +15,7 @@
     [ ] stop logging below minimal speed (hysteresis 2-7 km/h)
     [x] check NMEA crc
     [x] parse NMEA to get time and date
-    [ ] separate NMEA related funcs to nmea module
+    [x] separate NMEA related funcs to nmea module
     [x] set system time from NMEA
     [ ] create log directory
     [ ] file names with creation time string
