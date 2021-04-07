@@ -13,8 +13,9 @@
     [x] SD card hotplug
     [ ] sensors hotplug
     [ ] stop logging below minimal speed (hysteresis 2-7 km/h)
-    [ ] check NMEA crc
-    [ ] parse NMEA to get time and date
+    [x] check NMEA crc
+    [x] parse NMEA to get time and date
+    [ ] separate NMEA related funcs to nmea module
     [x] set system time from NMEA
     [ ] create log directory
     [ ] file names with creation time string
