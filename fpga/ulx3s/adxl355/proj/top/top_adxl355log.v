@@ -170,6 +170,7 @@ module top_adxl355log
   wire spi_bram_cs = ram_addr[31:24] == 8'h00; // currently unused
   wire spi_wav_cs  = ram_addr[31:24] == 8'h05; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
   wire spi_tag_cs  = ram_addr[31:24] == 8'h06; // write to 0x06xxxxxx writes 6-bit tags
+  wire spi_rds_cs  = ram_addr[31:24] == 8'h0D; // write to 0x0Dxxxxxx writes 52 bytes of RDS encoded data for 8-char text display
   wire spi_ctrl_cs = ram_addr[31:24] == 8'hFF;
 
   generate
@@ -490,6 +491,13 @@ module top_adxl355log
   reg [7:0] rds_ram[0:51];
   initial
     $readmemh("message_ps.mem", rds_ram);
+  // SPI writes to RDS RAM
+  always @(posedge clk)
+  begin
+    if(ram_wr & spi_rds_cs)
+      rds_ram[ram_addr] <= ram_di;
+  end
+  // FM core reads from RDS RAM
   wire [5:0] rds_addr;
   reg  [7:0] rds_data;
   always @(posedge clk)
