@@ -10,6 +10,8 @@
 #include "driver/mcpwm.h"
 // SD card 4-bit mode
 #include "sdcard.h"
+// NMEA simple parsing for $GPRMC NMEA sentence
+#include "nmea.h"
 
 BluetoothSerial SerialBT;
 
@@ -56,13 +58,18 @@ int32_t nmea2ms_log[256]; // difference nmea-ms() log
 int64_t nmea2ms_sum;
 int32_t nmea2ms_dif;
 
-// nmea timestamp string (day time) from conversion factors to 10x seconds
-uint32_t nmea2sx[8] = { 360000,36000,6000,600,100,10,0,1 };
+// this ISR is software PLL that will lock to GPS signal
+// by adjusting frequency of MCPWM signal to match
+// time occurence of the ISR with averge difference between
+// GPS clock and internal ESP32 clock.
+// average difference is calculated at NMEA reception in loop()
 
 // connect MCPWM PPS pin output to some input pin for interrupt
-// workaround to create interrupt at each MCPWM cycle
-// the ISR should sample GPS tracking timer and calculate
-// MCPWM period correction to make PLL to GPS time
+// workaround to create interrupt at each MCPWM cycle because
+// MCPWM doesn't or I don't know how to generate software interrupt.
+// the ISR will sample GPS tracking timer and calculate
+// MCPWM period correction to make a PLL that precisely locks to
+// GPS, it does the PPS signal recovery
 static void IRAM_ATTR isr_handler()
 {
   uint32_t ct = cputix(); // hi-resolution timer 18s wraparound
@@ -115,35 +122,10 @@ void init_nmea2ms(int32_t d)
     nmea2ms_log[i] = d; 
 }
 
-// file creation times should work with this
-void set_system_time(time_t seconds_since_1980)
-{
-  timeval epoch = {seconds_since_1980, 0};
-  const timeval *tv = &epoch;
-  timezone utc = {0, 0};
-  const timezone *tz = &utc;
-  settimeofday(tv, tz);
-}
-
-void set_date_time(int year, int month, int day, int h, int m, int s)
-{
-  time_t t_of_day; 
-  struct tm t;
-
-  t.tm_year = year-1900;  // year since 1900
-  t.tm_mon  = month-1;    // Month, 0 - jan
-  t.tm_mday = day;        // Day of the month
-  t.tm_hour = h;
-  t.tm_min  = m;
-  t.tm_sec  = s;
-  t_of_day  = mktime(&t);
-  set_system_time(t_of_day);
-}
-
 void setup() {
   Serial.begin(115200);
   //set_system_time(1527469964);
-  set_date_time(2021,4,1,12,30,45);
+  //set_date_time(2021,4,1,12,30,45);
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
   pinMode(PIN_IRQ, INPUT);
@@ -190,46 +172,29 @@ void reconnect()
   // it is sometimes true even if not connected.
 }
 
-// convert nmea daytime HHMMSS.S to seconds since midnight x10 (0.1 s resolution)
-int nmea2s(char *nmea)
+// file creation times should work with this
+void set_system_time(time_t seconds_since_1980)
 {
-  int s = 0;
-  for(int i = 0; i < 8; i++)
-  s += (nmea[i]-'0')*nmea2sx[i];
-  return s;
+  timeval epoch = {seconds_since_1980, 0};
+  const timeval *tv = &epoch;
+  timezone utc = {0, 0};
+  const timezone *tz = &utc;
+  settimeofday(tv, tz);
 }
 
-inline uint8_t hex2int(char a)
+void set_date_time(int year, int month, int day, int h, int m, int s)
 {
-  return a <= '9' ? a-'0' : a-'A'+10;
-}
+  time_t t_of_day;
+  struct tm t;
 
-int check_nmea_crc(char *a)
-{
-  int i;
-  if(a[0] != '$')
-    return 0;
-  a++;
-  uint8_t crc = 0;
-  for(i = 1; a[0] != '\0' && a[0] != '*'; i++, a++)
-    crc ^= a[0];
-  if(a[0] != '*')
-    return 0;
-  return crc == ( (hex2int(a[1])<<4) | hex2int(a[2]) );
-}
-
-// find position of nth char (used as CSV parser)
-char *nthchar(char *a, int n, char c)
-{
-  int i;
-  for(i=0; *a; a++)
-  {
-    if(*a == c)
-      i++;
-    if(i == n)
-      return a;
-  }
-  return NULL;
+  t.tm_year = year-1900;  // year since 1900
+  t.tm_mon  = month-1;    // Month, 0 - jan
+  t.tm_mday = day;        // Day of the month
+  t.tm_hour = h;
+  t.tm_min  = m;
+  t.tm_sec  = s;
+  t_of_day  = mktime(&t);
+  set_system_time(t_of_day);
 }
 
 static uint8_t datetime_is_set = 0;
