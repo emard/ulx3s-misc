@@ -1,6 +1,16 @@
 #include "pins.h"
 #include "sdcard.h"
 #include "adxl355.h"
+#include "RDS.h"
+
+// TODO
+// too much of various code is put into this module
+// big cleanup needed, code from here should be distributed
+// to multiple modules for readability
+// (sdcard, adxl master, adxl reader, audio player, ascii tagger)
+
+RDS rds;
+
 // Manage Libraries -> ESP32DMASPI
 #include <ESP32DMASPIMaster.h> // Version 0.1.0 tested
 
@@ -146,6 +156,33 @@ void spi_init(void)
     // VSPI = CS:  5, CLK: 18, MOSI: 23, MISO: 19
     // HSPI = CS: 15, CLK: 14, MOSI: 13, MISO: 12
     master.begin(VSPI, PIN_SCK, PIN_MISO, PIN_MOSI, PIN_CSN); // use -1 if no CSN
+}
+
+// must be called after spi_init when buffer is allocated
+void rds_init(void)
+{
+  rds.setmemptr(spi_master_tx_buf+5);
+}
+
+void spi_rds_write(void)
+{
+  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  rds.pi(0xCAFE);
+  rds.ta(0);
+  rds.stereo(0);
+  //rds.rt("aabbcc");
+  rds.ps("TEST600D");
+  for(int i = 0; i < 5+4*13; i++)
+  {
+    Serial.print(i);
+    Serial.print(" ");
+    Serial.println(spi_master_tx_buf[i],HEX);
+  }
+  master.transfer(spi_master_tx_buf, 5+4*13); // write tag string
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){

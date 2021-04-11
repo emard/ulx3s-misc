@@ -146,6 +146,7 @@ void setup() {
   init_nmea2ms(0);
 
   spi_init();
+  rds_init();
   for(int i = 0; i < 5; i++)
   {
     adxl355_init();
@@ -157,6 +158,7 @@ void setup() {
   //uint8_t rdsmsg[13] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   write_rds(rdsmsg, sizeof(rdsmsg));
   #endif
+  spi_rds_write();
 }
 
 void reconnect()

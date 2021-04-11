@@ -7,6 +7,8 @@ extern int card_is_mounted;
 void mount(void);
 void umount(void);
 void spi_init(void);
+void rds_init(void);
+void spi_rds_write(void);
 void adxl355_init(void);
 uint8_t adxl355_available(void);
 void ls(void);
