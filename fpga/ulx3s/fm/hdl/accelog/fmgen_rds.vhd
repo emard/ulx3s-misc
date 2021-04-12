@@ -8,14 +8,15 @@ use ieee.std_logic_arith.all;
 use ieee.numeric_std.all; -- we need signed type from here
 use ieee.math_real.all; -- to calculate log2 bit size
 
-entity fmgen_test is
+entity fmgen_rds is
     generic
     (
-        C_addr_bits: integer := 6; -- must fit 2**n >= C_rds_msg_len
-        C_rds_msg_len: integer range 2 to 2048 := 52; -- RAM address range 0..n-1 for RDS binary message
+        C_addr_bits: integer := 7; -- must fit 2**n >= C_rds_msg_len
+        C_rds_msg_len: integer range 2 to 2048 := 65; -- RAM address range 0..n-1 for RDS binary message
         -- some useful values for C_rds_msg_len
         --  13 =        1*13 (CT)
         --  52 =        4*13 (PS)
+        --  65 =        5*13 (PS+CT)
         -- 260 =   (16+4)*13 (PS+RT)
         -- 273 = (16+4+1)*13 (PS+RT+CT)
         -- PS:  4 groups, main display 8 characters
@@ -41,7 +42,7 @@ entity fmgen_test is
     );
 end;
 
-architecture arch of fmgen_test is
+architecture arch of fmgen_rds is
     --constant C_addr_bits: integer := integer(ceil((log2(real(C_rds_msg_len)+1.0E-6))-1.0E-6));
     constant C_set_rds_msg_len: std_logic_vector(C_addr_bits-1 downto 0) := std_logic_vector(to_unsigned(C_rds_msg_len, C_addr_bits));
 

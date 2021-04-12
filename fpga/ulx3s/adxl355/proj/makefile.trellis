@@ -30,9 +30,9 @@ $(TOP_MODULE_FILE) \
 ../../adxl355/hdl/adxl355_sync.v \
 
 # *.vhd those files will be compiled with ghdl
-TOP_VHDL_MODULE = fmgen_test
+TOP_VHDL_MODULE = fmgen_rds
 VHDL_FILES = \
-../../fm/hdl/test/fmgen_test.vhd \
+../../fm/hdl/accelog/fmgen_rds.vhd \
 ../../fm/hdl/fmgen.vhd \
 ../../fm/hdl/rds.vhd \
 ../../fm/hdl/lowpass.vhd \

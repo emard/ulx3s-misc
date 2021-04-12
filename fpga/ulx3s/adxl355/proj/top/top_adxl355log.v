@@ -488,7 +488,7 @@ module top_adxl355log
   end
 
   wire [15:0] wav_data_signed = {~wav_data[7],wav_data[6:0],8'h00}; // unsigned 8-bit to signed 16-bit
-  reg [7:0] rds_ram[0:51];
+  reg [7:0] rds_ram[0:64]; // it has 5*13=65 elements, 0-64, this is not a typo
   initial
     $readmemh("message_ps.mem", rds_ram);
   // SPI writes to RDS RAM
@@ -498,12 +498,12 @@ module top_adxl355log
       rds_ram[ram_addr] <= ram_di;
   end
   // FM core reads from RDS RAM
-  wire [5:0] rds_addr;
+  wire [6:0] rds_addr;
   reg  [7:0] rds_data;
   always @(posedge clk)
     rds_data <= rds_ram[rds_addr];
-  fmgen_test
-  fmgen_test_inst
+  fmgen_rds
+  fmgen_rds_inst
   (
     .clk(clk),
     .clk_fmdds(clk_fmdds),

@@ -239,12 +239,11 @@ void RDS::stereo(uint8_t stereo) // public
   send_ps(); // PS block sends TA
 }
 
-// fixme - CT group will overwrite last RT group
-// after time is send, RT should be refreshed
-// rdsmem can be extended from 260 bytes to 273
+// CT group will be written at 5th postion after PS group
+// rdsmem should be 65 bytes long
 void RDS::send_ct(void)
 {
-  int rds_mem_offset = (RDS_BITS_PER_GROUP/8) * 19; // last RT group
+  int rds_mem_offset = (RDS_BITS_PER_GROUP/8) * 4; // after PS group
   uint8_t bit_buffer[RDS_BITS_PER_GROUP/8];
 
   binary_ct_group(bit_buffer);

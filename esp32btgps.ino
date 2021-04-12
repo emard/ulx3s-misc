@@ -15,6 +15,7 @@
 
 BluetoothSerial SerialBT;
 
+// TODO: read address from SD card gps.mac
 uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
 String name = "Garmin GLO #4352e";
 char *pin = "1234"; //<- standard pin would be provided by default
@@ -184,6 +185,7 @@ void set_system_time(time_t seconds_since_1980)
   settimeofday(tv, tz);
 }
 
+#if 0
 void set_date_time(int year, int month, int day, int h, int m, int s)
 {
   time_t t_of_day;
@@ -198,14 +200,35 @@ void set_date_time(int year, int month, int day, int h, int m, int s)
   t_of_day  = mktime(&t);
   set_system_time(t_of_day);
 }
+#endif
+
+// parse NMEA ascii string -> write to struct tm
+int nmea2tm(char *a, struct tm *t)
+{
+  char *b = nthchar(a, 9, ',');
+  if(b == NULL)
+    return 0;
+  t->tm_year  = (b[ 5]-'0')*10 + (b[ 6]-'0') + 100;
+  t->tm_mon   = (b[ 3]-'0')*10 + (b[ 4]-'0') - 1;
+  t->tm_mday  = (b[ 1]-'0')*10 + (b[ 2]-'0');
+  t->tm_hour  = (a[ 7]-'0')*10 + (a[ 8]-'0');
+  t->tm_min   = (a[ 9]-'0')*10 + (a[10]-'0');
+  t->tm_sec   = (a[11]-'0')*10 + (a[12]-'0');
+  return 1;
+}
 
 static uint8_t datetime_is_set = 0;
-void set_date_from_nmea(char *a)
+void set_date_from_tm(struct tm *tm)
 {
   uint16_t year;
   uint8_t month, day, h, m, s;
+  time_t t_of_day;
   if(datetime_is_set)
     return;
+  t_of_day = mktime(tm);
+  set_system_time(t_of_day);
+  datetime_is_set = 1;
+  #if 0
   char *b = nthchar(a, 9, ',');
   if(b == NULL)
     return;
@@ -215,13 +238,18 @@ void set_date_from_nmea(char *a)
   h     = (a[ 7]-'0')*10 + (a[ 8]-'0');
   m     = (a[ 9]-'0')*10 + (a[10]-'0');
   s     = (a[11]-'0')*10 + (a[12]-'0');
+  #endif
+  #if 1
+  year  = tm->tm_year + 1900;
+  month = tm->tm_mon  + 1;
+  day   = tm->tm_mday;
+  h     = tm->tm_hour;
+  m     = tm->tm_min;
+  s     = tm->tm_sec;
   char pr[80];
   sprintf(pr, "datetime %04d-%02d-%02d %02d:%02d:%02d", year, month, day, h, m, s);
   Serial.println(pr);
-  if(year < 2021)
-    return;
-  set_date_time(year,month,day,h,m,s);
-  datetime_is_set = 1;
+  #endif
 }
 
 #if 0
@@ -240,6 +268,7 @@ void loop()
   static uint32_t ct0; // first char in line millis timestamp
   static uint32_t tprev_wav, tprev_wavp;
   uint32_t tdelta_wav, tdelta_wavp;
+  struct tm tm;
 
   #if 1
   if (connected && SerialBT.available()>0)
@@ -294,7 +323,18 @@ void loop()
         date_end[0]=0;
         Serial.println(date_begin);
         #endif
-        set_date_from_nmea(nmea);
+        if(nmea2tm(nmea,&tm))
+        {
+          static uint8_t prev_min;
+          set_date_from_tm(&tm);
+          if(tm.tm_min != prev_min)
+          {
+            // update RDS time
+            rds_ct_tm(&tm);
+            // TODO: say time
+            prev_min = tm.tm_min;
+          }
+        }
       }
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
@@ -317,6 +357,7 @@ void loop()
       close_logs();
       ls();
       umount();
+      rds_ct_tm(NULL);
       reconnect();
       datetime_is_set = 0; // set datetime again
       tprev = ms();

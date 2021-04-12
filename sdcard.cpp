@@ -174,15 +174,30 @@ void spi_rds_write(void)
   rds.pi(0xCAFE);
   rds.ta(0);
   rds.stereo(0);
+  //rds.ct(2020,3,10,12,15,0); // ct will be updated from rds_ct_tm()
   //rds.rt("aabbcc");
-  rds.ps("TEST600D");
-  for(int i = 0; i < 5+4*13; i++)
+  rds.ps("test600D");
+  master.transfer(spi_master_tx_buf, 5+5*13); // write RDS binary
+}
+
+void rds_ct_tm(struct tm *tm)
+{
+  if(tm)
   {
-    Serial.print(i);
-    Serial.print(" ");
-    Serial.println(spi_master_tx_buf[i],HEX);
+    uint16_t year = tm->tm_year + 1900;
+    rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
-  master.transfer(spi_master_tx_buf, 5+4*13); // write tag string
+  else // NULL pointer
+  {
+    // null pointer, dummy time
+    rds.ct(2000, 0, 1, 0, 0, 0);
+  }
+  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  master.transfer(spi_master_tx_buf, 5+5*13); // write RDS binary
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
