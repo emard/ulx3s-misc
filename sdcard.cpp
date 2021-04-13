@@ -445,11 +445,12 @@ void write_tag(char *a)
 }
 
 // repeatedly call this to refill buffer with PCM data from file
-// play n bytes (samples) from open PCM file
-void play_pcm(int n)
+// play max n bytes (samples) from open PCM file
+// return number of bytes to be played for this buffer refill
+int play_pcm(int n)
 {
   if(pcm_is_open == 0)
-    return;
+    return 0;
   if(n > SPI_READER_BUF_SIZE)
     n = SPI_READER_BUF_SIZE;
   int a = file_pcm.available(); // number of bytes available
@@ -477,12 +478,14 @@ void play_pcm(int n)
     file_pcm.close();
     pcm_is_open = 0;
   }
+  return n;
 }
 
-void open_pcm(char *wav)
+int open_pcm(char *wav)
 {
   if(pcm_is_open)
-    return;
+    return 0;
+  int n = 3584; // bytes to play for initiall buffer fill
   // to generate wav files:
   // espeak-ng -v hr -f speak.txt -w speak.wav; sox speak.wav --no-dither -r 11025 -b 8 output.wav reverse trim 1s reverse
   // "--no-dither" reduces noise
@@ -493,13 +496,15 @@ void open_pcm(char *wav)
   {
     file_pcm.seek(44); // skip header to get data
     pcm_is_open = 1;
-    play_pcm(3584); // initially fill the play buffer, max buffer is 4KB
+    play_pcm(n); // initially fill the play buffer, max buffer is 4KB
   }
   else
   {
     Serial.print("can't open file ");
+    n = 0;
   }
   Serial.println(wav); // print which file is playing now
+  return n;
 }
 
 // play 8-bit PCM beep sample
