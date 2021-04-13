@@ -20,6 +20,8 @@ uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
 String name = "Garmin GLO #4352e";
 char *pin = "1234"; //<- standard pin would be provided by default
 bool connected = false;
+char *speakfile = NULL;
+char speak_printed[255];
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -331,7 +333,13 @@ void loop()
           {
             // update RDS time
             rds_ct_tm(&tm);
+            Serial.print(tm.tm_hour);
+            Serial.print(" i ");
+            Serial.println(tm.tm_min);
             // TODO: say time
+            sprintf(speak_printed, "/speak/%d.wav", tm.tm_min % 10);
+            if(!speakfile)
+              speakfile = speak_printed;
             prev_min = tm.tm_min;
           }
         }
@@ -368,14 +376,21 @@ void loop()
   }
   #endif
 
-  tdelta_wav = t-tprev_wav;
-  if(tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
+  if(!speakfile) // NULL: we are ready to speak new file, 
+  {
+    tdelta_wav = t-tprev_wav;
+    if(tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
+      speakfile = "/speak/trazim.wav";
+  }
+
+  if(speakfile)
   {
     // start speech
     mount();
-    open_pcm("/speak/cekam.wav"); // load buffer with start of the file
+    open_pcm(speakfile); // load buffer with start of the file
     tprev_wavp = ms(); // reset play timer from now, after start of PCM file
     tprev_wav = t; // prevent too often starting of the speech
+    speakfile = NULL; // consumed
   }
   else
   {

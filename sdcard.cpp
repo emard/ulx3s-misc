@@ -1,7 +1,6 @@
 #include "pins.h"
 #include "sdcard.h"
 #include "adxl355.h"
-#include "RDS.h"
 
 // TODO
 // too much of various code is put into this module
