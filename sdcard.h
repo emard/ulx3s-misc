@@ -5,6 +5,7 @@
 // 3072, 6144, 9216, 12288, 15360
 #define SPI_READER_BUF_SIZE 9216
 extern int card_is_mounted;
+extern int pcm_is_open;
 extern RDS rds;
 void mount(void);
 void umount(void);

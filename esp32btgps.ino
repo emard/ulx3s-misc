@@ -270,6 +270,7 @@ void loop()
   static uint32_t ct0; // first char in line millis timestamp
   static uint32_t tprev_wav, tprev_wavp;
   uint32_t tdelta_wav, tdelta_wavp;
+  static uint32_t tspeak_ready;
   struct tm tm;
 
   #if 1
@@ -338,7 +339,7 @@ void loop()
             Serial.println(tm.tm_min);
             // TODO: say time
             sprintf(speak_printed, "/speak/%d.wav", tm.tm_min % 10);
-            if(!speakfile)
+            if(!pcm_is_open)
               speakfile = speak_printed;
             prev_min = tm.tm_min;
           }
@@ -376,31 +377,41 @@ void loop()
   }
   #endif
 
-  if(!speakfile) // NULL: we are ready to speak new file, 
+  if(!pcm_is_open) // NULL: we are ready to speak new file, 
   {
     tdelta_wav = t-tprev_wav;
     if(tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
       speakfile = "/speak/trazim.wav";
   }
-
-  if(speakfile)
+#if 0
+  if(speakfile == NULL && pcm_is_open==0 && (((int32_t)t)-(int32_t)tspeak_ready)>0) // NULL: we are ready to speak new file, 
+  {
+    speakfile = "/speak/1.wav";
+  }
+#endif
+  if(speakfile != NULL && pcm_is_open == 0)
   {
     // start speech
     mount();
     open_pcm(speakfile); // load buffer with start of the file
     tprev_wavp = ms(); // reset play timer from now, after start of PCM file
     tprev_wav = t; // prevent too often starting of the speech
-    speakfile = NULL; // consumed
   }
   else
   {
     // continue speaking from remaining parts of the file
     // refill wav-play buffer
     tdelta_wavp = t-tprev_wavp; // how many ms have passed since last refill
-    if(tdelta_wavp > 200) // 200 ms is about 2.2KB to refill
+    if(tdelta_wavp > 200 && pcm_is_open) // 200 ms is about 2.2KB to refill
     {
-      play_pcm(tdelta_wavp*11); // approx 11 samples per ms at 11025 rate
+      int remaining_bytes;
+      remaining_bytes = play_pcm(tdelta_wavp*11); // approx 11 samples per ms at 11025 rate
       tprev_wavp = t;
+      if(!pcm_is_open)
+      {
+        tspeak_ready = t+remaining_bytes/11+359; // estimate when PCM will be ready
+        speakfile = NULL; // consumed
+      }
     }
   }
   #if 0

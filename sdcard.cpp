@@ -477,6 +477,9 @@ int play_pcm(int n)
   {
     file_pcm.close();
     pcm_is_open = 0;
+    #if 0
+    Serial.println("PCM done");
+    #endif
   }
   return n;
 }
@@ -501,6 +504,7 @@ int open_pcm(char *wav)
   else
   {
     Serial.print("can't open file ");
+    pcm_is_open = 0;
     n = 0;
   }
   Serial.println(wav); // print which file is playing now
