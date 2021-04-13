@@ -21,7 +21,6 @@ String name = "Garmin GLO #4352e";
 char *pin = "1234"; //<- standard pin would be provided by default
 bool connected = false;
 char *speakfile = NULL;
-char speak_printed[255];
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -337,8 +336,6 @@ void loop()
             Serial.print(tm.tm_hour);
             Serial.print(" i ");
             Serial.println(tm.tm_min);
-            // TODO: say time
-            // sprintf(speak_printed, "/speak/%d.wav", tm.tm_min % 10);
             if(!pcm_is_open)
               speakfile = "/speak/spreman.wav";
             prev_min = tm.tm_min;
@@ -386,13 +383,8 @@ void loop()
 #if 0
   if(speakfile == NULL && pcm_is_open==0 && (((int32_t)t)-(int32_t)tspeak_ready)>0) // NULL: we are ready to speak new file, 
   {
-    static uint8_t x = 0;
     // PCM is now ready for next file
-    if(x)
-      speakfile = "/speak/1.wav";
-    else
-      speakfile = "/speak/20.wav";
-    x ^= 1;
+    speakfile = "/speak/1.wav";
   }
 #endif
   if(speakfile != NULL && pcm_is_open == 0)
