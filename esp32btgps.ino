@@ -338,9 +338,9 @@ void loop()
             Serial.print(" i ");
             Serial.println(tm.tm_min);
             // TODO: say time
-            sprintf(speak_printed, "/speak/%d.wav", tm.tm_min % 10);
+            // sprintf(speak_printed, "/speak/%d.wav", tm.tm_min % 10);
             if(!pcm_is_open)
-              speakfile = speak_printed;
+              speakfile = "/speak/spreman.wav";
             prev_min = tm.tm_min;
           }
         }
@@ -386,7 +386,13 @@ void loop()
 #if 0
   if(speakfile == NULL && pcm_is_open==0 && (((int32_t)t)-(int32_t)tspeak_ready)>0) // NULL: we are ready to speak new file, 
   {
-    speakfile = "/speak/1.wav";
+    static uint8_t x = 0;
+    // PCM is now ready for next file
+    if(x)
+      speakfile = "/speak/1.wav";
+    else
+      speakfile = "/speak/20.wav";
+    x ^= 1;
   }
 #endif
   if(speakfile != NULL && pcm_is_open == 0)
