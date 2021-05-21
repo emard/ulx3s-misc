@@ -50,7 +50,7 @@ module esp32_passthru
   always @(posedge clk_25mhz)
   begin
     R_prog_in <= S_prog_in;
-    if(/*S_prog_out == 2'b01 &&*/ R_prog_in == 2'b10)
+    if(R_prog_in != 2'b10 && S_prog_in == 2'b10)
       R_prog_release <= 0; // keep resetting during start of ESP32 programming
     else
       if(R_prog_release[C_prog_release_timeout] == 1'b0)
