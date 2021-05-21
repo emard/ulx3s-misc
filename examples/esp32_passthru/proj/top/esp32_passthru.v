@@ -40,8 +40,8 @@ module esp32_passthru
   wire [1:0] S_prog_in  = { ftdi_ndtr, ftdi_nrts };
   wire [1:0] S_prog_out = S_prog_in == 2'b10 ? 2'b01 
                         : S_prog_in == 2'b01 ? 2'b10 : 2'b11;
-  assign wifi_en = S_prog_out[1];
-  //assign wifi_en = S_prog_out[1] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN0 reboots ESP32
+  //assign wifi_en = S_prog_out[1];
+  assign wifi_en = S_prog_out[1] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
   assign wifi_gpio0 = S_prog_out[0];
   //assign wifi_gpio0 = S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
 
