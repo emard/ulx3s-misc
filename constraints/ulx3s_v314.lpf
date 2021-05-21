@@ -1,6 +1,6 @@
 BLOCK RESETPATHS;
 BLOCK ASYNCPATHS;
-## ULX3S v3.1.x
+## ULX3S v3.1.4
 
 # The clock "usb" and "gpdi" sheet
 LOCATE COMP "clk_25mhz" SITE "G2";
