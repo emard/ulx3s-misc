@@ -4,7 +4,11 @@
 `default_nettype none
 module esp32_passthru
 #(
-  // time to hold EN down after power up, 9 or more works
+  // time to hold EN down after power up,
+  // 0 to disable
+  // 9 or more to reset ESP32 at power up
+  //   (for boards where ESP32 doesn't boot at power up)
+  //   Board reason yet unknown
   C_powerup_en_time = 10,
   // timeout to release SD lines after programing ESP32
   C_prog_release_timeout = 26 // default n=26, 2^n / 25MHz = 2.6s
@@ -42,12 +46,15 @@ module esp32_passthru
   wire [1:0] S_prog_in  = { ftdi_ndtr, ftdi_nrts };
   wire [1:0] S_prog_out = S_prog_in == 2'b10 ? 2'b01 
                         : S_prog_in == 2'b01 ? 2'b10 : 2'b11;
-  reg [C_powerup_en_time:0] R_powerup_en_time = 0;
+  reg [C_powerup_en_time:0] R_powerup_en_time = 1;
+  generate
+  if(C_powerup_en_time)
   always @(posedge clk_25mhz)
   begin
     if(R_powerup_en_time[C_powerup_en_time] == 1'b0)
       R_powerup_en_time <= R_powerup_en_time + 1; // increment until MSB=0
   end
+  endgenerate
   //assign wifi_en = S_prog_out[1];
   assign wifi_en = S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
   assign wifi_gpio0 = S_prog_out[0];
