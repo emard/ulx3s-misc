@@ -5,6 +5,10 @@ FPGA_PREFIX ?=
 FPGA_SIZE ?= 12
 FPGA_CHIP ?= lfe5u-$(FPGA_SIZE)f
 FPGA_PACKAGE ?= CABGA381
+# 2.4 4.8 9.7 19.4 38.8 62.0
+FLASH_READ_MHZ ?= 62.0
+# fast-read dual-spi qspi
+FLASH_READ_MODE ?= fast-read
 
 # ******* design files *******
 CONSTRAINTS ?= board_constraints.lpf
@@ -50,13 +54,14 @@ ifeq ($(FPGA_CHIP), lfe5u-85f)
   CHIP_ID=0x41113043
 endif
 
-ifeq ($(FPGA_SIZE), 12)
-  FPGA_K=$(FPGA_PREFIX)25
-  IDCODE_CHIPID=--idcode $(CHIP_ID)
-else
+#ifeq ($(FPGA_SIZE), 12)
+#  FPGA_K=$(FPGA_PREFIX)25
+#  IDCODE_CHIPID=--idcode $(CHIP_ID)
+#else
   FPGA_K=$(FPGA_PREFIX)$(FPGA_SIZE)
   IDCODE_CHIPID=
-endif
+#endif
+
 
 FPGA_CHIP_EQUIVALENT ?= lfe5u-$(FPGA_K)f
 
@@ -129,7 +134,8 @@ $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config: $(PROJECT).json $(BASECFG)
 	$(NEXTPNR-ECP5) $(NEXTPNR_OPTIONS) --$(FPGA_K)k --package $(FPGA_PACKAGE) --json $(PROJECT).json --lpf $(CONSTRAINTS) --textcfg $@
 
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config
-	$(ECPPACK) $(IDCODE_CHIPID) --compress --freq 62.0 --input $< --bit $@
+	$(ECPPACK) $(IDCODE_CHIPID) --compress --freq $(FLASH_READ_MHZ) --input $< --bit $@
+#	$(ECPPACK) $(IDCODE_CHIPID) --compress --freq $(FLASH_READ_MHZ) --spimode $(FLASH_READ_MODE) --input $< --bit $@
 
 $(CLK0_FILE_NAME):
 	$(ECPPLL) $(CLK0_OPTIONS) --file $@
@@ -164,7 +170,8 @@ $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme: $(BOARD)_$(FPGA_SIZE)f.xcf $(BOARD)_$(FPG
 #	$(BIT2SVF) $< $@
 
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).config
-	$(ECPPACK) $(IDCODE_CHIPID) $< --compress --freq 62.0 --svf-rowsize 800000 --svf $@
+	$(ECPPACK) $(IDCODE_CHIPID) $< --compress --freq $(FLASH_READ_MHZ) --svf-rowsize 800000 --svf $@
+#	$(ECPPACK) $(IDCODE_CHIPID) $< --compress --freq $(FLASH_READ_MHZ) --spimode $(FLASH_READ_MODE) --svf-rowsize 800000 --svf $@
 
 # program SRAM  with ujrprog (temporary)
 prog: program
