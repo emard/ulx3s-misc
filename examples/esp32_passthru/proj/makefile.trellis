@@ -4,6 +4,10 @@ BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
 FPGA_PACKAGE = CABGA381
+# 2.4 4.8 9.7 19.4 38.8 62.0
+FLASH_READ_MHZ = 62.0
+# fast-read dual-spi qspi
+FLASH_READ_MODE = fast-read
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
