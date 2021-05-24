@@ -77,7 +77,7 @@ module esp32_passthru
   assign sd_wp = sd_clk | sd_cmd | /*wifi_gpio5*/ | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
 
-  assign led[7] = 0;
+  assign led[7] = wifi_en;
   assign led[6] = S_prog_out[1]; // green LED ON = ESP32 enabled
   assign led[5] = ~R_prog_release[C_prog_release_timeout]; // orange LED ON = ESP32 programming
   assign led[4] = 0;
