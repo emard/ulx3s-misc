@@ -67,6 +67,7 @@ module esp32rmii
   // protocol analyzer to generate 3-state control signal
   assign rmii_mdc   = wifi_gpio12; // wifi -> rmii, wifi generates MDC clock 2.5 MHz typical
   wire   wifi_mdio  = wifi_gpio4; // analyzer listens to wifi side
+
   reg [1:0] r_rmii_mdc; // MDC edge detection
   localparam c_rmii_mdio_bits = 32;
   reg [c_rmii_mdio_bits-1:0] r_rmii_mdio; // MDIO shift register
@@ -97,6 +98,8 @@ module esp32rmii
                : r_rmii_mdc_cnt[c_rmii_mdc_cnt_bits-1] ? 0 // end   3-state read
                : mdio_read;               // no change
   end
+
+  // rmii_mdio bidirectional 3-state connection gn13-wifi_gpio4
 
   // normal
   assign gn13       = mdio_read ? 1'bz : wifi_gpio4; // wifi -> rmii
@@ -144,7 +147,7 @@ module esp32rmii
   assign led[1] = wifi_gpio4;
   assign led[0] = wifi_gpio2;
 */
-  assign led = r_blink;
+  assign led = r_blink; // each MDIO read cycle increments r_blink
 
 endmodule
 `default_nettype wire
