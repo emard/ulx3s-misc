@@ -97,17 +97,19 @@ module esp32rmii
       else // read cycle active, increment
         r_rmii_mdc_cnt <= r_rmii_mdc_cnt + 1; // increment
     end
-    mdio_read <= r_rmii_mdc_cnt == 12 ? 1 // begin 3-state read
-               : r_rmii_mdc_cnt == 14 ? 0 // end   3-state read
+    mdio_read <= r_rmii_mdc_cnt == 11 ? 1 // begin 3-state read
+               : r_rmii_mdc_cnt == 26 ? 0 // end   3-state read
                : mdio_read;               // no change
   end
-  
-  wire read_test = 0; // r_rmii_mdc_cnt == 12 ? 1 : 0;
 
-  //assign gn13       = mdio_read ? 1'bz : wifi_gpio4; // wifi -> rmii
-  assign gn13 = 0;
-  // assign wifi_gpio4 = mdio_read ? gn13 : 1'bz;       // rmii -> wifi
-  // assign wifi_gpio4 = mdio_read ? 1'b0 : 1'bz;       // rmii -> wifi
+  // normal
+  assign gn13       = mdio_read ? 1'bz : wifi_gpio4; // wifi -> rmii
+  assign wifi_gpio4 = mdio_read ? gn13 : 1'bz;       // rmii -> wifi
+
+  // debug
+  //wire read_test = r_rmii_mdc_cnt == 11 ? 1 : 0; // 11 -> 0x8000, 26 -> 0x0001
+  //assign gn13 = 0;
+  //assign wifi_gpio4 = mdio_read ? read_test : 1'bz;       // rmii -> wifi
 
   // TX/RX passthru
   assign ftdi_rxd = wifi_txd;
