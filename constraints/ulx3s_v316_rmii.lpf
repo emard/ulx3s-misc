@@ -182,9 +182,18 @@ LOCATE COMP "wifi_gpio0" SITE "F1"; # wifi_en on v3.0.x
 LOCATE COMP "wifi_gpio19" SITE "N4"; # wifi_gpio5 on v3.0.x
 LOCATE COMP "wifi_gpio21" SITE "K5";
 LOCATE COMP "wifi_gpio22" SITE "L2"; # wifi_gpio0 on v3.0.x
+LOCATE COMP "wifi_gpio25" SITE "E9";
 LOCATE COMP "wifi_gpio26" SITE "L1"; # wifi_gpio16 on v3.0.x
 LOCATE COMP "wifi_gpio27" SITE "N3"; # wifi_gpio17 on v3.0.x
 LOCATE COMP "wifi_gpio35" SITE "E6"; # FPGA transmits to WiFi
+# wifi lines shared with SD card (also defined as sd_*)
+LOCATE COMP "wifi_gpio2" SITE "J3"; # sd_dat0_do (MISO) WiFi GPIO2
+LOCATE COMP "wifi_gpio4" SITE "H1"; # sd_dat1_irq WiFi GPIO4
+LOCATE COMP "wifi_gpio12" SITE "K1"; # sd_dat2 WiFi_GPIO12
+LOCATE COMP "wifi_gpio13" SITE "K2"; # sd_dat3_csn WiFi_GPIO13
+LOCATE COMP "wifi_gpio14" SITE "H2"; # sd_clk WiFi_GPIO14
+LOCATE COMP "wifi_gpio15" SITE "J1"; # sd_cmd_di (MOSI) WiFi GPIO15
+# wifi lines shared with JTAG
 # LOCATE COMP "wifi_gpio5" SITE "U5"; # JTAG TMS, blue LED inverted logic
 # LOCATE COMP "wifi_gpio18" SITE "T5"; # JTAG TCK
 # LOCATE COMP "wifi_gpio23" SITE "R5"; # JTAG TDI
@@ -196,9 +205,17 @@ IOBUF  PORT "wifi_gpio0" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio19" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio21" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio22" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio25" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio26" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio27" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio35" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+# wifi lines shared with SD card (also defined as sd_*)
+IOBUF  PORT "wifi_gpio2" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio4" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio12" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio13" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio14" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio15" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## PCB antenna 433 MHz (may be also used for FM) "usb" sheet
 LOCATE COMP "ant_433mhz" SITE "G1";
