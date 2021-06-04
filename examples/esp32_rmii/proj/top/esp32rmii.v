@@ -69,41 +69,45 @@ module esp32rmii
   assign wifi_gpio25 = rmii_rx0;
   assign wifi_gpio26 = rmii_rx1;
 
+  // protocol analyzer to generate 3-state control signal
   assign rmii_mdc   = wifi_gpio12; // wifi -> rmii, wifi generates MDC clock 2.5 MHz typical
-  // TODO protocol analyzer to generate 3-state signal
-  reg    mdio_read  = 0;
-  assign gn13       = mdio_read ? 1'bz : wifi_gpio4; // wifi -> rmii
-  assign wifi_gpio4 = mdio_read ? (gn13 & 0) : 1'bz;       // rmii -> wifi
   wire   wifi_mdio  = wifi_gpio4; // analyzer listens to wifi side
-
   reg [1:0] r_rmii_mdc; // MDC edge detection
   localparam c_rmii_mdio_bits = 36;
   reg [c_rmii_mdio_bits-1:0] r_rmii_mdio; // MDIO shift register
-  localparam c_rmii_mdc_cnt_bits = 5;
+  localparam c_rmii_mdc_cnt_bits = 6;
   reg [c_rmii_mdc_cnt_bits-1:0] r_rmii_mdc_cnt = 0;
-  always @(posedge clk_25mhz)
-    r_rmii_mdc <= {rmii_mdc, r_rmii_mdc[1]};
   reg [15:0] r_blink;
+  reg mdio_read  = 0; // 3-state control signal
   always @(posedge clk_25mhz)
   begin
+    r_rmii_mdc <= {rmii_mdc, r_rmii_mdc[1]};
     if(r_rmii_mdc == 2'b10) // rising edge
     begin
-      r_rmii_mdio <= {r_rmii_mdio[c_rmii_mdio_bits-2:1], wifi_mdio};
+      r_rmii_mdio <= {r_rmii_mdio[c_rmii_mdio_bits-2:0], wifi_mdio};
       if(r_rmii_mdc_cnt == 26)
       begin // wait for new preamble and read cycle
-        if(r_rmii_mdio[19:4] == 16'hFFFF && r_rmii_mdio[3:0] == 4'b0110)
+        if(r_rmii_mdio[31:0] == 32'hFFFFFFF6)
+        begin
           // read cycle detected, reset counter
           r_rmii_mdc_cnt <= 0;
+          r_blink <= r_blink+1;
+        end
       end
       else // read cycle active, increment
         r_rmii_mdc_cnt <= r_rmii_mdc_cnt + 1; // increment
-      if(r_rmii_mdc_cnt == 1)
-        r_blink <= r_blink+1;
     end
-    mdio_read <= r_rmii_mdc_cnt ==  9 ? 1 // begin 3-state read
-               : r_rmii_mdc_cnt == 25 ? 0 // end   3-state read
+    mdio_read <= r_rmii_mdc_cnt == 12 ? 1 // begin 3-state read
+               : r_rmii_mdc_cnt == 14 ? 0 // end   3-state read
                : mdio_read;               // no change
   end
+  
+  wire read_test = 0; // r_rmii_mdc_cnt == 12 ? 1 : 0;
+
+  //assign gn13       = mdio_read ? 1'bz : wifi_gpio4; // wifi -> rmii
+  assign gn13 = 0;
+  // assign wifi_gpio4 = mdio_read ? gn13 : 1'bz;       // rmii -> wifi
+  // assign wifi_gpio4 = mdio_read ? 1'b0 : 1'bz;       // rmii -> wifi
 
   // TX/RX passthru
   assign ftdi_rxd = wifi_txd;
@@ -182,6 +186,7 @@ module esp32rmii
   assign led[0] = wifi_gpio2;
 */
   assign led = r_blink[7:0];
+  //assign led = r_rmii_mdc_cnt;
 
 endmodule
 `default_nettype wire
