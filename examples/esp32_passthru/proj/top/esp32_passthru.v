@@ -8,7 +8,7 @@ module esp32_passthru
   // 0 to disable
   // 9 or more to reset ESP32 at power up
   //   (for boards where ESP32 doesn't boot at power up)
-  //   Board reason yet unknown
+  //   wifi_gpio0-15k-3.3V pullup missing
   C_powerup_en_time = 10,
   // timeout to release SD lines after programing ESP32
   C_prog_release_timeout = 26 // default n=26, 2^n / 25MHz = 2.6s
