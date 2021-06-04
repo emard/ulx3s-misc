@@ -34,9 +34,6 @@ module esp32rmii
   output       gp13,
   output            gp10,
   output       gn9, gn10,
-  //inout [27:0] gp,gn,
-  //inout  [3:0] sd_d, // wifi_gpio 13,12,4,2
-  //input        sd_cmd, sd_clk,
   output       sd_wp // BGA pin exists but not connected on PCB
 );
   // ETH RMII LAN8720 signals labelled on the PCB
@@ -60,8 +57,6 @@ module esp32rmii
   // GPIO26 - EMAC_RXD1   : RX1
   // GPIO27 - EMAC_RX_DV  : CRS
 
-  // assign wifi_gpio0  = rmii_nint; // GPIO00 - EMAC_TX_CLK : nINT/REFCLK (50MHz)
-
   assign rmii_tx_en  = wifi_gpio21;
   assign rmii_tx0    = wifi_gpio19;
   assign rmii_tx1    = wifi_gpio22;
@@ -73,13 +68,14 @@ module esp32rmii
   assign rmii_mdc   = wifi_gpio12; // wifi -> rmii, wifi generates MDC clock 2.5 MHz typical
   wire   wifi_mdio  = wifi_gpio4; // analyzer listens to wifi side
   reg [1:0] r_rmii_mdc; // MDC edge detection
-  localparam c_rmii_mdio_bits = 36;
+  localparam c_rmii_mdio_bits = 32;
   reg [c_rmii_mdio_bits-1:0] r_rmii_mdio; // MDIO shift register
   localparam c_rmii_mdc_cnt_bits = 6;
   reg [c_rmii_mdc_cnt_bits-1:0] r_rmii_mdc_cnt = 0;
-  reg [15:0] r_blink;
+  reg [7:0] r_blink;
   reg mdio_read  = 0; // 3-state control signal
-  always @(posedge clk_25mhz)
+  //always @(posedge clk_25mhz)
+  always @(posedge rmii_nint)
   begin
     r_rmii_mdc <= {rmii_mdc, r_rmii_mdc[1]};
     if(r_rmii_mdc == 2'b10) // rising edge
@@ -115,68 +111,29 @@ module esp32rmii
   assign ftdi_rxd = wifi_txd;
   assign wifi_rxd = ftdi_txd;
 
-  // Programming logic
-  // SERIAL  ->  ESP32
-  // DTR RTS -> EN IO0
-  //  1   1     1   1
-  //  0   0     1   1
-  //  1   0     0   1
-  //  0   1     1   0
+  // BTN1 -> reset and strapping timing
 
-/*
-  reg  [1:0] R_prog_in;
-  wire [1:0] S_prog_in  = { ftdi_ndtr, ftdi_nrts };
-  wire [1:0] S_prog_out = S_prog_in == 2'b10 ? 2'b01 
-                        : S_prog_in == 2'b01 ? 2'b10 : 2'b11;
-*/
   reg [C_powerup_en_time:0] R_powerup_en_time = 1;
   generate
   if(C_powerup_en_time)
   always @(posedge clk_25mhz)
-  begin
     R_powerup_en_time <= btn[1] ? 0 
                        : R_powerup_en_time[C_powerup_en_time] ? R_powerup_en_time
                        : R_powerup_en_time + 1; // increment until MSB=0
-  end
   endgenerate
 
   reg [C_powerup_strap_time:0] R_powerup_strap_time = 1;
   generate
   if(C_powerup_strap_time)
   always @(posedge clk_25mhz)
-  begin
     R_powerup_strap_time <= btn[1] ? 0 
                           : R_powerup_strap_time[C_powerup_strap_time] ? R_powerup_strap_time
                           : R_powerup_strap_time + 1; // increment until MSB=0
-  end
   endgenerate
 
-  assign wifi_en = R_powerup_en_time[C_powerup_en_time] ? 1 : 0; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
+  assign wifi_en = R_powerup_en_time[C_powerup_en_time] ? 1 : 0;
   assign wifi_gpio0 = R_powerup_strap_time[C_powerup_strap_time] ? rmii_nint : 1;
 
-/*
-  //assign wifi_en = S_prog_out[1];
-  assign wifi_en = S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
-  assign wifi_gpio0 = R_powerup_en_time[C_powerup_en_time] ? rmii_nint : S_prog_out[0];
-  //assign wifi_gpio0 = S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
-
-  // detecting start of programming ESP32 and reset timeout
-  reg [C_prog_release_timeout:0] R_prog_release = -1;
-  always @(posedge clk_25mhz)
-  begin
-    R_prog_in <= S_prog_in;
-    if(R_prog_in != 2'b10 && S_prog_in == 2'b10)
-      R_prog_release <= 0; // keep resetting during start of ESP32 programming
-    else
-      if(R_prog_release[C_prog_release_timeout] == 1'b0)
-        R_prog_release <= R_prog_release + 1; // increment until MSB=0
-  end
-  // wifi_gpio2 for programming must go together with wifi_gpio0
-  // wifi_gpio12 (must be 0 for esp32-wrover fuse unprogrammed, maybe 1 for esp32-wroom)
-  assign sd_d  = R_prog_release[C_prog_release_timeout] ? 4'hz : { 3'b101, S_prog_out[0] }; // wifi_gpio 13,12,4,2
-  assign sd_wp = sd_clk | sd_cmd | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
-  // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
-*/
 /*
   assign led[7] = wifi_en;
   assign led[6] = ~R_powerup_en_time[C_powerup_en_time];
@@ -187,8 +144,7 @@ module esp32rmii
   assign led[1] = wifi_gpio4;
   assign led[0] = wifi_gpio2;
 */
-  assign led = r_blink[7:0];
-  //assign led = r_rmii_mdc_cnt;
+  assign led = r_blink;
 
 endmodule
 `default_nettype wire
