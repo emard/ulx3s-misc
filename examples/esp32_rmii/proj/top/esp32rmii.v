@@ -81,7 +81,7 @@ module esp32rmii
     if(r_rmii_mdc == 2'b10) // rising edge
     begin
       r_rmii_mdio <= {r_rmii_mdio[c_rmii_mdio_bits-2:0], wifi_mdio};
-      if(r_rmii_mdc_cnt == 26)
+      if(r_rmii_mdc_cnt[c_rmii_mdc_cnt_bits-1]) // read cycle finished
       begin // wait for new preamble and read cycle
         if(r_rmii_mdio[31:0] == 32'hFFFFFFF6)
         begin
@@ -94,7 +94,7 @@ module esp32rmii
         r_rmii_mdc_cnt <= r_rmii_mdc_cnt + 1; // increment
     end
     mdio_read <= r_rmii_mdc_cnt == 11 ? 1 // begin 3-state read
-               : r_rmii_mdc_cnt == 26 ? 0 // end   3-state read
+               : r_rmii_mdc_cnt[c_rmii_mdc_cnt_bits-1] ? 0 // end   3-state read
                : mdio_read;               // no change
   end
 
