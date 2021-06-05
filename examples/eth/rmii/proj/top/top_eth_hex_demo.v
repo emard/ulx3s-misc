@@ -15,7 +15,9 @@ module top_eth_hex_demo
   input  wire clk_25mhz,
   input  wire [6:0] btn,
   output wire [7:0] led,
-  inout  wire [27:0] gp,gn,
+  input  wire gp11, gn11, gp12, gn12,
+  output wire gn9,  gp10, gn10, gp13,
+  inout  wire gn13,
   output wire [3:0] gpdi_dp,
   output wire oled_csn,
   output wire oled_clk,
@@ -52,19 +54,19 @@ module top_eth_hex_demo
   wire clk_pixel = clocks[1];
   
   // ETH RMII LAN8720 signals labelled on the PCB
-  wire rmii_tx_en ; assign gn[10] = rmii_tx_en; // 0:RX 1:TX
-  wire rmii_tx0   ; assign gp[10] = rmii_tx0;
-  wire rmii_tx1   ; assign gn[9]  = rmii_tx1;
-  wire rmii_crs   =        gp[12]; // 0:IDLE 1:RX DATA VALID
-  wire rmii_rx0   =        gn[11];
-  wire rmii_rx1   =        gp[11];
-  wire rmii_nint  =        gn[12]; // clock 50MHz
-  wire rmii_mdio  =        gn[13]; // bidirectional
-  wire rmii_mdc   ; assign gp[13] = rmii_mdc;
+  wire rmii_tx_en ; assign gn10 = rmii_tx_en; // 0:RX 1:TX
+  wire rmii_tx0   ; assign gp10 = rmii_tx0;
+  wire rmii_tx1   ; assign gn9  = rmii_tx1;
+  wire rmii_crs   =        gp12; // 0:IDLE 1:RX DATA VALID
+  wire rmii_rx0   =        gn11;
+  wire rmii_rx1   =        gp11;
+  wire rmii_nint  =        gn12; // clock 50MHz
+  wire rmii_mdio  =        gn13; // bidirectional
+  wire rmii_mdc   ; assign gp13 = rmii_mdc;
 
   wire rmii_clk   = rmii_nint;
   assign rmii_mdc = 0; // management clock held 0
-  // assign gn[13] = 0; // not necessary to hold data 0
+  // assign gn13 = 0; // not necessary to hold data 0
 
   reg [1:0] R_data[0:2**(datab2n-1)-1]; // collects data
   reg [1:0] preamble = 1; // 0:data, 1:wait 5, 2:wait non-5, 3:skip 
