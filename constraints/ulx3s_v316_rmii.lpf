@@ -365,6 +365,8 @@ IOBUF PORT "gpdi_scl" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 # gp[] (+) are used, gn[] (-) are ignored from design
 # as they handle inverted signal by default.
 # To enable differential, rename LVCMOS33->LVCMOS33D
+# FEMALE ANGLED (90 deg PMOD) on TOP or
+# MALE VERTICAL ( 0 deg pins) on BOTTOM and flat cable
 LOCATE COMP "gp[0]"  SITE "B11";
 LOCATE COMP "gn[0]"  SITE "C11";
 LOCATE COMP "gp[1]"  SITE "A10";
@@ -482,6 +484,8 @@ IOBUF PORT  "gn[27]" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 # Allows mixed input, output, bidirectional, clock, differential
 # If any of individual gp is used, then don't use gp[] vector.
 # Same for gn and gn[].
+# FEMALE ANGLED (90 deg PMOD) on TOP or
+# MALE VERTICAL ( 0 deg pins) on BOTTOM and flat cable
 LOCATE COMP "gp0"  SITE "B11";
 LOCATE COMP "gn0"  SITE "C11";
 LOCATE COMP "gp1"  SITE "A10";
