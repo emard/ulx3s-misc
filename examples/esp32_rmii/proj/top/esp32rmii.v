@@ -24,16 +24,12 @@ module esp32rmii
   input        wifi_txd,
   output       wifi_rxd,
   output       wifi_en,
-  inout        wifi_gpio4,
-  input        wifi_gpio12,
-  input        wifi_gpio19, wifi_gpio21, wifi_gpio22,
+  input        wifi_gpio12, wifi_gpio19, wifi_gpio21, wifi_gpio22,
   output       wifi_gpio0,  wifi_gpio25, wifi_gpio26, wifi_gpio27,
-  input        gp11, gp12,
-  input        gn11, gn12,
+  inout        wifi_gpio4,
+  input        gp11, gn11, gp12, gn12,
+  output       gn9,  gp10, gn10, gp13,
   inout        gn13,
-  output       gp13,
-  output            gp10,
-  output       gn9, gn10,
   output       sd_wp // BGA pin exists but not connected on PCB
 );
   // ETH RMII LAN8720 signals labelled on the PCB
