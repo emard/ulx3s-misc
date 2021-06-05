@@ -71,7 +71,7 @@ begin
 	begin
 		for j in 1 to c_bits loop
 			no_ones_below(j) <= no_ones_below(j-1) and not q(j-1);
-		end generate;
+		end loop;
 	end process;
 
 	-- Copy over everything but the imaginary bit
