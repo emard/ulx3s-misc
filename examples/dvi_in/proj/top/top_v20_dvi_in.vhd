@@ -432,7 +432,7 @@ begin
       lcd_video_inst: entity work.lcd_video_vhd
       generic map
       (
-        c_clk_mhz      => 25,
+        c_clk_spi_mhz  => 25,
         c_init_file    => "st7789_linit_xflip.mem",
         c_init_size    => 38,
         c_clk_phase    => 0,
@@ -440,7 +440,8 @@ begin
       )
       port map
       (
-        clk            => clk_25mhz,
+        clk_spi        => clk_25mhz,
+        clk_pixel      => clk_25mhz,
         clk_pixel_ena  => '1',
         reset          => reset,
         x              => x,
