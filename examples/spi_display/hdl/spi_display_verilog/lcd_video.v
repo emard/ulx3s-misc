@@ -4,7 +4,7 @@
 
 module lcd_video #(
   parameter c_clk_spi_mhz = 25, // MHz clk freq (125 MHz max for st7789)
-  parameter c_reset_us = 150000, // us holding hardware reset
+  parameter c_reset_us = 150000, // us hold hardware reset, countdown
   parameter c_color_bits = 16, // RGB565
   parameter c_vga_sync = 0,  // 0:free running, 1:sync to hsync/vsync/blank
   parameter c_x_size = 240,  // pixel X screen size
@@ -105,8 +105,8 @@ module lcd_video #(
       clken <= 0;
     end else if (delay_cnt[$bits(delay_cnt)-1] == 0) begin // Delay
       delay_cnt <= delay_cnt - 1;
-      resn <= 1;
     end else if (index[10:4] != c_init_size) begin
+      resn <= 1;
       index <= index + 1;
       if (index[3:0] == 0) begin // Start of byte
         if (init) begin // Still initialisation
