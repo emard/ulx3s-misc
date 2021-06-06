@@ -22,9 +22,9 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-#CONSTRAINTS = ../../../constraints/ulx3s_v20.lpf
+CONSTRAINTS = ../../../constraints/ulx3s_v20.lpf
 #CONSTRAINTS = ../../../constraints/ulx3s_v314.lpf
-CONSTRAINTS = ../../../constraints/ulx3s_v316.lpf
+#CONSTRAINTS = ../../../constraints/ulx3s_v316.lpf
 TOP_MODULE = esp32_passthru
 TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
