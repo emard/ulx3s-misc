@@ -129,12 +129,13 @@ IOBUF  PORT "sd_clk" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "sd_cmd" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "sd_d[0]" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "sd_d[1]" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
-IOBUF  PORT "sd_d[2]" PULLMODE=NONE IO_TYPE=LVCMOS33 DRIVE=4; # WiFi GPIO12 pulldown bootstrapping requirement
+IOBUF  PORT "sd_d[2]" PULLMODE=NONE IO_TYPE=LVCMOS33 DRIVE=4; # WiFi GPIO12 pulldown bootstrapping without 3.3V efuse
 IOBUF  PORT "sd_d[3]" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "sd_wp" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "sd_cdn" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## ADC SPI (MAX11123) "analog", "ram" sheet
+# input lines shared with GP,GN14-17
 LOCATE COMP "adc_csn" SITE "R17";
 LOCATE COMP "adc_mosi" SITE "R16";
 LOCATE COMP "adc_miso" SITE "U16";
@@ -145,12 +146,9 @@ IOBUF  PORT "adc_miso" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "adc_sclk" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## Audio 4-bit DAC "analog", "gpio" sheet
-# 4-bit mode can drive down to 75 ohm load impedance.
-# Lower impedance leads to IO overload, 
-# FPGA will stop working and need reboot.
-# For standard 17 ohm earphones on PCB v1.7:
-# use bits 2,3 as input (High-Z) and drive only bits 0,1.
-# PCB v2.1.2 can use full 4 bits and 16mA drive for 17 ohm earphones.
+# output impedance: 75 ohm
+# Stereo 16 ohm earphones, analog audio,
+# SPDIF digital audio and composite video.
 LOCATE COMP "audio_l[3]" SITE "B3"; # JACK TIP (left audio)
 LOCATE COMP "audio_l[2]" SITE "C3";
 LOCATE COMP "audio_l[1]" SITE "D3";
@@ -214,6 +212,13 @@ IOBUF  PORT "wifi_gpio25" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio26" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio27" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF  PORT "wifi_gpio35" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+# wifi lines shared with SD card
+IOBUF  PORT "wifi_gpio2" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio4" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio12" PULLMODE=NONE IO_TYPE=LVCMOS33 DRIVE=4; # WiFi GPIO12 pulldown bootstrapping without 3.3V efuse
+IOBUF  PORT "wifi_gpio13" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio14" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
+IOBUF  PORT "wifi_gpio15" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## PCB antenna 433 MHz (may be also used for FM) "usb" sheet
 LOCATE COMP "ant_433mhz" SITE "G1";
@@ -596,11 +601,9 @@ IOBUF PORT  "gp27" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 IOBUF PORT  "gn27" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## PROGRAMN (reload bitstream from FLASH, exit from bootloader)
-# PCB v2.0.5 and higher
 LOCATE COMP "user_programn" SITE "M4";
 IOBUF  PORT "user_programn" PULLMODE=UP IO_TYPE=LVCMOS33 DRIVE=4;
 
 ## SHUTDOWN "power", "ram" sheet (connected from PCB v1.7.5)
-# on PCB v1.7 shutdown is not connected to FPGA
 LOCATE COMP "shutdown" SITE "G16"; # FPGA receives
 IOBUF  PORT "shutdown" PULLMODE=DOWN IO_TYPE=LVCMOS33 DRIVE=4;
