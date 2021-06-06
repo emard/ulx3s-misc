@@ -24,9 +24,9 @@ module lcd_video #(
 ) (
   input  wire reset,
   input  wire clk_pixel, // video data clock
-  input  wire clk_pixel_ena = 1,
+  input  wire clk_pixel_ena, // constant 1 or clk enable
   input  wire clk_spi, // SPI display clock rate will be half of this clock rate
-  input  wire clk_spi_ena = 1,
+  input  wire clk_spi_ena, // constant 1 or clk enable
   input  wire hsync, vsync, blank, // hsync not used
   input  wire [c_color_bits-1:0] color,
 
