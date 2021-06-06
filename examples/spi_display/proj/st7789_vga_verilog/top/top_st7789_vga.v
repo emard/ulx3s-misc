@@ -11,7 +11,6 @@ module top_st7789_vga
 );
   assign wifi_en = 1;
   assign wifi_gpio0 = btn[0];
-  wire S_reset = ~btn[0];
 
   // clock generator
   wire clk_locked;
@@ -30,6 +29,8 @@ module top_st7789_vga
   );
   wire clk_lcd = clocks[0];
   wire clk_pixel = clocks[1];
+
+  wire S_reset = ~btn[0] | btn[1] | ~clk_locked;
 
   // test picture video generator for debug purposes
   wire vga_hsync_test;
