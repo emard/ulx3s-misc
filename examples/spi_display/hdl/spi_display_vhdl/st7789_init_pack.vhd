@@ -23,58 +23,69 @@ package st7789_init_pack is
 
   constant C_st7789_init_seq: T_spi_display_init_seq :=
   (
--- after reset, delay 2^13 us = 8ms before sending commands
-x"80",
-x"0D",
--- SWRESET, delay 2^17 us = 131us
-x"01",
-x"80",
-x"11",
+-- after reset, delay 2^17 us = 131ms before sending commands
+x"80", x"11",
+
+-- green tab displays have strange power on default
+-- workaround is one dummy initialization first
+-- and then real initialization
+
+-- dummy initialization
+-- SWRESET, delay 2^14 us = 16ms
+x"01", x"80", x"0E",
 -- SLPOUT, delay 2^14 us = 16ms
-x"11",
-x"80",
-x"0E",
+x"11", x"80", x"0E",
+-- DISPOFF, delay 2^14 us = 16ms
+x"28", x"80", x"0E",
 -- COLMOD, 16-bit color, delay 2^14 us = 16ms
-x"3A",
-x"81",
-x"55",
-x"0E",
+x"3A", x"81",  x"55",  x"0E",
 -- MADCTL
-x"36",
-x"01",
-x"C0",
--- CASET X
-x"2A",
-x"04",
--- X start MSB,LSB
-x"00",
-x"00",
--- X end MSB,LSB
-x"00",
-x"EF",
--- RASET Y
-x"2B",
-x"04",
--- Y start MSB,LSB
-x"00",
-x"50",
--- Y end MSB,LSB
-x"01",
-x"3F",
+x"36", x"01",  x"C0",
+-- CASET X, start MSB,LSB, end MSB,LSB
+x"2A", x"04",  x"00", x"00",  x"00", x"EF",
+-- RASET Y, start MSB,LSB, end MSB,LSB
+x"2B", x"04",  x"00", x"00",  x"00", x"EF",
 -- INVON, delay 2^14 us = 16ms
-x"21",
-x"80",
-x"0E",
+x"21", x"80", x"0E",
 -- NORON, delay 2^14 us = 16ms
-x"13",
-x"80",
-x"0E",
+x"13", x"80", x"0E",
 -- DISPON, delay 2^14 us = 16ms
-x"29",
-x"80",
-x"0E",
+x"29", x"80", x"0E",
+
+-- real initialization
+-- SWRESET, delay 2^17 us = 131ms
+x"01", x"80", x"11",
+-- SLPOUT, delay 2^14 us = 16ms
+x"11", x"80", x"0E",
+-- DISPOFF, delay 2^14 us = 16ms
+x"28", x"80", x"0E",
+-- MADCTL
+x"36", x"01",  x"C0",
+-- COLMOD, 16-bit color, delay 2^14 us = 16ms
+x"3A", x"81",  x"55",  x"0E",
+-- PORCH SETTING, (frame rate) 5-param, delay 2^14 us = 16ms
+x"B2", x"85",  x"0C", x"0C", x"00", x"33", x"33",  x"0E",
+-- GATE CONTROL, 1-param
+x"B7", x"01",  x"35",
+-- VCOM SETTING
+x"BB", x"01",  x"2B",
+x"C0", x"01",  x"2C",
+x"C2", x"02",  x"01", x"FF",
+x"C3", x"01",  x"11",
+x"C4", x"01",  x"20",
+x"C6", x"01",  x"0F",
+x"D0", x"02",  x"A4", x"A1",
+-- CASET X, start MSB,LSB, end MSB,LSB
+x"2A", x"04",  x"00", x"00",  x"00", x"EF",
+-- RASET Y, start MSB,LSB, end MSB,LSB
+x"2B", x"04",  x"00", x"50",  x"01", x"3F",
+-- INVON, delay 2^14 us = 16ms
+x"21", x"80", x"0E",
+-- NORON, delay 2^14 us = 16ms
+x"13", x"80", x"0E",
+-- DISPON, delay 2^14 us = 16ms
+x"29", x"80", x"0E",
 -- RAMWR 2C 00
-x"2C",
-x"00"
+x"2C", x"00"
   );
 end;
