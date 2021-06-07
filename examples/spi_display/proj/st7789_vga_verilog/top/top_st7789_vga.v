@@ -73,7 +73,7 @@ module top_st7789_vga
   #(
     .c_clk_spi_mhz(125),
     .c_vga_sync(1),
-    //.c_init_file("st7789_linit_reliable.mem"),
+    //.c_init_file("st7789_linit_xyflip.mem"),
     //.c_init_size(110),
     .c_x_size(240),
     .c_y_size(240),
