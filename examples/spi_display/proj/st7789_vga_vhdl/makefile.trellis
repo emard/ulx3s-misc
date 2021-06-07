@@ -22,7 +22,6 @@ CONSTRAINTS = ../../../../constraints/ulx3s_v20.lpf
 TOP_MODULE = top_vgatest
 TOP_MODULE_FILE = top/$(TOP_MODULE).vhd
 
-# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
 $(TOP_MODULE_FILE) \
 ../../../ecp5pll/hdl/vhd/ecp5pll.vhd \
