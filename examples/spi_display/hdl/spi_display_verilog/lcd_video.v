@@ -4,7 +4,7 @@
 
 module lcd_video #(
   parameter c_clk_spi_mhz = 25, // MHz clk freq (125 MHz max for st7789)
-  parameter c_reset_us = 150000, // us hold hardware reset, countdown
+  parameter c_reset_us = 10000, // us hold hardware reset
   parameter c_color_bits = 16, // RGB565
   parameter c_vga_sync = 0,  // 0:free running, 1:sync to hsync/vsync/blank
   parameter c_x_size = 240,  // pixel X screen size
@@ -16,7 +16,7 @@ module lcd_video #(
   // file name is relative to directory path in which verilog compiler is running
   // screen can be also XY flipped and/or rotated from this init file
   parameter c_init_file = "st7789_linit.mem",
-  parameter c_init_size = 38, // bytes in init file
+  parameter c_init_size = 110, // bytes in init file
   // although SPI CLK will be stopped during
   // arg parsing and delays, to be on the safe side
   // this will put NOP command at SPI MOSI line
