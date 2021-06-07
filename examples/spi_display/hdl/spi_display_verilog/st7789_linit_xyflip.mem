@@ -1,56 +1,69 @@
 // ST7789 init lcd_video (display mounted pins down)
-// image XY-flip
-// 38 bytes
-// after reset, delay 2^13 us = 8ms before sending commands
-80
-0D
-// SWRESET, delay 2^17 us = 131us
-01
-80
-11
-// SLPOUT, delay 2^14 us = 16ms
-11
-80
-0E
-// COLMOD, 16-bit color, delay 2^14 us = 16ms
-3A
-81
-55
-0E
+// image normal (no flip)
+// 110 bytes
+//
+// Some displays don't initialize for the first time,
+// usually after power up or other use.
+// For the picture to appear reliably each time,
+// second initialization is required.
+//
+// first action is wait, no command
+// after reset, delay 2^17 us = 131ms before sending commands
+80 11
+// send command byte, optional data and optional wait
+//
+// **** dummy initialization ****
+// SLPOUT, 0-param, delay 2^1 us = 2us
+11 80 01
+// DISPOFF, 0-param, delay 2^1 us = 2us
+28 80 01
+// COLMOD, 16-bit color, 1-param, delay 2^1 us = 2us
+3A 81 55 01
 // MADCTL
-36
-01
-00
-// CASET X
-2A
-04
-// X start MSB,LSB
-00
-00
-// X end MSB,LSB
-00
-EF
-// RASET Y
-2B
-04
-// Y start MSB,LSB
-00
-00
-// Y end MSB,LSB
-00
-EF
-// INVON, delay 2^14 us = 16ms
-21
-80
-0E
-// NORON, delay 2^14 us = 16ms
-13
-80
-0E
-// DISPON, delay 2^14 us = 16ms
-29
-80
-0E
-// RAMWR 2C 00
-2C
-00
+36 01 C0
+// CASET X, 4-param, start MSB,LSB end MSB,LSB
+2A 04  00 00  00 EF
+// RASET Y, 4-param, start MSB,LSB end MSB,LSB
+2B 04  00 00  00 EF
+// INVON, 0-param, delay 2^1 us = 2us
+21 80 01
+// NORON, 0-param, delay 2^1 us = 2us
+13 80 01
+// DISPON, 0-param, delay 2^1 us = 2us
+29 80 01
+//
+// **** real initialization ****
+// SWRESET, 0-param, delay 2^17 us = 131us
+01 80 11
+// DISPOFF, 0-param, delay 2^14 us = 16ms
+28 80 0E
+// SLPOUT, 0-param, delay 2^14 us = 16ms
+11 80 0E
+// MADCTL, 1-param, RGB format
+36 01 00
+// COLMOD, 16-bit color, 1-param, delay 2^14 us = 16ms
+3A 81  55  0E
+// PORCH SETTING, (frame rate) 5-param, delay 2^14 us = 16ms
+B2 85  0C 0C 00 33 33  0E
+// GATE CONTROL, 1-param
+B7 01  35
+// VCOM SETTING
+BB 01  2B
+C0 01  2C
+C2 02  01 FF
+C3 01  11
+C4 01  20
+C6 01  0F
+D0 02  A4 A1
+// CASET X, 4-param, start MSB,LSB end MSB,LSB
+2A 04  00 00  00 EF
+// RASET Y, 4-param, start MSB,LSB end MSB,LSB
+2B 04  00 00  00 EF
+// INVON, 0-param, delay 2^14 us = 16ms
+21 80 0E
+// NORON, 0-param, delay 2^14 us = 16ms
+13 80 0E
+// DISPON, 0-param, delay 2^14 us = 16ms
+29 80 0E
+// RAMWR, 0-param
+2C 00
