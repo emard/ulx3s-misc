@@ -67,7 +67,8 @@ module top_st7789_vga
   assign led[0] = ~vga_blank_test;
   assign led[1] = vga_hsync_test;
   assign led[2] = vga_vsync_test;
-  assign led[7:3] = 0;
+  assign led[3] = ~oled_resn;
+  assign led[7:4] = 0;
   
   lcd_video
   #(
@@ -92,9 +93,10 @@ module top_st7789_vga
     .color(vga_rgb_test),
     .spi_resn(oled_resn),
     .spi_clk(oled_clk),
+    //.spi_csn(oled_csn), // 8-pin ST7789
     .spi_dc(oled_dc),
     .spi_mosi(oled_mosi)
   );
-  assign oled_csn = 1;
+  assign oled_csn = 1; // 7-pin ST7789
 
 endmodule
