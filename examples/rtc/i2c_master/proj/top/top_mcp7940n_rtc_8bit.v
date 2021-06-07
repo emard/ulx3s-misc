@@ -125,9 +125,9 @@ module top_mcp7940n_rtc_8bit
   #(
     .c_clk_mhz(25),
     .c_init_file("st7789_linit_xflip.mem"),
+    .c_init_size(110),
     .c_clk_phase(0),
-    .c_clk_polarity(1),
-    .c_init_size(38)
+    .c_clk_polarity(1)
   )
   lcd_video_inst
   (
