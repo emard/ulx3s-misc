@@ -112,8 +112,9 @@ architecture Behavioral of top_vgatest is
   constant video_timing : T_video_timing := F_video_timing(x,y,f);
   constant C_clk_shift_hz: natural := video_timing.f_pixel*4; -- *4 minimum
 
+  signal S_reset: std_logic;
   signal clocks: std_logic_vector(3 downto 0);
-  signal clk_pixel, clk_shift: std_logic;
+  signal clk_pixel, clk_shift, clk_locked: std_logic;
   signal vga_hsync, vga_vsync, vga_blank, vga_de: std_logic;
   signal vga_r, vga_g, vga_b: std_logic_vector(7 downto 0);
   signal dvid_red, dvid_green, dvid_blue, dvid_clock: std_logic_vector(1 downto 0);
@@ -135,12 +136,15 @@ begin
   )
   port map
   (
-    clk_i => clk_25MHz,
-    clk_o => clocks
+    clk_i  => clk_25MHz,
+    clk_o  => clocks,
+    locked => clk_locked
   );
   clk_shift <= clocks(0);
   clk_pixel <= clocks(1);
-  
+
+  S_reset <= not btn(0) or btn(1) or not clk_locked;
+
   vga_instance: entity work.vga
   generic map
   (
@@ -174,14 +178,16 @@ begin
   
   led(0) <= vga_hsync;
   led(1) <= vga_vsync;
-  led(7) <= vga_blank;
+  led(2) <= vga_blank;
+  led(3) <= not oled_resn;
+  led(7 downto 4) <= (others => '0');
 
   S_pixel <= vga_r(7 downto 3) & vga_g(7 downto 2) & vga_b(7 downto 3);
   spi_display_instance: entity work.spi_display
   generic map
   (
     c_clk_spi_mhz  => C_clk_shift_hz/1000000,
-    c_reset_us     => 1,
+    c_reset_us     => 10000,
     c_color_bits   => 16,
     c_clk_phase    => '0',
     c_clk_polarity => '1',
@@ -192,7 +198,7 @@ begin
   )
   port map
   (
-    reset          => not btn(0),
+    reset          => S_reset,
     clk_pixel      => clk_pixel, -- 25 MHz
     clk_pixel_ena  => '1',
     clk_spi        => clk_shift, -- 125 MHz
@@ -202,10 +208,10 @@ begin
     color          => S_pixel,
     spi_resn       => oled_resn,
     spi_clk        => oled_clk,
-    --spi_csn        => oled_csn,
+    --spi_csn        => oled_csn,  -- 8-pin ST7789
     spi_dc         => oled_dc,
     spi_mosi       => oled_mosi
   );
-  oled_csn <= '1';
+  oled_csn <= '1'; -- 7-pin ST7789
 
 end Behavioral;
