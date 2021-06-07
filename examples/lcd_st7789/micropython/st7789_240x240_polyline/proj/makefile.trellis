@@ -18,9 +18,10 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../../../../constraints/ulx3s_v20.lpf
+#CONSTRAINTS = ../../../../../constraints/ulx3s_v20.lpf
+CONSTRAINTS = ../../../../../constraints/ulx3s_v314.lpf
 #TOP_MODULE = top_st7789_spi_slave
-TOP_MODULE = top_st7789_spi_slave_polyline
+TOP_MODULE = top_st7789_spi_slave_polyline_v316
 TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
