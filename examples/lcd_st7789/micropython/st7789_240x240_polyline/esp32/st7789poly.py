@@ -31,7 +31,7 @@ class st7789poly:
   def polyline(self, poly, color:int):
     self.open_poly()
     self.write_poly(poly)
-    self.spi.write(end_poly)
+    self.spi.write(self.end_poly)
     self.close_poly(color)
 
   @micropython.viper
@@ -44,7 +44,7 @@ class st7789poly:
     self.csn.on()
 
   @micropython.viper
-  def open_poly(self, color:int):
+  def open_poly(self):
     while self.busy.value():
       continue
     self.csn.off()
