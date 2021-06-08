@@ -263,7 +263,7 @@ assign shutdown = 0;
   lcd_video
   #(
     .c_init_file("st7789_linit_xflip.mem"),
-    .c_init_size(110),
+    .c_init_size(35),
     .c_clk_spi_mhz(125)
   )
   lcd_video_inst

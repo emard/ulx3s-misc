@@ -15,7 +15,7 @@ module top_checkered (
     lcd_video #(
         .c_clk_mhz(25),
         .c_init_file("st7789_linit.mem"),
-        .c_init_size(110),
+        .c_init_size(35),
         .c_color_bits(16)
     ) lcd_video_inst (
         .clk(clk_25mhz),

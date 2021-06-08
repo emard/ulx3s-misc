@@ -220,7 +220,7 @@ module top_spirw_sdram_hex
   #(
     .c_clk_mhz(125),
     .c_init_file("st7789_linit_xflip.mem"),
-    .c_init_size(110),
+    .c_init_size(35),
     .c_clk_phase(0),
     .c_clk_polarity(1)
   )

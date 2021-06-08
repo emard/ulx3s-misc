@@ -174,7 +174,7 @@ module top_eink
     #(
         .c_clk_mhz(25),
         .c_init_file("st7789_linit_xflip.mem"),
-        .c_init_size(110),
+        .c_init_size(35),
         .c_clk_phase(0),
         .c_clk_polarity(1)
     )
