@@ -12,14 +12,17 @@ module top_st7789_vga
   assign wifi_en = 1;
   assign wifi_gpio0 = btn[0];
 
+  localparam c_clk_pixel_mhz = 25;
+  localparam c_clk_spi_mhz = 4*c_clk_pixel_mhz; // *4 or more
+
   // clock generator
   wire clk_locked;
   wire [3:0] clocks;
   ecp5pll
   #(
       .in_hz( 25*1000000),
-    .out0_hz(125*1000000),
-    .out1_hz( 25*1000000)
+    .out0_hz( c_clk_spi_mhz*1000000),
+    .out1_hz( c_clk_pixel_mhz*1000000)
   )
   ecp5pll_inst
   (
@@ -30,7 +33,7 @@ module top_st7789_vga
   wire clk_lcd = clocks[0];
   wire clk_pixel = clocks[1];
 
-  wire S_reset = ~btn[0] | btn[1] | ~clk_locked;
+  wire S_reset = ~btn[0] | btn[1];
 
   // test picture video generator for debug purposes
   wire vga_hsync_test;
@@ -69,13 +72,17 @@ module top_st7789_vga
   assign led[2] = vga_vsync_test;
   assign led[3] = ~oled_resn;
   assign led[7:4] = 0;
-  
+
   lcd_video
   #(
-    .c_clk_spi_mhz(125),
+    .c_clk_spi_mhz(c_clk_spi_mhz),
     .c_vga_sync(1),
-    .c_init_file("st7789_linit_yflip.mem"),
-    //.c_init_size(110),
+    .c_reset_us(1000),
+    //.c_init_file("st7789_linit_long.mem"),
+    //.c_init_size(75), // long init
+    //.c_init_size(35), // standard init (not long)
+    .c_clk_phase(0),
+    .c_clk_polarity(1),
     .c_x_size(240),
     .c_y_size(240),
     .c_color_bits(16)
@@ -85,7 +92,7 @@ module top_st7789_vga
     .reset(S_reset),
     .clk_pixel(clk_pixel), // 25 MHz
     .clk_pixel_ena(1),
-    .clk_spi(clk_lcd), // 125 MHz
+    .clk_spi(clk_lcd), // 100 MHz
     .clk_spi_ena(1),
     .blank(vga_blank_test),
     .hsync(vga_hsync_test),
