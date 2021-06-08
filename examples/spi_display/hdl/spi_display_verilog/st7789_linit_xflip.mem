@@ -1,60 +1,20 @@
 // ST7789 init lcd_video (display mounted pins down)
-// image normal (no flip)
-// 110 bytes
+// image x-flip
+// 2+3+4+3+2*6+3*3+2 = 35 bytes
 //
-// Some displays don't initialize for the first time,
-// usually after power up or other use.
-// For the picture to appear reliably each time,
-// second initialization is required.
+// Some displays won't initialize for the first time after power up.
+// workaround: 0.5s after 1st reset pulse, 2nd reset pulse.
 //
-// first action is wait, no command
+// first action is to wait (no command)
 // after reset, delay 2^17 us = 131ms before sending commands
 80 11
 // send command byte, optional data and optional wait
-//
-// **** dummy initialization ****
-// SLPOUT, 0-param, delay 2^1 us = 2us
-11 80 01
-// DISPOFF, 0-param, delay 2^1 us = 2us
-28 80 01
-// COLMOD, 16-bit color, 1-param, delay 2^1 us = 2us
-3A 81 55 01
-// MADCTL
-36 01 C0
-// CASET X, 4-param, start MSB,LSB end MSB,LSB
-2A 04  00 00  00 EF
-// RASET Y, 4-param, start MSB,LSB end MSB,LSB
-2B 04  00 00  00 EF
-// INVON, 0-param, delay 2^1 us = 2us
-21 80 01
-// NORON, 0-param, delay 2^1 us = 2us
-13 80 01
-// DISPON, 0-param, delay 2^1 us = 2us
-29 80 01
-//
-// **** real initialization ****
-// SWRESET, 0-param, delay 2^17 us = 131us
-01 80 11
-// DISPOFF, 0-param, delay 2^14 us = 16ms
-28 80 0E
-// SLPOUT, 0-param, delay 2^14 us = 16ms
-11 80 0E
-// MADCTL, 1-param, RGB format
-36 01 80
+// SLPOUT, 0-param, delay 2^17 us = 131ms
+11 80 11
 // COLMOD, 16-bit color, 1-param, delay 2^14 us = 16ms
 3A 81  55  0E
-// PORCH SETTING, (frame rate) 5-param, delay 2^14 us = 16ms
-B2 85  0C 0C 00 33 33  0E
-// GATE CONTROL, 1-param
-B7 01  35
-// VCOM SETTING
-BB 01  2B
-C0 01  2C
-C2 02  01 FF
-C3 01  11
-C4 01  20
-C6 01  0F
-D0 02  A4 A1
+// MADCTL
+36 01  80
 // CASET X, 4-param, start MSB,LSB end MSB,LSB
 2A 04  00 00  00 EF
 // RASET Y, 4-param, start MSB,LSB end MSB,LSB

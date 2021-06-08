@@ -1,0 +1,41 @@
+// ST7789 init lcd_video (display mounted pins down)
+// image normal (no flip)
+// 2+4*3+4+8+3*3+4+3*3+4+2*6+3*3+2 = 75 bytes
+// first action is wait, no command
+// after reset, delay 2^1 us = 2us before sending commands
+80 11
+// send command byte, optional data and optional wait
+// SWRESET, 0-param, delay 2^17 us = 131us
+01 80 11
+// SLPOUT, 0-param, delay 2^14 us = 16ms
+11 80 0E
+// DISPOFF, 0-param, delay 2^14 us = 16ms
+28 80 0E
+// MADCTL, 1-param, RGB format
+36 01 C0
+// COLMOD, 16-bit color, 1-param, delay 2^14 us = 16ms
+3A 81  55  0E
+// PORCH SETTING, (frame rate) 5-param, delay 2^14 us = 16ms
+B2 85  0C 0C 00 33 33  0E
+// GATE CONTROL, 1-param
+B7 01  35
+// VCOM SETTING
+BB 01  2B
+C0 01  2C
+C2 02  01 FF
+C3 01  11
+C4 01  20
+C6 01  0F
+D0 02  A4 A1
+// CASET X, 4-param, start MSB,LSB end MSB,LSB
+2A 04  00 00  00 EF
+// RASET Y, 4-param, start MSB,LSB end MSB,LSB
+2B 04  00 50  01 3F
+// INVON, 0-param, delay 2^14 us = 16ms
+21 80 0E
+// NORON, 0-param, delay 2^14 us = 16ms
+13 80 0E
+// DISPON, 0-param, delay 2^14 us = 16ms
+29 80 0E
+// RAMWR, 0-param
+2C 00
