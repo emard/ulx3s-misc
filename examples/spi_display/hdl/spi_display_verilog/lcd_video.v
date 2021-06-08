@@ -5,6 +5,7 @@
 module lcd_video #(
   parameter c_clk_spi_mhz = 25, // MHz clk freq (125 MHz max for st7789)
   parameter c_reset_us = 10000, // us hold hardware reset
+  parameter c_reset2_us = 500000, // us after 1st reset, 2nd reset pulse (st7789 cold boot)
   parameter c_color_bits = 16, // RGB565
   parameter c_vga_sync = 0,  // 0:free running, 1:sync to hsync/vsync/blank
   parameter c_x_size = 240,  // pixel X screen size
@@ -16,7 +17,7 @@ module lcd_video #(
   // file name is relative to directory path in which verilog compiler is running
   // screen can be also XY flipped and/or rotated from this init file
   parameter c_init_file = "st7789_linit.mem",
-  parameter c_init_size = 110, // bytes in init file
+  parameter c_init_size = 35, // bytes in init file
   // although SPI CLK will be stopped during
   // arg parsing and delays, to be on the safe side
   // this will put NOP command at SPI MOSI line
@@ -44,6 +45,18 @@ module lcd_video #(
   reg [7:0] c_oled_init[0:c_init_size-1];
   initial begin
     $readmemh(c_init_file, c_oled_init);
+  end
+
+  // generate 2nd reset pulse for cold boot display start
+  localparam reset2at = c_reset2_us*c_clk_spi_mhz;
+  localparam resetpulse_bits = $clog2(reset2at);
+  reg [resetpulse_bits:0] resetpulse_cnt = reset2at;
+  reg reset2nd = 0;
+  always @(posedge clk_spi)
+  begin
+    if(resetpulse_cnt[resetpulse_bits] == 0)
+      resetpulse_cnt <= resetpulse_cnt - 1;
+    reset2nd <= resetpulse_cnt == 0;
   end
 
   reg [c_x_bits-1:0] R_x_in;
@@ -90,7 +103,7 @@ module lcd_video #(
 
   // Do the initialisation sequence and then start sending pixels
   always @(posedge clk_spi) begin
-    if (reset) begin
+    if (reset || reset2nd) begin
       delay_cnt <= c_reset_us*c_clk_spi_mhz;
       delay_set <= 0;
       index <= 0;
@@ -110,10 +123,10 @@ module lcd_video #(
       index <= index + 1;
       if (index[3:0] == 0) begin // Start of byte
         if (init) begin // Still initialisation
-          dc <= 0;
           arg <= arg + 1;
           if (arg == 0) begin // New command
-            data <= c_nop; // No NOP
+            dc <= 0;
+            data <= c_nop; // NOP
             clken <= 0;
             last_cmd <= next_byte;
           end else if (arg == 1) begin // numArgs and delay_set
