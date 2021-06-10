@@ -17,7 +17,7 @@ entity spi_display is
 generic
 (
   c_clk_spi_mhz  : natural   := 25;     -- MHz clk freq (125 MHz max for st7789)
-  c_reset_us     : natural   := 10000;  -- us holding hardware reset
+  c_reset_us     : natural   := 1000;   -- us holding hardware reset
   c_color_bits   : natural   := 16;     -- RGB565
   c_clk_phase    : std_logic := '0';    -- spi_clk phase
   c_clk_polarity : std_logic := '1';    -- spi_clk polarity and idle state 0:normal; 1:inverted (for st7789)
@@ -118,9 +118,9 @@ begin
         index <= index + 1;
         if index(3 downto 0) = 0 then
           if init = '1' then -- Still initialisation
-            dc <= '0';
             arg <= arg + 1;
             if arg = 0 then -- New command
+              dc <= '0';
               data <= c_nop; -- No NOP
               clken <= '0';
               last_cmd <= next_byte;
