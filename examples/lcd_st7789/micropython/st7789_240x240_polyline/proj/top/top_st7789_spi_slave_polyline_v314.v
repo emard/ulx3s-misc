@@ -44,7 +44,7 @@ module top_st7789_spi_slave_polyline_v314
   );
   wire   clk = clocks[0];
 
-  assign wifi_gpio0 = btn[0];
+  //assign wifi_gpio0 = btn[0];
   assign wifi_en    = 1;
 
   // passthru to ESP32 micropython serial console
@@ -160,7 +160,7 @@ module top_st7789_spi_slave_polyline_v314
   draw_polyline_inst
   (
     .clk(clk),
-    .reset(~btn[0]),
+    .reset(btn[1]),
     .plot(polyline_plot), // input rising edge starts process
     .busy(polyline_busy), // output, 1 during busy
     .addr(polyline_addr), // output addr to buffer
@@ -225,7 +225,7 @@ module top_st7789_spi_slave_polyline_v314
   wire w_oled_csn;
   lcd_video
   #(
-    .c_clk_mhz(125),
+    .c_clk_mhz(100),
     .c_init_file("st7789_linit_xflip.mem"),
     .c_init_size(35),
     .c_clk_phase(0),
@@ -233,8 +233,11 @@ module top_st7789_spi_slave_polyline_v314
   )
   lcd_video_inst
   (
-    .clk(clk),
-    .reset(~btn[0]),
+    .clk_spi(clk),
+    .clk_spi_ena(1),
+    .clk_video(clk),
+    .clk_video_ena(1),
+    .reset(btn[1]),
     .x(x),
     .y(y),
     .next_pixel(next_pixel),
@@ -257,3 +260,4 @@ module top_st7789_spi_slave_polyline_v314
   assign led[7]   = polyline_busy;
 
 endmodule
+`default_nettype wire
