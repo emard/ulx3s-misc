@@ -1,6 +1,6 @@
 `default_nettype none
 // polyline demo for st7789
-module top_st7789_spi_slave_polyline_v316
+module top_st7789_spi_slave_polyline_v314
 #(  // choose one of
   parameter c_lcd = 1, // SPI to display
   parameter c_hex = 0  // see RAM in HEX (must comment .spi_*() from draw_polyline)
