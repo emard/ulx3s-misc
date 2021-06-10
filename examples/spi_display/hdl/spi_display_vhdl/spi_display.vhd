@@ -18,6 +18,7 @@ generic
 (
   c_clk_spi_mhz  : natural   := 25;     -- MHz clk freq (125 MHz max for st7789)
   c_reset_us     : natural   := 1000;   -- us holding hardware reset
+  c_reset2_us    : natural   := 500000; -- us after 1st reset, 2nd reset pulse (st7789 cold boot)
   c_color_bits   : natural   := 16;     -- RGB565
   c_clk_phase    : std_logic := '0';    -- spi_clk phase
   c_clk_polarity : std_logic := '1';    -- spi_clk polarity and idle state 0:normal; 1:inverted (for st7789)
@@ -47,6 +48,10 @@ end;
 architecture rtl of spi_display is
   constant c_init_index_bits: natural := integer(ceil(log2(real(c_init_seq'length))));
   constant c_init_size: unsigned(c_init_index_bits+3 downto 4) := to_unsigned(c_init_seq'length,c_init_index_bits);
+  constant c_resetpulse_bits: natural := 28; -- $clog2(reset2at);
+  constant c_reset2at: unsigned(c_resetpulse_bits-1 downto 0) := to_unsigned(c_reset2_us*c_clk_spi_mhz,c_resetpulse_bits);
+  signal resetpulse_cnt: unsigned(c_resetpulse_bits-1 downto 0) := c_reset2at;
+  signal reset2nd: std_logic := '0';
   signal index: unsigned(c_init_index_bits+3 downto 0);
   signal data: std_logic_vector(7 downto 0) := c_nop;
   signal dc: std_logic := '1';
@@ -73,6 +78,21 @@ architecture rtl of spi_display is
   type T_scanline is array (0 to c_x_size-1) of std_logic_vector(C_color_bits-1 downto 0); -- buffer for one scan line
   signal R_scanline: T_scanline;
 begin
+  -- generate 2nd reset pulse for cold boot display start
+  process(clk_spi)
+  begin
+    if rising_edge(clk_spi) then
+      if resetpulse_cnt = 0 then
+        reset2nd <= '1';
+      else
+        reset2nd <= '0';
+      end if;
+      if resetpulse_cnt(c_resetpulse_bits-1) = '0' then
+        resetpulse_cnt <= resetpulse_cnt - 1;
+      end if;
+    end if;
+  end process;
+  
   -- track signal's pixel coordinates and buffer one line
   S_x_in_inc  <= R_x_in+1 when R_x_in /= c_x_size else R_x_in;
   S_x_in_next <= S_x_in_inc when blank = '0' else (others => '0');
@@ -98,7 +118,7 @@ begin
   process(clk_spi)
   begin
     if rising_edge(clk_spi) and clk_spi_ena = '1' then
-      if reset = '1' then
+      if reset = '1' or reset2nd = '1' then
         delay_cnt <= C_delay_cnt_init;
         delay_set <= '0';
         index <= (others => '0');
