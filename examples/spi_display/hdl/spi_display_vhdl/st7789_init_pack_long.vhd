@@ -25,25 +25,35 @@ package st7789_init_pack is
   (
 -- after reset, delay 2^17 us = 131ms before sending commands
 x"80", x"11",
--- SWRESET, 0-param, delay 2^14 us = 16ms
---x"01", x"80", x"0E",
--- SLPOUT, 0-param, delay 2^17 us = 131ms
-x"11", x"80", x"11",
--- DISPOFF, 0-param, delay 2^14 us = 16ms
---x"28", x"80", x"0E",
--- COLMOD, 1-param, 16-bit color, delay 2^14 us = 16ms
-x"3A", x"81",  x"55",  x"0E",
--- MADCTL, 1-param
+-- SLPOUT, delay 2^14 us = 16ms
+x"11", x"80", x"0E",
+-- DISPOFF, delay 2^14 us = 16ms
+x"28", x"80", x"0E",
+-- MADCTL
 x"36", x"01",  x"C0",
--- CASET X, 4-param start MSB,LSB, end MSB,LSB
+-- COLMOD, 16-bit color, delay 2^14 us = 16ms
+x"3A", x"81",  x"55",  x"0E",
+-- PORCH SETTING, (frame rate) 5-param, delay 2^14 us = 16ms
+x"B2", x"85",  x"0C", x"0C", x"00", x"33", x"33",  x"0E",
+-- GATE CONTROL, 1-param
+x"B7", x"01",  x"35",
+-- VCOM SETTING
+x"BB", x"01",  x"2B",
+x"C0", x"01",  x"2C",
+x"C2", x"02",  x"01", x"FF",
+x"C3", x"01",  x"11",
+x"C4", x"01",  x"20",
+x"C6", x"01",  x"0F",
+x"D0", x"02",  x"A4", x"A1",
+-- CASET X, start MSB,LSB, end MSB,LSB
 x"2A", x"04",  x"00", x"00",  x"00", x"EF",
--- RASET Y, 4-param start MSB,LSB, end MSB,LSB
+-- RASET Y, start MSB,LSB, end MSB,LSB
 x"2B", x"04",  x"00", x"50",  x"01", x"3F",
--- INVON, 0-param, delay 2^14 us = 16ms
+-- INVON, delay 2^14 us = 16ms
 x"21", x"80", x"0E",
--- NORON, 0-param, delay 2^14 us = 16ms
+-- NORON, delay 2^14 us = 16ms
 x"13", x"80", x"0E",
--- DISPON, 0-param, delay 2^14 us = 16ms
+-- DISPON, delay 2^14 us = 16ms
 x"29", x"80", x"0E",
 -- RAMWR 2C 00
 x"2C", x"00"
