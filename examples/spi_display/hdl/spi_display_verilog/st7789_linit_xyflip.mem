@@ -13,7 +13,7 @@
 11 80 11
 // COLMOD, 16-bit color, 1-param, delay 2^14 us = 16ms
 3A 81  55  0E
-// MADCTL
+// MADCTL, 1-param
 36 01  00
 // CASET X, 4-param, start MSB,LSB end MSB,LSB
 2A 04  00 00  00 EF
