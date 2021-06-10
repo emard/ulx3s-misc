@@ -181,7 +181,7 @@ IOBUF  PORT "audio_v[0]" PULLMODE=NONE IO_TYPE=LVCMOS33 DRIVE=16;
 LOCATE COMP "wifi_en" SITE "J5"; # enable/reset WiFi
 LOCATE COMP "wifi_rxd" SITE "K3"; # FPGA transmits to WiFi
 LOCATE COMP "wifi_txd" SITE "K4"; # FPGA receives from WiFi
-LOCATE COMP "wifi_gpio0" SITE "F1"; # wifi_en on v3.0.x
+LOCATE COMP "wifi_gpio0" SITE "F1"; # PCLK wifi_en on v3.0.x
 LOCATE COMP "wifi_gpio19" SITE "N4"; # wifi_gpio5 on v3.0.x
 LOCATE COMP "wifi_gpio21" SITE "K5";
 LOCATE COMP "wifi_gpio22" SITE "L2"; # wifi_gpio0 on v3.0.x
