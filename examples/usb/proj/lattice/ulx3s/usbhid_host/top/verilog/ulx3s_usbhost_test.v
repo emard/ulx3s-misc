@@ -38,6 +38,11 @@ output wire oled_mosi,
 output wire oled_dc,
 output wire oled_resn,
 
+input  wire ftdi_txd,
+output wire ftdi_rxd,
+input  wire wifi_txd,
+output wire wifi_rxd,
+
 inout wire [27:0] gp,
 inout wire [27:0] gn,
 
@@ -66,6 +71,10 @@ wire [15:0] color;
 wire vga_hsync; wire vga_vsync; wire vga_blank;
 wire [7:0] vga_r; wire [7:0] vga_g; wire [7:0] vga_b;
 wire [1:0] dvid_red; wire [1:0] dvid_green; wire [1:0] dvid_blue; wire [1:0] dvid_clock;
+
+// TX/RX passthru
+assign ftdi_rxd = wifi_txd;
+assign wifi_rxd = ftdi_txd;
 
 assign shutdown = 0;
   wire [3:0] clocks;
