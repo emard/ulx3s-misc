@@ -6,7 +6,6 @@ ndesni.wav \
 nkartice.wav \
 nmjesta.wav \
 trazim.wav \
-tisuca.wav \
 1.wav \
 
 1.wav : brojevi.sh
