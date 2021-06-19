@@ -111,6 +111,7 @@ class RDS {
     // internal RDS message in cleartext
     uint16_t value_pi = 0xCAFE; // program ID
     uint8_t signal_ta = 0; // traffic announcement
+    uint8_t signal_pty = 8; // signal type (0=undefined, 3=information, 8=science, see RDS wiki)
     uint8_t signal_stereo = 0;
     uint8_t afs = 1;
     uint16_t af[7] = {1079, 0, 0, 0, 0, 0, 0}; // x0.1 MHz

@@ -178,12 +178,14 @@ void spi_rds_write(void)
   rds.ct(2020,3,10,12,15,0);
   master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
   if(0)
-  for(int i = 0; i < 5+(4+16+1)*13; i++)
   {
-    Serial.print(" ");
-    Serial.print(spi_master_tx_buf[i], HEX);
+    for(int i = 0; i < 5+(4+16+1)*13; i++)
+    {
+      Serial.print(spi_master_tx_buf[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.println("RDS set");
   }
-  Serial.println(". RDS set");
 }
 
 void rds_ct_tm(struct tm *tm)

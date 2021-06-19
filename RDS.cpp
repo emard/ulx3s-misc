@@ -26,7 +26,12 @@
 
 #include <string.h>
 #include "RDS.h"
+
+#define DEBUGPRINT 0
+
+#if DEBUGPRINT
 #include <Arduino.h>
+#endif
 
 /* constructor takes RDS memory address */
 RDS::RDS()
@@ -91,7 +96,7 @@ void RDS::binary_ps_group(uint8_t *buffer, uint8_t group_number)
   uint16_t blocks[RDS_GROUP_LENGTH] = {this->value_pi, 0, 0, 0};
   uint8_t gn = group_number & 3; // group number
 
-  blocks[1] = 0x0400 | gn;
+  blocks[1] = 0x0400 | ((this->signal_pty & 0x1F) << 5) | gn;
   if(this->signal_stereo != 0 && gn == 3)
     blocks[1] |= 0x0004;
   if(this->signal_ta)
@@ -119,7 +124,7 @@ void RDS::binary_rt_group(uint8_t *buffer, uint8_t group_number)
   uint16_t blocks[RDS_GROUP_LENGTH] = {this->value_pi, 0, 0, 0};
   uint8_t gn = group_number & 15; // group number
 
-  blocks[1] = 0x2400 | gn;
+  blocks[1] = 0x2400 | ((this->signal_pty & 0x1F) << 5) | gn;
   blocks[2] = this->string_rt[gn*4+0]<<8 | this->string_rt[gn*4+1];
   blocks[3] = this->string_rt[gn*4+2]<<8 | this->string_rt[gn*4+3];
 
@@ -140,7 +145,7 @@ void RDS::binary_ct_group(uint8_t *buffer)
              (int)((this->tm_year - l) * 365.25) +
              (int)((this->tm_mon + 2 + l*12) * 30.6001);
 
-  blocks[1] = 0x4400 | (mjd>>15);
+  blocks[1] = 0x4400 | ((this->signal_pty & 0x1F) << 5) | (mjd>>15);
   blocks[2] = (mjd<<1) | (this->tm_hour>>4);
   blocks[3] = (this->tm_hour & 0xF)<<12 | this->tm_min<<6;
 
@@ -155,58 +160,78 @@ void RDS::send_ps(void)
 {
   int rds_mem_offset = 0;
   uint8_t bit_buffer[RDS_BITS_PER_GROUP/8];
+  #if DEBUGPRINT
   Serial.print("PS");
+  #endif
   for(int i = 0; i < 4; i++)
   {
     //rds_mem_offset = (RDS_BITS_PER_GROUP/8) * (i*5); // interleave with RT
+    #if DEBUGPRINT
     Serial.print(" @");
     Serial.print(rds_mem_offset);
     Serial.print(":");
+    #endif
     binary_ps_group(bit_buffer, i);
     for(int j = 0; j < RDS_BITS_PER_GROUP/8; j++)
     {
       // this->rdsmem[rds_mem_offset++] = bit_buffer[j];
       msgbyte(rds_mem_offset++, bit_buffer[j]);
+      #if DEBUGPRINT
       Serial.print(" ");
       Serial.print(bit_buffer[j], HEX);
+      #endif
     }
   }
+  #if DEBUGPRINT
   Serial.println("");
+  #endif
 }
 
 void RDS::send_rt(void)
 {
   int rds_mem_offset = (RDS_BITS_PER_GROUP/8) * 4; // after PS
   uint8_t bit_buffer[RDS_BITS_PER_GROUP/8];
+  #if DEBUGPRINT
   Serial.print("RT");
+  #endif
   for(int i = 0; i < 16; i++)
   {
     #if 0
     if( (i & 3) == 0) // skip locations of PS packets
     {
       rds_mem_offset += (RDS_BITS_PER_GROUP/8);
+      #if DEBUGPRINT
       Serial.print(" ");
+      #endif
     }
     #endif
+    #if DEBUGPRINT
     Serial.print(" @");
     Serial.print(rds_mem_offset);
     Serial.print(":");
+    #endif
     binary_rt_group(bit_buffer, i);
     for(int j = 0; j < RDS_BITS_PER_GROUP/8; j++)
     {
       // this->rdsmem[rds_mem_offset++] = bit_buffer[j];
       msgbyte(rds_mem_offset++, bit_buffer[j]);
+      #if DEBUGPRINT
       Serial.print(" ");
       Serial.print(bit_buffer[j], HEX);
+      #endif
     }
   }
+  #if DEBUGPRINT
   Serial.println("");
+  #endif
 }
 
 void RDS::pi(uint16_t pi_code) // public
 {
     this->value_pi = pi_code;
+    #if DEBUGPRINT
     Serial.println(pi_code, HEX);
+    #endif
     // PI changed - immediately recalculate checksums for all binaries
     send_ps();
     send_rt();
@@ -220,8 +245,10 @@ void RDS::new_rt(char *rt)
     str_size = RDS_RT_LENGTH;
   memset(this->string_rt, ' ', RDS_RT_LENGTH); // fill with spaces
   memcpy(this->string_rt, rt, str_size);
+  #if DEBUGPRINT
   Serial.print("RT=");
   Serial.println(rt);
+  #endif
 }
 
 void RDS::rt(char *rt) // public
@@ -237,8 +264,10 @@ void RDS::new_ps(char *ps)
     str_size = RDS_PS_LENGTH;
   memset(this->string_ps, ' ', RDS_PS_LENGTH); // fill with spaces
   memcpy(this->string_ps, ps, str_size);
+  #if DEBUGPRINT
   Serial.print("PS=");
   Serial.println(ps);
+  #endif
 }
 
 void RDS::ps(char *ps) // public
@@ -267,8 +296,10 @@ void RDS::send_ct(void)
   uint8_t bit_buffer[RDS_BITS_PER_GROUP/8];
 
   binary_ct_group(bit_buffer);
+  #if DEBUGPRINT
   Serial.print("CT ");
   Serial.println(rds_mem_offset);
+  #endif
   for(int j = 0; j < RDS_BITS_PER_GROUP/8; j++)
   {
     // this->rdsmem[rds_mem_offset++] = bit_buffer[j];
