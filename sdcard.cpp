@@ -191,15 +191,17 @@ void rds_ct_tm(struct tm *tm)
   if(tm)
   {
     uint16_t year = tm->tm_year + 1900;
-    rds.ps("GO");
-    rds.rt("GO");
+    char disp_short[9], disp_long[65];
+    sprintf(disp_short, "%02d:%02d GO", tm->tm_hour, tm->tm_min);
+    rds.ps(disp_short);
+    rds.rt(disp_short);
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
   else // NULL pointer
   {
     // null pointer, dummy time
-    rds.ps("SEARCH");
-    rds.rt("SEARCH");
+    rds.ps("GPS?");
+    rds.rt("SEARCHING FOR GPS");
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
   spi_master_tx_buf[0] = 0; // 1: write ram
