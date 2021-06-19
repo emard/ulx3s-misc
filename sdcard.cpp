@@ -173,8 +173,10 @@ void spi_rds_write(void)
   rds.pi(0xCAFE);
   rds.ta(0);
   rds.stereo(0);
-  rds.ps("abcd5678");
-  rds.rt("abcdefghijklmnopqrstuvwxyz123abcdefghijklmnopqrstuvwxyz");
+  rds.ps("SELFTEST");
+  //               1         2         3         4         5         6
+  //      1234567890123456789012345678901234567890123456789012345678901234
+  rds.rt("abcdefghijklmnopqrstuvwxyz 0123456789 abcdefghijklmnopqrstuvwxyz");
   rds.ct(2020,3,10,12,15,0);
   master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
   if(0)
