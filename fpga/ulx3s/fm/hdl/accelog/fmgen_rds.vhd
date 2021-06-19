@@ -11,8 +11,8 @@ use ieee.math_real.all; -- to calculate log2 bit size
 entity fmgen_rds is
     generic
     (
-        C_addr_bits: integer := 7; -- must fit 2**n >= C_rds_msg_len
-        C_rds_msg_len: integer range 2 to 2048 := 65; -- RAM address range 0..n-1 for RDS binary message
+        C_addr_bits: integer := 9; -- must fit 2**n >= C_rds_msg_len
+        C_rds_msg_len: integer range 2 to 2048 := 273; -- RAM address range 0..n-1 for RDS binary message
         -- some useful values for C_rds_msg_len
         --  13 =        1*13 (CT)
         --  52 =        4*13 (PS)
