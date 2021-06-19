@@ -193,8 +193,9 @@ void rds_ct_tm(struct tm *tm)
     uint16_t year = tm->tm_year + 1900;
     char disp_short[9], disp_long[65];
     sprintf(disp_short, "%02d:%02d GO", tm->tm_hour, tm->tm_min);
+    sprintf(disp_long, "%02d:%02d READY TO GO", tm->tm_hour, tm->tm_min);
     rds.ps(disp_short);
-    rds.rt(disp_short);
+    rds.rt(disp_long);
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
   else // NULL pointer

@@ -158,7 +158,7 @@ void RDS::send_ps(void)
   Serial.print("PS");
   for(int i = 0; i < 4; i++)
   {
-    rds_mem_offset = (RDS_BITS_PER_GROUP/8) * (i*5); // interleave with RT
+    //rds_mem_offset = (RDS_BITS_PER_GROUP/8) * (i*5); // interleave with RT
     Serial.print(" @");
     Serial.print(rds_mem_offset);
     Serial.print(":");
@@ -176,16 +176,18 @@ void RDS::send_ps(void)
 
 void RDS::send_rt(void)
 {
-  int rds_mem_offset = 0;
+  int rds_mem_offset = (RDS_BITS_PER_GROUP/8) * 4; // after PS
   uint8_t bit_buffer[RDS_BITS_PER_GROUP/8];
   Serial.print("RT");
   for(int i = 0; i < 16; i++)
   {
+    #if 0
     if( (i & 3) == 0) // skip locations of PS packets
     {
       rds_mem_offset += (RDS_BITS_PER_GROUP/8);
       Serial.print(" ");
     }
+    #endif
     Serial.print(" @");
     Serial.print(rds_mem_offset);
     Serial.print(":");
