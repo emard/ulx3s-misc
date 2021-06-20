@@ -218,6 +218,17 @@ int nmea2tm(char *a, struct tm *t)
   return 1;
 }
 
+// parse NMEA ascii string -> return mph x100 speed (negative -1 if no fix)
+int nmea2spd(char *a)
+{
+  //char *b = a+46; // simplified locating 7th ","
+  char *b = nthchar(a, 7, ',');
+  // simplified parsing, string has form ,000.00,
+  if(b[4] != '.' || b[7] != ',')
+    return -1;
+  return (b[1]-'0')*10000 + (b[2]-'0')*1000 + (b[3]-'0')*100 + (b[5]-'0')*10 + (b[6]-'0');
+}
+
 static uint8_t datetime_is_set = 0;
 void set_date_from_tm(struct tm *tm)
 {
@@ -330,11 +341,11 @@ void loop()
           static uint8_t prev_min;
           set_date_from_tm(&tm);
           if(tm.tm_min != prev_min)
-          {
+          { // every minute
             // update RDS time
             rds_ct_tm(&tm);
             Serial.print(tm.tm_hour);
-            Serial.print(" i ");
+            Serial.print(":");
             Serial.println(tm.tm_min);
             if(!pcm_is_open)
               speakfile = "/speak/spreman.wav";
