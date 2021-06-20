@@ -6,6 +6,7 @@ ndesni.wav \
 nkartice.wav \
 nmjesta.wav \
 cekam.wav \
+snimam.wav \
 trazim.wav \
 1.wav \
 
