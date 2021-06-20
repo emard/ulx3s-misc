@@ -7,13 +7,14 @@
 extern int card_is_mounted;
 extern int pcm_is_open;
 extern int sensor_check_status;
+extern int nmea_speed;
 extern RDS rds;
 void mount(void);
 void umount(void);
 void spi_init(void);
 void rds_init(void);
 void spi_rds_write(void);
-void rds_ct_tm(struct tm *tm, int spd);
+void rds_ct_tm(struct tm *tm);
 void adxl355_init(void);
 uint8_t adxl355_available(void);
 void ls(void);

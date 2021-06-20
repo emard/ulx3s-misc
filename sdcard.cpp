@@ -23,6 +23,7 @@ int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
 int sensor_check_status = 0;
+int nmea_speed = -1;
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
@@ -189,13 +190,13 @@ void spi_rds_write(void)
   }
 }
 
-void rds_ct_tm(struct tm *tm, int spd)
+void rds_ct_tm(struct tm *tm)
 {
   char disp_short[9], disp_long[65];
   if(tm)
   {
     uint16_t year = tm->tm_year + 1900;
-    if(spd < 0)
+    if(nmea_speed < 0)
     {
       sprintf(disp_short, "WAIT  LR");
       sprintf(disp_long, "%02d:%02d WAIT FOR GPS FIX", tm->tm_hour, tm->tm_min);
@@ -203,7 +204,7 @@ void rds_ct_tm(struct tm *tm, int spd)
     else
     {
       sprintf(disp_short, "GO    LR");
-      sprintf(disp_long, "%02d:%02d %d.%02d mph READY TO GO", tm->tm_hour, tm->tm_min, spd/100, spd%100);
+      sprintf(disp_long, "%02d:%02d %d.%02d mph READY TO GO", tm->tm_hour, tm->tm_min, nmea_speed/100, nmea_speed%100);
     }
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
