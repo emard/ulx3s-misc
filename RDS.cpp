@@ -93,26 +93,43 @@ void RDS::binary_buf_crc(uint8_t buffer[], uint16_t blocks[])
 // lower 2 bits of n define the group number
 void RDS::binary_ps_group(uint8_t *buffer, uint8_t group_number)
 {
-  uint16_t blocks[RDS_GROUP_LENGTH] = {this->value_pi, 0, 0, 0};
   uint8_t gn = group_number & 3; // group number
-
-  blocks[1] = 0x0400 | ((this->signal_pty & 0x1F) << 5) | gn;
-  if(this->signal_stereo != 0 && gn == 3)
-    blocks[1] |= 0x0004;
-  if(this->signal_ta)
-    blocks[1] |= 0x0010;
-  blocks[2] = 0xCDCD;     // no AF
+  uint16_t blocks[RDS_GROUP_LENGTH] = {
+    /* blocks[0] = */ this->value_pi,
+    /* blocks[1] = */ 0x0000
+                    | (this->signal_tp  &  1)<<10
+                    | (this->signal_pty & 31)<<5
+                    | (this->signal_ta  &  1)<<4
+                    | (this->signal_ms  &  1)<<3
+                    | gn,
+    /* blocks[2] = */ 0,
+    /* blocks[3] = */ this->string_ps[gn*2]<<8
+                    | this->string_ps[gn*2+1]
+  };
+  // see see page 41, table 9 of the standard
+  // or  gqrx source, gqrx/src/dsp/rds/parser_impl.cc decode_type0() switch(segment_address)
+  switch(gn)
+  {
+    case 0: // gn = 0 -> DI = mono/stereo
+      if(this->signal_mono)
+        blocks[1] |= 0x0004; // DI flag -> 1:mono 0:stereo
+      break;
+  }
+  // FIXME: multiple AF not working (receiving with gqrx)
+  blocks[2] = 0xCDCD; // no AF
   if(gn == 0)
     // 224..249 -> 0..25 AFs but we support max 7
-    blocks[2] = (blocks[2] & 0x00FF) | ((this->afs+224)<<8);
+    blocks[2] = (blocks[2] & 0x00FF)
+              | ((this->afs+224)<<8);
   else
   {
     if(this->af[2*gn-1] > 875)
-     blocks[2] = (blocks[2] & 0x00FF) | ((this->af[2*gn-1]-875)<<8);    
+      blocks[2] = (blocks[2] & 0x00FF)
+                | ((this->af[2*gn-1]-875)<<8);
   }
   if(this->af[2*gn] > 875)
-    blocks[2] = (blocks[2] & 0xFF00) | (this->af[2*gn]-875);
-  blocks[3] = this->string_ps[gn*2]<<8 | this->string_ps[gn*2+1];
+    blocks[2] = (blocks[2] & 0xFF00)
+              | (this->af[2*gn]-875);
   binary_buf_crc(buffer, blocks);
 }
 
@@ -121,13 +138,18 @@ void RDS::binary_ps_group(uint8_t *buffer, uint8_t group_number)
 // lower 4 bits of n define the group number
 void RDS::binary_rt_group(uint8_t *buffer, uint8_t group_number)
 {
-  uint16_t blocks[RDS_GROUP_LENGTH] = {this->value_pi, 0, 0, 0};
   uint8_t gn = group_number & 15; // group number
-
-  blocks[1] = 0x2400 | ((this->signal_pty & 0x1F) << 5) | gn;
-  blocks[2] = this->string_rt[gn*4+0]<<8 | this->string_rt[gn*4+1];
-  blocks[3] = this->string_rt[gn*4+2]<<8 | this->string_rt[gn*4+3];
-
+  uint16_t blocks[RDS_GROUP_LENGTH] = {
+    /* blocks[0] = */ this->value_pi,
+    /* blocks[1] = */ 0x2000
+                    | (this->signal_tp  &  1)<<10
+                    | (this->signal_pty & 31)<< 5
+                    | gn,
+    /* blocks[2] = */ this->string_rt[gn*4+0]<<8
+                    | this->string_rt[gn*4+1],
+    /* blocks[3] = */ this->string_rt[gn*4+2]<<8
+                    | this->string_rt[gn*4+3]
+  };
   binary_buf_crc(buffer, blocks);
 }
 
@@ -145,7 +167,10 @@ void RDS::binary_ct_group(uint8_t *buffer)
              (int)((this->tm_year - l) * 365.25) +
              (int)((this->tm_mon + 2 + l*12) * 30.6001);
 
-  blocks[1] = 0x4400 | ((this->signal_pty & 0x1F) << 5) | (mjd>>15);
+  blocks[1] = 0x4000
+            | (this->signal_tp  &  1)<<10
+            | (this->signal_pty & 31)<<5
+            | mjd>>15;
   blocks[2] = (mjd<<1) | (this->tm_hour>>4);
   blocks[3] = (this->tm_hour & 0xF)<<12 | this->tm_min<<6;
 
@@ -165,7 +190,7 @@ void RDS::send_ps(void)
   #endif
   for(int i = 0; i < 4; i++)
   {
-    //rds_mem_offset = (RDS_BITS_PER_GROUP/8) * (i*5); // interleave with RT
+    rds_mem_offset = (RDS_BITS_PER_GROUP/8) * (i*5); // interleave with RT
     #if DEBUGPRINT
     Serial.print(" @");
     Serial.print(rds_mem_offset);
@@ -189,14 +214,15 @@ void RDS::send_ps(void)
 
 void RDS::send_rt(void)
 {
-  int rds_mem_offset = (RDS_BITS_PER_GROUP/8) * 4; // after PS
+  int rds_mem_offset = 0; // for interleave with PS
+  //int rds_mem_offset = (RDS_BITS_PER_GROUP/8) * 4; // no interleave, after PS
   uint8_t bit_buffer[RDS_BITS_PER_GROUP/8];
   #if DEBUGPRINT
   Serial.print("RT");
   #endif
   for(int i = 0; i < 16; i++)
   {
-    #if 0
+    #if 1 // interleave with PS
     if( (i & 3) == 0) // skip locations of PS packets
     {
       rds_mem_offset += (RDS_BITS_PER_GROUP/8);
@@ -284,7 +310,7 @@ void RDS::ta(uint8_t ta) // public
 
 void RDS::stereo(uint8_t stereo) // public
 {
-  this->signal_stereo = stereo;
+  this->signal_mono = !stereo;
   send_ps(); // PS block sends TA
 }
 

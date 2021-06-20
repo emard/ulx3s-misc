@@ -109,10 +109,12 @@ class RDS {
     uint16_t crc(uint16_t block);
 
     // internal RDS message in cleartext
-    uint16_t value_pi = 0xCAFE; // program ID
-    uint8_t signal_ta = 0; // traffic announcement
-    uint8_t signal_pty = 8; // signal type (0=undefined, 3=information, 8=science, see RDS wiki)
-    uint8_t signal_stereo = 0;
+    uint16_t value_pi   = 0xCAFE; // program ID
+    uint8_t signal_tp   = 1; // traffic program
+    uint8_t signal_ta   = 0; // traffic announcement
+    uint8_t signal_ms   = 0; // 1=music, 0=speech
+    uint8_t signal_mono = 1; // 1=mono,  0=stereo
+    uint8_t signal_pty  = 8; // program type (0=undefined, 3=information, 8=science, see RDS wiki)
     uint8_t afs = 1;
     uint16_t af[7] = {1079, 0, 0, 0, 0, 0, 0}; // x0.1 MHz
     char string_ps[RDS_PS_LENGTH]; // short 8-char text shown as station name
