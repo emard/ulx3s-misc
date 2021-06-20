@@ -6,6 +6,7 @@
 #define SPI_READER_BUF_SIZE 9216
 extern int card_is_mounted;
 extern int pcm_is_open;
+extern int sensor_check_status;
 extern RDS rds;
 void mount(void);
 void umount(void);

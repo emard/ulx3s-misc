@@ -22,6 +22,7 @@ File file_gps, file_accel, file_pcm;
 int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
+int sensor_check_status = 0;
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
@@ -190,31 +191,33 @@ void spi_rds_write(void)
 
 void rds_ct_tm(struct tm *tm, int spd)
 {
+  char disp_short[9], disp_long[65];
   if(tm)
   {
     uint16_t year = tm->tm_year + 1900;
-    char disp_short[9], disp_long[65];
     if(spd < 0)
     {
-      sprintf(disp_short, "WAIT");
+      sprintf(disp_short, "WAIT  LR");
       sprintf(disp_long, "%02d:%02d WAIT FOR GPS FIX", tm->tm_hour, tm->tm_min);
     }
     else
     {
-      sprintf(disp_short, "GO");
+      sprintf(disp_short, "GO    LR");
       sprintf(disp_long, "%02d:%02d %d.%02d mph READY TO GO", tm->tm_hour, tm->tm_min, spd/100, spd%100);
     }
-    rds.ps(disp_short);
-    rds.rt(disp_long);
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
   else // NULL pointer
   {
     // null pointer, dummy time
-    rds.ps("GPS OFF");
-    rds.rt("SEARCHING FOR GPS");
+    sprintf(disp_short, "OFF   LR");
+    sprintf(disp_long,  "SEARCHING FOR GPS");
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
+  disp_short[6] = sensor_check_status & 1 ? 'L' : ' ';
+  disp_short[7] = sensor_check_status & 2 ? 'R' : ' ';
+  rds.ps(disp_short);
+  rds.rt(disp_long);
   spi_master_tx_buf[0] = 0; // 1: write ram
   spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
@@ -328,6 +331,45 @@ void write_wav_header(void)
   file_accel.write(wavhdr, sizeof(wavhdr));
 }
 
+/* after write_logs, check beginning middle and end of buffer
+   there should be different data from sensor noise.
+   all equal data indicate sensor failure
+   bit 1: right sensor ok
+   bit 0: left  sensor ok
+*/
+int sensor_check(void)
+{
+  int retval = 0; // start with both sensors fail
+  int checkat[4] = { // make it 12-even
+    SPI_READER_BUF_SIZE*1/8 - SPI_READER_BUF_SIZE*1/8%12,
+    SPI_READER_BUF_SIZE*2/8 - SPI_READER_BUF_SIZE*2/8%12,
+    SPI_READER_BUF_SIZE*3/8 - SPI_READER_BUF_SIZE*3/8%12,
+    SPI_READER_BUF_SIZE*4/8 - SPI_READER_BUF_SIZE*4/8%12 - 12,
+  }; // list of indexes to check (0 not included)
+  int lr[2] = {6, 12}; // l, r index of sensors in rx buf to check
+  int16_t v0, v; // sensor signed value
+  int i, j;
+
+  for(i = 0; i < 2; i++) // lr index
+  {
+    v0 = (spi_master_rx_buf[lr[i]+1] << 8)
+       | (spi_master_rx_buf[lr[i]  ]  | 1); // remove LSB
+    //Serial.print(v0);
+    for(j = 0; j < 4; j++) // checkat index
+    {
+      v = (spi_master_rx_buf[lr[i]+checkat[j]+1] << 8)
+        | (spi_master_rx_buf[lr[i]+checkat[j]  ]  | 1); // remove LSB
+      //Serial.print("=");
+      //Serial.print(v);
+      if(v != v0)
+        retval |= 1<<i;
+    }
+    //Serial.print(", ");
+  }
+  //Serial.println("");
+  return retval;
+}
+
 void open_logs(void)
 {
   if(logs_are_open != 0)
@@ -435,14 +477,15 @@ void write_logs(void)
   static uint8_t prev_half = 0;
   uint8_t half;
   uint16_t ptr;
+  int retval = -1;
 
   ptr = (SPI_READER_BUF_SIZE + spi_slave_ptr() - 2) % SPI_READER_BUF_SIZE; // written content is 2 bytes behind pointer
   half = ptr >= SPI_READER_BUF_SIZE/2;
   if(half != prev_half)
   {
+    spi_slave_read(half ? 0 : SPI_READER_BUF_SIZE/2, SPI_READER_BUF_SIZE/2);
     if(logs_are_open)
     {
-      spi_slave_read(half ? 0 : SPI_READER_BUF_SIZE/2, SPI_READER_BUF_SIZE/2);
       file_accel.write(spi_master_rx_buf+6, SPI_READER_BUF_SIZE/2);
       #if 0
       // print buffer ptr
@@ -451,9 +494,12 @@ void write_logs(void)
       #endif
     }
     prev_half = half;
+    sensor_check_status = sensor_check();
+    //Serial.println(sensor_check_status);
   }
 }
 #endif
+
 
 void write_tag(char *a)
 {
