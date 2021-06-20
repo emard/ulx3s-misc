@@ -170,9 +170,7 @@ void spi_rds_write(void)
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
-  rds.pi(0xACE1);
   rds.ta(0);
-  rds.stereo(0);
   rds.ps("SELFTEST");
   //               1         2         3         4         5         6
   //      1234567890123456789012345678901234567890123456789012345678901234
