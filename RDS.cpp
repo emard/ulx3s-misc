@@ -114,6 +114,10 @@ void RDS::binary_ps_group(uint8_t *buffer, uint8_t group_number)
       if(this->signal_mono)
         blocks[1] |= 0x0004; // DI flag -> 1:mono 0:stereo
       break;
+    case 3: // gn = 3 -> DI = static PTY
+      if(this->signal_static_pty)
+        blocks[1] |= 0x0004; // DI flag -> 1:static 0:dynamic PTY
+      break;
   }
   // NOTE:
   // gqrx can display max 2 AF frequencies at a time
