@@ -188,14 +188,17 @@ void spi_rds_write(void)
   }
 }
 
-void rds_ct_tm(struct tm *tm)
+void rds_ct_tm(struct tm *tm, int spd)
 {
   if(tm)
   {
     uint16_t year = tm->tm_year + 1900;
     char disp_short[9], disp_long[65];
-    sprintf(disp_short, "%02d:%02d GO", tm->tm_hour, tm->tm_min);
-    sprintf(disp_long, "%02d:%02d READY TO GO", tm->tm_hour, tm->tm_min);
+    if(spd < 0)
+      sprintf(disp_short, "WAIT");
+    else
+      sprintf(disp_short, "GO");
+    sprintf(disp_long, "%02d:%02d %d.%02d mph GO", tm->tm_hour, tm->tm_min, spd/100, spd%100);
     rds.ps(disp_short);
     rds.rt(disp_long);
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
@@ -203,7 +206,7 @@ void rds_ct_tm(struct tm *tm)
   else // NULL pointer
   {
     // null pointer, dummy time
-    rds.ps("GPS?");
+    rds.ps("GPS ON?");
     rds.rt("SEARCHING FOR GPS");
     rds.ct(2000, 0, 1, 0, 0, 0);
   }

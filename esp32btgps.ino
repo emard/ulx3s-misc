@@ -319,6 +319,7 @@ void loop()
         // debug NMEA data
         Serial.print(nmea);
         #endif
+        int spd = nmea2spd(nmea); // parse speed
         int daytime = nmea2s(nmea+7);
         int32_t nmea2ms = daytime*100-ct0; // difference from nmea to timer
         if(nmea2ms_sum == 0) // sum is 0 only at reboot
@@ -342,11 +343,14 @@ void loop()
           set_date_from_tm(&tm);
           if(tm.tm_min != prev_min)
           { // every minute
-            // update RDS time
-            rds_ct_tm(&tm);
+            // update RDS time and speed
+            rds_ct_tm(&tm, spd);
             Serial.print(tm.tm_hour);
             Serial.print(":");
-            Serial.println(tm.tm_min);
+            Serial.print(tm.tm_min);
+            Serial.print(" ");
+            Serial.print(spd);
+            Serial.println("x0.01 mph");
             if(!pcm_is_open)
               speakfile = "/speak/spreman.wav";
             prev_min = tm.tm_min;
@@ -374,7 +378,7 @@ void loop()
       close_logs();
       ls();
       umount();
-      rds_ct_tm(NULL);
+      rds_ct_tm(NULL,-1);
       reconnect();
       datetime_is_set = 0; // set datetime again
       tprev = ms();
