@@ -352,7 +352,12 @@ void loop()
             Serial.print(spd);
             Serial.println("x0.01 mph");
             if(!pcm_is_open)
-              speakfile = "/speak/spreman.wav";
+            {
+              if(spd < 0)
+                speakfile = "/speak/cekam.wav";
+              else
+                speakfile = "/speak/spreman.wav";
+            }
             prev_min = tm.tm_min;
           }
         }
