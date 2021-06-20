@@ -102,7 +102,7 @@ void RDS::binary_ps_group(uint8_t *buffer, uint8_t group_number)
                     | (this->signal_ta  &  1)<<4
                     | (this->signal_ms  &  1)<<3
                     | gn,
-    /* blocks[2] = */ 0,
+    /* blocks[2] = */ 0xCDCD, // AF filler code (empty)
     /* blocks[3] = */ this->string_ps[gn*2]<<8
                     | this->string_ps[gn*2+1]
   };
@@ -115,21 +115,23 @@ void RDS::binary_ps_group(uint8_t *buffer, uint8_t group_number)
         blocks[1] |= 0x0004; // DI flag -> 1:mono 0:stereo
       break;
   }
-  // FIXME: multiple AF not working (receiving with gqrx)
-  blocks[2] = 0xCDCD; // no AF
+  // NOTE:
+  // gqrx can display max 2 AF frequencies at a time
+  // if more, they will be changing/blinking
+  // this code replaces AF filler code with AF values
   if(gn == 0)
-    // 224..249 -> 0..25 AFs but we support max 7
+    // 224..249 -> 0..25 AFs but we support max 6 (could support 7)
     blocks[2] = (blocks[2] & 0x00FF)
-              | ((this->afs+224)<<8);
+              | (this->afs+224)<<8;
   else
   {
-    if(this->af[2*gn-1] > 875)
+    if(this->af[2*gn-1] > 875) // af[0,2,4]
+      blocks[2] = (blocks[2] & 0xFF00)
+                | (this->af[2*gn-1]-875);
+    if(this->af[2*gn-2] > 875) // af[1,3,5]
       blocks[2] = (blocks[2] & 0x00FF)
-                | ((this->af[2*gn-1]-875)<<8);
+                | (this->af[2*gn-2]-875)<<8;
   }
-  if(this->af[2*gn] > 875)
-    blocks[2] = (blocks[2] & 0xFF00)
-              | (this->af[2*gn]-875);
   binary_buf_crc(buffer, blocks);
 }
 
