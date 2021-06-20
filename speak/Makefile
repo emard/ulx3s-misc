@@ -5,6 +5,7 @@ nlijevi.wav \
 ndesni.wav \
 nkartice.wav \
 nmjesta.wav \
+cekam.wav \
 trazim.wav \
 1.wav \
 
