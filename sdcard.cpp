@@ -191,24 +191,42 @@ void spi_rds_write(void)
   }
 }
 
-void rds_ct_tm(struct tm *tm)
+void rds_message(struct tm *tm)
 {
   char disp_short[9], disp_long[65];
   if(tm)
   {
     uint16_t year = tm->tm_year + 1900;
+    size_t total_bytes = SD_MMC.totalBytes();
+    size_t used_bytes = SD_MMC.usedBytes();
+    size_t free_bytes = total_bytes-used_bytes;
+    size_t free_MB = free_bytes / (1024 * 1024);
+    size_t free_100 = 0;
+    if(total_bytes > 1000000)
+    {
+      free_100 = free_bytes/(total_bytes/100);
+      if(free_100 >= 100)
+        free_100 = 99;
+      if(free_100 < 0)
+        free_100 = 0;
+    }
     if(knots < 0)
     {
-      sprintf(disp_short, "WAIT  LR");
-      sprintf(disp_long, "%02d:%02d WAIT FOR GPS FIX", tm->tm_hour, tm->tm_min);
+      sprintf(disp_short, "WAIT%2dLR", free_100);
+      sprintf(disp_long, "%dMB free %02d:%02d WAIT FOR GPS FIX", 
+        free_MB, tm->tm_hour, tm->tm_min);
     }
     else
     {
       if(fast_enough)
-        sprintf(disp_short, "RUN   LR");
+        sprintf(disp_short, "RUN %2dLR", free_100);
       else
-        sprintf(disp_short, "GO    LR");
-      sprintf(disp_long, "%02d:%02d %d.%02d kt RUN=%d", tm->tm_hour, tm->tm_min, knots/100, knots%100, fast_enough);
+        sprintf(disp_short, "GO  %2dLR", free_100);
+      sprintf(disp_long, "%dMB free %02d:%02d %d.%02d kt RUN=%d",
+        free_MB,
+        tm->tm_hour, tm->tm_min,
+        knots/100, knots%100,
+        fast_enough);
     }
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
@@ -223,6 +241,8 @@ void rds_ct_tm(struct tm *tm)
   disp_short[7] = sensor_check_status & 2 ? 'R' : ' ';
   rds.ps(disp_short);
   rds.rt(disp_long);
+  Serial.println(disp_short);
+  Serial.println(disp_long);
   spi_master_tx_buf[0] = 0; // 1: write ram
   spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
@@ -394,8 +414,10 @@ void open_logs(void)
   file_accel = SD_MMC.open("/accel.wav", FILE_WRITE);
   write_wav_header();
   #endif
+  #if 0
   Serial.print("file position (expect 44) ");
   Serial.println(file_accel.position(), DEC);
+  #endif
   logs_are_open = 1;
 }
 

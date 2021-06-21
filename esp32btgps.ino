@@ -321,12 +321,12 @@ void loop()
         #endif
         knots = nmea2spd(nmea); // parse speed
         // hysteresis for logging
-        if(knots > 50)
+        if(knots > 10)
         {
           if(fast_enough == 0)
           {
             Serial.print(knots);
-            Serial.println(">50 kt*100 fast enough - start logging");
+            Serial.println(">10 kt*100 fast enough - start logging");
           }
           fast_enough = 1;
         }
@@ -363,13 +363,15 @@ void loop()
           if(tm.tm_min != prev_min)
           { // every minute
             // update RDS time and speed
-            rds_ct_tm(&tm);
+            rds_message(&tm);
+            #if 0
             Serial.print(tm.tm_hour);
             Serial.print(":");
             Serial.print(tm.tm_min);
             Serial.print(" ");
             Serial.print(knots);
             Serial.println(" kt*100");
+            #endif
             if(!pcm_is_open)
             {
               if(knots < 0)
@@ -377,7 +379,7 @@ void loop()
               else
               {
                 if(fast_enough)
-                  speakfile = "/speak/mjerim.wav";
+                  speakfile = "/speak/snimam.wav";
                 else
                   speakfile = "/speak/spreman.wav";
               }
@@ -407,7 +409,7 @@ void loop()
       close_logs();
       ls();
       umount();
-      rds_ct_tm(NULL);
+      rds_message(NULL);
       reconnect();
       datetime_is_set = 0; // set datetime again
       tprev = ms();
