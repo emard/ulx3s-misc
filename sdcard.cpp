@@ -23,7 +23,8 @@ int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
 int sensor_check_status = 0;
-int nmea_speed = -1;
+int knots = -1; // knots*100
+int fast_enough = 0; // for speed logging hysteresis
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
@@ -196,15 +197,18 @@ void rds_ct_tm(struct tm *tm)
   if(tm)
   {
     uint16_t year = tm->tm_year + 1900;
-    if(nmea_speed < 0)
+    if(knots < 0)
     {
       sprintf(disp_short, "WAIT  LR");
       sprintf(disp_long, "%02d:%02d WAIT FOR GPS FIX", tm->tm_hour, tm->tm_min);
     }
     else
     {
-      sprintf(disp_short, "GO    LR");
-      sprintf(disp_long, "%02d:%02d %d.%02d mph READY TO GO", tm->tm_hour, tm->tm_min, nmea_speed/100, nmea_speed%100);
+      if(fast_enough)
+        sprintf(disp_short, "RUN   LR");
+      else
+        sprintf(disp_short, "GO    LR");
+      sprintf(disp_long, "%02d:%02d %d.%02d kt RUN=%d", tm->tm_hour, tm->tm_min, knots/100, knots%100, fast_enough);
     }
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
@@ -485,7 +489,7 @@ void write_logs(void)
   if(half != prev_half)
   {
     spi_slave_read(half ? 0 : SPI_READER_BUF_SIZE/2, SPI_READER_BUF_SIZE/2);
-    if(logs_are_open)
+    if(logs_are_open && fast_enough)
     {
       file_accel.write(spi_master_rx_buf+6, SPI_READER_BUF_SIZE/2);
       #if 0

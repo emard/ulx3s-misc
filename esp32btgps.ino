@@ -319,7 +319,26 @@ void loop()
         // debug NMEA data
         Serial.print(nmea);
         #endif
-        nmea_speed = nmea2spd(nmea); // parse speed
+        knots = nmea2spd(nmea); // parse speed
+        // hysteresis for logging
+        if(knots > 50)
+        {
+          if(fast_enough == 0)
+          {
+            Serial.print(knots);
+            Serial.println(">50 kt*100 fast enough - start logging");
+          }
+          fast_enough = 1;
+        }
+        if(knots < 2)
+        {
+          if(fast_enough)
+          {
+            Serial.print(knots);
+            Serial.println("<2 kt*100 not fast enough - stop logging");
+          }
+          fast_enough = 0;
+        }
         int daytime = nmea2s(nmea+7);
         int32_t nmea2ms = daytime*100-ct0; // difference from nmea to timer
         if(nmea2ms_sum == 0) // sum is 0 only at reboot
@@ -349,14 +368,19 @@ void loop()
             Serial.print(":");
             Serial.print(tm.tm_min);
             Serial.print(" ");
-            Serial.print(nmea_speed);
-            Serial.println("x0.01 mph");
+            Serial.print(knots);
+            Serial.println(" kt*100");
             if(!pcm_is_open)
             {
-              if(nmea_speed < 0)
+              if(knots < 0)
                 speakfile = "/speak/cekam.wav";
               else
-                speakfile = "/speak/spreman.wav";
+              {
+                if(fast_enough)
+                  speakfile = "/speak/mjerim.wav";
+                else
+                  speakfile = "/speak/spreman.wav";
+              }
             }
             prev_min = tm.tm_min;
           }
