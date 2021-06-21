@@ -19,6 +19,7 @@ uint8_t* spi_master_rx_buf;
 static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
 File file_gps, file_accel, file_pcm;
+char filename[50] = "/accel.wav";
 int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
@@ -395,28 +396,32 @@ int sensor_check(void)
   return retval;
 }
 
-void open_logs(void)
+void open_logs(struct tm *tm)
 {
   if(logs_are_open != 0)
     return;
+  #if 0
+  sprintf(filename, "/%04d%02d%02d-%02d%02d.wav",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
+  #else
+  sprintf(filename, "/%04d%02d%02d.wav",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
+  #endif
   #if 1
-  SD_MMC.remove("/accel.wav");
-  //file_gps   = SD_MMC.open("/gps.log",   FILE_APPEND);
-  file_accel = SD_MMC.open("/accel.wav", FILE_APPEND);
+  file_accel = SD_MMC.open(filename, FILE_APPEND);
   // check appending file position (SEEK_CUR) and if 0 then write header
   if(file_accel.position() == 0)
     write_wav_header();
   #else
-  //SD_MMC.remove("/test.txt");
-  //SD_MMC.remove("/foo.txt");
-  //SD_MMC.remove("/accel.log");
-  //file_gps   = SD_MMC.open("/gps.log",   FILE_WRITE);
-  file_accel = SD_MMC.open("/accel.wav", FILE_WRITE);
+  SD_MMC.remove(filename);
+  SD_MMC.remove("/accel.wav");
+  file_accel = SD_MMC.open(filename, FILE_WRITE);
   write_wav_header();
   #endif
-  #if 0
-  Serial.print("file position (expect 44) ");
-  Serial.println(file_accel.position(), DEC);
+  #if 1
+  Serial.print(filename);
+  Serial.print(" @");
+  Serial.println(file_accel.position());
   #endif
   logs_are_open = 1;
 }

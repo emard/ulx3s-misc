@@ -19,7 +19,7 @@ void rds_message(struct tm *tm);
 void adxl355_init(void);
 uint8_t adxl355_available(void);
 void ls(void);
-void open_logs(void);
+void open_logs(struct tm *tm);
 void write_logs(void);
 void write_tag(char *a);
 int play_pcm(int n);

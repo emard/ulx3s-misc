@@ -281,7 +281,7 @@ void loop()
   static uint32_t tprev_wav, tprev_wavp;
   uint32_t tdelta_wav, tdelta_wavp;
   static uint32_t tspeak_ready;
-  struct tm tm;
+  static struct tm tm;
 
   #if 1
   if (connected && SerialBT.available()>0)
@@ -360,6 +360,10 @@ void loop()
         {
           static uint8_t prev_min;
           set_date_from_tm(&tm);
+          pinMode(PIN_LED, OUTPUT);
+          digitalWrite(PIN_LED, LED_ON);
+          mount();
+          open_logs(&tm);
           if(tm.tm_min != prev_min)
           { // every minute
             // update RDS time and speed
@@ -388,10 +392,6 @@ void loop()
           }
         }
       }
-      pinMode(PIN_LED, OUTPUT);
-      digitalWrite(PIN_LED, LED_ON);
-      mount();
-      open_logs();
       tprev=t;
       i=0;
     }
