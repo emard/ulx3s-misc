@@ -192,9 +192,18 @@ void spi_rds_write(void)
   }
 }
 
+// integer log2 for MB free
+int iclog2(int x)
+{
+  int n, c;
+  for(n = 0, c = 1; c < x; n++, c <<= 1);
+  return n;
+}
+
 void rds_message(struct tm *tm)
 {
   char disp_short[9], disp_long[65];
+  char free_MB_2n = ' ';
   if(tm)
   {
     uint16_t year = tm->tm_year + 1900;
@@ -202,27 +211,23 @@ void rds_message(struct tm *tm)
     size_t used_bytes = SD_MMC.usedBytes();
     size_t free_bytes = total_bytes-used_bytes;
     size_t free_MB = free_bytes / (1024 * 1024);
-    size_t free_100 = 0;
-    if(total_bytes > 1000000)
-    {
-      free_100 = free_bytes/(total_bytes/100);
-      if(free_100 >= 100)
-        free_100 = 99;
-      if(free_100 < 0)
-        free_100 = 0;
-    }
+    free_MB_2n = '0'+iclog2(free_MB)-1;
+    if(free_MB_2n < '0')
+      free_MB_2n = '0';
+    if(free_MB_2n > '9')
+      free_MB_2n = '9';
     if(knots < 0)
     {
-      sprintf(disp_short, "WAIT%2dLR", free_100);
+      sprintf(disp_short, "WAIT 0LR");
       sprintf(disp_long, "%dMB free %02d:%02d WAIT FOR GPS FIX", 
         free_MB, tm->tm_hour, tm->tm_min);
     }
     else
     {
       if(fast_enough)
-        sprintf(disp_short, "RUN %2dLR", free_100);
+        sprintf(disp_short, "RUN  0LR");
       else
-        sprintf(disp_short, "GO  %2dLR", free_100);
+        sprintf(disp_short, "GO   0LR");
       sprintf(disp_long, "%dMB free %02d:%02d %d.%02d kt RUN=%d",
         free_MB,
         tm->tm_hour, tm->tm_min,
@@ -238,6 +243,7 @@ void rds_message(struct tm *tm)
     sprintf(disp_long,  "SEARCHING FOR GPS");
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
+  disp_short[5] = free_MB_2n;
   disp_short[6] = sensor_check_status & 1 ? 'L' : ' ';
   disp_short[7] = sensor_check_status & 2 ? 'R' : ' ';
   rds.ps(disp_short);
@@ -408,6 +414,7 @@ void open_logs(struct tm *tm)
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
   #endif
   #if 1
+  //SD_MMC.remove(filename);
   file_accel = SD_MMC.open(filename, FILE_APPEND);
   // check appending file position (SEEK_CUR) and if 0 then write header
   if(file_accel.position() == 0)
