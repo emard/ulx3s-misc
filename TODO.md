@@ -1,15 +1,21 @@
 # TODO
 
+    [ ] config file for BT MAC and few parameters
+    [ ] sensor hotplug
+    [ ] LCD display with freq and status
+    [ ] WiFi server file download
+    [ ] time sync status
+    [ ] speech immediately at start logging
     [x] start/stop recording at speed hysteresis
     [x] sensor L/R status monitor and error reporting
-    [ ] time sync status
     [ ] GPS time discontinuty warning
-    [ ] LCD display with freq and status
     [ ] TA flag at errors
     [ ] increase speech volume
     [ ] core fm filter and downsample not working
-    [ ] speech report remaining minutes and disk full
     [x] RT display disk free
-    [ ] WiFi download
     [x] file named with timestamp
-    [ ] rename speech files to english filenames
+    [x] rename speech files to english filenames
+    [x] 1-char 2^n MB free display 0-9
+    [ ] low free: erase oldest files, stop logging
+    [ ] speech report remaining minutes and disk full
+    [ ] estimate speed-accel integration value
