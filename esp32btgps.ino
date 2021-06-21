@@ -326,7 +326,7 @@ void loop()
         {
           if(fast_enough == 0)
           {
-            Serial.print(knots);
+            Serial.print(knots*1852/100000);
             Serial.println(">10 km/h fast enough - start logging");
           }
           fast_enough = 1;
@@ -335,7 +335,7 @@ void loop()
         {
           if(fast_enough)
           {
-            Serial.print(knots);
+            Serial.print(knots*1852/100000);
             Serial.println("<4 km/h not fast enough - stop logging");
           }
           fast_enough = 0;
