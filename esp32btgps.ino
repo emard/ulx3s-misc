@@ -321,21 +321,22 @@ void loop()
         #endif
         knots = nmea2spd(nmea); // parse speed
         // hysteresis for logging
-        if(knots > 10)
+        // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
+        if(knots > 550)
         {
           if(fast_enough == 0)
           {
             Serial.print(knots);
-            Serial.println(">10 kt*100 fast enough - start logging");
+            Serial.println(">10 km/h fast enough - start logging");
           }
           fast_enough = 1;
         }
-        if(knots < 2)
+        if(knots < 220)
         {
           if(fast_enough)
           {
             Serial.print(knots);
-            Serial.println("<2 kt*100 not fast enough - stop logging");
+            Serial.println("<4 km/h not fast enough - stop logging");
           }
           fast_enough = 0;
         }
@@ -379,13 +380,13 @@ void loop()
             if(!pcm_is_open)
             {
               if(knots < 0)
-                speakfile = "/speak/cekam.wav";
+                speakfile = "/speak/wait.wav";
               else
               {
                 if(fast_enough)
-                  speakfile = "/speak/snimam.wav";
+                  speakfile = "/speak/record.wav";
                 else
-                  speakfile = "/speak/spreman.wav";
+                  speakfile = "/speak/ready.wav";
               }
             }
             prev_min = tm.tm_min;
@@ -424,7 +425,7 @@ void loop()
   {
     tdelta_wav = t-tprev_wav;
     if(tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
-      speakfile = "/speak/trazim.wav";
+      speakfile = "/speak/search.wav";
   }
 #if 0
   if(speakfile == NULL && pcm_is_open==0 && (((int32_t)t)-(int32_t)tspeak_ready)>0) // NULL: we are ready to speak new file, 

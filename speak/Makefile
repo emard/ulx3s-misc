@@ -1,17 +1,17 @@
 all: \
-spreman.wav \
-nsenzora.wav \
-nlijevi.wav \
-ndesni.wav \
-nkartice.wav \
-nmjesta.wav \
-cekam.wav \
-snimam.wav \
-trazim.wav \
+ready.wav \
+nsensor.wav \
+nleft.wav \
+nright.wav \
+ncard.wav \
+nfree.wav \
+wait.wav \
+record.wav \
+search.wav \
 1.wav \
 
-1.wav : brojevi.sh
-	./brojevi.sh
+1.wav : numbers.sh
+	./numbers.sh
 
 %.wav : %.txt
 	./txt2wav.sh $< $@
