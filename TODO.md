@@ -11,4 +11,5 @@
     [ ] speech report remaining minutes and disk full
     [x] RT display disk free
     [ ] WiFi download
-    [ ] file named with timestamp
+    [x] file named with timestamp
+    [ ] rename speech files to english filenames
