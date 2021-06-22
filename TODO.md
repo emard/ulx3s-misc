@@ -1,5 +1,6 @@
 # TODO
 
+    [ ] SD card compatiblity sandisk
     [ ] config file for BT MAC and few parameters
     [ ] sensor hotplug
     [ ] LCD display with freq and status
