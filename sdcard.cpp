@@ -203,6 +203,7 @@ int iclog2(int x)
 void rds_message(struct tm *tm)
 {
   char disp_short[9], disp_long[65];
+  char *sensor_status_decode = "XLRY"; // X-no sensors, L-left only, R-right only, Y-both
   char free_MB_2n = ' ';
   if(tm)
   {
@@ -218,16 +219,16 @@ void rds_message(struct tm *tm)
       free_MB_2n = '9';
     if(knots < 0)
     {
-      sprintf(disp_short, "WAIT 0LR");
+      sprintf(disp_short, "WAIT  0X");
       sprintf(disp_long, "%dMB free %02d:%02d WAIT FOR GPS FIX", 
         free_MB, tm->tm_hour, tm->tm_min);
     }
     else
     {
       if(fast_enough)
-        sprintf(disp_short, "RUN  0LR");
+        sprintf(disp_short, "RUN   0X");
       else
-        sprintf(disp_short, "GO   0LR");
+        sprintf(disp_short, "GO    0X");
       sprintf(disp_long, "%dMB free %02d:%02d %d.%02d kt RUN=%d",
         free_MB,
         tm->tm_hour, tm->tm_min,
@@ -239,13 +240,12 @@ void rds_message(struct tm *tm)
   else // NULL pointer
   {
     // null pointer, dummy time
-    sprintf(disp_short, "OFF   LR");
+    sprintf(disp_short, "OFF    X");
     sprintf(disp_long,  "SEARCHING FOR GPS");
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
-  disp_short[5] = free_MB_2n;
-  disp_short[6] = sensor_check_status & 1 ? 'L' : ' ';
-  disp_short[7] = sensor_check_status & 2 ? 'R' : ' ';
+  disp_short[6] = free_MB_2n;
+  disp_short[7] = sensor_status_decode[sensor_check_status];
   rds.ps(disp_short);
   rds.rt(disp_long);
   Serial.println(disp_short);
