@@ -16,6 +16,8 @@
     [x] file named with timestamp
     [x] rename speech files to english filenames
     [x] 1-char 2^n MB free display 0-9
+    [ ] 1-char sensor status XLRY
     [ ] low free: erase oldest files, stop logging
     [ ] speech report remaining minutes and disk full
     [ ] estimate speed-accel integration value
+    [ ] get bytes free early to display when GPS is OFF
