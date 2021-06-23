@@ -21,7 +21,6 @@ entity ulx3s_gray_counter is
   ftdi_txd: in    std_logic;
   -- FTDI additional signaling
   ftdi_ndtr: inout  std_logic;
-  ftdi_ndsr: inout  std_logic;
   ftdi_nrts: inout  std_logic;
   ftdi_txden: inout std_logic;
 
@@ -44,26 +43,8 @@ entity ulx3s_gray_counter is
   -- GPIO (some are shared with wifi and adc)
   gp, gn: inout std_logic_vector(27 downto 0) := (others => 'Z');
   
-  -- FPGA direct USB connector
-  usb_fpga_dp, usb_fpga_dn: inout std_logic;
-
   -- SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
-  shutdown: out std_logic := '0';
-
-  -- Digital Video (differential outputs)
-  --gpdi_dp, gpdi_dn: out std_logic_vector(2 downto 0);
-  --gpdi_clkp, gpdi_clkn: out std_logic;
-
-  -- Flash ROM (SPI0)
-  --flash_miso   : in      std_logic;
-  --flash_mosi   : out     std_logic;
-  --flash_clk    : out     std_logic;
-  --flash_csn    : out     std_logic;
-
-  -- SD card (SPI1)
-  sd_dat3_csn, sd_cmd_di, sd_dat0_do, sd_dat1_irq, sd_dat2: inout std_logic := 'Z';
-  sd_clk: inout std_logic := 'Z';
-  sd_cdn, sd_wp: inout std_logic := 'Z'
+  shutdown: out std_logic := '0'
   );
 end;
 
@@ -91,7 +72,7 @@ begin
   end process;
   S_enable <= R_counter(R_counter'high);
 
-  gray_inst: entity gray_counter
+  gray_inst: entity work.gray_counter
   port map
   (
     clk => clk_25mhz,
