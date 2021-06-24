@@ -31,9 +31,10 @@ module top_hex_mul
     .locked(clk_locked)
   );
 
-  reg [31:0] ma = 32'd39127620;
-  reg [31:0] mb = 32'd35792620;
-  reg [53:0] mc = ma*mb;
+  // signed multiplication with 54-bit result
+  reg signed [31:0] ma = 32'd39127620;
+  reg signed [31:0] mb = 32'd35792620;
+  reg signed [53:0] mc = ma*mb;
 
   wire [6:0] btn_rising;
   btn_debounce
