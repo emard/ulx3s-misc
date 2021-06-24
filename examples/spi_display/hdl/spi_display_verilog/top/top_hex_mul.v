@@ -32,9 +32,9 @@ module top_hex_mul
   );
 
   // signed multiplication with 54-bit result
-  reg signed [31:0] ma = 32'd39127620;
-  reg signed [31:0] mb = 32'd35792620;
-  reg signed [53:0] mc = ma*mb;
+  reg  signed [31:0] ma = 32'd39127620;
+  reg  signed [31:0] mb = 32'd35792620;
+  wire signed [53:0] mc = ma*mb;
 
   wire [6:0] btn_rising;
   btn_debounce
@@ -57,10 +57,10 @@ module top_hex_mul
   end
 
   reg [127:0] R_display; // something to display
-  always @(posedge clk)
+  always @(posedge clkm)
   begin
-    R_display[63:32] <= ma;
-    R_display[31: 0] <= mb;
+    R_display[ 63:32] <= ma;
+    R_display[ 31: 0] <= mb;
     R_display[127:64] <= mc;
   end
 
