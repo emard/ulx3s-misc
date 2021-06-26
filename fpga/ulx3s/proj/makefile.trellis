@@ -2,7 +2,7 @@
 PROJECT = accelog
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 12
+FPGA_SIZE = 85
 FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
@@ -24,26 +24,26 @@ TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
 $(TOP_MODULE_FILE) \
-../../ecp5pll/hdl/sv/ecp5pll.sv \
-../../spi_slave/hdl/spirw_slave_v.v \
-../../adxl355/hdl/adxl355rd.v \
-../../adxl355/hdl/adxl355_sync.v \
-../../hex/decoder/hex_decoder_v.v \
-../../spi_display/hdl/spi_display_verilog/lcd_video.v \
+../ecp5pll/hdl/sv/ecp5pll.sv \
+../spi_slave/hdl/spirw_slave_v.v \
+../adxl355/hdl/adxl355rd.v \
+../adxl355/hdl/adxl355_sync.v \
+../hex/decoder/hex_decoder_v.v \
+../spi_display/hdl/spi_display_verilog/lcd_video.v \
 
 # *.vhd those files will be compiled with ghdl
 TOP_VHDL_MODULE = fmgen_rds
 VHDL_FILES = \
-../../fm/hdl/accelog/fmgen_rds.vhd \
-../../fm/hdl/fmgen.vhd \
-../../fm/hdl/rds.vhd \
-../../fm/hdl/lowpass.vhd \
+../fm/hdl/accelog/fmgen_rds.vhd \
+../fm/hdl/fmgen.vhd \
+../fm/hdl/rds.vhd \
+../fm/hdl/lowpass.vhd \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
 NEXTPNR_OPTIONS = --timing-allow-fail
 
-SCRIPTS = ../../../scripts
+SCRIPTS = ../../scripts
 include $(SCRIPTS)/diamond_path.mk
 include $(SCRIPTS)/trellis_path.mk
 include $(SCRIPTS)/trellis_main_ghdl.mk

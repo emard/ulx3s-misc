@@ -56,7 +56,6 @@ module top_adxl355log
   input         clk_25mhz,
   input   [6:0] btn,
   output  [7:0] led,
-  output        oled_csn, // LCD ST7789 backlight off
   output  [3:0] audio_l, audio_r,
   output        gp13, // ESP32   MISO
   output        gp14, // ADXL355 DRDY
@@ -531,6 +530,7 @@ module top_adxl355log
 
   wire [7:0] disp_x, disp_y;
   wire [15:0] disp_color;
+  wire [63:0] data;
   hex_decoder_v
   #(
     .c_data_len(64),
