@@ -46,6 +46,7 @@ module top_adxl355log
   spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1 or SPI_MODE3)
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
   clk_out1_hz  = 240*1000000,// Hz, 240 MHz, PLL generated clock for FM transmitter
+  //clk_out2_hz  = 120*1000000,// Hz, 120 MHz, PLL generated clock for SPI LCD
   pps_n        = 10,         // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
@@ -83,6 +84,11 @@ module top_adxl355log
   inout   [3:0] sd_d, // wifi_gpio 13,12,4,2
   input         sd_cmd, sd_clk,
   output        sd_wp, // BGA pin exists but not connected on PCB
+  output        oled_csn,
+  output        oled_clk,
+  output        oled_mosi,
+  output        oled_dc,
+  output        oled_resn,
   output        ant_433mhz
 );
   // TX/RX passthru
@@ -523,7 +529,56 @@ module top_adxl355log
   assign audio_r[3:1] = 0;
   assign audio_r[0] = pps_btn;
 
-  assign oled_csn = 0; // st7789 backlight off
+  wire [7:0] disp_x, disp_y;
+  wire [15:0] disp_color;
+  hex_decoder_v
+  #(
+    .c_data_len(64),
+    .c_grid_6x8(1)
+  )
+  hex_decoder_inst
+  (
+    .clk(clk),
+    .data(data),
+    .x(disp_x[7:1]),
+    .y(disp_y[7:1]),
+    .color(disp_color)
+  );
+
+  lcd_video
+  #(
+    .c_clk_spi_mhz(clk_out0_hz/1000000),
+    .c_vga_sync(0),
+    .c_reset_us(1000),
+    .c_init_file("st7789_linit_xflip.mem"),
+    //.c_init_size(75), // long init
+    //.c_init_size(35), // standard init (not long)
+    .c_clk_phase(0),
+    .c_clk_polarity(1),
+    .c_x_size(240),
+    .c_y_size(240),
+    .c_color_bits(16)
+  )
+  lcd_video_instance
+  (
+    .reset(0),
+    .clk_pixel(clk), // 25 MHz
+    .clk_pixel_ena(1),
+    .clk_spi(clk), // 100 MHz
+    .clk_spi_ena(1),
+    //.blank(vga_blank_test),
+    //.hsync(vga_hsync_test),
+    //.vsync(vga_vsync_test),
+    .x(disp_x),
+    .y(disp_y),
+    .color(disp_color),
+    .spi_resn(oled_resn),
+    .spi_clk(oled_clk),
+    //.spi_csn(oled_csn), // 8-pin ST7789
+    .spi_dc(oled_dc),
+    .spi_mosi(oled_mosi)
+  );
+  assign oled_csn = 1; // 7-pin ST7789
 
 endmodule
 `default_nettype wire
