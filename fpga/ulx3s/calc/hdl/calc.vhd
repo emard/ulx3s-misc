@@ -115,9 +115,12 @@ begin
       else
         case cnt(2 downto 0) is
           when "000" => -- 0
-            reset_c <= '1';
-            ia <= to_unsigned(0+ 4*4, 7);
-            ib <= to_unsigned(0+11*4, 7);
+            --if cnt(cnt_bits-1 downto 3) = (others => '0') then
+              reset_c <= '1';
+              ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
+              ib <= to_unsigned(0+11*4, 7); -- Z1(0)
+            --else
+            --end if;
           when "001" => -- 1
             reset_c <= '0';
             matrix_read <= '1';
@@ -126,8 +129,7 @@ begin
             mux_ab <= "10"; -- a,b <= ra,yp
           when "011" => -- 3
             mux_ab <= "00"; -- NOP
-            ia <= ia - 4*4;
-            calc_c <= '1';
+            calc_c <= '1';  -- PR(0)*YP or ST(0,0)*Z1(0)
           when "100" => -- 4
             calc_c <= '0';
           when "101" => -- 5
