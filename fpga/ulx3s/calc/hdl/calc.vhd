@@ -104,9 +104,6 @@ begin
     end if;
   end process;
   
-  --b <= x"00200000"; -- 2.0 scaled fixed point 20-bit
-  --c <= x"00000030";
-  
   process(clk)
   begin
     if rising_edge(clk) then
@@ -121,8 +118,8 @@ begin
         else
           reset_c <= '0';
           if cnt = to_unsigned(3,cnt_bits) then -- set write address
-            ia <= to_unsigned(0, 7);
-            --ia <= to_unsigned(5*4, 7);
+            --ia <= to_unsigned(0, 7);
+            ia <= to_unsigned(5*4, 7);
           end if;
         end if;
         -- ra,rb = matrix(ia),matrix(ib) (read from BRAM)
@@ -133,8 +130,8 @@ begin
         end if;
         -- a,b = ra,rb
         if cnt = to_unsigned(2,cnt_bits) then
-          mux_ab <= "11"; -- a,b <= ra,rb
-          --mux_ab <= "10"; -- a,b <= ra,yp
+          --mux_ab <= "11"; -- a,b <= ra,rb
+          mux_ab <= "10"; -- a,b <= ra,yp
         else
           mux_ab <= "00"; -- nop
         end if;
