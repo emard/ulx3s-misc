@@ -112,21 +112,37 @@ begin
     if rising_edge(clk) then
       if enter = '1' then
         cnt <= (others => '0');
+        ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
+        ib <= to_unsigned(0+11*4, 7); -- Z1(0)
       else
         case cnt(2 downto 0) is
           when "000" => -- 0
-            --if cnt(cnt_bits-1 downto 3) = (others => '0') then
+            if cnt(4 downto 3) = "00" then
               reset_c <= '1';
-              ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
-              ib <= to_unsigned(0+11*4, 7); -- Z1(0)
-            --else
-            --end if;
+            else
+              reset_c <= '0';
+            end if;
+            case cnt(5 downto 3) is
+              when "000" =>
+                ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
+                ib <= to_unsigned(0+11*4, 7); -- Z1(0)
+              when "001" =>
+                ia <= ia - 4*4; -- ST(0,0)
+              when "010" | "011" | "100" =>
+                ia <= ia + 4; -- ST(0,1)
+                ib <= ib + 1; -- Z1(1)
+              when others =>
+            end case;
           when "001" => -- 1
             reset_c <= '0';
             matrix_read <= '1';
           when "010" => -- 2
             matrix_read <= '0';
-            mux_ab <= "10"; -- a,b <= ra,yp
+            if cnt(5 downto 3) = "000" then
+              mux_ab <= "10"; -- a,b <= ra,yp
+            else
+              mux_ab <= "11"; -- a,b <= ra,rb
+            end if;
           when "011" => -- 3
             mux_ab <= "00"; -- NOP
             calc_c <= '1';  -- PR(0)*YP or ST(0,0)*Z1(0)
