@@ -48,7 +48,8 @@ architecture RTL of calc is
   signal ab: signed(63 downto 0);
   signal result: signed(31 downto 0);
   signal reset_c, calc_c: std_logic;
-  signal cnt: unsigned(3 downto 0);
+  constant cnt_bits: integer := 4;
+  signal cnt: unsigned(cnt_bits-1 downto 0);
   signal ia, ib: unsigned(6 downto 0); -- indexes for matrix
   signal matrix_read, matrix_write: std_logic := '0';
   signal mux_ab: unsigned(1 downto 0) := "00";
@@ -113,42 +114,40 @@ begin
         cnt <= (others => '0');
       else
         -- reset and addressing
-        if cnt = x"0" then
+        if cnt = to_unsigned(0,cnt_bits) then -- set read address
           reset_c <= '1';
           ia <= to_unsigned(0, 7);
           ib <= to_unsigned(1, 7);
         else
           reset_c <= '0';
-          if cnt = x"6" then
-            ia <= to_unsigned(5*4, 7);
+          if cnt = to_unsigned(3,cnt_bits) then -- set write address
+            ia <= to_unsigned(0, 7);
+            --ia <= to_unsigned(5*4, 7);
           end if;
         end if;
         -- ra,rb = matrix(ia),matrix(ib) (read from BRAM)
-        if cnt = x"1" then
+        if cnt = to_unsigned(1,cnt_bits) then
           matrix_read <= '1';
         else
           matrix_read <= '0';
         end if;
         -- a,b = ra,rb
-        if cnt = x"2" then
-          --mux_ab <= "11"; -- a,b <= ra,rb
-          mux_ab <= "10"; -- a,b <= ra,yp
+        if cnt = to_unsigned(2,cnt_bits) then
+          mux_ab <= "11"; -- a,b <= ra,rb
+          --mux_ab <= "10"; -- a,b <= ra,yp
         else
           mux_ab <= "00"; -- nop
         end if;
         -- c += a*b
-        if cnt = x"3" then
+        if cnt = to_unsigned(3,cnt_bits) then
           calc_c <= '1';
         else
           calc_c <= '0';
         end if;
         -- wait one cycle for result to appear in c
-        -- result = c
-        if cnt = x"5" then
+        -- result = c, matrix = c
+        if cnt = to_unsigned(5,cnt_bits) then
           result <= c;
-        end if;
-        -- matrix = c (write to BRAM)
-        if cnt = x"7" then
           matrix_write <= '1';
         else
           matrix_write <= '0';
