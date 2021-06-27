@@ -608,7 +608,8 @@ module top_adxl355log
   calc_inst
   (
     .clk(clk),
-    .start(btn_rising[1]),
+    .enter(btn_rising[1]),
+    .yp(32'h00300000),
     .d1(ma),
     .d0(data[31:0])
   );
