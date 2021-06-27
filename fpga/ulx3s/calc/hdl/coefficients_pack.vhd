@@ -7,14 +7,14 @@ use ieee.math_real.all; -- for real numbers
 
 package coefficients is
 type coefficients_type is array(0 to 19) of real;
-constant coefficients_matrix: coefficients_type := (
+constant coefficients_250mm_matrix: coefficients_type := (
 -- ST matrix 4x4
-1.1, 2.1, 3.1, 4.1,
-1.2, 2.2, 3.2, 4.2,
-1.3, 2.3, 3.3, 4.3,
-1.4, 2.4, 3.4, 4.4,
+  0.9966071  ,  1.091514e-2, -2.083274e-3,  3.190145e-4  , -- 0*4+
+ -0.5563044  ,  0.9438768  , -0.8324718  ,  5.064701e-2  , -- 1*4+
+  2.153176e-2,  2.126763e-3,  0.7508714  ,  8.221888e-3  , -- 2*4+
+  3.335013   ,  0.3376467  ,-39.12762    ,  0.4347564    , -- 3*4+
 -- PR matrix 1x4
-1.5, 2.5, 3.5, 4.5,
+  5.476107e-3,  1.388776   ,  0.2275968  , 35.79262      , -- 4*4+
 others => 0.0 -- should not be needed
 );
 end coefficients;
