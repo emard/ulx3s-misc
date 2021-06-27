@@ -2,7 +2,7 @@
 PROJECT = accelog
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 12
 FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
@@ -38,6 +38,8 @@ VHDL_FILES = \
 ../fm/hdl/fmgen.vhd \
 ../fm/hdl/rds.vhd \
 ../fm/hdl/lowpass.vhd \
+../calc/hdl/coefficients_pack.vhd \
+../calc/hdl/calc.vhd \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2

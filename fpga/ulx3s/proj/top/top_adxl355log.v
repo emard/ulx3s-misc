@@ -580,5 +580,14 @@ module top_adxl355log
   );
   assign oled_csn = 1; // 7-pin ST7789
 
+  /*
+  calc
+  calc_inst
+  (
+    .d1(32'hABCD),
+    .d0(data[31:0])
+  );
+  */
+
 endmodule
 `default_nettype wire

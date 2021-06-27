@@ -40,6 +40,8 @@ VHDL_FILES = \
 ../fm/hdl/fmgen.vhd \
 ../fm/hdl/rds.vhd \
 ../fm/hdl/lowpass.vhd \
+../calc/hdl/coefficients_pack.vhd \
+../calc/hdl/calc.vhd \
 
 SCRIPTS = ../../scripts
 include $(SCRIPTS)/trellis_path.mk
