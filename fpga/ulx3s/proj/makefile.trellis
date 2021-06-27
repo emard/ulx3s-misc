@@ -30,6 +30,7 @@ $(TOP_MODULE_FILE) \
 ../adxl355/hdl/adxl355_sync.v \
 ../hex/decoder/hex_decoder_v.v \
 ../spi_display/hdl/spi_display_verilog/lcd_video.v \
+../btn_debounce/hdl/btn_debounce.v \
 
 # *.vhd those files will be compiled with ghdl
 TOP_VHDL_MODULE = fmgen_rds

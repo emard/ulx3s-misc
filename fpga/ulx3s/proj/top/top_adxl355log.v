@@ -528,9 +528,33 @@ module top_adxl355log
   assign audio_r[3:1] = 0;
   assign audio_r[0] = pps_btn;
 
+  reg  signed [31:0] ma = 32'd0;
+  reg  signed [31:0] mb = 32'd0;
+
+  wire [6:0] btn_rising;
+  btn_debounce
+  btn_debounce_inst
+  (
+    .clk(clk),
+    .btn(btn),
+    .rising(btn_rising)
+  );
+  always @(posedge clk)
+  begin
+    if(btn_rising[3])
+      ma <= ma + 1;
+    else if(btn_rising[4])
+      ma <= ma - 1;
+    if(btn_rising[6])
+      mb <= mb + 1;
+    else if(btn_rising[5])
+      mb <= mb - 1;
+  end
+
   wire [7:0] disp_x, disp_y;
   wire [15:0] disp_color;
   wire [63:0] data;
+  assign data[63:32] = ma;
   hex_decoder_v
   #(
     .c_data_len(64),
@@ -583,7 +607,8 @@ module top_adxl355log
   calc
   calc_inst
   (
-    .d1(32'hABCD),
+    .clk(clk),
+    .d1(ma),
     .d0(data[31:0])
   );
 
