@@ -48,7 +48,7 @@ architecture RTL of calc is
   signal ab: signed(63 downto 0);
   signal result: signed(31 downto 0);
   signal reset_c, calc_c: std_logic;
-  constant cnt_bits: integer := 4;
+  constant cnt_bits: integer := 6; -- 0-31, stop at 32
   signal cnt: unsigned(cnt_bits-1 downto 0);
   signal ia, ib: unsigned(6 downto 0); -- indexes for matrix
   signal matrix_read, matrix_write: std_logic := '0';
@@ -104,52 +104,40 @@ begin
     end if;
   end process;
   
+  -- 16 iterations for one row
+  --  4 iterations for 4 rows
+  -- 64 cycles total
   process(clk)
   begin
     if rising_edge(clk) then
       if enter = '1' then
         cnt <= (others => '0');
       else
-        -- reset and addressing
-        if cnt = to_unsigned(0,cnt_bits) then -- set read address
-          reset_c <= '1';
-          ia <= to_unsigned(0, 7);
-          ib <= to_unsigned(1, 7);
-        else
-          reset_c <= '0';
-          if cnt = to_unsigned(3,cnt_bits) then -- set write address
-            --ia <= to_unsigned(0, 7);
-            ia <= to_unsigned(5*4, 7);
-          end if;
-        end if;
-        -- ra,rb = matrix(ia),matrix(ib) (read from BRAM)
-        if cnt = to_unsigned(1,cnt_bits) then
-          matrix_read <= '1';
-        else
-          matrix_read <= '0';
-        end if;
-        -- a,b = ra,rb
-        if cnt = to_unsigned(2,cnt_bits) then
-          --mux_ab <= "11"; -- a,b <= ra,rb
-          mux_ab <= "10"; -- a,b <= ra,yp
-        else
-          mux_ab <= "00"; -- nop
-        end if;
-        -- c += a*b
-        if cnt = to_unsigned(3,cnt_bits) then
-          calc_c <= '1';
-        else
-          calc_c <= '0';
-        end if;
-        -- wait one cycle for result to appear in c
-        -- result = c, matrix = c
-        if cnt = to_unsigned(5,cnt_bits) then
-          result <= c;
-          matrix_write <= '1';
-        else
-          matrix_write <= '0';
-        end if;
-        if cnt(3) = '0' then
+        case cnt(2 downto 0) is
+          when "000" => -- 0
+            reset_c <= '1';
+            ia <= to_unsigned(0+ 4*4, 7);
+            ib <= to_unsigned(0+11*4, 7);
+          when "001" => -- 1
+            reset_c <= '0';
+            matrix_read <= '1';
+          when "010" => -- 2
+            matrix_read <= '0';
+            mux_ab <= "10"; -- a,b <= ra,yp
+          when "011" => -- 3
+            mux_ab <= "00"; -- NOP
+            ia <= ia - 4*4;
+            calc_c <= '1';
+          when "100" => -- 4
+            calc_c <= '0';
+          when "101" => -- 5
+            result <= c;
+            matrix_write <= '1';
+          when "110" => -- 6
+            matrix_write <= '0';
+          when others =>
+        end case;
+        if cnt(cnt_bits-1) = '0' then
           cnt <= cnt + 1;
         end if;
       end if;

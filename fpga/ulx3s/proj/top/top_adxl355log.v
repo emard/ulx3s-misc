@@ -609,7 +609,7 @@ module top_adxl355log
   (
     .clk(clk),
     .enter(btn_rising[1]),
-    .yp(32'h00300000),
+    .yp(32'h00100000),
     .d1(ma),
     .d0(data[31:0])
   );
