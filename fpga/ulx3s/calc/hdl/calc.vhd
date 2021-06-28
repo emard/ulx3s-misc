@@ -2,6 +2,8 @@
 -- (c) Davor Jadrijevic
 -- LICENSE=BSD
 
+-- TODO: now 1-input, extend with 6-input
+
 library ieee;
 use ieee.std_logic_1164.all;
 -- use ieee.std_logic_arith.all; -- replaced by ieee.numeric_std.all
