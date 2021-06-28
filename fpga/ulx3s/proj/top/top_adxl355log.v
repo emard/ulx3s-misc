@@ -620,14 +620,16 @@ module top_adxl355log
     .clk(clk),
     .enter(btn_rising[1]),
     //.enter(autofire),
-    .yp(ma), // 1<<20 cca um/m, * 1<<10 -> mm/m slope
-    .vz(data[31:0]),
+    .slope_l(ma), // 1<<20 cca um/m
+    .slope_r(mb),
+    .vz_l(data[127:96]),
+    .vz_r(data[95:64])
     //.d0(data[ 63:32]),
     //.d1(data[ 31:0 ]),
     //.d2(data[127:96]),
     //.d3(data[ 95:64])
   );
   assign data[63:32] = ma;
-  assign data[127:64] = 0;
+  assign data[31:0]  = mb;
 endmodule
 `default_nettype wire

@@ -22,14 +22,14 @@ use work.coefficients.all; -- coefficients matrix
 
 entity calc is
 generic (
-  c_x: integer := 0;
-  c_y: integer := 0
+  interval_mm : integer := 250; -- mm sampling interval (don't touch)
+  length_m    : integer := 100  --  m length
 );
 port (
   clk: in std_logic;
-  enter: in std_logic; -- '1' to enter slope for every x = 250 mm
-  yp: in  std_logic_vector(31 downto 0); -- slope um/m
-  vz: out std_logic_vector(31 downto 0); -- z-velocity um/s
+  enter: in std_logic; -- '1' to enter slope for every sampling interval x = 250 mm
+  slope_l, slope_r: in  std_logic_vector(31 downto 0); -- slope um/m
+     vz_l,    vz_r: out std_logic_vector(31 downto 0); -- z-velocity um/s
   d0, d1, d2, d3: out std_logic_vector(31 downto 0)
 );
 end;
@@ -64,6 +64,7 @@ architecture RTL of calc is
   signal mux_ab: unsigned(1 downto 0) := "00";
   signal swap_z: std_logic := '1'; -- swaps Z0 or Z1
   signal z0, z1, z2, z3: signed(31 downto 0);
+  signal yp: signed(31 downto 0); -- slope register
 begin
   
   -- data fetch, this should create BRAM
@@ -83,7 +84,7 @@ begin
   begin
     if rising_edge(clk) then
       case mux_ab is
-        when "10" => -- a from matrix ra, b from input yp
+        when "10" => -- a from matrix ra, b from input slope yp
           a <= ra;
           b <= signed(yp);
         when "11" => -- a,b from matrix ra,rb
@@ -120,6 +121,7 @@ begin
       if enter = '1' and cnt(cnt_bits-1) = '1' then
         cnt <= (others => '0');
         swap_z <= not swap_z;
+        yp <= signed(slope_l);
       else
         case cnt(2 downto 0) is -- one element calc
           when "000" => -- 0 = cnt(2 downto 0)
@@ -203,7 +205,8 @@ begin
   end process;
 
   -- output connection
-  vz <= std_logic_vector(result);
+  vz_l <= std_logic_vector(result);
+  vz_r <= (others => '0');
   --d0 <= std_logic_vector(int32_coefficients_matrix(to_integer(unsigned(d1))));
   --d0 <= std_logic_vector(bc(31 downto 0));
   --d0 <= std_logic_vector(result);
