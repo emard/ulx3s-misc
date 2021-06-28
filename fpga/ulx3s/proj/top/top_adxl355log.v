@@ -528,7 +528,7 @@ module top_adxl355log
   assign audio_r[3:1] = 0;
   assign audio_r[0] = pps_btn;
 
-  reg  signed [31:0] ma = 32'h400;
+  reg  signed [31:0] ma = 32'd0;
   reg  signed [31:0] mb = 32'd0;
 
   wire [6:0] btn_rising;
@@ -545,9 +545,9 @@ module top_adxl355log
   always @(posedge clk)
   begin
     if(btn_rising[3])
-      ma <= ma + 1;
+      ma <= ma + 32'h100;
     else if(btn_rising[4])
-      ma <= ma - 1;
+      ma <= ma - 32'h100;
     if(btn_rising[6])
       mb <= mb + 1;
     else if(btn_rising[5])
@@ -605,13 +605,22 @@ module top_adxl355log
     .spi_mosi(oled_mosi)
   );
   assign oled_csn = 1; // 7-pin ST7789
+  
+  reg [19:0] autoenter;
+  always @(posedge clk)
+    if(autoenter[19] == 0)
+      autoenter <= autoenter + 1;
+    else
+      autoenter <= 0;
+  wire autofire = autoenter[19];
 
   calc
   calc_inst
   (
     .clk(clk),
     .enter(btn_rising[1]),
-    .yp(32'h400), // 1<<20 cca um/m, * 1<<10 -> mm/m slope
+    //.enter(autofire),
+    .yp(ma), // 1<<20 cca um/m, * 1<<10 -> mm/m slope
     .vz(data[31:0]),
     //.d0(data[ 63:32]),
     //.d1(data[ 31:0 ]),
