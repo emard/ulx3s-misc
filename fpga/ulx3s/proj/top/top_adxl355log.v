@@ -528,7 +528,7 @@ module top_adxl355log
   assign audio_r[3:1] = 0;
   assign audio_r[0] = pps_btn;
 
-  reg  signed [31:0] ma = 32'd0;
+  reg  signed [31:0] ma = 32'h400;
   reg  signed [31:0] mb = 32'd0;
 
   wire [6:0] btn_rising;
@@ -556,11 +556,10 @@ module top_adxl355log
 
   wire [7:0] disp_x, disp_y;
   wire [15:0] disp_color;
-  wire [63:0] data;
-  assign data[63:32] = ma;
+  wire [127:0] data;
   hex_decoder_v
   #(
-    .c_data_len(64),
+    .c_data_len(128),
     .c_grid_6x8(1)
   )
   hex_decoder_inst
@@ -612,10 +611,14 @@ module top_adxl355log
   (
     .clk(clk),
     .enter(btn_rising[1]),
-    .yp(32'h00100000),
-    .d1(ma),
-    .d0(data[31:0])
+    .yp(32'h400), // 1<<20 cca um/m, * 1<<10 -> mm/m slope
+    .vz(data[31:0]),
+    //.d0(data[ 63:32]),
+    //.d1(data[ 31:0 ]),
+    //.d2(data[127:96]),
+    //.d3(data[ 95:64])
   );
-
+  assign data[63:32] = ma;
+  assign data[127:64] = 0;
 endmodule
 `default_nettype wire

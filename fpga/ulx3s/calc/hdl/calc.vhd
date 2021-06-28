@@ -20,8 +20,8 @@ port (
   clk: in std_logic;
   enter: in std_logic;
   yp: in  std_logic_vector(31 downto 0);
-  d1: in  std_logic_vector(31 downto 0);
-  d0: out std_logic_vector(31 downto 0)
+  vz: out std_logic_vector(31 downto 0);
+  d0, d1, d2, d3: out std_logic_vector(31 downto 0)
 );
 end;
 
@@ -53,21 +53,16 @@ architecture RTL of calc is
   signal ia, ib: unsigned(6 downto 0); -- indexes for matrix
   signal matrix_read, matrix_write: std_logic := '0';
   signal mux_ab: unsigned(1 downto 0) := "00";
-  signal swap_z: std_logic := '0'; -- swaps Z0 or Z1
-  signal z0, z2: signed(31 downto 0);
+  signal swap_z: std_logic := '1'; -- swaps Z0 or Z1
+  signal z0, z1, z2, z3: signed(31 downto 0);
 begin
-  --d0 <= std_logic_vector(int32_coefficients_matrix(to_integer(unsigned(d1))));
-  --d0 <= std_logic_vector(bc(31 downto 0));
-  d0 <= std_logic_vector(result);
   
   -- data fetch, this should create BRAM
   process(clk)
   begin
     if rising_edge(clk) then
-      --if matrix_read = '1' then
-        ra <= int32_coefficients_matrix(to_integer(ia));
-        rb <= int32_coefficients_matrix(to_integer(ib));
-      --end if;
+      ra <= int32_coefficients_matrix(to_integer(ia));
+      rb <= int32_coefficients_matrix(to_integer(ib));
       if matrix_write = '1' then
         int32_coefficients_matrix(to_integer(ib)) <= c;
       end if;
@@ -115,8 +110,6 @@ begin
     if rising_edge(clk) then
       if enter = '1' and cnt(cnt_bits-1) = '1' then
         cnt <= (others => '0');
-        --ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
-        --ib <= to_unsigned(0+11*4, 7); -- Z1(0)
         swap_z <= not swap_z;
       else
         case cnt(2 downto 0) is
@@ -156,10 +149,10 @@ begin
           when "100" => -- 4
             calc_c <= '0';
             if cnt(5 downto 3) = "100" then -- set write address
-              if swap_z = '1' then -- swap 5,B -- Z0(j) or Z1(j)
-                ib(5 downto 2) <= x"B"; -- normal Z1(j)
+              if swap_z = '1' then -- swap 5,B -- Z0(i) or Z1(i)
+                ib <= '0' & x"B" & cnt(7 downto 6); -- Z1(i)
               else
-                ib(5 downto 2) <= x"5"; -- normal Z0(j)
+                ib <= '0' & x"5" & cnt(7 downto 6); -- Z0(i)
               end if;
             end if;
           when "101" => -- 5 result ready
@@ -168,9 +161,13 @@ begin
               case cnt(7 downto 6) is
                 when "00" => -- 0, Z(0)
                   z0 <= c;
+                when "01" => -- 0, Z(1)
+                  z1 <= c;
                 when "10" => -- 2, Z(2)
-                  result <= z0-c; -- show value vz = Z(0)-Z(2)
-                  --result <= z0;  -- debug to compare with python result of first row Z(0)
+                  z2 <= c;
+                  result <= z0-c; -- vz = Z(0)-Z(2)
+                when "11" => -- 3, Z(3)
+                  z3 <= c;
                 when others =>
               end case;
               matrix_write <= '1'; -- matrix(ib) <= c
@@ -185,5 +182,15 @@ begin
       end if;
     end if;
   end process;
+
+  -- output connection
+  vz <= std_logic_vector(result);
+  --d0 <= std_logic_vector(int32_coefficients_matrix(to_integer(unsigned(d1))));
+  --d0 <= std_logic_vector(bc(31 downto 0));
+  --d0 <= std_logic_vector(result);
+  d0 <= std_logic_vector(z0);
+  d1 <= std_logic_vector(z1);
+  d2 <= std_logic_vector(z2);
+  d3 <= std_logic_vector(z3);
   
 end;
