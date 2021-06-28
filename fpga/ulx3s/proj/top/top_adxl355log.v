@@ -549,9 +549,9 @@ module top_adxl355log
     else if(btn_rising[4])
       ma <= ma - 32'h100;
     if(btn_rising[6])
-      mb <= mb + 1;
+      mb <= mb + 32'h100;
     else if(btn_rising[5])
-      mb <= mb - 1;
+      mb <= mb - 32'h100;
   end
 
   wire [7:0] disp_x, disp_y;
