@@ -105,13 +105,11 @@ begin
       end if;
     end if;
   end process;
-  
-  -- 16 iterations for one row
-  --  4 iterations for 4 rows
-  -- 64 cycles total
+
+  -- 256 iterations  
   -- cnt(2 downto 0) 0-6 one element calc
-  -- cnt(5 downto 3) 0-4 one column of ST
-  -- cnt(7 downto 6) 0-3 one row    of ST
+  -- cnt(5 downto 3) 0-4 one row    of ST
+  -- cnt(7 downto 6) 0-3 one column of ST
   process(clk)
   begin
     if rising_edge(clk) then
@@ -131,9 +129,7 @@ begin
                 ia <= '0' & x"4" & cnt(7 downto 6); --  PR(i) simplified
               when "001" => -- 1
                 reset_c <= '0';
-                --ia <= to_unsigned(0+  0*4, 7);
-                --ib <= to_unsigned(0+ 11*4, 7);
-                ia <= '0' & x"0" & cnt(7 downto 6);     -- ST(i,0)
+                ia <= '0' & "00" & cnt(7 downto 6) & "00";     -- ST(i,0)
                 if swap_z = '1' then -- swap 5,B -- Z0(0) or Z1(0)
                   ib <= '0' & x"5" & "00"; -- Z0(0)
                   --ib <= to_unsigned(0+ 5*4, 7); -- Z0(0)
@@ -142,7 +138,7 @@ begin
                   --ib <= to_unsigned(0+11*4, 7); -- Z1(0)
                 end if;
               when "010" | "011" | "100" => -- 2,3,4
-                ia(3 downto 2) <= ia(3 downto 2) + 1; -- ST(i,1) ST(i,2) ST(i,3)
+                ia(1 downto 0) <= ia(1 downto 0) + 1; -- ST(i,1) ST(i,2) ST(i,3)
                 ib(1 downto 0) <= ib(1 downto 0) + 1; --   Z1(1)    Z(2)    Z(3)
               when others =>
             end case;
@@ -176,7 +172,7 @@ begin
                   z0 <= c;
                 when "10" => -- 2, Z(2)
                   result <= z0-c; -- show value vz = Z(0)-Z(2)
-                  --result <= z0;  -- debug
+                  --result <= z0;  -- debug to compare with python result of first row Z(0)
                 when others =>
               end case;
               matrix_write <= '1'; -- matrix(ib) <= c
