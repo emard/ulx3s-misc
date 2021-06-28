@@ -23,7 +23,7 @@ constant coefficients_250mm_matrix: coefficients_type := (
   0.0        ,  0.0        ,  0.0        ,  0.0        ,
   0.0        ,  0.0        ,  0.0        ,  0.0        ,
 -- 11*4
-  1.0        ,  0.0        ,  0.0        ,  0.0        ,
+  0.1        ,  0.2        ,  0.3        ,  0.4        ,
   0.0        ,  0.0        ,  0.0        ,  0.0        ,
   0.0        ,  0.0        ,  0.0        ,  0.0        ,
   0.0        ,  0.0        ,  0.0        ,  0.0        ,
@@ -32,6 +32,11 @@ constant coefficients_250mm_matrix: coefficients_type := (
 --
 others => 0.0 -- 5*4+ .. 16*4+ Z0=5*4 and Z1=11*4 variable area
 );
+
+-- python3 to verify result (may differ in last digit due to roundoff)
+-- >>> "%08X" % (int( (5.476107e-3 * 1 + 0.9966071 * 0.1 -0.5563044 * 0.2 + 2.153176e-2 * 0.3 + 3.335013 * 0.4 ) * (1<<20) ) + 0x100000000 & 0xFFFFFFFF)
+-- '100155975'
+
 -- microcode to calculate one step
 --                            C  = 0  , A = M[0+4*4], B = YP
 -- Z0[0]  =   PR[0] * YP      C += A*B, A = M[0+0*4], B = M[0+11*4]
