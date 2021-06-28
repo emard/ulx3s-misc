@@ -48,7 +48,7 @@ architecture RTL of calc is
   signal ab: signed(63 downto 0);
   signal result: signed(31 downto 0);
   signal reset_c, calc_c: std_logic;
-  constant cnt_bits: integer := 6; -- 0-31, stop at 32
+  constant cnt_bits: integer := 7; -- 0-63, stop at 64
   signal cnt: unsigned(cnt_bits-1 downto 0);
   signal ia, ib: unsigned(6 downto 0); -- indexes for matrix
   signal matrix_read, matrix_write: std_logic := '0';
@@ -67,7 +67,7 @@ begin
         rb <= int32_coefficients_matrix(to_integer(ib));
       --end if;
       if matrix_write = '1' then
-        int32_coefficients_matrix(to_integer(ia)) <= c;
+        int32_coefficients_matrix(to_integer(ib)) <= c;
       end if;
     end if;
   end process;
@@ -117,20 +117,17 @@ begin
       else
         case cnt(2 downto 0) is
           when "000" => -- 0
-            if cnt(4 downto 3) = "00" then
-              reset_c <= '1';
-            else
-              reset_c <= '0';
-            end if;
             case cnt(5 downto 3) is
-              when "000" =>
+              when "000" => -- 0
+                reset_c <= '1';
                 ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
+              when "001" => -- 1
+                reset_c <= '0';
+                ia <= (others => '0'); -- ST(0,0)
                 ib <= to_unsigned(0+11*4, 7); -- Z1(0)
-              when "001" =>
-                ia <= ia - 4*4; -- ST(0,0)
-              when "010" | "011" | "100" =>
+              when "010" | "011" | "100" => -- 2,3,4
                 ia <= ia + 4; -- ST(0,1)
-                ib <= ib + 1; -- Z1(1)
+                ib(2 downto 0) <= ib(2 downto 0) + 1; -- Z1(1)
               when others =>
             end case;
           when "001" => -- 1
@@ -148,9 +145,15 @@ begin
             calc_c <= '1';  -- PR(0)*YP or ST(0,0)*Z1(0)
           when "100" => -- 4
             calc_c <= '0';
+            if cnt(5 downto 3) = "100" then -- set write address
+              ib <= to_unsigned(0+5*4, 7); -- Z0(0)
+            end if;
           when "101" => -- 5
-            result <= c;
-            matrix_write <= '1';
+            --if cnt(5 downto 3) = "000" then -- debug store value
+            if cnt(5 downto 3) = "100" then -- store value
+              result <= c;
+              matrix_write <= '1';
+            end if;
           when "110" => -- 6
             matrix_write <= '0';
           when others =>
