@@ -48,7 +48,7 @@ architecture RTL of calc is
   signal ab: signed(63 downto 0);
   signal result: signed(31 downto 0);
   signal reset_c, calc_c: std_logic;
-  constant cnt_bits: integer := 7; -- 0-63, stop at 64
+  constant cnt_bits: integer := 9; -- 0-255, stop at 256
   signal cnt: unsigned(cnt_bits-1 downto 0);
   signal ia, ib: unsigned(6 downto 0); -- indexes for matrix
   signal matrix_read, matrix_write: std_logic := '0';
@@ -107,6 +107,9 @@ begin
   -- 16 iterations for one row
   --  4 iterations for 4 rows
   -- 64 cycles total
+  -- cnt(2 downto 0) 0-6 one element calc
+  -- cnt(5 downto 3) 0-4 one column of ST
+  -- cnt(7 downto 6) 0-3 one row    of ST
   process(clk)
   begin
     if rising_edge(clk) then
@@ -120,13 +123,17 @@ begin
             case cnt(5 downto 3) is
               when "000" => -- 0
                 reset_c <= '1';
-                ia <= to_unsigned(0+ 4*4, 7);         --   PR(0)
+                ia <= to_unsigned(0+ 4*4, 7); -- PR(0) complex
+                --ia <= to_unsigned(cnt(7 downto 6)+ 4*4, 7); -- PR(0) complex
+                --ia <= '0' & x"1" & cnt(7 downto 6); --  PR(i) simplified
               when "001" => -- 1
                 reset_c <= '0';
-                ia <= (others => '0');                -- ST(0,0)
-                ib <= to_unsigned(0+11*4, 7);         --   Z1(0)
+                ia <= to_unsigned(0+  0*4, 7);
+                ib <= to_unsigned(0+ 11*4, 7);
+                --ia <= '0' & x"0" & cnt(7 downto 6);     -- ST(i,0)
+                --ib <= '0' & x"B" &            "00";     --   Z1(0)
               when "010" | "011" | "100" => -- 2,3,4
-                ia <= ia + 4;
+                ia <= ia + 4; -- ST(i,1) ST(i,2) ST(i,3)
                 ib <= ib + 1; --   Z1(1)    Z(2)    Z(3)
               when others =>
             end case;
@@ -146,12 +153,15 @@ begin
           when "100" => -- 4
             calc_c <= '0';
             if cnt(5 downto 3) = "100" then -- set write address
-              ib <= to_unsigned(0+5*4, 7); -- normal Z0(0)
+              --ib <= '0' & x"5" & "00";      -- normal Z0(j)
+              ib <= to_unsigned(0+ 5*4, 7);
             end if;
           when "101" => -- 5
             --if cnt(5 downto 3) = "000" then -- debug store first value
             if cnt(5 downto 3) = "100" then -- normal store last value
-              result <= c;
+              --if cnt(7 downto 6) = "00" then -- select show at col
+                result <= c; -- debug show value
+              --end if;
               matrix_write <= '1';
             end if;
           when "110" => -- 6
