@@ -53,6 +53,8 @@ architecture RTL of calc is
   signal ia, ib: unsigned(6 downto 0); -- indexes for matrix
   signal matrix_read, matrix_write: std_logic := '0';
   signal mux_ab: unsigned(1 downto 0) := "00";
+  signal swap_z: std_logic := '0'; -- swaps Z0 or Z1
+  signal z0, z2: signed(31 downto 0);
 begin
   --d0 <= std_logic_vector(int32_coefficients_matrix(to_integer(unsigned(d1))));
   --d0 <= std_logic_vector(bc(31 downto 0));
@@ -113,10 +115,11 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      if enter = '1' then
+      if enter = '1' and cnt(cnt_bits-1) = '1' then
         cnt <= (others => '0');
-        ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
-        ib <= to_unsigned(0+11*4, 7); -- Z1(0)
+        --ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
+        --ib <= to_unsigned(0+11*4, 7); -- Z1(0)
+        swap_z <= not swap_z;
       else
         case cnt(2 downto 0) is
           when "000" => -- 0
@@ -131,10 +134,16 @@ begin
                 --ia <= to_unsigned(0+  0*4, 7);
                 --ib <= to_unsigned(0+ 11*4, 7);
                 ia <= '0' & x"0" & cnt(7 downto 6);     -- ST(i,0)
-                ib <= '0' & x"B" &            "00";     --   Z1(0)
+                if swap_z = '1' then -- swap 5,B -- Z0(0) or Z1(0)
+                  ib <= '0' & x"5" & "00"; -- Z0(0)
+                  --ib <= to_unsigned(0+ 5*4, 7); -- Z0(0)
+                else
+                  ib <= '0' & x"B" & "00"; -- Z1(0)
+                  --ib <= to_unsigned(0+11*4, 7); -- Z1(0)
+                end if;
               when "010" | "011" | "100" => -- 2,3,4
-                ia <= ia + 4; -- ST(i,1) ST(i,2) ST(i,3)
-                ib <= ib + 1; --   Z1(1)    Z(2)    Z(3)
+                ia(3 downto 2) <= ia(3 downto 2) + 1; -- ST(i,1) ST(i,2) ST(i,3)
+                ib(1 downto 0) <= ib(1 downto 0) + 1; --   Z1(1)    Z(2)    Z(3)
               when others =>
             end case;
           when "001" => -- 1
@@ -153,16 +162,23 @@ begin
           when "100" => -- 4
             calc_c <= '0';
             if cnt(5 downto 3) = "100" then -- set write address
-              --ib <= '0' & x"5" & "00";      -- normal Z0(j)
-              ib <= to_unsigned(0+ 5*4, 7);
+              if swap_z = '1' then -- swap 5,B -- Z0(j) or Z1(j)
+                ib(5 downto 2) <= x"B"; -- normal Z1(j)
+              else
+                ib(5 downto 2) <= x"5"; -- normal Z0(j)
+              end if;
             end if;
           when "101" => -- 5
             --if cnt(5 downto 3) = "000" then -- debug store first value
             if cnt(5 downto 3) = "100" then -- normal store last value
-              if cnt(7 downto 6) = "00" then -- select show at col
-                result <= c; -- debug show value
-              end if;
-              matrix_write <= '1';
+              case cnt(7 downto 6) is
+                when "00" => -- 0, Z(0)
+                  z0 <= c;
+                when "10" => -- 2, Z(2)
+                  result <= z0-c; -- debug show value vz = Z(0)-Z(2)
+                when others =>
+              end case;
+              matrix_write <= '1'; -- matrix(ib) <= c
             end if;
           when "110" => -- 6
             matrix_write <= '0';
