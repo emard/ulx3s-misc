@@ -533,6 +533,9 @@ module top_adxl355log
 
   wire [6:0] btn_rising;
   btn_debounce
+  #(
+    .bits(19)
+  )
   btn_debounce_inst
   (
     .clk(clk),
