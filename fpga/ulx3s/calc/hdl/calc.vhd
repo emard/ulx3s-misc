@@ -2,7 +2,14 @@
 -- (c) Davor Jadrijevic
 -- LICENSE=BSD
 
--- TODO: now 1-input, extend with 6-input
+--- enter slope, in 256 clk cycles calculates vz response
+
+-- TODO:
+-- [ ] extend 1-input to 6-input
+-- [ ] speed up, reduce states
+-- [ ] parameter for step (other than 250 mm)
+-- [ ] function to calculate coefficients for arbitrary step
+-- [ ] moving sum rvz in BRAM (parameter: track length 100 m)
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -20,9 +27,9 @@ generic (
 );
 port (
   clk: in std_logic;
-  enter: in std_logic;
-  yp: in  std_logic_vector(31 downto 0);
-  vz: out std_logic_vector(31 downto 0);
+  enter: in std_logic; -- '1' to enter slope for every x = 250 mm
+  yp: in  std_logic_vector(31 downto 0); -- slope um/m
+  vz: out std_logic_vector(31 downto 0); -- z-velocity um/s
   d0, d1, d2, d3: out std_logic_vector(31 downto 0)
 );
 end;
