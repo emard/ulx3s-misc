@@ -175,7 +175,8 @@ begin
                 when "00" => -- 0, Z(0)
                   z0 <= c;
                 when "10" => -- 2, Z(2)
-                  result <= z0-c; -- debug show value vz = Z(0)-Z(2)
+                  result <= z0-c; -- show value vz = Z(0)-Z(2)
+                  --result <= z0;  -- debug
                 when others =>
               end case;
               matrix_write <= '1'; -- matrix(ib) <= c
