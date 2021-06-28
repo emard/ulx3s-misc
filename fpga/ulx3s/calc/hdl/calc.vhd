@@ -128,10 +128,10 @@ begin
                 ia <= '0' & x"4" & cnt(7 downto 6); --  PR(i) simplified
               when "001" => -- 1
                 reset_c <= '0';
-                ia <= to_unsigned(0+  0*4, 7);
-                ib <= to_unsigned(0+ 11*4, 7);
-                --ia <= '0' & x"0" & cnt(7 downto 6);     -- ST(i,0)
-                --ib <= '0' & x"B" &            "00";     --   Z1(0)
+                --ia <= to_unsigned(0+  0*4, 7);
+                --ib <= to_unsigned(0+ 11*4, 7);
+                ia <= '0' & x"0" & cnt(7 downto 6);     -- ST(i,0)
+                ib <= '0' & x"B" &            "00";     --   Z1(0)
               when "010" | "011" | "100" => -- 2,3,4
                 ia <= ia + 4; -- ST(i,1) ST(i,2) ST(i,3)
                 ib <= ib + 1; --   Z1(1)    Z(2)    Z(3)
