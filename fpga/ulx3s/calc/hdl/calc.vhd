@@ -123,11 +123,11 @@ begin
                 ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
               when "001" => -- 1
                 reset_c <= '0';
-                ia <= (others => '0'); -- ST(0,0)
-                ib <= to_unsigned(0+11*4, 7); -- Z1(0)
+                ia <= (others => '0');                -- ST(0,0)
+                ib <= to_unsigned(0+11*4, 7);         --   Z1(0)
               when "010" | "011" | "100" => -- 2,3,4
-                ia <= ia + 4; -- ST(0,1)
-                ib(2 downto 0) <= ib(2 downto 0) + 1; -- Z1(1)
+                ia(4 downto 3) <= ia(4 downto 3) + 1; -- ST(0,1) ST(0,2) ST(0,3)
+                ib(2 downto 0) <= ib(2 downto 0) + 1; --   Z1(1)    Z(2)    Z(3)
               when others =>
             end case;
           when "001" => -- 1
