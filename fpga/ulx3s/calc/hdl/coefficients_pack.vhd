@@ -36,7 +36,11 @@ others => 0.0 -- 5*4+ .. 16*4+ Z0=5*4 and Z1=11*4 variable area
 -- python3 to verify result (may differ in last digit due to roundoff)
 -- use result <= z0; debug line
 -- >>> "%08X" % (int( (5.476107e-3 * 1 + 0.9966071 * 0.1 + 1.091514e-2 * 0.2 + -2.083274e-3 * 0.3 + 3.190145e-4 * 0.4 ) * (1<<20) ) + 0x100000000 & 0xFFFFFFFF)
--- '001B589' (LCD shows 001B58B)
+-- '0001B589'
+-- LCD shows:
+-- 9001B58B with result <= z0
+-- FFFA5E9B with result <= z0-c initially (BTN1 not pressed)
+-- FFF32EB4 / FFF6351A alternating with result <= z0-c after 16 and more BTN1 presses
 --
 -- microcode to calculate one step
 -- swap_z = 0                 C  = 0  , A = M[0+4*4], B = YP
