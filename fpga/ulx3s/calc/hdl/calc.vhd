@@ -120,14 +120,14 @@ begin
             case cnt(5 downto 3) is
               when "000" => -- 0
                 reset_c <= '1';
-                ia <= to_unsigned(0+ 4*4, 7); -- PR(0)
+                ia <= to_unsigned(0+ 4*4, 7);         --   PR(0)
               when "001" => -- 1
                 reset_c <= '0';
                 ia <= (others => '0');                -- ST(0,0)
                 ib <= to_unsigned(0+11*4, 7);         --   Z1(0)
               when "010" | "011" | "100" => -- 2,3,4
-                ia(4 downto 3) <= ia(4 downto 3) + 1; -- ST(0,1) ST(0,2) ST(0,3)
-                ib(2 downto 0) <= ib(2 downto 0) + 1; --   Z1(1)    Z(2)    Z(3)
+                ia <= ia + 4;
+                ib <= ib + 1; --   Z1(1)    Z(2)    Z(3)
               when others =>
             end case;
           when "001" => -- 1
@@ -146,11 +146,11 @@ begin
           when "100" => -- 4
             calc_c <= '0';
             if cnt(5 downto 3) = "100" then -- set write address
-              ib <= to_unsigned(0+5*4, 7); -- Z0(0)
+              ib <= to_unsigned(0+5*4, 7); -- normal Z0(0)
             end if;
           when "101" => -- 5
-            --if cnt(5 downto 3) = "000" then -- debug store value
-            if cnt(5 downto 3) = "100" then -- store value
+            --if cnt(5 downto 3) = "000" then -- debug store first value
+            if cnt(5 downto 3) = "100" then -- normal store last value
               result <= c;
               matrix_write <= '1';
             end if;
