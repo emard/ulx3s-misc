@@ -123,9 +123,9 @@ begin
             case cnt(5 downto 3) is
               when "000" => -- 0
                 reset_c <= '1';
-                ia <= to_unsigned(0+ 4*4, 7); -- PR(0) complex
+                --ia <= to_unsigned(0+ 4*4, 7); -- PR(0) complex
                 --ia <= to_unsigned(cnt(7 downto 6)+ 4*4, 7); -- PR(0) complex
-                --ia <= '0' & x"1" & cnt(7 downto 6); --  PR(i) simplified
+                ia <= '0' & x"4" & cnt(7 downto 6); --  PR(i) simplified
               when "001" => -- 1
                 reset_c <= '0';
                 ia <= to_unsigned(0+  0*4, 7);
@@ -159,9 +159,9 @@ begin
           when "101" => -- 5
             --if cnt(5 downto 3) = "000" then -- debug store first value
             if cnt(5 downto 3) = "100" then -- normal store last value
-              --if cnt(7 downto 6) = "00" then -- select show at col
+              if cnt(7 downto 6) = "00" then -- select show at col
                 result <= c; -- debug show value
-              --end if;
+              end if;
               matrix_write <= '1';
             end if;
           when "110" => -- 6
