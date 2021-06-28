@@ -107,7 +107,7 @@ begin
   end process;
 
   -- 256 iterations  
-  -- cnt(2 downto 0) 0-6 one element calc
+  -- cnt(2 downto 0) 0-5 one element calc
   -- cnt(5 downto 3) 0-4 one row    of ST
   -- cnt(7 downto 6) 0-3 one column of ST
   process(clk)
@@ -124,22 +124,20 @@ begin
             case cnt(5 downto 3) is
               when "000" => -- 0
                 reset_c <= '1';
-                --ia <= to_unsigned(0+ 4*4, 7); -- PR(0) complex
-                --ia <= to_unsigned(cnt(7 downto 6)+ 4*4, 7); -- PR(0) complex
-                ia <= '0' & x"4" & cnt(7 downto 6); --  PR(i) simplified
+                ia <= '0' & x"4" & cnt(7 downto 6); -- PR(i)
               when "001" => -- 1
                 reset_c <= '0';
-                ia <= '0' & "00" & cnt(7 downto 6) & "00";     -- ST(i,0)
-                if swap_z = '1' then -- swap 5,B -- Z0(0) or Z1(0)
-                  ib <= '0' & x"5" & "00"; -- Z0(0)
-                  --ib <= to_unsigned(0+ 5*4, 7); -- Z0(0)
+                ia <= '0' & "00" & cnt(7 downto 6) & "00"; -- ST(i,0)
+                if swap_z = '1' then -- swap 5,B -- Zz(0) -> Z0(0) or Z1(0)
+                  ib <= '0' & x"5" & "00"; -- Zz(0) -> Z0(0)
+                  --ib <= to_unsigned(0+ 5*4, 7); -- Zz(0) -> Z0(0)
                 else
-                  ib <= '0' & x"B" & "00"; -- Z1(0)
-                  --ib <= to_unsigned(0+11*4, 7); -- Z1(0)
+                  ib <= '0' & x"B" & "00"; -- Zz(0) -> Z1(0)
+                  --ib <= to_unsigned(0+11*4, 7); -- Zz(0) -> Z1(0)
                 end if;
               when "010" | "011" | "100" => -- 2,3,4
                 ia(1 downto 0) <= ia(1 downto 0) + 1; -- ST(i,1) ST(i,2) ST(i,3)
-                ib(1 downto 0) <= ib(1 downto 0) + 1; --   Z1(1)    Z(2)    Z(3)
+                ib(1 downto 0) <= ib(1 downto 0) + 1; --   Zz(1)   Zz(2)   Zz(3)
               when others =>
             end case;
           when "001" => -- 1
@@ -164,7 +162,7 @@ begin
                 ib(5 downto 2) <= x"5"; -- normal Z0(j)
               end if;
             end if;
-          when "101" => -- 5
+          when "101" => -- 5 result ready
             --if cnt(5 downto 3) = "000" then -- debug store first value
             if cnt(5 downto 3) = "100" then -- normal store last value
               case cnt(7 downto 6) is
