@@ -9,7 +9,7 @@ Run pyhton code, view it with cursor up-down, q to exit.
 
 Press BTN1 for each step and verify that results
 shown on LCD are exactly the same as in VZ (um/s)
-hex output of the python code:
+hex output of the python code for slope 0x400:
 
     VZ=0xFFFFFF1C
     VZ=0xFFFFFD5B
@@ -30,3 +30,7 @@ hex output of the python code:
     VZ=0x00000043
     VZ=0x00000071
     ...
+
+Negative slope values like 0xFFFF000 (-0x1000 in python)
+also work, but for any given value, results may
+slightly differ in last digit or two.
