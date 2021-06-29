@@ -53,18 +53,17 @@ architecture RTL of calc is
   end matrix_real2int;
   signal int32_coefficients_matrix: int32_coefficients_type := 
     matrix_real2int(coefficients_250mm_matrix, 2**int_scale_matrix_2n);
-  signal a,b,ra,rb,c: signed(31 downto 0);
+  --signal ypl, ypr: signed(31 downto 0); -- slope registers
+  signal yp: signed(31 downto 0); -- slope register
+  signal a,b,ra,rb,c,c_calc: signed(31 downto 0);
   signal ab: signed(63 downto 0);
   signal result: signed(31 downto 0);
-  signal reset_c, calc_c: std_logic;
   constant cnt_bits: integer := 9; -- 0-255, stop at 256
   signal cnt: unsigned(cnt_bits-1 downto 0);
   signal ia, ib: unsigned(6 downto 0); -- indexes for matrix
   signal matrix_write: std_logic := '0';
-  signal mux_ab: unsigned(1 downto 0) := "00";
   signal swap_z: std_logic := '1'; -- swaps Z0 or Z1
   signal z0, z1, z2, z3: signed(31 downto 0);
-  signal yp: signed(31 downto 0); -- slope register
 begin
   
   -- data fetch, this should create BRAM
@@ -78,41 +77,15 @@ begin
       end if;
     end if;
   end process;
-  
-  -- mux for a,b
-  process(clk)
-  begin
-    if rising_edge(clk) then
-      case mux_ab is
-        when "10" => -- a from matrix ra, b from input slope yp
-          a <= ra;
-          b <= signed(yp);
-        when "11" => -- a,b from matrix ra,rb
-          a <= ra;
-          b <= rb;
-        when others => -- "00" NOP
-      end case;
-    end if;
-  end process;
-  
 
+  a <= ra;
+  b <= signed(yp) when cnt(5 downto 3) = "000" else rb;
   -- sum of scaled integer multiplication
   ab <= a*b;
-  process(clk)
-  begin
-    if rising_edge(clk) then
-      if reset_c = '1' then
-        c <= (others => '0');
-      else
-        if calc_c = '1' then
-          c <= c+ab(int_scale_matrix_2n+31 downto int_scale_matrix_2n);
-        end if;
-      end if;
-    end if;
-  end process;
+  c_calc <= c+ab(int_scale_matrix_2n+31 downto int_scale_matrix_2n);
 
-  -- 5*5*4=100 iterations
-  -- cnt(2 downto 0) 0-4 one element calc
+  -- 4*5*4=80 iterations
+  -- cnt(2 downto 0) 0-3 one element calc
   -- cnt(5 downto 3) 0-4 one row    of ST
   -- cnt(7 downto 6) 0-3 one column of ST
   process(clk)
@@ -128,10 +101,9 @@ begin
             matrix_write <= '0';
             case cnt(5 downto 3) is -- one row of ST
               when "000" => -- 0
-                reset_c <= '1';
+                c <= (others => '0');
                 ia <= '0' & x"4" & cnt(7 downto 6); -- PR(i) one columnt of ST
               when "001" => -- 1
-                reset_c <= '0';
                 ia <= '0' & "00" & cnt(7 downto 6) & "00"; -- ST(i,0)
                 if swap_z = '1' then -- swap 5,7 -- Zz(0) -> Z0(0) or Z1(0)
                   ib <= '0' & x"5" & "00"; -- Zz(0) -> Z0(0)
@@ -145,20 +117,10 @@ begin
                 ib(1 downto 0) <= ib(1 downto 0) + 1; --   Zz(1)   Zz(2)   Zz(3)
               when others =>
             end case;
-            --matrix_read <= '1';
-          when "001" => -- 1 = cnt(2 downto 0)
-            --matrix_read <= '0';
-            reset_c <= '0';
-            if cnt(5 downto 3) = "000" then
-              mux_ab <= "10"; -- a,b <= ra,yp
-            else
-              mux_ab <= "11"; -- a,b <= ra,rb
-            end if;
+          --when "001" => -- 1 = cnt(2 downto 0)
+          -- must wait 1 clk for matrix read and calc here
           when "010" => -- 2 = cnt(2 downto 0)
-            mux_ab <= "00"; -- NOP
-            calc_c <= '1';  -- PR(0)*YP or ST(0,0)*Z1(0)
-          when "011" => -- 3 = cnt(2 downto 0)
-            calc_c <= '0';
+            c <= c_calc; -- PR(0)*YP or ST(0,0)*Z1(0)
             if cnt(5 downto 3) = "100" then -- set write address
               if swap_z = '1' then -- swap 5,7 -- Z0(i) or Z1(i)
                 ib <= '0' & x"7" & cnt(7 downto 6); -- Z1(i)
@@ -166,7 +128,7 @@ begin
                 ib <= '0' & x"5" & cnt(7 downto 6); -- Z0(i)
               end if;
             end if;
-          when "100" => -- 4 = cnt(2 downto 0) result ready
+          when "011" => -- 3 = cnt(2 downto 0) result ready
             --if cnt(5 downto 3) = "000" then -- debug store first value
             if cnt(5 downto 3) = "100" then -- normal store last value
               case cnt(7 downto 6) is
@@ -183,12 +145,12 @@ begin
               end case;
               matrix_write <= '1'; -- matrix(ib) <= c
             end if;
-          --when "101" => -- 5 = cnt(2 downto 0) -- not reached
+          --when "100" => -- 4 = cnt(2 downto 0) -- not reached
           --  matrix_write <= '0';
           when others =>
         end case;
         if cnt(cnt_bits-1) = '0' then
-          if cnt(2 downto 0) = "100" then -- skip states after 4
+          if cnt(2 downto 0) = "011" then -- skip states after 3
             cnt(2 downto 0) <= "000";
             if cnt(5 downto 3) = "100" then -- skip states after 4
               cnt(5 downto 3) <= "000";
