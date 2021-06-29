@@ -59,8 +59,6 @@ architecture RTL of calc is
   signal yp: signed(31 downto 0); -- slope register
   signal a,b,ra,rb,c,c_calc: signed(31 downto 0);
   signal ab: signed(63 downto 0);
-  type result_type is array(0 to 1) of signed(31 downto 0);
-  signal result: result_type;
   constant cnt_bits: integer := 9; -- 0-256, stop at 511 (some skipped)
   signal cnt: unsigned(cnt_bits-1 downto 0) := (others => '1'); -- don't start before enter
   alias cnt_element: unsigned(1 downto 0) is cnt(1 downto 0); -- 0-3 one element calc
@@ -71,7 +69,10 @@ architecture RTL of calc is
   signal ia, ib: unsigned(5 downto 0); -- indexes for matrix
   signal matrix_write: std_logic := '0';
   signal swap_z: std_logic := '1'; -- swaps Z0 or Z1
-  signal z0, z1, z2, z3: signed(31 downto 0);
+  type z_type is array(0 to 3) of signed(31 downto 0);
+  signal z: z_type;
+  type result_type is array(0 to 1) of signed(31 downto 0);
+  signal result: result_type;
 begin
   
   -- data fetch, this should create BRAM
@@ -133,18 +134,10 @@ begin
           when "11" => -- 3 = cnt_element result ready
             --if cnt_row = "000" then -- debug store first value
             if cnt_row = "100" then -- normal store last value
-              case cnt_col is
-                when "00" => -- 0, Z(0)
-                  z0 <= c;
-                when "01" => -- 1, Z(1)
-                  z1 <= c;
-                when "10" => -- 2, Z(2)
-                  z2 <= c;
-                  result(to_integer(unsigned(cnt_ch))) <= z0-c; -- vz = Z(0)-Z(2)
-                when "11" => -- 3, Z(3)
-                  z3 <= c;
-                when others =>
-              end case;
+              z(to_integer(unsigned(cnt_col))) <= c;
+              if cnt_col = "10" then -- 2, Z(2)
+                result(to_integer(unsigned(cnt_ch))) <= z(0)-c; -- vz = Z(0)-Z(2)
+              end if;              
               matrix_write <= '1'; -- matrix(ib) <= c
             end if;
           when others =>
@@ -173,9 +166,9 @@ begin
   --d0 <= std_logic_vector(int32_coefficients_matrix(to_integer(unsigned(d1))));
   --d0 <= std_logic_vector(bc(31 downto 0));
   --d0 <= std_logic_vector(result);
-  d0 <= std_logic_vector(z0);
-  d1 <= std_logic_vector(z1);
-  d2 <= std_logic_vector(z2);
-  d3 <= std_logic_vector(z3);
+  d0 <= std_logic_vector(z(0));
+  d1 <= std_logic_vector(z(1));
+  d2 <= std_logic_vector(z(2));
+  d3 <= std_logic_vector(z(3));
   
 end;
