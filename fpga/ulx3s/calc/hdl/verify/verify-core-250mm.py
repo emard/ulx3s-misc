@@ -51,7 +51,8 @@ print("Z1")
 print(roughness.Z);
 print("")
 for i in range(1,points):
-  yp = 1<<10
+  yp = 0x400
+  #yp = -0x1000
   roughness.enter_slope(yp)
   iri[i] = roughness.IRI() 
   # x10 to fit on the same plot,
