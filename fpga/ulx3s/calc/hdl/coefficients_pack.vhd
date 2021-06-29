@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 use ieee.math_real.all; -- for real numbers
 
 package coefficients is
-type coefficients_type is array(0 to 9*4-1) of real;
+type coefficients_type is array(0 to 12*4-1) of real;
 constant coefficients_250mm_matrix: coefficients_type := (
 -- 0*4 ST matrix 4x4
   0.9966071  ,  1.091514e-2, -2.083274e-3,  3.190145e-4, -- 0*4+
@@ -15,12 +15,16 @@ constant coefficients_250mm_matrix: coefficients_type := (
   3.335013   ,  0.3376467  ,-39.12762    ,  0.4347564  , -- 3*4+
 -- 4*4 PR matrix 1x4
   5.476107e-3,  1.388776   ,  0.2275968  , 35.79262    , -- 4*4+
--- 5*4
---  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 5*4+ Z0 left
---  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 6*4+ Z0 right
--- 7*4
---  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 7*4+ Z1 left
---  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 8*4+ Z1 right
+-- 5*4 unused, start Z from 8*4 to simplify code
+--  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 5*4+
+--  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 6*4+
+--  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 7*4+
+-- 8*4 -- Z0
+--  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 8*4+ Z0 left
+--  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 9*4+ Z0 right
+-- 10*4 -- Z1
+--  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 10*4+ Z1 left
+--  0.0        ,  0.0        ,  0.0        ,  0.0        , -- 11*4+ Z1 right
 --
 others => 0.0 -- 5*4+ .. 8*4+ Z0=5*4 and Z1=7*4 variable area
 );
