@@ -4,15 +4,6 @@
 
 --- enter slope, in 177 clk cycles calculates vz response
 
--- TODO:
--- [x] extend 1-input to 2-input
--- [x] speed up, reduce states
--- [x] alias element calc state index cnt(2 downto 0) -> cnt(1 downto 0)
--- [x] reduce address bits 7->6 ia,ib
--- [ ] parameter for step (other than 250 mm)
--- [ ] function to calculate coefficients for arbitrary step
--- [ ] moving sum rvz in BRAM (parameter: track length 100 m)
-
 library ieee;
 use ieee.std_logic_1164.all;
 -- use ieee.std_logic_arith.all; -- replaced by ieee.numeric_std.all
@@ -24,22 +15,19 @@ use work.coefficients.all; -- coefficients matrix
 
 entity calc is
 generic (
-  interval_mm : integer := 250; -- mm sampling interval (don't touch)
-  --length_m    : integer := 100  --  m length
-  length_m    : integer := 1  --  m length DEBUG
+  int_scale_matrix_2n: integer := 20 -- approx 1e6 fixed precision
 );
 port (
   clk: in std_logic;
   enter: in std_logic; -- '1' to enter slope for every sampling interval x = 250 mm
   slope_l, slope_r: in  std_logic_vector(31 downto 0); -- slope um/m
      vz_l,    vz_r: out std_logic_vector(31 downto 0); -- z-velocity um/s
-   srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- z-velocity um/s
+   srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- um/s rectified sum of z-velocities at n_points, length_m
   d0, d1, d2, d3: out std_logic_vector(31 downto 0)
 );
 end;
 
 architecture RTL of calc is
-  constant int_scale_matrix_2n: integer := 20; -- approx 1e6
   type int32_coefficients_type is array(0 to 2047) of signed(31 downto 0); -- 12*4 for matrix calc + 2*512 for running sum l,r
   -- function to scale and convert real matrix to integers
   function matrix_real2int(x: coefficients_type; scale: integer)
@@ -58,7 +46,7 @@ architecture RTL of calc is
     return y;
   end matrix_real2int;
   signal int32_coefficients_matrix: int32_coefficients_type := 
-    matrix_real2int(coefficients_250mm_matrix, 2**int_scale_matrix_2n);
+    matrix_real2int(coefficients_active_matrix, 2**int_scale_matrix_2n);
   signal ypl, ypr: signed(31 downto 0); -- slope registers
   signal yp: signed(31 downto 0); -- slope register
   signal a,b,ra,rb,c,c_calc: signed(31 downto 0);
@@ -215,6 +203,8 @@ begin
   -- output connection
   vz_l <= std_logic_vector(vz(0));
   vz_r <= std_logic_vector(vz(1));
+  srvz_l <= std_logic_vector(srvz(0));
+  srvz_r <= std_logic_vector(srvz(1));
 
   --d0 <= std_logic_vector(int32_coefficients_matrix(to_integer(unsigned(d1))));
   --d0 <= std_logic_vector(bc(31 downto 0));
