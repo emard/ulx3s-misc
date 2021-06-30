@@ -26,14 +26,7 @@ module top_spirw_hex
 
     assign led[4] = wifi_gpio5;
 
-    wire clk, locked;
-    pll
-    pll_inst
-    (
-        .clki(clk_25mhz),
-        .clko(clk), // 12.5 MHz
-        .locked(locked)
-    );
+    wire clk = clk_25mhz;
     
     assign sd_d[3] = 1'bz; // FPGA pin pullup sets SD card inactive at SPI bus
     
@@ -87,45 +80,6 @@ module top_spirw_hex
 
     wire [C_color_bits-1:0] color;
 
-    generate
-      if(0)
-      begin // ssd1331 only
-    hex_decoder
-    #(
-        .C_data_len(C_display_bits),
-        .C_font_file("oled_font.mem")
-    )
-    hex_decoder_inst
-    (
-        .clk(clk),
-        .en(1'b1),
-        .data(S_display),
-        .x(x),
-        .y(y),
-        .next_pixel(next_pixel),
-        .color(color)
-    );
-
-    oled_video
-    #(
-        .c_init_file("oled_init_xflip.mem")
-    )
-    oled_video_inst
-    (
-        .clk(clk),
-        .x(x),
-        .y(y),
-        .next_pixel(next_pixel),
-        .color(color),
-        .spi_csn(oled_csn),
-        .spi_clk(oled_clk),
-        .spi_mosi(oled_mosi),
-        .spi_dc(oled_dc),
-        .spi_resn(oled_resn)
-    );
-      end
-      if(1)
-      begin // lcd st7789 universal, can drive others
     hex_decoder_v
     #(
         .c_data_len(C_display_bits),
@@ -156,7 +110,7 @@ module top_spirw_hex
     wire w_oled_csn;
     lcd_video
     #(
-        .c_clk_mhz(12),
+        .c_clk_spi_mhz(12),
         .c_init_file("st7789_linit_xflip.mem"),
         .c_init_size(35),
         .c_clk_phase(0),
@@ -164,7 +118,10 @@ module top_spirw_hex
     )
     lcd_video_inst
     (
-        .clk(clk),
+        .clk_spi(clk),
+        .clk_spi_ena(1),
+        .clk_pixel(clk),
+        .clk_pixel_ena(1),
         .reset(~btn[0]),
         .x(x),
         .y(y),
@@ -177,8 +134,5 @@ module top_spirw_hex
         .spi_csn(w_oled_csn)
     );
     assign oled_csn = w_oled_csn | btn[1]; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
-
-      end
-    endgenerate
 
 endmodule
