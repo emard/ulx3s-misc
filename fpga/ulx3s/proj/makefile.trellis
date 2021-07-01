@@ -45,6 +45,11 @@ VHDL_FILES2 = \
 ../calc/hdl/coefficients_pack.vhd \
 ../calc/hdl/calc.vhd \
 
+TOP_VHDL_MODULE3 = slope
+VHDL_FILES3 = \
+../calc/hdl/coefficients_pack.vhd \
+../calc/hdl/slope.vhd \
+
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
 NEXTPNR_OPTIONS = --timing-allow-fail
