@@ -7,9 +7,6 @@ use ieee.math_real.all; -- for real numbers
 
 package coefficients is
 
-constant  interval_mm : integer := 250; -- mm sampling interval (don't touch)
-constant  length_m    : integer := 100; --  m length
-
 type coefficients_type is array(0 to 12*4-1) of real;
 
 constant coefficients_50mm_matrix: coefficients_type := (
@@ -20,6 +17,17 @@ constant coefficients_50mm_matrix: coefficients_type := (
   0.8983268  ,  8.617964e-2,-10.2297     ,  0.9031446  , -- 3*4+
 -- 4*4 PR matrix 1x4
   4.858894e-5,  6.427258e-2,  1.067582e-2,  9.331372   ,
+others => 0.0 -- variable area
+);
+
+constant coefficients_200mm_matrix: coefficients_type := (
+-- 0*4 ST matrix 4x4
+  0.9977588  ,  8.780606e-3, -6.436089e-4,  2.127641e-4, -- 0*4+
+ -0.4660258  ,  0.9535856  , -0.4602074  ,  4.352945e-2, -- 1*4+
+  1.448438e-2,  1.418428e-3,  0.8332105  ,  7.105564e-3, -- 2*4+
+  2.908761   ,  0.2901964  ,-33.84164    ,  0.5574984  , -- 3*4+
+-- 4*4 PR matrix 1x4
+  2.885245e-3,  0.9262331  ,  0.1523053  , 30.93289    ,
 others => 0.0 -- variable area
 );
 
@@ -48,9 +56,13 @@ constant coefficients_250mm_matrix: coefficients_type := (
 others => 0.0
 );
 
+constant  interval_mm : integer := 250; -- mm sampling interval (don't touch)
+constant  length_m    : integer := 100; --  m length
+
 -- choose one 50mm or 250mm depending on interval_mm
 constant coefficients_active_matrix: coefficients_type :=
   coefficients_250mm_matrix;
+--  coefficients_200mm_matrix;
 --  coefficients_50mm_matrix;
 
 -- python3 to verify result (may differ in last digit due to roundoff)
