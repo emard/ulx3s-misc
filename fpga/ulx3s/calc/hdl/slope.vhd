@@ -68,15 +68,17 @@ begin
         sl <= (others => '0');
         sr <= (others => '0');
       else
-        if ix > interval_x then
-          ix <= ix_next - interval_x;
-          next_interval <= '1';
-        else
-          ix <= ix_next;
-          next_interval <= '0';
+        if enter = '1' then
+          if ix > interval_x then
+            ix <= ix_next - interval_x;
+            next_interval <= '1';
+          else
+            ix <= ix_next;
+            next_interval <= '0';
+          end if;
+          sl <= sl_next;
+          sr <= sr_next;
         end if;
-        sl <= sl_next;
-        sr <= sr_next;
       end if;
     end if;
   end process;
