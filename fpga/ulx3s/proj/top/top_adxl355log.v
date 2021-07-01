@@ -622,8 +622,10 @@ module top_adxl355log
     //.enter(autofire),
     .slope_l(ma), // 1<<20 cca um/m
     .slope_r(mb),
-    .vz_l(data[127:96]),
-    .vz_r(data[95:64])
+    //.vz_l(data[127:96]),
+    //.vz_r(data[95:64])
+    .srvz_l(data[127:96]),
+    .srvz_r(data[95:64])
     //.d0(data[ 63:32]),
     //.d1(data[ 31:0 ]),
     //.d2(data[127:96]),
