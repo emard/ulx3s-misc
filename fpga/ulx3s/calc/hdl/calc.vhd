@@ -23,6 +23,7 @@ port (
   slope_l, slope_r: in  std_logic_vector(31 downto 0); -- slope um/m
      vz_l,    vz_r: out std_logic_vector(31 downto 0); -- z-velocity um/s
    srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- um/s rectified sum of z-velocities at n_points, length_m
+  ready: out std_logic; -- '1' when result is ready
   d0, d1, d2, d3: out std_logic_vector(31 downto 0)
 );
 end;
@@ -205,6 +206,7 @@ begin
   vz_r <= std_logic_vector(vz(1));
   srvz_l <= std_logic_vector(srvz(0));
   srvz_r <= std_logic_vector(srvz(1));
+  ready <= '1' when cnt(cnt_bits-1 downto cnt_bits-2) = "11" else '0';
 
   --d0 <= std_logic_vector(int32_coefficients_matrix(to_integer(unsigned(d1))));
   --d0 <= std_logic_vector(bc(31 downto 0));
