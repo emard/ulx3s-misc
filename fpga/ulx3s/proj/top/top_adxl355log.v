@@ -614,6 +614,22 @@ module top_adxl355log
       autoenter <= 0;
   wire autofire = autoenter[19];
 
+  slope
+  slope_inst
+  (
+    .clk(clk),
+    .reset(btn_rising[2]),
+    .enter(btn_rising[1]),
+    .x_inc(22*1000), // 22000 um = 22 mm per 1kHz sample
+    .cvx2(2452500/22**2), // 5067 for 22 m/s
+    .azl(1638), // +0.1g
+    .azr(-1638), // -0.1g
+    .slope_l(data[127:96]),
+    .slope_r(data[95:64]),
+    .d0(data[63:32]),
+    .ready()
+  );
+
   calc
   calc_inst
   (
@@ -624,14 +640,14 @@ module top_adxl355log
     .slope_r(mb),
     //.vz_l(data[127:96]),
     //.vz_r(data[95:64])
-    .srvz_l(data[127:96]),
-    .srvz_r(data[95:64])
+    //.srvz_l(data[127:96]),
+    //.srvz_r(data[95:64])
     //.d0(data[ 63:32]),
     //.d1(data[ 31:0 ]),
     //.d2(data[127:96]),
     //.d3(data[ 95:64])
   );
-  assign data[63:32] = ma;
+  //assign data[63:32] = ma;
   assign data[31:0]  = mb;
 endmodule
 `default_nettype wire
