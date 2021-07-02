@@ -14,6 +14,7 @@ void mount(void);
 void umount(void);
 void spi_init(void);
 void rds_init(void);
+void spi_speed_write(float spd);
 void spi_rds_write(void);
 void rds_message(struct tm *tm);
 void adxl355_init(void);

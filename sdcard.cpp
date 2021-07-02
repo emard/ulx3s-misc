@@ -167,6 +167,27 @@ void rds_init(void)
   rds.setmemptr(spi_master_tx_buf+5);
 }
 
+// speed in m/s
+void spi_speed_write(float spd)
+{
+  float vx       = spd*1.0e3;
+  float cvx2     = spd > 0.1 ? 2452500.0/(spd*spd) : 0.0;
+  uint16_t ivx   = int(vx);
+  uint32_t icvx2 = int(cvx2);
+  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[1] = 0x1; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  spi_master_tx_buf[5] = ivx>>8;
+  spi_master_tx_buf[6] = ivx;
+  spi_master_tx_buf[7] = icvx2>>24;
+  spi_master_tx_buf[8] = icvx2>>16;
+  spi_master_tx_buf[9] = icvx2>>8;
+  spi_master_tx_buf[10]= icvx2;
+  master.transfer(spi_master_tx_buf, 5+2+4); // write speed binary
+}
+
 void spi_rds_write(void)
 {
   spi_master_tx_buf[0] = 0; // 1: write ram

@@ -166,6 +166,7 @@ void setup() {
   write_rds(rdsmsg, sizeof(rdsmsg));
 #endif
   spi_rds_write();
+  spi_speed_write(22.0);
 }
 
 void reconnect()
@@ -325,6 +326,7 @@ void loop()
           Serial.print(nmea);
 #endif
           knots = nmea2spd(nmea); // parse speed
+          spi_speed_write(knots > 550 ? knots*0.514444e-2 : 0.0);
           // hysteresis for logging
           // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
           if (knots > 550)
