@@ -16,10 +16,10 @@
 BluetoothSerial SerialBT;
 
 // TODO: read address from SD card gps.mac
-//uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
+uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
 // String name = "Garmin GLO #4352e"; // new
 
-uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x14, 0x6B, 0xD0};
+//uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x14, 0x6B, 0xD0};
 // String name = "Garmin GLO #46bd0"; // old from rpi box
 
 char *pin = "1234"; //<- standard pin would be provided by default
