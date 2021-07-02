@@ -4,6 +4,8 @@
 // adxl355.sync(2) # DRDY=SYNC input, internal oscillator
 // adxl355.multird16()
 
+// TODO use spi_ram_x to reset addr for RAM
+
 /*
 https://wiki.analog.com/resources/eval/user-guides/eval-adicup360/hardware/adxl355
 PMOD connected to GP,GN 14-17
@@ -409,15 +411,34 @@ module top_adxl355log
     .x(spi_ram_x)
   );
   // test memory write cycle
-  reg [7:0] r_wrdata;
+  reg [7:0] r_accel[0:11];
+  reg [3:0] r_accel_addr;
+  reg r_accel_ready;
   always @(posedge clk)
   begin
     if(spi_ram_wr)
-      r_wrdata <= spi_ram_data;
+    begin
+      r_accel[r_accel_addr] <= spi_ram_data;
+      if(r_accel_addr == 11)
+      begin
+        r_accel_addr <= 0;
+        r_accel_ready <= 1;
+      end
+      else
+      begin
+        if(spi_ram_x)
+          r_accel_addr <= 1;
+        else
+          r_accel_addr <= r_accel_addr + 1;
+        r_accel_ready <= 0;
+      end
+    end
   end
+  wire [15:0] azl = {r_accel[ 4], r_accel[ 5]};
+  wire [15:0] azr = {r_accel[10], r_accel[11]};
 
   //assign led = {spi_ram_x, spi_ram_wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
-  //assign led = r_wrdata;
+  //assign led = r_accel_l;
   //assign led = r_ctrl;
 
   // FM/RDS transmitter
@@ -629,8 +650,10 @@ module top_adxl355log
     .enter(autofire),
     .x_inc(22*1000), // 22000 um = 22 mm per 1kHz sample
     .cvx2(2452500/22**2), // 5067 for 22 m/s
-    .azl(ma), // +0.1g
-    .azr(mb), // -0.1g
+    //.azl(ma), // btn
+    //.azr(mb), // btn
+    .azl(azl), // from left  sensor
+    .azr(azr), // from right sensor
     .slope_l(slope_l), // um/m
     .slope_r(slope_r), // um/m
     //.slope_l(data[127:96]),
@@ -658,7 +681,11 @@ module top_adxl355log
     //.d2(data[127:96]),
     //.d3(data[ 95:64])
   );
-  assign data[63:32] = ma;
-  assign data[31:0]  = mb;
+  //assign data[63:32] = ma;
+  //assign data[31:0]  = mb;
+  assign data[63:32] = {0, azl};
+  assign data[31:0]  = {0, azr};
+  //assign data[63:32] = slope_l;
+  //assign data[31:0]  = slope_r;
 endmodule
 `default_nettype wire
