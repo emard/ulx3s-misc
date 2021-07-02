@@ -21,6 +21,7 @@ use work.coefficients.all; -- coefficients matrix
 
 entity slope is
 generic (
+  a_default: integer := 16384; -- default accel sensor reading (measuring 1g)
   int_sample_rate_hz: integer := 1000; -- Hz accel input sample rate
   -- 1024 to provide enough resolution for high speeds > 20 m/s
   -- 1.0e6 to scale resulting slope to um/s
@@ -48,7 +49,7 @@ architecture RTL of slope is
   signal sl, sr, sr_next, sl_next : signed(41 downto 0); -- sum of const/vz^2, 42 bits (last 10 bits dropped at output)
   signal avz2l, avz2r: signed(47 downto 0); -- multiplier
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration signed
-  signal adifl, adifr : signed(15 downto 0); -- z-acceleration differential adjust
+  signal adifl, adifr : signed(15 downto 0) := to_signed(-a_default,16); -- z-acceleration differential adjust
   signal icvx2: signed(31 downto 0);
   signal next_interval : std_logic;
   constant interval_x : signed(31 downto 0) := to_signed(1000*interval_mm,32); -- interval um
