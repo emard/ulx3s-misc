@@ -554,7 +554,7 @@ module top_adxl355log
   reg  signed [31:0] ma = a_default;
   reg  signed [31:0] mb = a_default;
 
-  wire [6:0] btn_rising;
+  wire [6:0] btn_rising, btn_debounce;
   btn_debounce
   #(
     .bits(19)
@@ -563,6 +563,7 @@ module top_adxl355log
   (
     .clk(clk),
     .btn(btn),
+    .debounce(btn_debounce),
     .rising(btn_rising)
   );
   always @(posedge clk)
@@ -648,6 +649,8 @@ module top_adxl355log
     .reset(btn_rising[2]),
     //.enter(btn_rising[1]),
     .enter(autofire),
+    //.hold(0),
+    .hold(btn_debounce[1]),
     .x_inc(22*1000), // 22000 um = 22 mm per 1kHz sample
     .cvx2(2452500/22**2), // 5067 for 22 m/s
     //.azl(ma), // btn
@@ -683,9 +686,9 @@ module top_adxl355log
   );
   //assign data[63:32] = ma;
   //assign data[31:0]  = mb;
-  assign data[63:32] = {0, azl};
-  assign data[31:0]  = {0, azr};
-  //assign data[63:32] = slope_l;
-  //assign data[31:0]  = slope_r;
+  //assign data[63:32] = {0, azl};
+  //assign data[31:0]  = {0, azr};
+  assign data[63:32] = slope_l;
+  assign data[31:0]  = slope_r;
 endmodule
 `default_nettype wire
