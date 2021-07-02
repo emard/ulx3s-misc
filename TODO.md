@@ -1,9 +1,12 @@
 # TODO
 
+    [ ] SPI slave for speed and iri
+    [ ] EPS32 send to SPI speed, c/speed^2, report and tag iri
     [ ] SD card compatiblity sandisk
     [ ] config file for BT MAC and few parameters
     [ ] sensor hotplug
     [ ] LCD display with freq and status
+    [ ] audio output to 3.5 mm jack
     [ ] WiFi server file download
     [ ] time sync status
     [ ] speech immediately at start logging
@@ -20,5 +23,5 @@
     [ ] 1-char sensor status XLRY
     [ ] low free: erase oldest files, stop logging
     [ ] speech report remaining minutes and disk full
-    [ ] estimate speed-accel integration value
+    [x] estimate speed-accel integration value
     [ ] get bytes free early to display when GPS is OFF
