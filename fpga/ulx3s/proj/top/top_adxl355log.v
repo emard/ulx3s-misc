@@ -528,8 +528,10 @@ module top_adxl355log
   assign audio_r[3:1] = 0;
   assign audio_r[0] = pps_btn;
 
-  reg  signed [31:0] ma = 32'd0;
-  reg  signed [31:0] mb = 32'd0;
+  localparam a_default = 16384; // default sensor reading accel
+
+  reg  signed [31:0] ma = a_default;
+  reg  signed [31:0] mb = a_default;
 
   wire [6:0] btn_rising;
   btn_debounce
@@ -545,13 +547,13 @@ module top_adxl355log
   always @(posedge clk)
   begin
     if(btn_rising[3])
-      ma <= ma + 32'h100;
+      ma <= ma + 32'h10;
     else if(btn_rising[4])
-      ma <= ma - 32'h100;
+      ma <= ma - 32'h10;
     if(btn_rising[6])
-      mb <= mb + 32'h100;
+      mb <= mb + 32'h10;
     else if(btn_rising[5])
-      mb <= mb - 32'h100;
+      mb <= mb - 32'h10;
   end
 
   wire [7:0] disp_x, disp_y;
@@ -614,19 +616,26 @@ module top_adxl355log
       autoenter <= 0;
   wire autofire = autoenter[19];
 
+  wire [31:0] slope_l, slope_r;
   slope
+  //#(
+  //  .a_default(a_default)
+  //)
   slope_inst
   (
     .clk(clk),
     .reset(btn_rising[2]),
-    .enter(btn_rising[1]),
+    //.enter(btn_rising[1]),
+    .enter(autofire),
     .x_inc(22*1000), // 22000 um = 22 mm per 1kHz sample
     .cvx2(2452500/22**2), // 5067 for 22 m/s
-    .azl(1638), // +0.1g
-    .azr(-1638), // -0.1g
-    .slope_l(data[127:96]),
-    .slope_r(data[95:64]),
-    .d0(data[63:32]),
+    .azl(ma), // +0.1g
+    .azr(mb), // -0.1g
+    .slope_l(slope_l), // um/m
+    .slope_r(slope_r), // um/m
+    //.slope_l(data[127:96]),
+    //.slope_r(data[95:64]),
+    //.d0(data[63:32]),
     .ready()
   );
 
@@ -634,20 +643,22 @@ module top_adxl355log
   calc_inst
   (
     .clk(clk),
-    .enter(btn_rising[1]),
-    //.enter(autofire),
-    .slope_l(ma), // 1<<20 cca um/m
-    .slope_r(mb),
+    //.enter(btn_rising[1]),
+    .enter(autofire),
+    .slope_l(slope_l), // um/m
+    .slope_r(slope_r),
+    //.slope_l(ma), // um/m
+    //.slope_r(mb),
     //.vz_l(data[127:96]),
     //.vz_r(data[95:64])
-    //.srvz_l(data[127:96]),
-    //.srvz_r(data[95:64])
+    .srvz_l(data[127:96]),
+    .srvz_r(data[95:64])
     //.d0(data[ 63:32]),
     //.d1(data[ 31:0 ]),
     //.d2(data[127:96]),
     //.d3(data[ 95:64])
   );
-  //assign data[63:32] = ma;
+  assign data[63:32] = ma;
   assign data[31:0]  = mb;
 endmodule
 `default_nettype wire
