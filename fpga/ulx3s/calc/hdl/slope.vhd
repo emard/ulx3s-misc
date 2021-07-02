@@ -48,30 +48,31 @@ end;
 architecture RTL of slope is
   signal ix, ix_next, ix_inc: signed(31 downto 0); -- traveled distance um
   signal sl, sr, sr_next, sl_next : signed(41 downto 0); -- sum of const/vz^2, 42 bits (last 10 bits dropped at output)
-  signal avz2l, avz2r: signed(47 downto 0); -- multiplier
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration signed
   signal adifl, adifr : signed(15 downto 0) := to_signed(-a_default,16); -- z-acceleration differential adjust
-  signal cntadj: unsigned(5 downto 0); -- counter how often to adjust
-  signal icvx2: signed(31 downto 0);
+  signal cntadj: unsigned(0 downto 0); -- counter how often to adjust every 1m
   signal next_interval : std_logic;
   constant interval_x : signed(31 downto 0) := to_signed(1000*interval_mm,32); -- interval um
+  signal icvx2: signed(31 downto 0);
+  signal avz2l, avz2r: signed(icvx2'length+iazl'length-1 downto 0); -- multiplier result 48-bit
 begin
   ix_inc <= signed(x_inc);
   process(clk)
   begin
     if rising_edge(clk) then
-      if enter = '1' and cntadj = to_unsigned(0,cntadj'length) and hold = '0' then
-      --if next_interval = '1' and hold = '0' then
+      --if enter = '1' and hold = '0' then
+      --if enter = '1' and cntadj = to_unsigned(0,cntadj'length) and hold = '0' then
+      if next_interval = '1' and cntadj = to_unsigned(0,cntadj'length) and hold = '0' then
         -- slowly adjust acceleration to prevent slope build up DC
         if sl < 0 then
-          if avz2l < 0 then
+          if avz2l < 0 then -- derivative
             adifl <= adifl + 2;
           else
             adifl <= adifl + 1;
           end if;
         else
           if sl > 0 then
-            if avz2l > 0 then
+            if avz2l > 0 then -- derivative
               adifl <= adifl - 2;
             else
               adifl <= adifl - 1;
@@ -96,7 +97,7 @@ begin
       end if;
       iazl <= adifl + signed(azl);
       iazr <= adifr + signed(azr);
-      if enter = '1' then
+      if next_interval = '1' then
         cntadj <= cntadj + 1;
       end if;
     end if;
