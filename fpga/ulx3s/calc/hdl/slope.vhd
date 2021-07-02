@@ -35,6 +35,7 @@ port (
   clk              : in  std_logic;
   reset            : in  std_logic;
   enter            : in  std_logic; -- '1' pulse to enter acceleration and speed for every
+  hold             : in  std_logic; -- hold adjustment correction
   x_inc            : in  std_logic_vector(31 downto 0); -- um travel for each 1kHz sensor signed
   cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx^2 = 2452500/vx^2 signed
   azl, azr         : in  std_logic_vector(15 downto 0); -- acceleration signed 16384 = 1g
@@ -50,6 +51,7 @@ architecture RTL of slope is
   signal avz2l, avz2r: signed(47 downto 0); -- multiplier
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration signed
   signal adifl, adifr : signed(15 downto 0) := to_signed(-a_default,16); -- z-acceleration differential adjust
+  signal cntadj: unsigned(5 downto 0); -- counter how often to adjust
   signal icvx2: signed(31 downto 0);
   signal next_interval : std_logic;
   constant interval_x : signed(31 downto 0) := to_signed(1000*interval_mm,32); -- interval um
@@ -58,8 +60,8 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      if enter = '1' then
-      --if next_interval = '1' then
+      if enter = '1' and cntadj = to_unsigned(0,cntadj'length) and hold = '0' then
+      --if next_interval = '1' and hold = '0' then
         -- slowly adjust acceleration to prevent slope build up DC
         if sl < 0 then
           if avz2l < 0 then
@@ -93,7 +95,10 @@ begin
         end if;
       end if;
       iazl <= adifl + signed(azl);
-      iazr <= adifr + signed(azr);      
+      iazr <= adifr + signed(azr);
+      if enter = '1' then
+        cntadj <= cntadj + 1;
+      end if;
     end if;
   end process;
 
@@ -113,6 +118,7 @@ begin
         ix <= (others => '0');
         sl <= (others => '0');
         sr <= (others => '0');
+        next_interval <= '0';
       else
         if enter = '1' then
           if ix > interval_x then
