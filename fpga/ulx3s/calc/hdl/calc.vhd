@@ -22,7 +22,8 @@ port (
   enter: in std_logic; -- '1' to enter slope for every sampling interval x = 250 mm
   slope_l, slope_r: in  std_logic_vector(31 downto 0); -- slope um/m
      vz_l,    vz_r: out std_logic_vector(31 downto 0); -- z-velocity um/s
-   srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- um/s rectified sum of z-velocities at n_points, length_m
+   srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- um/m rectified sum of z/x-velocities at (n_points*length_m)
+   -- iri[mm/m] = srvz/(1000*n_points) = srvz / 400e3
   ready: out std_logic; -- '1' when result is ready
   d0, d1, d2, d3: out std_logic_vector(31 downto 0)
 );
