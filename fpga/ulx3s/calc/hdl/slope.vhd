@@ -21,7 +21,7 @@ use work.coefficients.all; -- coefficients matrix
 
 entity slope is
 generic (
-  a_default: integer := 16384; -- default accel sensor reading (measuring 1g)
+  a_default: integer := 15872; -- default accel sensor reading (ideally 16384 measuring 1g)
   int_sample_rate_hz: integer := 1000; -- Hz accel input sample rate
   -- 1024 to provide enough resolution for high speeds > 20 m/s
   -- 1.0e6 to scale resulting slope to um/s
