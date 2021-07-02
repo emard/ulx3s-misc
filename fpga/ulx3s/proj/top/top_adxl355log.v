@@ -175,6 +175,7 @@ module top_adxl355log
   wire direct_en;
 
   wire spi_bram_cs = ram_addr[31:24] == 8'h00; // currently unused
+  wire spi_calc_cs = ram_addr[31:24] == 8'h01; // write to 0x01xxxxxx writes 32-bit speed mm/s and const/speed^2
   wire spi_wav_cs  = ram_addr[31:24] == 8'h05; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
   wire spi_tag_cs  = ram_addr[31:24] == 8'h06; // write to 0x06xxxxxx writes 6-bit tags
   wire spi_rds_cs  = ram_addr[31:24] == 8'h0D; // write to 0x0Dxxxxxx writes 52 bytes of RDS encoded data for 8-char text display
@@ -551,6 +552,22 @@ module top_adxl355log
 
   localparam a_default = 16384; // default sensor reading accel
 
+  reg [ 7:0] vx_ram[0:5]; // 6-byte: 2-byte=16-bit speed [um/s], 4-byte=32-bit const/speed^2
+  reg [15:0] vx   = 0;
+  reg [31:0] cvx2 = 0;
+  always @(posedge clk)
+  begin
+    if(ram_wr & spi_calc_cs)
+    begin
+      vx_ram[ram_addr[2:0]] <= ram_di;
+      if(ram_addr[2:0] == 5)
+      begin
+        vx   <= {vx_ram[0],vx_ram[1]}; // mm/s vx speed
+        cvx2 <= {vx_ram[2],vx_ram[3],vx_ram[4],ram_di}; // c/vx^2 speed
+      end
+    end
+  end
+
   reg  signed [31:0] ma = a_default;
   reg  signed [31:0] mb = a_default;
 
@@ -651,8 +668,10 @@ module top_adxl355log
     .enter(autofire),
     //.hold(0),
     .hold(btn_debounce[1]),
-    .x_inc(22*1000), // 22000 um = 22 mm per 1kHz sample
-    .cvx2(2452500/22**2), // 5067 for 22 m/s
+    //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
+    //.cvx2(2452500/22**2), // 2452500/vx^2, vx in m/s, 5067 for 22 m/s
+    .vx(vx), // vx in mm/s
+    .cvx2(cvx2), // 2452500/vx^2, vx in m/s
     //.azl(ma), // btn
     //.azr(mb), // btn
     .azl(azl), // from left  sensor
@@ -688,7 +707,10 @@ module top_adxl355log
   //assign data[31:0]  = mb;
   //assign data[63:32] = {0, azl};
   //assign data[31:0]  = {0, azr};
-  assign data[63:32] = slope_l;
-  assign data[31:0]  = slope_r;
+  //assign data[63:32] = slope_l;
+  //assign data[31:0]  = slope_r;
+
+  assign data[63:32] = vx;
+  assign data[31:0]  = cvx2;
 endmodule
 `default_nettype wire

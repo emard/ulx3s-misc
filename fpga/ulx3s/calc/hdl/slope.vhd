@@ -36,7 +36,7 @@ port (
   reset            : in  std_logic;
   enter            : in  std_logic; -- '1' pulse to enter acceleration and speed for every
   hold             : in  std_logic; -- hold adjustment correction
-  x_inc            : in  std_logic_vector(31 downto 0); -- um travel for each 1kHz sensor signed
+  vx               : in  std_logic_vector(15 downto 0); -- mm/s, actually um travel for each 1kHz pulse, unsigned
   cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx^2 = 2452500/vx^2 signed
   azl, azr         : in  std_logic_vector(15 downto 0); -- acceleration signed 16384 = 1g
   slope_l, slope_r : out std_logic_vector(31 downto 0); -- um/m slope signed
@@ -46,17 +46,18 @@ port (
 end;
 
 architecture RTL of slope is
-  signal ix, ix_next, ix_inc: signed(31 downto 0); -- traveled distance um
+  signal ix, ix_next: unsigned(31 downto 0); -- traveled distance um
+  signal ivx: unsigned(15 downto 0);
   signal sl, sr, sr_next, sl_next : signed(41 downto 0); -- sum of const/vz^2, 42 bits (last 10 bits dropped at output)
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration signed
   signal adifl, adifr : signed(15 downto 0) := to_signed(-a_default,16); -- z-acceleration differential adjust
   signal cntadj: unsigned(0 downto 0); -- counter how often to adjust every 1m
   signal next_interval : std_logic;
-  constant interval_x : signed(31 downto 0) := to_signed(1000*interval_mm,32); -- interval um
+  constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
   signal icvx2: signed(31 downto 0);
   signal avz2l, avz2r: signed(icvx2'length+iazl'length-1 downto 0); -- multiplier result 48-bit
 begin
-  ix_inc <= signed(x_inc);
+  ivx <= unsigned(vx);
   process(clk)
   begin
     if rising_edge(clk) then
@@ -106,7 +107,7 @@ begin
   icvx2  <= signed(cvx2);
 
   -- x_inc should be less tnan interval_x
-  ix_next  <= ix + ix_inc;
+  ix_next  <= ix + ivx;
   sl_next  <= sl + avz2l(41 downto 0);
   sr_next  <= sr + avz2r(41 downto 0);
 
