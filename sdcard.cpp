@@ -171,7 +171,7 @@ void rds_init(void)
 void spi_speed_write(float spd)
 {
   float vx       = spd*1.0e3;
-  float cvx2     = spd > 0.1 ? 2452500.0/(spd*spd) : 0.0;
+  float cvx2     = spd > 1.0 ? 9810000.0/(spd*spd) : 0.0;
   uint16_t ivx   = int(vx);
   uint32_t icvx2 = int(cvx2);
   spi_master_tx_buf[0] = 0; // 1: write ram
