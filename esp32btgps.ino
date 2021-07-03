@@ -166,7 +166,8 @@ void setup() {
   write_rds(rdsmsg, sizeof(rdsmsg));
 #endif
   spi_rds_write();
-  spi_speed_write(22.0);
+  //spi_speed_write(22.0); // debug
+  spi_speed_write(0.0); // normal
 }
 
 void reconnect()
@@ -326,8 +327,9 @@ void loop()
           Serial.print(nmea);
 #endif
           knots = nmea2spd(nmea); // parse speed
-          //spi_speed_write(knots > 550 ? knots*0.514444e-2 : 0.0);
-          spi_speed_write(22.0);
+          spi_speed_write(knots > 550 ? knots*0.514444e-2 : 0.0); // normal
+          //spi_speed_write(knots > 55 ? knots*0.514444e-2 : 0.0); // debug
+          //spi_speed_write(22.0); // debug
           int32_t srvz[2];
           spi_srvz_read(srvz);
           const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
