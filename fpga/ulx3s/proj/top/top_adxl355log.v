@@ -322,7 +322,7 @@ module top_adxl355log
     .o_locked(sync_locked),
     .o_clk_sync(drdy)
   );
-  
+
   // sync counter
   reg [11:0] cnt_sync, cnt_sync_prev;
   reg [1:0] sync_shift, pps_shift;
@@ -411,7 +411,7 @@ module top_adxl355log
     .wr16(spi_ram_wr), // skips every 3rd byte
     .x(spi_ram_x)
   );
-  // test memory write cycle
+  // store one sample in reg memory
   reg [7:0] r_accel[0:11];
   reg [3:0] r_accel_addr;
   reg r_accel_ready;
@@ -555,6 +555,7 @@ module top_adxl355log
   reg [ 7:0] vx_ram[0:5]; // 6-byte: 2-byte=16-bit speed [um/s], 4-byte=32-bit const/speed^2
   reg [15:0] vx   = 0;
   reg [31:0] cvx2 = 0;
+  reg slope_reset = 0;
   always @(posedge clk)
   begin
     if(ram_wr & spi_calc_cs)
@@ -564,6 +565,7 @@ module top_adxl355log
       begin
         vx   <= {vx_ram[0],vx_ram[1]}; // mm/s vx speed
         cvx2 <= {vx_ram[2],vx_ram[3],vx_ram[4],ram_di}; // c/vx^2 speed
+        slope_reset <= {vx_ram[0],vx_ram[1]} == 0;
       end
     end
   end
@@ -663,9 +665,10 @@ module top_adxl355log
   slope_inst
   (
     .clk(clk),
-    .reset(btn_rising[2]),
+    .reset(slope_reset),
     //.enter(btn_rising[1]),
-    .enter(autofire),
+    //.enter(autofire),
+    .enter(sync_pulse),
     //.hold(0),
     .hold(btn_debounce[1]),
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
