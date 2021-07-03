@@ -173,9 +173,11 @@ module top_adxl355log
   reg [7:0] r_ctrl = 8'h00; // control byte, r_ctrl[7:2]:reserved, r_ctrl[1]:direct_en, r_ctrl[0]:reserved
   wire direct_req = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire direct_en;
+  reg [7:0] calc_result[0:7]; // 8-byte (2x32-bit)
 
-  wire spi_bram_cs = ram_addr[31:24] == 8'h00; // currently unused
-  wire spi_calc_cs = ram_addr[31:24] == 8'h01; // write to 0x01xxxxxx writes 32-bit speed mm/s and const/speed^2
+  wire spi_bram_cs = ram_addr[31:24] == 8'h00; // read bram
+  wire spi_bptr_cs = ram_addr[31:24] == 8'h01; // read bram ptr
+  wire spi_calc_cs = ram_addr[31:24] == 8'h02; // read/write to 0x02xxxxxx writes 32-bit speed mm/s and g*const/speed^2
   wire spi_wav_cs  = ram_addr[31:24] == 8'h05; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
   wire spi_tag_cs  = ram_addr[31:24] == 8'h06; // write to 0x06xxxxxx writes 6-bit tags
   wire spi_rds_cs  = ram_addr[31:24] == 8'h0D; // write to 0x0Dxxxxxx writes 52 bytes of RDS encoded data for 8-char text display
@@ -242,9 +244,9 @@ module top_adxl355log
           r_spi_ram_addr <= spi_ram_addr; // latch address MSB
         // ram_addr: SPI slave core provided read address
         // spi_ram_addr: SPI reader core autoincrementing address
-        R_ram_do <= ram_addr[31:24] == 8'h00 ? ram[ram_addr]
-                  : ram_addr[31:24] == 8'h01 ? (ram_addr[0] ? r_spi_ram_addr[ram_addr_bits-1:8] : r_spi_ram_addr[7:0])
-                  //: ram_addr[31:24] == 8'h02 ? (ram_addr[0] ?   spi_ram_addr[ram_addr_bits-1:8] :   spi_ram_addr[7:0]) // debug to check latched values
+        R_ram_do <= spi_bram_cs ? ram[ram_addr]
+                  : spi_bptr_cs ? (ram_addr[0] ? r_spi_ram_addr[ram_addr_bits-1:8] : r_spi_ram_addr[7:0])
+                  : spi_calc_cs ? calc_result[ram_addr] // calc result array
                   : 0;
       end
     end
@@ -552,7 +554,7 @@ module top_adxl355log
 
   localparam a_default = 16384; // default sensor reading accel
 
-  reg [ 7:0] vx_ram[0:5]; // 6-byte: 2-byte=16-bit speed [um/s], 4-byte=32-bit const/speed^2
+  reg [ 7:0] vx_ram[0:7]; // 8-byte: 2-byte=16-bit speed [um/s], 4-byte=32-bit const/speed^2, 2-byte unused
   reg [15:0] vx   = 0;
   reg [31:0] cvx2 = 0;
   reg slope_reset = 0;
@@ -687,6 +689,7 @@ module top_adxl355log
     .ready()
   );
 
+  wire [63:0] srvz;
   calc
   calc_inst
   (
@@ -699,8 +702,8 @@ module top_adxl355log
     //.slope_r(mb),
     //.vz_l(data[127:96]),
     //.vz_r(data[95:64])
-    .srvz_l(data[127:96]),
-    .srvz_r(data[95:64])
+    .srvz_l(srvz[63:32]),
+    .srvz_r(srvz[31: 0])
     //.d0(data[ 63:32]),
     //.d1(data[ 31:0 ]),
     //.d2(data[127:96]),
@@ -712,8 +715,19 @@ module top_adxl355log
   //assign data[31:0]  = {0, azr};
   //assign data[63:32] = slope_l;
   //assign data[31:0]  = slope_r;
+  assign data[127:96]  = srvz[63:32];
+  assign data[ 95:64]  = srvz[31: 0];
+  assign data[ 63:32]  = vx;
+  assign data[ 31: 0]  = cvx2;
 
-  assign data[63:32] = vx;
-  assign data[31:0]  = cvx2;
+  generate
+    genvar i;
+    for(i = 0; i < 4; i++)
+    begin
+      assign calc_result[i+0] = srvz[(i+4)*8+7:(i+4)*8]; // left
+      assign calc_result[i+4] = srvz[(i+0)*8+7:(i+0)*8]; // right
+    end
+  endgenerate
+
 endmodule
 `default_nettype wire
