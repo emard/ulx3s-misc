@@ -22,14 +22,15 @@ use work.coefficients.all; -- coefficients matrix
 entity slope is
 generic (
   a_default: integer := 15872; -- default accel sensor reading (ideally 16384 measuring 1g)
+  scale: integer := 16; -- 16 bits scale
   int_sample_rate_hz: integer := 1000; -- Hz accel input sample rate
-  -- 1024 to provide enough resolution for high speeds > 20 m/s
+  -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
   -- 1.0e6 to scale resulting slope to um/s
   -- 9.81 = 1g standard gravity
   -- 16384 sensor reading for 1g
-  -- 0.25 interval in m
-  -- 1024*1.0e6*9.81/16384/0.25 = 2452500
-  int_vx2_scale: integer := 2452500 -- not used here, used in ESP32
+  -- 0.25 m interval x
+  -- 65536*1.0e6*0.25*9.81/16384 = 9810000
+  int_vx2_scale: integer := 9810000 -- not used here, used in ESP32
 );
 port (
   clk              : in  std_logic;
@@ -48,10 +49,10 @@ end;
 architecture RTL of slope is
   signal ix, ix_next: unsigned(31 downto 0); -- traveled distance um
   signal ivx: unsigned(15 downto 0);
-  signal sl, sr, sr_next, sl_next : signed(41 downto 0); -- sum of const/vz^2, 42 bits (last 10 bits dropped at output)
+  signal sl, sr, sr_next, sl_next : signed(31+scale downto 0); -- sum of const/vz^2, 42 bits (last 10 bits dropped at output)
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration signed
   signal adifl, adifr : signed(15 downto 0) := to_signed(-a_default,16); -- z-acceleration differential adjust
-  signal cntadj: unsigned(0 downto 0); -- counter how often to adjust every 1m
+  signal cntadj: unsigned(2 downto 0); -- counter how often to adjust every 1m
   signal next_interval : std_logic;
   constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
   signal icvx2: signed(31 downto 0);
@@ -108,8 +109,8 @@ begin
 
   -- x_inc should be less tnan interval_x
   ix_next  <= ix + ivx;
-  sl_next  <= sl + avz2l(41 downto 0);
-  sr_next  <= sr + avz2r(41 downto 0);
+  sl_next  <= sl + avz2l(31+scale downto 0);
+  sr_next  <= sr + avz2r(31+scale downto 0);
 
   process(clk)
   begin
@@ -139,8 +140,8 @@ begin
     end if;
   end process;
 
-  slope_l <= std_logic_vector(sl(41 downto 10));
-  slope_r <= std_logic_vector(sr(41 downto 10));
+  slope_l <= std_logic_vector(sl(31+scale downto scale));
+  slope_r <= std_logic_vector(sr(31+scale downto scale));
   ready <= next_interval;
   
   d0 <= x"0000" & std_logic_vector(adifl);
