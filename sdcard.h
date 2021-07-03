@@ -9,12 +9,14 @@ extern int pcm_is_open;
 extern int sensor_check_status;
 extern int knots; // speed knots, 1 knot = 0.514444 m/s = 1.852 km/h
 extern int fast_enough; // logging flag when fast enough
+extern float iri[2];
 extern RDS rds;
 void mount(void);
 void umount(void);
 void spi_init(void);
 void rds_init(void);
 void spi_speed_write(float spd);
+void spi_srvz_read(int32_t *srvz);
 void spi_rds_write(void);
 void rds_message(struct tm *tm);
 void adxl355_init(void);

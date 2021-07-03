@@ -26,6 +26,7 @@ int pcm_is_open = 0;
 int sensor_check_status = 0;
 int knots = -1; // knots*100
 int fast_enough = 0; // for speed logging hysteresis
+float iri[2];
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
@@ -174,7 +175,7 @@ void spi_speed_write(float spd)
   float cvx2     = spd > 1.0 ? 9810000.0/(spd*spd) : 0.0;
   uint16_t ivx   = int(vx);
   uint32_t icvx2 = int(cvx2);
-  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0x2; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -186,6 +187,20 @@ void spi_speed_write(float spd)
   spi_master_tx_buf[9] = icvx2>>8;
   spi_master_tx_buf[10]= icvx2;
   master.transfer(spi_master_tx_buf, 5+4+2); // write speed binary
+}
+
+// returns [um/m] sum abs(vz) over 100m/0.25m = 400 points integer
+void spi_srvz_read(int32_t *srvz)
+{
+  spi_master_tx_buf[0] = 1; // 1: read ram
+  spi_master_tx_buf[1] = 0x2; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  spi_master_tx_buf[5] = 0; // dummy
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 5+2*4+1); // read srvz binary
+  srvz[0] = (spi_master_rx_buf[ 6]<<24)|(spi_master_rx_buf[ 7]<<16)|(spi_master_rx_buf[ 8]<<8)|(spi_master_rx_buf[ 9]);
+  srvz[1] = (spi_master_rx_buf[10]<<24)|(spi_master_rx_buf[11]<<16)|(spi_master_rx_buf[12]<<8)|(spi_master_rx_buf[13]);
 }
 
 void spi_rds_write(void)
@@ -238,6 +253,12 @@ void rds_message(struct tm *tm)
       free_MB_2n = '0';
     if(free_MB_2n > '9')
       free_MB_2n = '9';
+    float iri_short = sensor_check_status == 0 ? 0.0
+                    : sensor_check_status == 1 ? iri[0]
+                    : sensor_check_status == 2 ? iri[1]
+                    : (iri[0]+iri[1])/2;  // 3, both sensors
+    if(iri_short > 99.99)
+      iri_short = 99.99;
     if(knots < 0)
     {
       sprintf(disp_short, "WAIT  0X");
@@ -247,10 +268,12 @@ void rds_message(struct tm *tm)
     else
     {
       if(fast_enough)
-        sprintf(disp_short, "RUN   0X");
+        sprintf(disp_short, "%-5.2f 0X", iri_short);
       else
-        sprintf(disp_short, "GO    0X");
-      sprintf(disp_long, "%dMB free %02d:%02d %d.%02d kt RUN=%d",
+        //sprintf(disp_short, "GO    0X"); // normal
+        sprintf(disp_short, "%-5.2f 0X", iri_short); // debug
+      sprintf(disp_long, "L=%.2f R=%.2f %dMB free %02d:%02d %d.%02d kt RUN=%d",
+        iri[0], iri[1],
         free_MB,
         tm->tm_hour, tm->tm_min,
         knots/100, knots%100,

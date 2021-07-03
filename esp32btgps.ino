@@ -326,7 +326,19 @@ void loop()
           Serial.print(nmea);
 #endif
           knots = nmea2spd(nmea); // parse speed
-          spi_speed_write(knots > 550 ? knots*0.514444e-2 : 0.0);
+          //spi_speed_write(knots > 550 ? knots*0.514444e-2 : 0.0);
+          spi_speed_write(22.0);
+          int32_t srvz[2];
+          spi_srvz_read(srvz);
+          const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
+          iri[0] = srvz[0]*srvz2iri;
+          iri[1] = srvz[1]*srvz2iri;
+          #if 0
+          char iri_report[80];
+          sprintf(iri_report, "srvz %8X %8X IRI %8.2f %8.2f",
+            srvz[0], srvz[1], iri[0], iri[1]);
+          Serial.println(iri_report);
+          #endif
           // hysteresis for logging
           // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
           if (knots > 550)
@@ -366,16 +378,19 @@ void loop()
 #endif
           if (nmea2tm(nmea, &tm))
           {
-            static uint8_t prev_min;
+            static uint8_t prev_min, prev_sec;
             set_date_from_tm(&tm);
             pinMode(PIN_LED, OUTPUT);
             digitalWrite(PIN_LED, LED_ON);
             mount();
             open_logs(&tm);
-            if (tm.tm_min != prev_min)
-            { // every minute
-              // update RDS time and speed
+            if (tm.tm_sec != prev_sec && tm.tm_sec%5 == 0)
+            { // update RDS every 5 sec
               rds_message(&tm);
+              prev_sec = tm.tm_sec;
+            }
+            if (tm.tm_min != prev_min)
+            { // speak every minute
 #if 0
               Serial.print(tm.tm_hour);
               Serial.print(":");
