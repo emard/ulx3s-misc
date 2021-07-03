@@ -175,7 +175,7 @@ void spi_speed_write(float spd)
   uint16_t ivx   = int(vx);
   uint32_t icvx2 = int(cvx2);
   spi_master_tx_buf[0] = 0; // 1: write ram
-  spi_master_tx_buf[1] = 0x1; // addr [31:24] msb
+  spi_master_tx_buf[1] = 0x2; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
@@ -185,7 +185,7 @@ void spi_speed_write(float spd)
   spi_master_tx_buf[8] = icvx2>>16;
   spi_master_tx_buf[9] = icvx2>>8;
   spi_master_tx_buf[10]= icvx2;
-  master.transfer(spi_master_tx_buf, 5+2+4); // write speed binary
+  master.transfer(spi_master_tx_buf, 5+4+2); // write speed binary
 }
 
 void spi_rds_write(void)
