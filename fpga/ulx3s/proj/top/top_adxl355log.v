@@ -724,8 +724,8 @@ module top_adxl355log
     genvar i;
     for(i = 0; i < 4; i++)
     begin
-      assign calc_result[i+0] = srvz[(i+4)*8+7:(i+4)*8]; // left
-      assign calc_result[i+4] = srvz[(i+0)*8+7:(i+0)*8]; // right
+      assign calc_result[3-i] = srvz[(i+4)*8+7:(i+4)*8]; // left
+      assign calc_result[7-i] = srvz[(i+0)*8+7:(i+0)*8]; // right
     end
   endgenerate
 
