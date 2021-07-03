@@ -172,7 +172,7 @@ void rds_init(void)
 void spi_speed_write(float spd)
 {
   float vx       = spd*1.0e3;
-  float cvx2     = spd > 1.0 ? 9810000.0/(spd*spd) : 0.0;
+  float cvx2     = spd > 1.0 ? 39240.0/spd : 0.0;
   uint16_t ivx   = int(vx);
   uint32_t icvx2 = int(cvx2);
   spi_master_tx_buf[0] = 0; // 0: write ram
@@ -257,8 +257,8 @@ void rds_message(struct tm *tm)
                     : sensor_check_status == 1 ? iri[0]
                     : sensor_check_status == 2 ? iri[1]
                     : (iri[0]+iri[1])/2;  // 3, both sensors
-    if(iri_short > 99.99)
-      iri_short = 99.99;
+    if(iri_short > 99.9)
+      iri_short = 99.9;
     if(knots < 0)
     {
       sprintf(disp_short, "WAIT  0X");
@@ -268,10 +268,10 @@ void rds_message(struct tm *tm)
     else
     {
       if(fast_enough)
-        sprintf(disp_short, "%-5.2f 0X", iri_short);
+        sprintf(disp_short, "%-4.1f  0X", iri_short);
       else
         sprintf(disp_short, "GO    0X"); // normal
-        //sprintf(disp_short, "%-5.2f 0X", iri_short); // debug
+        //sprintf(disp_short, "%-4.1f  0X", iri_short); // debug
       sprintf(disp_long, "L=%.2f R=%.2f %dMB free %02d:%02d %d.%02d kt RUN=%d",
         iri[0], iri[1],
         free_MB,
