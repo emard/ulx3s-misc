@@ -674,9 +674,9 @@ module top_adxl355log
     //.hold(0),
     .hold(btn_debounce[1]),
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
-    //.cvx2(9810000/22**2), // 9810000/vx^2, vx in m/s, 5067 for 22 m/s
+    //.cvx2(39240/22), // int_vx2_scale/vx, vx in m/s, 1783 for 22 m/s
     .vx(vx), // vx in mm/s
-    .cvx2(cvx2), // 9810000/vx^2, vx in m/s
+    .cvx2(cvx2), // int_vx2_scale/vx, vx in m/s
     //.azl(ma), // btn
     //.azr(mb), // btn
     .azl(azl), // from left  sensor

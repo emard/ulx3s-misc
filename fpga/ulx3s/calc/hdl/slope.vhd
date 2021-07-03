@@ -28,9 +28,9 @@ generic (
   -- 1.0e6 to scale resulting slope to um/s
   -- 9.81 = 1g standard gravity
   -- 16384 sensor reading for 1g
-  -- 0.25 m interval x
-  -- 65536*1.0e6*0.25*9.81/16384 = 9810000
-  int_vx2_scale: integer := 9810000 -- not used here, used in ESP32
+  -- 1e-3 delta t (1/1kHz sample_rate)
+  -- 65536*1.0e6*1e-3*9.81/16384 = 39240
+  int_vx2_scale: integer := 39240 -- not used here, used in ESP32
 );
 port (
   clk              : in  std_logic;
