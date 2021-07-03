@@ -333,6 +333,9 @@ void loop()
           const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
           iri[0] = srvz[0]*srvz2iri;
           iri[1] = srvz[1]*srvz2iri;
+          char iri_tag[40];
+          sprintf(iri_tag, " L%.2fR%.2f ", iri[0], iri[1]);
+          write_tag(iri_tag);
           #if 0
           char iri_report[80];
           sprintf(iri_report, "srvz %8X %8X IRI %8.2f %8.2f",
@@ -341,7 +344,8 @@ void loop()
           #endif
           // hysteresis for logging
           // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
-          if (knots > 550)
+          //if (knots > 55) // debug
+          if (knots > 550) // normal
           {
             if (fast_enough == 0)
             {
@@ -350,7 +354,8 @@ void loop()
             }
             fast_enough = 1;
           }
-          if (knots < 220)
+          //if (knots < 22) // debug
+          if (knots < 220) // normal
           {
             if (fast_enough)
             {

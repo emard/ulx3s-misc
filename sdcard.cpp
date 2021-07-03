@@ -270,8 +270,8 @@ void rds_message(struct tm *tm)
       if(fast_enough)
         sprintf(disp_short, "%-5.2f 0X", iri_short);
       else
-        //sprintf(disp_short, "GO    0X"); // normal
-        sprintf(disp_short, "%-5.2f 0X", iri_short); // debug
+        sprintf(disp_short, "GO    0X"); // normal
+        //sprintf(disp_short, "%-5.2f 0X", iri_short); // debug
       sprintf(disp_long, "L=%.2f R=%.2f %dMB free %02d:%02d %d.%02d kt RUN=%d",
         iri[0], iri[1],
         free_MB,
