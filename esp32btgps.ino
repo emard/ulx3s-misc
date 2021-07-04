@@ -368,7 +368,7 @@ void loop()
           #endif
           // hysteresis for logging
           // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
-          //if (knots > 55) // debug, stationary GPS will record
+          //if (knots > 5) // debug, stationary GPS will record
           if (knots > 550) // normal
           {
             if (fast_enough == 0)
@@ -378,7 +378,7 @@ void loop()
             }
             fast_enough = 1;
           }
-          //if (knots < 22) // debug, stationary GPS will record
+          //if (knots < 2) // debug, stationary GPS will record
           if (knots < 220) // normal
           {
             if (fast_enough)
@@ -415,15 +415,17 @@ void loop()
             open_logs(&tm);
             if (tm.tm_sec != prev_sec && tm.tm_sec%5 == 0)
             { // update RDS every 5 sec
+              uint8_t iri99 = iriavg*10;
+              if(iri99 > 99)
+                iri99 = 99;
+              iri2digit[0]='0'+iri99/10;
+              iri2digit[2]='0'+iri99%10;
               rds_message(&tm);
               prev_sec = tm.tm_sec;
               if (speakfile == NULL && pcm_is_open == 0 && fast_enough > 0)
               {
-                int iri2digit = iriavg*10;
-                if(iri2digit > 99)
-                  iriavg = 99;
-                speak2digits[0] = digit_file[(iri2digit/10)%10];
-                speak2digits[1] = digit_file[ iri2digit%10];
+                speak2digits[0] = digit_file[iri2digit[0]-'0'];
+                speak2digits[1] = digit_file[iri2digit[2]-'0'];
                 speakfiles = speak2digits;
               }
             }

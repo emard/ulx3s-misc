@@ -27,6 +27,7 @@ int sensor_check_status = 0;
 int knots = -1; // knots*100
 int fast_enough = 0; // for speed logging hysteresis
 float iri[2], iriavg;
+char iri2digit[4] = "0.0";
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
@@ -253,9 +254,6 @@ void rds_message(struct tm *tm)
       free_MB_2n = '0';
     if(free_MB_2n > '9')
       free_MB_2n = '9';
-    float iri_short = iriavg;
-    if(iri_short > 99.9)
-      iri_short = 99.9;
     if(knots < 0)
     {
       sprintf(disp_short, "WAIT  0X");
@@ -265,10 +263,10 @@ void rds_message(struct tm *tm)
     else
     {
       if(fast_enough)
-        sprintf(disp_short, "%-4.1f  0X", iri_short);
+        sprintf(disp_short, "%3s   0X", iri2digit);
       else
         sprintf(disp_short, "GO    0X"); // normal
-        //sprintf(disp_short, "%-4.1f  0X", iri_short); // debug
+        //sprintf(disp_short, "%3s   0X", iri2digit); // debug
       sprintf(disp_long, "L=%.2f R=%.2f %dMB free %02d:%02d %d.%02d kt RUN=%d",
         iri[0], iri[1],
         free_MB,
