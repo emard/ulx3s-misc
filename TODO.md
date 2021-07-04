@@ -1,17 +1,15 @@
 # TODO
 
-    [ ] SPI slave for speed and iri
-    [ ] EPS32 send to SPI speed, c/speed, report and tag iri
+    [ ] WiFi server file download
     [ ] SD card compatiblity sandisk
     [ ] config file for BT MAC and few parameters
     [ ] sensor hotplug
     [ ] LCD display with freq and status
     [x] audio output to 3.5 mm jack
     [ ] improve audio quality with DACPWM
-    [ ] WiFi server file download
     [ ] dual frequency output 100.0 and 107.9 
     [ ] time sync status
-    [ ] speech immediately at start logging
+    [x] speech immediately at start logging
     [x] start/stop recording at speed hysteresis
     [x] sensor L/R status monitor and error reporting
     [ ] GPS time discontinuty warning
@@ -27,3 +25,6 @@
     [ ] speech report remaining minutes and disk full
     [x] estimate speed-accel integration value
     [ ] get bytes free early to display when GPS is OFF
+    [ ] fix wav file to opened with wave.open("file.wav","r")
+    [x] SPI slave for speed and iri
+    [x] EPS32 send to SPI speed, c/speed, report and tag iri
