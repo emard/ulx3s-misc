@@ -9,7 +9,7 @@ extern int pcm_is_open;
 extern int sensor_check_status;
 extern int knots; // speed knots, 1 knot = 0.514444 m/s = 1.852 km/h
 extern int fast_enough; // logging flag when fast enough
-extern float iri[2];
+extern float iri[2],iriavg;
 extern RDS rds;
 void mount(void);
 void umount(void);

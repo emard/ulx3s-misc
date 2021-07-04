@@ -29,8 +29,21 @@ char *speakfile = NULL;
 char *nospeak[] = {NULL};
 char **speakfiles = nospeak;
 
-static char *spk123[] = {"/speak/0.wav", "/speak/1.wav", "/speak/2.wav", "/speak/3.wav", "/speak/4.wav", "/speak/5.wav", "/speak/6.wav", "/speak/7.wav", "/speak/8.wav", "/speak/9.wav", NULL};
-static char *spk02[] = {"/speak/0.wav", "/speak/8.wav", NULL};
+static char *digit_file[] =
+{
+  "/speak/0.wav",
+  "/speak/1.wav",
+  "/speak/2.wav",
+  "/speak/3.wav",
+  "/speak/4.wav",
+  "/speak/5.wav",
+  "/speak/6.wav",
+  "/speak/7.wav",
+  "/speak/8.wav",
+  "/speak/9.wav",
+  NULL
+};
+static char *speak2digits[] = {digit_file[0], digit_file[0], NULL};
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -340,6 +353,10 @@ void loop()
           const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
           iri[0] = srvz[0]*srvz2iri;
           iri[1] = srvz[1]*srvz2iri;
+          iriavg =    sensor_check_status == 0 ? 0.0
+                    : sensor_check_status == 1 ? iri[0]
+                    : sensor_check_status == 2 ? iri[1]
+                    : (iri[0]+iri[1])/2;  // 3, average of both sensors
           char iri_tag[40];
           sprintf(iri_tag, " L%.2fR%.2f ", iri[0], iri[1]);
           write_tag(iri_tag);
@@ -351,7 +368,7 @@ void loop()
           #endif
           // hysteresis for logging
           // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
-          //if (knots > 55) // debug
+          //if (knots > 55) // debug, stationary GPS will record
           if (knots > 550) // normal
           {
             if (fast_enough == 0)
@@ -361,7 +378,7 @@ void loop()
             }
             fast_enough = 1;
           }
-          //if (knots < 22) // debug
+          //if (knots < 22) // debug, stationary GPS will record
           if (knots < 220) // normal
           {
             if (fast_enough)
@@ -400,6 +417,15 @@ void loop()
             { // update RDS every 5 sec
               rds_message(&tm);
               prev_sec = tm.tm_sec;
+              if (speakfile == NULL && pcm_is_open == 0 && fast_enough > 0)
+              {
+                int iri2digit = iriavg*10;
+                if(iri2digit > 99)
+                  iriavg = 99;
+                speak2digits[0] = digit_file[(iri2digit/10)%10];
+                speak2digits[1] = digit_file[ iri2digit%10];
+                speakfiles = speak2digits;
+              }
             }
             if (tm.tm_min != prev_min)
             { // speak every minute
@@ -411,7 +437,7 @@ void loop()
               Serial.print(knots);
               Serial.println(" kt*100");
 #endif
-              if (!pcm_is_open)
+              if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
                 if (knots < 0)
                   speakfile = "/speak/wait.wav";
@@ -459,8 +485,7 @@ void loop()
   {
     tdelta_wav = t - tprev_wav;
     if (tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
-      //speakfile = "/speak/search.wav";
-      speakfiles = spk123;
+      speakfile = "/speak/search.wav";
   }
   if (speakfile == NULL && pcm_is_open == 0) // do we have more files to speak?
   {
@@ -475,7 +500,9 @@ void loop()
     speakfile = "/speak/1.wav";
   }
 #endif
-  // both end speech timing methods work
+  // before starting new word we must check
+  // that previous word has been spoken 
+  // both speech end timing methods work
 #if 1
   // coarse estimate of speech end
   tdelta_wavp = t - tprev_wavp; // estimate time after last word is spoken

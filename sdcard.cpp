@@ -26,7 +26,7 @@ int pcm_is_open = 0;
 int sensor_check_status = 0;
 int knots = -1; // knots*100
 int fast_enough = 0; // for speed logging hysteresis
-float iri[2];
+float iri[2], iriavg;
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
@@ -253,10 +253,7 @@ void rds_message(struct tm *tm)
       free_MB_2n = '0';
     if(free_MB_2n > '9')
       free_MB_2n = '9';
-    float iri_short = sensor_check_status == 0 ? 0.0
-                    : sensor_check_status == 1 ? iri[0]
-                    : sensor_check_status == 2 ? iri[1]
-                    : (iri[0]+iri[1])/2;  // 3, both sensors
+    float iri_short = iriavg;
     if(iri_short > 99.9)
       iri_short = 99.9;
     if(knots < 0)
