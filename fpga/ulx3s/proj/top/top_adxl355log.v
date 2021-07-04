@@ -547,12 +547,15 @@ module top_adxl355log
   );
   //assign led = wav_data_signed[15:8];
 
-  assign audio_l[3:1] = 0;
-  assign audio_l[0] = drdy;
-  assign audio_r[3:1] = 0;
-  assign audio_r[0] = pps_btn;
+  //assign audio_l[3:1] = 0;
+  //assign audio_l[0] = drdy;
+  //assign audio_r[3:1] = 0;
+  //assign audio_r[0] = pps_btn;
+  // enabling audio out may increase audio noise
+  assign audio_l[0] = wav_data[7];
+  assign audio_r[0] = wav_data[7];
 
-  localparam a_default = 16384; // default sensor reading accel
+  localparam a_default = 16384; // default sensor reading 1g acceleration
 
   reg [ 7:0] vx_ram[0:7]; // 8-byte: 2-byte=16-bit speed [um/s], 4-byte=32-bit const/speed^2, 2-byte unused
   reg [15:0] vx   = 0;
