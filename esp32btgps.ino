@@ -26,6 +26,11 @@ char *pin = "1234"; //<- standard pin would be provided by default
 
 bool connected = false;
 char *speakfile = NULL;
+char *nospeak[] = {NULL};
+char **speakfiles = nospeak;
+
+static char *spk123[] = {"/speak/0.wav", "/speak/1.wav", "/speak/2.wav", "/speak/3.wav", "/speak/4.wav", "/speak/5.wav", "/speak/6.wav", "/speak/7.wav", "/speak/8.wav", "/speak/9.wav", NULL};
+static char *spk02[] = {"/speak/0.wav", "/speak/8.wav", NULL};
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -285,7 +290,7 @@ void loop()
   static int i = 0;
   uint32_t tdelta = t - tprev;
   static uint32_t ct0; // first char in line millis timestamp
-  static uint32_t tprev_wav, tprev_wavp;
+  static uint32_t tprev_wav = t, tprev_wavp = t;
   uint32_t tdelta_wav, tdelta_wavp;
   static uint32_t tspeak_ready;
   static struct tm tm;
@@ -450,11 +455,18 @@ void loop()
   }
 #endif
 
-  if (!pcm_is_open) // NULL: we are ready to speak new file,
+  if (*speakfiles == NULL && pcm_is_open == 0) // NULL: we are ready to speak new file,
   {
     tdelta_wav = t - tprev_wav;
     if (tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
-      speakfile = "/speak/search.wav";
+      //speakfile = "/speak/search.wav";
+      speakfiles = spk123;
+  }
+  if (speakfile == NULL && pcm_is_open == 0) // do we have more files to speak?
+  {
+    if(speakfiles)
+      if(*speakfiles)
+        speakfile = *speakfiles++;
   }
 #if 0
   if (speakfile == NULL && pcm_is_open == 0 && (((int32_t)t) - (int32_t)tspeak_ready) > 0) // NULL: we are ready to speak new file,
@@ -463,12 +475,21 @@ void loop()
     speakfile = "/speak/1.wav";
   }
 #endif
-  if (speakfile != NULL && pcm_is_open == 0)
+  // both end speech timing methods work
+#if 1
+  // coarse estimate of speech end
+  tdelta_wavp = t - tprev_wavp; // estimate time after last word is spoken
+  if (speakfile != NULL && pcm_is_open == 0 && tdelta_wavp > 370) // 370 ms after last word
+#else
+  // fine estimate of speech end
+  if (speakfile != NULL && pcm_is_open == 0 && (((int32_t)t) - (int32_t)tspeak_ready) > 0) // NULL: we are ready to speak new file,
+#endif
   {
     // start speech
     mount();
     open_pcm(speakfile); // load buffer with start of the file
     tprev_wavp = ms(); // reset play timer from now, after start of PCM file
+    tspeak_ready = tprev_wavp+370;
     tprev_wav = t; // prevent too often starting of the speech
   }
   else
@@ -483,8 +504,8 @@ void loop()
       tprev_wavp = t;
       if (!pcm_is_open)
       {
-        tspeak_ready = t + remaining_bytes / 11 + 359; // estimate when PCM will be ready
         speakfile = NULL; // consumed
+        tspeak_ready = t + remaining_bytes / 11 + 359; // estimate when PCM will be ready
       }
     }
   }
