@@ -716,12 +716,12 @@ module top_adxl355log
   //assign data[31:0]  = mb;
   //assign data[63:32] = {0, azl};
   //assign data[31:0]  = {0, azr};
-  //assign data[63:32] = slope_l;
-  //assign data[31:0]  = slope_r;
+  assign data[63:32] = slope_l;
+  assign data[31:0]  = slope_r;
   assign data[127:96]  = srvz[63:32];
   assign data[ 95:64]  = srvz[31: 0];
-  assign data[ 63:32]  = vx;
-  assign data[ 31: 0]  = cvx2;
+  //assign data[ 63:32]  = vx;
+  //assign data[ 31: 0]  = cvx2;
 
   generate
     genvar i;
