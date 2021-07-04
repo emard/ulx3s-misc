@@ -33,12 +33,12 @@ entity fmgen_rds is
     (
 	clk: in std_logic;
 	clk_fmdds: in std_logic; -- DDS clock, must be > 2x max cw_freq, normally > 216 MHz
-	cw_freq: in std_logic_vector(31 downto 0);
+	cw_freq1, cw_freq2: in std_logic_vector(31 downto 0);
 	pcm_in_left, pcm_in_right: in ieee.numeric_std.signed(15 downto 0) := (others => '0'); -- PCM audio input
 	rds_addr: out std_logic_vector(C_addr_bits-1 downto 0); -- set byte address to RDS RAM
 	rds_data: in std_logic_vector(7 downto 0); -- read data byte from RDS RAM
 	--led: out std_logic_vector(7 downto 0);
-	fm_antenna: out std_logic -- pyhsical output
+	fm_antenna1, fm_antenna2: out std_logic -- pyhsical output
     );
 end;
 
@@ -87,7 +87,7 @@ begin
       pcm_out => rds_pcm
     );
 
-    fm_modulator: entity work.fmgen
+    fm_modulator1: entity work.fmgen
     generic map
     (
       c_fdds => real(C_fmdds_hz)
@@ -95,10 +95,24 @@ begin
     port map
     (
       clk_pcm => clk, -- PCM processing clock, same as CPU clock
-      clk_dds => clk_fmdds, -- DDS clock must be > 2x cw_freq 
-      cw_freq => cw_freq, -- Hz FM carrier wave frequency, e.g. 107900000
+      clk_dds => clk_fmdds, -- DDS clock must be > 2x cw_freq
+      cw_freq => cw_freq1, -- Hz FM carrier wave frequency, e.g. 107900000
       pcm_in  => rds_pcm,
-      fm_out  => fm_antenna
+      fm_out  => fm_antenna1
+    );
+
+    fm_modulator2: entity work.fmgen
+    generic map
+    (
+      c_fdds => real(C_fmdds_hz)
+    )
+    port map
+    (
+      clk_pcm => clk, -- PCM processing clock, same as CPU clock
+      clk_dds => clk_fmdds, -- DDS clock must be > 2x cw_freq
+      cw_freq => cw_freq2, -- Hz FM carrier wave frequency, e.g. 107900000
+      pcm_in  => rds_pcm,
+      fm_out  => fm_antenna2
     );
 
     --rdsbram: entity work.bram_rds

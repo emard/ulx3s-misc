@@ -59,6 +59,8 @@ module top_adxl355log
   input   [6:0] btn,
   output  [7:0] led,
   output  [3:0] audio_l, audio_r,
+  output        gp0,  // secondary antenna +
+  output        gn0,  // secondary antenna -
   output        gp13, // ESP32   MISO
   output        gp14, // ADXL355 DRDY
   input         gp15, // ADXL355 INT2
@@ -540,10 +542,12 @@ module top_adxl355log
     //.pcm_in_right(btn[2] ? beep[15:1] : wav_data_signed), // debug
     .pcm_in_left( wav_data_signed), // normal
     .pcm_in_right(wav_data_signed), // normal
-    .cw_freq(107900000),
+    .cw_freq1(107900000),
+    .cw_freq2(87600000),
     .rds_addr(rds_addr),
     .rds_data(rds_data),
-    .fm_antenna(ant_433mhz)
+    .fm_antenna1(ant_433mhz),
+    .fm_antenna2(gp0)
   );
   //assign led = wav_data_signed[15:8];
 
