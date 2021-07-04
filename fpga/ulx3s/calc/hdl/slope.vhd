@@ -52,7 +52,7 @@ architecture RTL of slope is
   signal sl, sr, sr_next, sl_next : signed(31+scale downto 0); -- sum of const/vz^2, 42 bits (last 10 bits dropped at output)
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration signed
   signal adifl, adifr : signed(15 downto 0) := to_signed(-a_default,16); -- z-acceleration differential adjust
-  signal cntadj: unsigned(2 downto 0); -- counter how often to adjust every 1m
+  signal cntadj: unsigned(0 downto 0); -- counter how often to adjust slope
   signal next_interval : std_logic;
   constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
   signal icvx2: signed(31 downto 0);
