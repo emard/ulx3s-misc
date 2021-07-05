@@ -107,8 +107,11 @@ while f.readinto(mvb):
         lonlat_prev = lonlat
       if nmea[0:1]==b"L" and lonlat!=None:
         rpos=nmea.find(b"R")
-        iri_left=float(nmea[1:rpos])
-        iri_right=float(nmea[rpos+1:])
+        try:
+          iri_left=float(nmea[1:rpos])
+          iri_right=float(nmea[rpos+1:])
+        except:
+          pass
         iri_avg=(iri_left+iri_right)/2
         rarify += 1
         if (rarify % mark_every == 0):
