@@ -42,6 +42,7 @@ iri_right   = 0.0
 iri_avg     = 0.0
 lonlat      = None
 lonlat_prev = None
+speed_kmh   = 0.0
 
 rarify = 0 # reset counter to rarify kml markers
 
@@ -89,13 +90,15 @@ while f.readinto(mvb):
         lonlat=nmea_latlon2kml(nmea[18:46])
         heading=float(nmea[54:59])
         datetime=b"20"+nmea[64:66]+b"-"+nmea[62:64]+b"-"+nmea[60:62]+b"T"+nmea[7:9]+b":"+nmea[9:11]+b":"+nmea[11:15]+b"Z"
+        speed_kt=float(nmea[47:53])
+        speed_kmh=speed_kt*1.852
         if lonlat_prev!=None:
           ls0 = styles.LineStyle(ns, 
             color=("%08X" % color32(iri_avg/red_iri)), width=12)
           lsty0 = styles.Style(styles = [ls0])
           p1 = kml.Placemark(ns, 'id', 
             name=("%.2f" % iri_avg),
-            description=("L=%.2f R=%.2f\n%s" % (iri_left, iri_right, datetime.decode("utf-8"))),
+            description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
             styles=[lsty0])
           p1.geometry = LineString([lonlat_prev, lonlat])
           t.timestamp, dummy = t.parse_str(datetime) # "2021-07-03T11:22:33Z"
@@ -117,7 +120,7 @@ while f.readinto(mvb):
           isty0 = styles.Style(styles = [is0])
           p0 = kml.Placemark(ns, 'id',
             name=("%.2f" % iri_avg),
-            description=("L=%.2f R=%.2f\n%s" % (iri_left, iri_right, datetime.decode("utf-8"))),
+            description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
             styles=[isty0])
           p0.geometry = Point(lonlat)
           p0.timeStamp = t.timestamp
