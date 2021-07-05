@@ -60,7 +60,6 @@ module top_adxl355log
   output  [7:0] led,
   output  [3:0] audio_l, audio_r,
   output        gp0,  // secondary antenna +
-  output        gn0,  // secondary antenna -
   output        gp13, // ESP32   MISO
   output        gp14, // ADXL355 DRDY
   input         gp15, // ADXL355 INT2
@@ -175,7 +174,7 @@ module top_adxl355log
   reg [7:0] r_ctrl = 8'h00; // control byte, r_ctrl[7:2]:reserved, r_ctrl[1]:direct_en, r_ctrl[0]:reserved
   wire direct_req = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire direct_en;
-  reg [7:0] calc_result[0:7]; // 8-byte (2x32-bit)
+  wire [7:0] calc_result[0:7]; // 8-byte (2x32-bit)
 
   wire spi_bram_cs = ram_addr[31:24] == 8'h00; // read bram
   wire spi_bptr_cs = ram_addr[31:24] == 8'h01; // read bram ptr

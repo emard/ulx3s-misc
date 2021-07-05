@@ -41,6 +41,7 @@ VHDL_FILES = \
 ../fm/hdl/fmgen.vhd \
 ../fm/hdl/rds.vhd \
 ../fm/hdl/lowpass.vhd \
+../calc/hdl/slope.vhd \
 ../calc/hdl/coefficients_pack.vhd \
 ../calc/hdl/calc.vhd \
 
