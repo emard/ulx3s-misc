@@ -472,6 +472,13 @@ void open_logs(struct tm *tm)
   logs_are_open = 1;
 }
 
+void flush_logs(void)
+{
+  if(logs_are_open != 0)
+    return;
+  file_accel.flush();
+}
+
 #if 0
 // using ADXL 32-sample buffer is too small, overruns
 void write_logs_old1(void)

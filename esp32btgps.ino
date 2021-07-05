@@ -439,6 +439,8 @@ void loop()
               Serial.print(knots);
               Serial.println(" kt*100");
 #endif
+              if(fast_enough == 0)
+                flush_logs(); // save recorded data
               if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
                 if (knots < 0)
