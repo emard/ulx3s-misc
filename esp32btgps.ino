@@ -1,8 +1,11 @@
 #include "pins.h"
+#include "web.h"
 #include <sys/time.h>
 
 #include "BluetoothSerial.h"
 // set Board->ESP32 Arduino->ESP32 Dev Module
+// CPU Frequency: 240 MHz
+// Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
 
 // PPS and IRQ connected with wire
 #include "soc/mcpwm_reg.h"
@@ -14,6 +17,8 @@
 #include "nmea.h"
 
 BluetoothSerial SerialBT;
+
+int web = 0; // set 1 to enable web server for file transfer (main application can not run then)
 
 // TODO: read address from SD card gps.mac
 uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
@@ -153,6 +158,12 @@ void setup() {
   //set_date_time(2021,4,1,12,30,45);
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
+  if(web)
+  {
+    mount();
+    web_setup();
+    return;
+  }
   pinMode(PIN_IRQ, INPUT);
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
   SerialBT.begin("ESP32", true);
@@ -307,6 +318,12 @@ void loop()
   uint32_t tdelta_wav, tdelta_wavp;
   static uint32_t tspeak_ready;
   static struct tm tm;
+
+  if(web)
+  {
+    server.handleClient();
+    return;
+  }
 
 #if 1
   if (connected && SerialBT.available() > 0)
