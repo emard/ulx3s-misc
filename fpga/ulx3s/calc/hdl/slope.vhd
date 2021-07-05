@@ -1,14 +1,18 @@
--- response calculator
+-- slope calculator
 -- (c) Davor Jadrijevic
 -- LICENSE=BSD
 
--- from acceleration and speed calculate slope
--- calculate slope at every interval_mm
+-- From acceleration and speed, calculate slope
+-- at every interval_mm
 
--- slope should not build up much DC
--- so feedback loop that adjusts acceleration +-1
--- each step
--- TODO better (faster) DC removal
+-- Slope should not build up much DC to avoid
+-- numeric overflow in the response calculator.
+-- Simplified PID loop adjusts acceleration offset
+-- +-2 at each interval_mm, generating damped
+-- oscillations that lead to DC offset removal.
+-- Oscillation amplitude and frequency contribute
+-- to about 0.01 mm/m IRI noise which has
+-- insignificant impact to the measurement.
 
 library ieee;
 use ieee.std_logic_1164.all;
