@@ -29,3 +29,6 @@
     [x] SPI slave for speed and iri
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [ ] >9.9 speak "out of scale"
+    [ ] log sensor temperature
+    [ ] report speed range min/max to placemarks
+    [ ] at 0-speed reset slope adjustment offset
