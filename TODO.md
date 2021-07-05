@@ -32,3 +32,4 @@
     [ ] log sensor temperature
     [ ] report speed range min/max to placemarks
     [ ] at 0-speed reset slope adjustment offset
+    [ ] at stop cut the track and restart new
