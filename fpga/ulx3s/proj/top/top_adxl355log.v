@@ -181,6 +181,7 @@ module top_adxl355log
   wire spi_calc_cs = ram_addr[31:24] == 8'h02; // read/write to 0x02xxxxxx writes 32-bit speed mm/s and g*const/speed^2
   wire spi_wav_cs  = ram_addr[31:24] == 8'h05; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
   wire spi_tag_cs  = ram_addr[31:24] == 8'h06; // write to 0x06xxxxxx writes 6-bit tags
+  wire spi_btn_cs  = ram_addr[31:24] == 8'h0B; // read from 0x0Bxxxxxx reads BTN state
   wire spi_rds_cs  = ram_addr[31:24] == 8'h0D; // write to 0x0Dxxxxxx writes 52 bytes of RDS encoded data for 8-char text display
   wire spi_ctrl_cs = ram_addr[31:24] == 8'hFF;
 
@@ -247,6 +248,7 @@ module top_adxl355log
         // spi_ram_addr: SPI reader core autoincrementing address
         R_ram_do <= spi_bram_cs ? ram[ram_addr]
                   : spi_bptr_cs ? (ram_addr[0] ? r_spi_ram_addr[ram_addr_bits-1:8] : r_spi_ram_addr[7:0])
+                  : spi_btn_cs  ? btn_debounce
                   : spi_calc_cs ? calc_result[ram_addr] // calc result array
                   : 0;
       end
