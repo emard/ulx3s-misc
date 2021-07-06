@@ -213,7 +213,7 @@ uint8_t spi_btn_read(void)
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   spi_master_tx_buf[5] = 0; // dummy
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 6+1); // read srvz binary
-  return spi_master_rx_buf[ 6];
+  return spi_master_rx_buf[6];
 }
 
 void spi_rds_write(void)
