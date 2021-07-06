@@ -199,9 +199,21 @@ void spi_srvz_read(int32_t *srvz)
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   spi_master_tx_buf[5] = 0; // dummy
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 5+2*4+1); // read srvz binary
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 6+2*4); // read srvz binary
   srvz[0] = (spi_master_rx_buf[ 6]<<24)|(spi_master_rx_buf[ 7]<<16)|(spi_master_rx_buf[ 8]<<8)|(spi_master_rx_buf[ 9]);
   srvz[1] = (spi_master_rx_buf[10]<<24)|(spi_master_rx_buf[11]<<16)|(spi_master_rx_buf[12]<<8)|(spi_master_rx_buf[13]);
+}
+
+uint8_t spi_btn_read(void)
+{
+  spi_master_tx_buf[0] = 1; // 1: read ram
+  spi_master_tx_buf[1] = 0xB; // addr [31:24] msb
+  spi_master_tx_buf[2] = 0; // addr [23:16]
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  spi_master_tx_buf[5] = 0; // dummy
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 6+1); // read srvz binary
+  return spi_master_rx_buf[ 6];
 }
 
 void spi_rds_write(void)

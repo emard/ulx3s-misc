@@ -158,6 +158,8 @@ void setup() {
   //set_date_time(2021,4,1,12,30,45);
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
+  spi_init();
+  web = (~spi_btn_read()) & 1; // hold BTN0 an plug power to up to enable web server
   if(web)
   {
     mount();
@@ -181,7 +183,6 @@ void setup() {
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
   init_nmea2ms(0);
 
-  spi_init();
   rds_init();
   for (int i = 0; i < 5; i++)
   {
