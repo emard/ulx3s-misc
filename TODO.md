@@ -1,10 +1,14 @@
 # TODO
 
-    [ ] WiFi server file download
+    [x] WiFi server
+    [ ] better web server home page for file download and delete
+    [ ] latch calc_result from changing while reading
     [ ] SD card compatiblity sandisk
-    [ ] config file for BT MAC and few parameters
+    [ ] config file for BT MAC, WiFi password and few parameters
     [ ] sensor hotplug
+    [ ] OBD2 support
     [ ] LCD display with freq and status
+    [ ] LCD display IP address and hostname
     [x] audio output to 3.5 mm jack
     [ ] improve audio quality with DACPWM
     [x] dual frequency output 87.6 and 107.9
