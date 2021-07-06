@@ -128,7 +128,8 @@ module top_adxl355log
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
 
   assign wifi_en = S_prog_out[1];
-  assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
+  // assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
+  assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
 
   //assign wifi_en = S_prog_out[1] & btn[0]; // holding BTN0 disables ESP32, releasing BTN0 reboots ESP32
   //assign wifi_gpio0 = S_prog_out[0];
@@ -153,7 +154,20 @@ module top_adxl355log
     .clk_o(clocks)
   );
   wire clk = clocks[0]; // 40 MHz system clock
-  wire clk_fmdds = clocks[1]; // 240 MHz system clock
+  wire clk_fmdds = clocks[1]; // 240 MHz FM clock
+
+  wire [6:0] btn_rising, btn_debounce;
+  btn_debounce
+  #(
+    .bits(19)
+  )
+  btn_debounce_inst
+  (
+    .clk(clk),
+    .btn(btn),
+    .debounce(btn_debounce),
+    .rising(btn_rising)
+  );
 
   wire csn, mosi, miso, sclk;
   wire rd_csn, rd_mosi, rd0_miso, rd1_miso, rd_sclk; // spi reader
@@ -176,14 +190,14 @@ module top_adxl355log
   wire direct_en;
   wire [7:0] calc_result[0:7]; // 8-byte (2x32-bit)
 
-  wire spi_bram_cs = ram_addr[31:24] == 8'h00; // read bram
-  wire spi_bptr_cs = ram_addr[31:24] == 8'h01; // read bram ptr
-  wire spi_calc_cs = ram_addr[31:24] == 8'h02; // read/write to 0x02xxxxxx writes 32-bit speed mm/s and g*const/speed^2
-  wire spi_wav_cs  = ram_addr[31:24] == 8'h05; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
-  wire spi_tag_cs  = ram_addr[31:24] == 8'h06; // write to 0x06xxxxxx writes 6-bit tags
-  wire spi_btn_cs  = ram_addr[31:24] == 8'h0B; // read from 0x0Bxxxxxx reads BTN state
-  wire spi_rds_cs  = ram_addr[31:24] == 8'h0D; // write to 0x0Dxxxxxx writes 52 bytes of RDS encoded data for 8-char text display
-  wire spi_ctrl_cs = ram_addr[31:24] == 8'hFF;
+  wire spi_bram_cs = ram_addr[27:24] == 4'h0; // read bram
+  wire spi_bptr_cs = ram_addr[27:24] == 4'h1; // read bram ptr
+  wire spi_calc_cs = ram_addr[27:24] == 4'h2; // read/write to 0x02xxxxxx writes 32-bit speed mm/s and g*const/speed^2
+  wire spi_wav_cs  = ram_addr[27:24] == 4'h5; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
+  wire spi_tag_cs  = ram_addr[27:24] == 4'h6; // write to 0x06xxxxxx writes 6-bit tags
+  wire spi_btn_cs  = ram_addr[27:24] == 4'hB; // read from 0x0Bxxxxxx reads BTN state
+  wire spi_rds_cs  = ram_addr[27:24] == 4'hD; // write to 0x0Dxxxxxx writes 52 bytes of RDS encoded data for 8-char text display
+  wire spi_ctrl_cs = ram_addr[27:24] == 4'hF;
 
   generate
   if(spi_direct)
@@ -242,7 +256,7 @@ module top_adxl355log
       end
       if(ram_rd)
       begin
-        if(ram_addr[31:24] == 8'h01 && ram_addr[0] == 1'b0)
+        if(spi_bptr_cs && ram_addr[0] == 1'b0)
           r_spi_ram_addr <= spi_ram_addr; // latch address MSB
         // ram_addr: SPI slave core provided read address
         // spi_ram_addr: SPI reader core autoincrementing address
@@ -301,7 +315,8 @@ module top_adxl355log
 
   //wire pps_btn = pps & ~btn[1];
   //wire pps_btn = wifi_gpio5 & ~btn[1];
-  wire pps_btn = wifi_gpio25 & ~btn[1];
+  //wire pps_btn = wifi_gpio25 & ~btn[1]; // debug
+  wire pps_btn = wifi_gpio25; // normal
   //wire pps_btn = ftdi_nrts & ~btn[1];
   wire pps_feedback;
   assign wifi_gpio26 = pps_feedback;
@@ -583,18 +598,6 @@ module top_adxl355log
   reg  signed [31:0] ma = a_default;
   reg  signed [31:0] mb = a_default;
 
-  wire [6:0] btn_rising, btn_debounce;
-  btn_debounce
-  #(
-    .bits(19)
-  )
-  btn_debounce_inst
-  (
-    .clk(clk),
-    .btn(btn),
-    .debounce(btn_debounce),
-    .rising(btn_rising)
-  );
   always @(posedge clk)
   begin
     if(btn_rising[3])
@@ -679,8 +682,8 @@ module top_adxl355log
     //.enter(btn_rising[1]),
     //.enter(autofire),
     .enter(sync_pulse),
-    //.hold(0),
-    .hold(btn_debounce[1]),
+    .hold(0), // normal
+    //.hold(btn_debounce[1]), // debug
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
     //.cvx2(39240/22), // int_vx2_scale/vx, vx in m/s, 1783 for 22 m/s
     .vx(vx), // vx in mm/s
