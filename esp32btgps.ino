@@ -159,18 +159,24 @@ void setup() {
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
   spi_init();
-  web = (~spi_btn_read()) & 1; // hold BTN0 an plug power to up to enable web server
+  rds_init();
+  spi_rds_write();
+  for (int i = 0; i < 5; i++)
+  {
+    adxl355_init();
+    delay(500);
+  }
+
+  web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
   if(web)
   {
     mount();
     web_setup();
     return;
   }
+
   pinMode(PIN_IRQ, INPUT);
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
-  SerialBT.begin("ESP32", true);
-  SerialBT.setPin(pin);
-  Serial.println("Bluetooth master started");
 
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS); // Initialise channel MCPWM0A on PPS pin
   MCPWM0.clk_cfg.prescale = 24;                 // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
@@ -183,20 +189,10 @@ void setup() {
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
   init_nmea2ms(0);
 
-  rds_init();
-  for (int i = 0; i < 5; i++)
-  {
-    adxl355_init();
-    delay(500);
-  }
-#if 0
-  // RDS test: fill some memory data
-  uint8_t rdsmsg[13] = {0xca, 0xfe, 0xa0, 0x01, 0x00, 0x2e, 0x8e, 0x1c, 0xc2, 0x31, 0x51, 0x15, 0xfb};
-  //uint8_t rdsmsg[13] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  write_rds(rdsmsg, sizeof(rdsmsg));
-#endif
-  spi_rds_write();
-  //spi_speed_write(22.0); // debug
+  SerialBT.begin("ESP32", true);
+  SerialBT.setPin(pin);
+  Serial.println("Bluetooth master started");
+
   spi_speed_write(0.0); // normal
 }
 
