@@ -9,6 +9,16 @@
   upload the contents of "websd" to the root of the SD card
   and access the editor by going to
   http://esp32sd.local/edit
+
+  hold BTN0 and plug the USB power
+  cd websd
+  upload local index.htm as remote name /index.htm (needs leading "/")
+  curl -X POST -F "a=@index.htm; filename=/index.htm" http://192.168.48.181/edit > /dev/null
+  curl -X DELETE --data "a=/dummy.fil" http://192.168.48.181/edit
+  curl -X PUT --data "a=/newfolder" http://192.168.48.181/edit > /dev/null
+  "a" is any argument name, could be data=, arg=, file= anything
+  list directory
+  http://192.168.48.181/list?dir=/
 */
 
 #include <WiFi.h>
@@ -99,11 +109,12 @@ void handleFileUpload() {
   }
   HTTPUpload& upload = server.upload();
   if (upload.status == UPLOAD_FILE_START) {
-    if (SD_MMC.exists((char *)upload.filename.c_str())) {
-      SD_MMC.remove((char *)upload.filename.c_str());
+    DBG_OUTPUT_PORT.print("Upload: START, filename: "); DBG_OUTPUT_PORT.println(upload.filename);
+    if (SD_MMC.exists(upload.filename.c_str())) {
+      SD_MMC.remove(upload.filename.c_str());
+      DBG_OUTPUT_PORT.print("Delete: "); DBG_OUTPUT_PORT.println(upload.filename);
     }
     uploadFile = SD_MMC.open(upload.filename.c_str(), FILE_WRITE);
-    DBG_OUTPUT_PORT.print("Upload: START, filename: "); DBG_OUTPUT_PORT.println(upload.filename);
   } else if (upload.status == UPLOAD_FILE_WRITE) {
     if (uploadFile) {
       uploadFile.write(upload.buf, upload.currentSize);
@@ -141,7 +152,7 @@ void deleteRecursive(String path) {
     }
     yield();
   }
-
+  DBG_OUTPUT_PORT.print("rmdir: "); DBG_OUTPUT_PORT.println(path);
   SD_MMC.rmdir((char *)path.c_str());
   file.close();
 }
@@ -151,6 +162,7 @@ void handleDelete() {
     return returnFail("BAD ARGS");
   }
   String path = server.arg(0);
+  DBG_OUTPUT_PORT.print("Delete: "); DBG_OUTPUT_PORT.println(path);
   if (path == "/" || !SD_MMC.exists((char *)path.c_str())) {
     returnFail("BAD PATH");
     return;
@@ -164,6 +176,7 @@ void handleCreate() {
     return returnFail("BAD ARGS");
   }
   String path = server.arg(0);
+  DBG_OUTPUT_PORT.print("Create: "); DBG_OUTPUT_PORT.println(path);
   if (path == "/" || SD_MMC.exists((char *)path.c_str())) {
     returnFail("BAD PATH");
     return;

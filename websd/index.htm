@@ -1,21 +1,373 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-  <title>ESP Index</title>
-  <style>
-    body {
-      background-color:black;
-      color:white;
-    }
-  </style>
+  <meta charset="UTF-8"> 
+  <title>ULX3S SD directory</title>
+  <link rel="stylesheet" type="text/css" media="all" href="styles.css"/>
   <script type="text/javascript">
-    function onBodyLoad(){
-      console.log("we are loaded!!");
+    // shorten typing: document.getElementById -> $id
+    function $id(id) {
+      return document.getElementById(id);
+    }
+
+    function load(e, t, n) {
+      if ("js" == t) {
+        var a = document.createElement("script");
+        a.src = e,
+        a.type = "text/javascript",
+        a.async = !1,
+        a.onload = function () { n() },
+        document.getElementsByTagName("head")[0].appendChild(a)
+      } else if ("css" == t) {
+        var a = document.createElement("link");
+        a.href = e,
+        a.rel = "stylesheet",
+        a.type = "text/css",
+        a.async = !1,
+        a.onload = function () { n() },
+        document.getElementsByTagName("head")[0].appendChild(a)
+      }
+    }
+
+    function path_for_new_folder(path)
+    {
+      var newfolder = document.getElementById("new_folder");
+      newfolder.value = path;
+      // move cursor to end and let last part of the path be shown
+      //newfolder.selectionEnd = newfolder.value.length;
+      //newfolder.selectionStart = newfolder.value.length;
+    }
+
+    function RemoveLastDirectoryPartOf(the_url)
+    {
+      var the_arr = the_url.split('/');
+      the_arr.pop();
+      return( the_arr.join('/') );
+    }
+
+    function append_row(name, entry_type, current_path, idnum) {
+      var full_path = name;
+      if(name==".") {
+        full_path = current_path;
+      } else if (name=="..") {
+        full_path = RemoveLastDirectoryPartOf(current_path);
+      }
+      var table = document.getElementById("directory_table");
+      var tr = document.createElement("tr");
+      var td1 = document.createElement("td");
+      td1.id="name"+idnum;
+      if(entry_type == "file")
+      {
+        // NOTE no idea why it works but it works, but applies too much "/"
+        //var base_href = location.hostname+"/../"+full_path;
+        var base_href = full_path;
+        var txt1 = document.createElement('a');
+        var linkText = document.createTextNode(name);
+        txt1.appendChild(linkText);
+        txt1.href = base_href;
+      } else {
+        var base_href = "/index.htm?path="+full_path;
+        var txt1 = document.createElement('a');
+        var linkText = document.createTextNode(name);
+        txt1.style.color = "yellow";
+        txt1.appendChild(linkText);
+        txt1.href = base_href;
+      }
+      td1.appendChild(txt1);
+      tr.appendChild(td1);
+      var td2 = document.createElement("td");
+      if(name == "..") {
+        // button which will enable all other delete buttons
+        var deleteText = document.createTextNode("\u2612"); // squared cross "x"
+        var del_btn = document.createElement("button");
+        del_btn.title = "ENABLE DELETE"; // shows oh mouse hover
+        del_btn.appendChild(deleteText);
+        del_btn.onclick=function() { enable_delete_buttons() };
+        del_btn.id="delena"+idnum;
+        td2.appendChild(del_btn);
+      }
+      if(name != "/" && name != "." && name != "..") {
+        // UTF8 chars symbolizing delete: \u2715, \u274C, \u2BBD, \u2BBE,
+        // disabled delete: \u25A1, \u274E
+        var deleteText = document.createTextNode("\u25A1"); // initially disabled
+        var del_btn = document.createElement("button");
+        del_btn.appendChild(deleteText);
+        del_btn.onclick = function() { httpDelete(idnum, full_path) };
+        del_btn.id="delbtn"+idnum;
+        del_btn.disabled=true; // initially disabled, click above to enable
+        td2.appendChild(del_btn);
+      }
+      tr.appendChild(td2);
+      table.appendChild(tr);
+    }
+
+    function delete_report_status(idnum){
+      if (xmlHttp.readyState == 4){
+        if(xmlHttp.status != 200) alert("ERROR["+xmlHttp.status+"]: "+xmlHttp.responseText);
+        else {
+          var obj_line = document.getElementById("name"+idnum); 
+          obj_line.removeChild(obj_line.firstChild);
+          var del_btn = document.getElementById("delbtn"+idnum); 
+          del_btn.disabled=true; // make button greyed out (disabled)
+        }
+      }
+    }
+    
+    function httpDelete(idnum, filename){
+      xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = function() { delete_report_status(idnum) };
+      var formData = new FormData();
+      formData.append("path", filename);
+      xmlHttp.open("DELETE", "/edit");
+      xmlHttp.send(formData);
+    }
+    
+    function enable_delete_buttons () {
+      var elmtTable = document.getElementById('directory_table');
+      var tableRows = elmtTable.getElementsByTagName('tr');
+      var rowCount = tableRows.length;
+      for (var x=2; x<rowCount; x++) {
+        var tableCols = tableRows[x].getElementsByTagName('td');
+        if(tableCols[0].firstChild) { // if we haven't already deleted file
+          tableCols[1].firstChild.disabled = false; // enable delete button
+          tableCols[1].firstChild.title = "DELETE"; // shows oh mouse hover
+          tableCols[1].firstChild.innerHTML = "\u2715"; // delete pictogram "x"
+        }
+      }
+    }
+
+    function clear_table() {
+      var elmtTable = document.getElementById('directory_table');
+      var tableRows = elmtTable.getElementsByTagName('tr');
+      var rowCount = tableRows.length;
+      for (var x=rowCount-1; x>0; x--) {
+        elmtTable.removeChild(tableRows[x]);
+      }
+    }
+
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, "\\$&");
+      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    function mkdir_report_status(){
+      if (xmlHttp.readyState == 4){
+        if(xmlHttp.status != 200) alert("ERROR["+xmlHttp.status+"]: "+xmlHttp.responseText);
+        else {
+          window.location.reload(true);
+        }
+      }
+    }
+    
+    // create directory and (TODO if successful) reload this web page
+    function mkdir(input_id) {
+      full_path = document.getElementById(input_id).value;
+      // var query_url = "/mkdir?path="+full_path;
+      xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = mkdir_report_status;
+      var formData = new FormData();
+      formData.append("path", full_path);
+      //formData.append("path", "/tmp2");
+      xmlHttp.open("PUT", "/edit");
+      xmlHttp.send(formData);
+    }
+
+    function directory_listing(url) // url parameter unused
+    {
+      var current_path = getParameterByName("path");
+      if(!current_path)
+        current_path="/";
+      if(current_path=="")
+        current_path="/";
+
+      var new_folder_path = "/";
+      if(current_path != "/") {
+        new_folder_path = current_path+"/";
+      }
+	path_for_new_folder(new_folder_path);
+      var query_url = "/list?dir="+current_path;
+	microAjax(query_url, function (res) { // lambda function
+          var objJSON = JSON.parse(res);
+          // append_row("/", "dir", current_path);
+          append_row(".", "dir", current_path);
+          append_row("..", "dir", current_path);
+          for(var i = 0; i < objJSON.length; i++) {
+            // var entry_type = objJSON[i].type;
+            append_row(objJSON[i].name, objJSON[i].type, current_path, i);
+          }
+	});
+    }
+
+    function enableUploadButtion() {
+      $id("uploadButton").disabled = false;
+      $id("uploadButton").value = "Upload";
+    }
+
+    function fileSelected() {
+      var file = $id('fileToUpload').files[0];
+      if (file) {
+        var fileSize = 0;
+        if (file.size > 1024 * 1024)
+          fileSize = (Math.round(file.size * 100 / (1024 * 1024)) / 100).toString() + 'MB';
+        else
+          fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
+        // $id('fileName').innerHTML = 'File: ' + file.name;
+        $id('fileSize').innerHTML = fileSize;
+        // $id('fileType').innerHTML = 'Type: ' + file.type;
+      }
+    }
+
+    function progress_empty() {
+      var progress = $id("progress").childNodes[0];
+      progress.style.backgroundPosition = 100 + "% 0";
+      progress.innerHTML = "Error";
+    }
+
+    function uploadFile() {
+      var current_path = getParameterByName("path");
+      if(!current_path)
+        current_path = "";
+      var file_name = $id('fileToUpload').files[0].name;
+      if(file_name.charAt(0)!="/")
+        file_name = "/"+file_name;
+      if(current_path=="/")
+        full_path = file_name;
+      else
+        full_path = current_path + file_name;
+      var fd = new FormData();
+      // fd.append("fileToUpload", file_content, file_name);
+      fd.append("fileToUpload", $id('fileToUpload').files[0], full_path);
+      // fd.append("post_param_name", "post_param_value"); // add a POST parameter with value
+      $id("report").innerHTML = "Uploading...";
+      var progress = $id("progress").childNodes[0];
+      var xhr = new XMLHttpRequest();
+      // graphical progress bar
+      xhr.upload.addEventListener("progress", function(e) {
+        // var pc = parseInt(100 - (e.loaded / e.total * 100));
+        var pc = Math.round(e.loaded * 100 / e.total);
+        var bar = Math.round(100 - pc);
+	  progress.style.backgroundPosition = bar + "% 0";
+	  progress.innerHTML = pc + "%";
+	}, false);
+      xhr.addEventListener("load" , uploadComplete, false);
+      xhr.addEventListener("error", uploadFailed  , false);
+      xhr.addEventListener("abort", uploadCanceled, false);
+      //xhr.open($id('upload_form').method, $id('upload_form').action);
+      xhr.open("POST", "/edit");
+      xhr.send(fd);
+    }
+
+    function uploadComplete(evt) {
+      /* This event is raised when the server send back a response */
+      // alert(evt.target.responseText);
+      var response = evt.target.responseText;
+      if (response.indexOf("success") == -1)
+        progress_empty();
+      $id("report").innerHTML = response;
+      enableUploadButtion();
+      // setTimeout(enableUploadButtion, 1000); // too fast upload will crash ESP32
+      // window.location.reload(true); // immediately refreshing will crash ESP32
+    }
+
+    function uploadFailed(evt) {
+      enableUploadButtion();
+      // pop-up window
+      alert("There was an error attempting to upload the file.");
+    }
+
+    function uploadCanceled(evt) {
+      enableUploadButtion();
+      alert("The upload has been canceled by the user or the browser dropped the connection.");
+    }
+
+    // debug to check is click on button executing some function
+    // that will change this paragraph, a kind of debug print
+    // <p id="changeable_paragraph">changeable paragraph</p>
+    function paragraph_change(input_id) {
+      full_path = document.getElementById(input_id).value;
+      document.getElementById("changeable_paragraph").innerHTML = full_path;
+    }
+
+    function microAjax(B,A){
+    this.bindFunction=function(E,D) {
+        return function() {
+            return E.apply(D,[D]);
+        };
+    };
+    this.stateChange=function(D) {
+        if (this.request.readyState == 4) {
+            this.callbackFunction(this.request.responseText);
+        }
+    };
+    this.getRequest = function () {
+        if (window.ActiveXObject) {
+            return new ActiveXObject("Microsoft.XMLHTTP");
+        } else {
+            if (window.XMLHttpRequest) {
+                return new XMLHttpRequest();
+            }
+        } return false;
+    };
+    this.postBody = (arguments[2] || "");
+    this.callbackFunction = A;
+    this.url = B;
+    this.request = this.getRequest();
+    if (this.request) {
+        var C = this.request;
+        C.onreadystatechange = this.bindFunction(this.stateChange, this);
+        if (this.postBody !== "") {
+            C.open("POST", B, true);
+            C.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            C.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            C.setRequestHeader("Connection", "close");
+        } else {
+            C.open("GET", B, true);
+        }
+        C.send(this.postBody);
+    }
+    }
+
+    window.onload = function ()
+    {
+      load("/styles.css", "css", function () {
+        //load("/microajax.js", "js", function () {
+          directory_listing("/dir");
+        //});
+      });
+      // refresh values every 5 seconds
+      //setInterval(function() {
+      //    directory_listing("/read");
+      //}, 5000);
     }
   </script>
 </head>
-<body id="index" onload="onBodyLoad()">
-  <h1>ESP32 file download</h1>
+<body>
+  <a href="index.htm">Home</a>
+  <form id="upload_form" enctype="multipart/form-data" method="post">
+    <div class="row">
+      <label for="fileToUpload">Save to SD</label>
+      <br/>
+      <input type="file" name="fileToUpload" id="fileToUpload" onchange="fileSelected();"/>
+      <mark id="fileSize"></mark>
+      <input type="button" id="uploadButton" value="Upload"
+      onclick="this.disabled=true;this.value='Wait';uploadFile()"/>
+    </div>
+  </form>
+  <div id="progress"><p>0%</p></div>
+  <div id="report"></div>
+    <div>
+      <input type="text" name="path" value="/" id="new_folder"
+             onfocus="this.selectionStart = this.selectionEnd = this.value.length;"/>
+      <button onclick="mkdir('new_folder')">New Folder</button>
+    </div>
+    <div>
+      <table id="directory_table">
+      </table>
+    </div>
 </body>
 </html>
