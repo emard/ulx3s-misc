@@ -129,10 +129,10 @@ void handleFileUpload() {
 }
 
 void deleteRecursive(String path) {
-  File file = SD_MMC.open((char *)path.c_str());
+  File file = SD_MMC.open(path.c_str());
   if (!file.isDirectory()) {
     file.close();
-    SD_MMC.remove((char *)path.c_str());
+    SD_MMC.remove(path.c_str());
     return;
   }
 
@@ -148,12 +148,12 @@ void deleteRecursive(String path) {
       deleteRecursive(entryPath);
     } else {
       entry.close();
-      SD_MMC.remove((char *)entryPath.c_str());
+      SD_MMC.remove(entryPath.c_str());
     }
     yield();
   }
   DBG_OUTPUT_PORT.print("rmdir: "); DBG_OUTPUT_PORT.println(path);
-  SD_MMC.rmdir((char *)path.c_str());
+  SD_MMC.rmdir(path.c_str());
   file.close();
 }
 
@@ -163,7 +163,7 @@ void handleDelete() {
   }
   String path = server.arg(0);
   DBG_OUTPUT_PORT.print("Delete: "); DBG_OUTPUT_PORT.println(path);
-  if (path == "/" || !SD_MMC.exists((char *)path.c_str())) {
+  if (path == "/" || !SD_MMC.exists(path.c_str())) {
     returnFail("BAD PATH");
     return;
   }
@@ -177,19 +177,19 @@ void handleCreate() {
   }
   String path = server.arg(0);
   DBG_OUTPUT_PORT.print("Create: "); DBG_OUTPUT_PORT.println(path);
-  if (path == "/" || SD_MMC.exists((char *)path.c_str())) {
+  if (path == "/" || SD_MMC.exists(path.c_str())) {
     returnFail("BAD PATH");
     return;
   }
 
   if (path.indexOf('.') > 0) {
-    File file = SD_MMC.open((char *)path.c_str(), FILE_WRITE);
+    File file = SD_MMC.open(path.c_str(), FILE_WRITE);
     if (file) {
       file.write(0);
       file.close();
     }
   } else {
-    SD_MMC.mkdir((char *)path.c_str());
+    SD_MMC.mkdir(path.c_str());
   }
   returnOK();
 }
@@ -199,10 +199,10 @@ void printDirectory() {
     return returnFail("BAD ARGS");
   }
   String path = server.arg("dir");
-  if (path != "/" && !SD_MMC.exists((char *)path.c_str())) {
+  if (path != "/" && !SD_MMC.exists(path.c_str())) {
     return returnFail("BAD PATH");
   }
-  File dir = SD_MMC.open((char *)path.c_str());
+  File dir = SD_MMC.open(path.c_str());
   path = String();
   if (!dir.isDirectory()) {
     dir.close();
