@@ -49,6 +49,14 @@ static char *digit_file[] =
   NULL
 };
 static char *speak2digits[] = {digit_file[0], digit_file[0], NULL};
+static char *sensor_status_file[] =
+{
+  "/speak/nsensor.wav",
+  "/speak/nright.wav",
+  "/speak/nleft.wav",
+  NULL
+};
+static char *speakaction[] = {"/speak/search.wav", NULL, NULL};
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -459,14 +467,16 @@ void loop()
               if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
                 if (knots < 0)
-                  speakfile = "/speak/wait.wav";
+                  speakaction[0] = "/speak/wait.wav";
                 else
                 {
                   if (fast_enough)
-                    speakfile = "/speak/record.wav";
+                    speakaction[0] = "/speak/record.wav";
                   else
-                    speakfile = "/speak/ready.wav";
+                    speakaction[0] = "/speak/ready.wav";
                 }
+                speakaction[1] = sensor_status_file[sensor_check_status];
+                speakfiles = speakaction;
               }
               prev_min = tm.tm_min;
             }
@@ -504,7 +514,11 @@ void loop()
   {
     tdelta_wav = t - tprev_wav;
     if (tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
-      speakfile = "/speak/search.wav";
+    {
+      speakfiles = speakaction;
+      speakaction[0] = "/speak/search.wav";
+      speakaction[1] = sensor_status_file[sensor_check_status];
+    }
   }
   if (speakfile == NULL && pcm_is_open == 0) // do we have more files to speak?
   {
