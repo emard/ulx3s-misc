@@ -158,10 +158,11 @@ void setup() {
   //set_date_time(2021,4,1,12,30,45);
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
+
   spi_init();
   rds_init();
   spi_rds_write();
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 8; i++)
   {
     adxl355_init();
     delay(500);
