@@ -1,7 +1,5 @@
 # TODO
 
-    [x] WiFi server
-    [ ] better web server home page for file download and delete
     [ ] latch calc_result from changing while reading
     [ ] SD card compatiblity sandisk
     [ ] config file for BT MAC, WiFi password and few parameters
@@ -37,3 +35,5 @@
     [ ] report speed range min/max to placemarks
     [ ] at 0-speed reset slope adjustment offset
     [ ] at stop cut the track and restart new
+    [x] spoken report when sensors are missing
+    [x] WiFi server
