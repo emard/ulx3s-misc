@@ -4,6 +4,7 @@ esp32
 
     [ ] SD card compatiblity sandisk
     [ ] test power lost during logging
+    [ ] web server files to separate directory
     [ ] config file for BT MAC, WiFi password and few parameters
     [ ] sensor hotplug
     [ ] OBD2 support
