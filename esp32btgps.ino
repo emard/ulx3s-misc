@@ -323,7 +323,8 @@ void loop()
   static uint32_t tprev_wav = t, tprev_wavp = t;
   uint32_t tdelta_wav, tdelta_wavp;
   static uint32_t tspeak_ready;
-  static struct tm tm;
+  static struct tm tm, tm_session;
+  static int session_log = 0;
 
   if(web)
   {
@@ -406,6 +407,7 @@ void loop()
           {
             if (fast_enough)
             {
+              close_logs(); // save data in case of power lost
               Serial.print(knots * 1852 / 100000);
               Serial.println("<4 km/h not fast enough - stop logging");
             }
@@ -434,8 +436,19 @@ void loop()
             set_date_from_tm(&tm);
             pinMode(PIN_LED, OUTPUT);
             digitalWrite(PIN_LED, LED_ON);
-            mount();
-            open_logs(&tm);
+            if(fast_enough)
+            {
+              if(session_log == 0)
+              {
+                tm_session = tm;
+                session_log = 1;
+              }
+              if(session_log != 0)
+              {
+                mount();
+                open_logs(&tm_session);
+              }
+            }
             if (tm.tm_sec != prev_sec && tm.tm_sec%5 == 0)
             { // update RDS every 5 sec
               uint8_t iri99 = iriavg*10;
@@ -462,8 +475,7 @@ void loop()
               Serial.print(knots);
               Serial.println(" kt*100");
 #endif
-              if(fast_enough == 0)
-                flush_logs(); // save recorded data
+              flush_logs(); // save data
               if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
                 if (knots < 0)
@@ -497,6 +509,7 @@ void loop()
       pinMode(PIN_LED, INPUT);
       digitalWrite(PIN_LED, LED_OFF);
       close_logs();
+      session_log = 0; // request new timestamp file name
       ls();
       umount();
       rds_message(NULL);
