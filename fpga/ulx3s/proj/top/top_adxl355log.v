@@ -188,7 +188,7 @@ module top_adxl355log
   reg [7:0] r_ctrl = 8'h00; // control byte, r_ctrl[7:2]:reserved, r_ctrl[1]:direct_en, r_ctrl[0]:reserved
   wire direct_req = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire direct_en;
-  wire [7:0] calc_result[0:7]; // 8-byte (2x32-bit)
+  reg [7:0] calc_result[0:7]; // 8-byte (2x32-bit)
 
   wire spi_bram_cs = ram_addr[27:24] == 4'h0; // read bram
   wire spi_bptr_cs = ram_addr[27:24] == 4'h1; // read bram ptr
@@ -728,12 +728,17 @@ module top_adxl355log
   //assign data[ 63:32]  = vx;
   //assign data[ 31: 0]  = cvx2;
 
+  // latch calc result when reading 1st byte
   generate
     genvar i;
     for(i = 0; i < 4; i++)
     begin
-      assign calc_result[3-i] = srvz[(i+4)*8+7:(i+4)*8]; // left
-      assign calc_result[7-i] = srvz[(i+0)*8+7:(i+0)*8]; // right
+      always @(posedge clk)
+        if(ram_rd && spi_calc_cs && ram_addr[2:0] == 3'b0) // reading 1st byte
+        begin
+          calc_result[3-i] <= srvz[(i+4)*8+7:(i+4)*8]; // left
+          calc_result[7-i] <= srvz[(i+0)*8+7:(i+0)*8]; // right
+        end
     end
   endgenerate
 
