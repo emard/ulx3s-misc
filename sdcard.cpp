@@ -457,7 +457,7 @@ void open_logs(struct tm *tm)
 {
   if(logs_are_open != 0)
     return;
-  #if 0
+  #if 1
   sprintf(filename, "/%04d%02d%02d-%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
   #else
