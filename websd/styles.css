@@ -153,3 +153,10 @@ a:active {
   background-color: transparent;
   text-decoration: underline;
 }
+
+
+p { 
+  margin-bottom: 0em;
+  margin-top: 0em;
+}
+ 

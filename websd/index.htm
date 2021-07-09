@@ -45,7 +45,7 @@
       return( the_arr.join('/') );
     }
 
-    function append_row(name, entry_type, current_path, idnum) {
+    function append_row(idnum, name, entry_type, current_path, size) {
       var full_path = name;
       if(name==".") {
         full_path = current_path;
@@ -75,6 +75,16 @@
       }
       td1.appendChild(txt1);
       tr.appendChild(td1);
+      var td3 = document.createElement("td");
+      var txt3 = document.createElement('p');
+      var sizetxt = "";
+      if(size > 0)
+        sizetxt = size;
+      var sizeText = document.createTextNode(sizetxt);
+      txt3.style.color = "white";
+      txt3.appendChild(sizeText);
+      td3.appendChild(txt3);
+      tr.appendChild(td3);
       var td2 = document.createElement("td");
       if(name == "..") {
         // button which will enable all other delete buttons
@@ -194,11 +204,12 @@
 	microAjax(query_url, function (res) { // lambda function
           var objJSON = JSON.parse(res);
           // append_row("/", "dir", current_path);
-          append_row(".", "dir", current_path);
-          append_row("..", "dir", current_path);
+          append_row(0, ".", "dir", current_path, 0);
+          append_row(0, "..", "dir", current_path, 0);
           for(var i = 0; i < objJSON.length; i++) {
             // var entry_type = objJSON[i].type;
-            append_row(objJSON[i].name, objJSON[i].type, current_path, i);
+            append_row(i, objJSON[i].name, objJSON[i].type, current_path,
+            objJSON[i].size);
           }
 	});
     }
