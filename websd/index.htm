@@ -77,11 +77,11 @@
       tr.appendChild(td1);
       var td3 = document.createElement("td");
       var txt3 = document.createElement('p');
+      txt3.id = "filesize";
       var sizetxt = "";
       if(size > 0)
-        sizetxt = size;
+        sizetxt = bytes2KB(size);
       var sizeText = document.createTextNode(sizetxt);
-      txt3.style.color = "white";
       txt3.appendChild(sizeText);
       td3.appendChild(txt3);
       tr.appendChild(td3);
@@ -139,9 +139,9 @@
       for (var x=2; x<rowCount; x++) {
         var tableCols = tableRows[x].getElementsByTagName('td');
         if(tableCols[0].firstChild) { // if we haven't already deleted file
-          tableCols[1].firstChild.disabled = false; // enable delete button
-          tableCols[1].firstChild.title = "DELETE"; // shows oh mouse hover
-          tableCols[1].firstChild.innerHTML = "\u2715"; // delete pictogram "x"
+          tableCols[2].firstChild.disabled = false; // enable delete button
+          tableCols[2].firstChild.title = "DELETE"; // shows oh mouse hover
+          tableCols[2].firstChild.innerHTML = "\u2715"; // delete pictogram "x"
         }
       }
     }
@@ -219,17 +219,20 @@
       $id("uploadButton").value = "Upload";
     }
 
+    // convert bytes to human readable KB, MB
+    function bytes2KB(size) {
+      var fstr = 0;
+      if (size > 1024 * 1024)
+        fstr = (Math.round(size * 100 / (1024 * 1024)) / 100).toString() + 'MB';
+      else
+        fstr = (Math.round(size * 100 / 1024) / 100).toString() + 'KB';
+      return fstr;
+    }
+
     function fileSelected() {
       var file = $id('fileToUpload').files[0];
       if (file) {
-        var fileSize = 0;
-        if (file.size > 1024 * 1024)
-          fileSize = (Math.round(file.size * 100 / (1024 * 1024)) / 100).toString() + 'MB';
-        else
-          fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
-        // $id('fileName').innerHTML = 'File: ' + file.name;
-        $id('fileSize').innerHTML = fileSize;
-        // $id('fileType').innerHTML = 'Type: ' + file.type;
+        $id('fileSize').innerHTML = bytes2KB(file.size);
       }
     }
 

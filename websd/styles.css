@@ -154,9 +154,11 @@ a:active {
   text-decoration: underline;
 }
 
-
-p { 
+/* paragraph with id <p id="filesize">some text</p> */
+p#filesize { 
   margin-bottom: 0em;
   margin-top: 0em;
+  color: white;
+  text-align: right;
 }
  
