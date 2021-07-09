@@ -3,7 +3,6 @@
 esp32
 
     [ ] SD card compatiblity sandisk
-    [ ] web server files to separate directory
     [ ] config file for BT MAC, WiFi password and few parameters
     [ ] sensor hotplug
     [ ] OBD2 support
@@ -18,6 +17,7 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] at 0-speed reset slope adjustment offset
+    [ ] web server files to separate directory
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
     [x] WiFi server
@@ -35,6 +35,7 @@ esp32
 core
 
     [ ] latch calc_result from changing while reading
+    [ ] diamond makes cleaner/stronger FM signal than trellis
     [ ] log sensor temperature
     [ ] core fm filter and downsample not working
     [ ] improve audio quality with DACPWM
