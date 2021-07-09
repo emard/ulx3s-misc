@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # apt install python3-fastkml python3-shapely python3-lxml
+# ./wav2kml.py 20210701.wav > 20210701.kml
 
 from fastkml import kml, styles
 from shapely.geometry import Point, LineString, Polygon
