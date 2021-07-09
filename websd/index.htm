@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8"> 
+  <meta charset="UTF-8">
   <title>ULX3S SD directory</title>
   <link rel="stylesheet" type="text/css" media="all" href="styles.css"/>
   <script type="text/javascript">
@@ -54,8 +54,9 @@
       }
       var table = document.getElementById("directory_table");
       var tr = document.createElement("tr");
+      // file name
       var td1 = document.createElement("td");
-      td1.id="name"+idnum;
+      td1.id = "name"+idnum;
       if(entry_type == "file")
       {
         // NOTE no idea why it works but it works, but applies too much "/"
@@ -75,16 +76,19 @@
       }
       td1.appendChild(txt1);
       tr.appendChild(td1);
+      // file size
       var td3 = document.createElement("td");
+      td3.id = "size"+idnum;
       var txt3 = document.createElement('p');
       txt3.id = "filesize";
       var sizetxt = "";
-      if(size > 0)
+      if(entry_type == "file")
         sizetxt = bytes2KB(size);
       var sizeText = document.createTextNode(sizetxt);
       txt3.appendChild(sizeText);
       td3.appendChild(txt3);
       tr.appendChild(td3);
+      // delete button
       var td2 = document.createElement("td");
       if(name == "..") {
         // button which will enable all other delete buttons
@@ -115,14 +119,17 @@
       if (xmlHttp.readyState == 4){
         if(xmlHttp.status != 200) alert("ERROR["+xmlHttp.status+"]: "+xmlHttp.responseText);
         else {
-          var obj_line = document.getElementById("name"+idnum); 
-          obj_line.removeChild(obj_line.firstChild);
-          var del_btn = document.getElementById("delbtn"+idnum); 
+          //paragraph_change("deleting"+idnum);
+          var obj_filename = document.getElementById("name"+idnum);
+          obj_filename.removeChild(obj_filename.firstChild);
+          var obj_filesize = document.getElementById("size"+idnum);
+          obj_filesize.removeChild(obj_filesize.firstChild);
+          var del_btn = document.getElementById("delbtn"+idnum);
           del_btn.disabled=true; // make button greyed out (disabled)
         }
       }
     }
-    
+
     function httpDelete(idnum, filename){
       xmlHttp = new XMLHttpRequest();
       xmlHttp.onreadystatechange = function() { delete_report_status(idnum) };
@@ -131,7 +138,7 @@
       xmlHttp.open("DELETE", "/edit");
       xmlHttp.send(formData);
     }
-    
+
     function enable_delete_buttons () {
       var elmtTable = document.getElementById('directory_table');
       var tableRows = elmtTable.getElementsByTagName('tr');
@@ -302,9 +309,8 @@
     // debug to check is click on button executing some function
     // that will change this paragraph, a kind of debug print
     // <p id="changeable_paragraph">changeable paragraph</p>
-    function paragraph_change(input_id) {
-      full_path = document.getElementById(input_id).value;
-      document.getElementById("changeable_paragraph").innerHTML = full_path;
+    function paragraph_change(text) {
+      document.getElementById("changeable_paragraph").innerHTML = text;
     }
 
     function microAjax(B,A){
