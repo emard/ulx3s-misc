@@ -59,7 +59,7 @@ module top_adxl355log
   input   [6:0] btn,
   output  [7:0] led,
   output  [3:0] audio_l, audio_r,
-  output        gp0,  // secondary antenna +
+  output        gp0,gp1,  // secondary antenna +
   output        gp13, // ESP32   MISO
   output        gp14, // ADXL355 DRDY
   input         gp15, // ADXL355 INT2
@@ -545,6 +545,7 @@ module top_adxl355log
       rds_ram[ram_addr[8:0]] <= ram_di;
   end
   // FM core reads from RDS RAM
+  wire antena;
   wire [8:0] rds_addr;
   reg  [7:0] rds_data;
   always @(posedge clk)
@@ -562,16 +563,12 @@ module top_adxl355log
     .cw_freq2(87600000),
     .rds_addr(rds_addr),
     .rds_data(rds_data),
-    .fm_antenna1(ant_433mhz),
-    .fm_antenna2(gp0)
+    .fm_antenna1(antena), // 107.9 MHz
+    .fm_antenna2(gp1)     //  87.6 MHz
   );
-  //assign led = wav_data_signed[15:8];
+  assign ant_433mhz = antena; // internal antenna 107.9 MHz
+  assign gp0 = antena;        // external antenna 107.9 MHz
 
-  //assign audio_l[3:1] = 0;
-  //assign audio_l[0] = drdy;
-  //assign audio_r[3:1] = 0;
-  //assign audio_r[0] = pps_btn;
-  // enabling audio out may increase audio noise
   assign audio_l[0] = wav_data[7];
   assign audio_r[0] = wav_data[7];
 
@@ -682,7 +679,7 @@ module top_adxl355log
     //.enter(btn_rising[1]),
     //.enter(autofire),
     .enter(sync_pulse),
-    .hold(0), // normal
+    .hold(1'b0), // normal
     //.hold(btn_debounce[1]), // debug
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
     //.cvx2(39240/22), // int_vx2_scale/vx, vx in m/s, 1783 for 22 m/s
