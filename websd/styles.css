@@ -105,14 +105,14 @@ table#directory_table
 */
 
 
-table tr:hover {background-color: #c5f5f5;}
+table tr:hover {background-color: #252565;}
 
 
-table tr td:nth-child(2):hover {
+table tr td:nth-child(3):hover {
   background-color: #c599f5;
 }
 
-table tr td:nth-child(2) button {
+table tr td:nth-child(3) button {
   color: #7F0000;
 }
 
@@ -137,13 +137,13 @@ a:link {
 }
 
 a:visited {
-  color: pink;
+  color: green;
   background-color: transparent;
   text-decoration: none;
 }
 
 a:hover {
-  color: red;
+  color: pink;
   background-color: transparent;
   text-decoration: underline;
 }
@@ -155,7 +155,7 @@ a:active {
 }
 
 /* paragraph with id <p id="filesize">some text</p> */
-p#filesize { 
+p#filesize {
   margin-bottom: 0em;
   margin-top: 0em;
   color: white;
