@@ -6,7 +6,7 @@
 
   index.htm is the default index (works on subfolders as well)
 
-  upload the contents of "websd" directory, 2 files
+  upload the contents of "websd" directory, files
   index.htm, styles.css, progress.png, favicon.ico
   to the root of the SD card
 
