@@ -6,11 +6,14 @@
 
   index.htm is the default index (works on subfolders as well)
 
-  upload the contents of "websd" to the root of the SD card
-  and access the editor by going to
-  http://esp32sd.local/edit
+  upload the contents of "websd" directory, 2 files
+  "index.htm" and "styles.css" to the root of the SD card
 
   hold BTN0 and plug the USB power
+  
+  access web by going to
+  http://esp32sd.local
+
   cd websd
   upload local index.htm as remote name /index.htm (needs leading "/")
   curl -X POST -F "a=@index.htm; filename=/index.htm" http://192.168.48.181/edit > /dev/null
@@ -229,7 +232,8 @@ void printDirectory() {
     output += (entry.isDirectory()) ? "dir" : "file";
     output += "\",\"name\":\"";
     output += entry.name();
-    output += "\"";
+    output += "\",\"size\":";
+    output += entry.size();
     output += "}";
     server.sendContent(output);
     entry.close();
