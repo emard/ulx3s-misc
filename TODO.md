@@ -3,6 +3,7 @@
 esp32
 
     [ ] SD card compatiblity sandisk
+    [ ] test power lost during logging
     [ ] config file for BT MAC, WiFi password and few parameters
     [ ] sensor hotplug
     [ ] OBD2 support
@@ -17,7 +18,6 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [ ] >9.9 speak "out of scale"
-    [ ] report speed range min/max to placemarks
     [ ] at 0-speed reset slope adjustment offset
     [x] spoken report when sensors are missing
     [x] WiFi server
@@ -41,5 +41,8 @@ core
     [ ] time sync status
     [x] SPI slave for speed and iri
 
-kml2wav
+wav2kml
+    [ ] placemark every 100 m
+    [ ] snap
     [ ] at stop cut the track and restart new
+    [x] report speed range min/max to placemarks
