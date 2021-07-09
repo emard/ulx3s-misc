@@ -43,6 +43,8 @@ iri_avg     = 0.0
 lonlat      = None
 lonlat_prev = None
 speed_kmh   = 0.0
+kmh_min     = 999.9
+kmh_max     = 0.0
 
 rarify = 0 # reset counter to rarify kml markers
 
@@ -92,6 +94,10 @@ while f.readinto(mvb):
         datetime=b"20"+nmea[64:66]+b"-"+nmea[62:64]+b"-"+nmea[60:62]+b"T"+nmea[7:9]+b":"+nmea[9:11]+b":"+nmea[11:15]+b"Z"
         speed_kt=float(nmea[47:53])
         speed_kmh=speed_kt*1.852
+        if speed_kmh > kmh_max:
+          kmh_max = speed_kmh
+        if speed_kmh < kmh_min:
+          kmh_min = speed_kmh
         if lonlat_prev!=None:
           ls0 = styles.LineStyle(ns, 
             color=("%08X" % color32(iri_avg/red_iri)), width=12)
@@ -114,6 +120,7 @@ while f.readinto(mvb):
           pass
         iri_avg=(iri_left+iri_right)/2
         rarify += 1
+        # FIXME mark every 100 m, not by rarify counter
         if (rarify % mark_every == 0):
           is0 = styles.IconStyle(ns, "id",
             color=("%08X" % color32(iri_avg/red_iri)),
@@ -123,11 +130,13 @@ while f.readinto(mvb):
           isty0 = styles.Style(styles = [is0])
           p0 = kml.Placemark(ns, 'id',
             name=("%.2f" % iri_avg),
-            description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
+            description=("L=%.2f R=%.2f\n%.1f km/h (%.1f-%.1f km/h)\n%s" % (iri_left, iri_right, speed_kmh, kmh_min, kmh_max, datetime.decode("utf-8"))),
             styles=[isty0])
           p0.geometry = Point(lonlat)
           p0.timeStamp = t.timestamp
           f2.append(p0)
+          kmh_max = 0.0
+          kmh_min = 999.9
     # delete, consumed  
     nmea=bytearray(0)
   i += 1
