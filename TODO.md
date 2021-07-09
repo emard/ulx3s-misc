@@ -48,5 +48,6 @@ wav2kml
 
     [ ] placemark every 100 m
     [ ] snap
+    [ ] lookat straight above
     [ ] at stop cut the track and restart new
     [x] report speed range min/max to placemarks
