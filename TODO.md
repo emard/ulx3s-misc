@@ -3,20 +3,19 @@
 esp32
 
     [ ] SD card compatiblity sandisk
-    [ ] config file for BT MAC, WiFi password and few parameters
     [ ] sensor hotplug
     [ ] OBD2 support
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
     [ ] GPS time discontinuty warning
     [ ] TA flag at errors
-    [ ] web server show SD free MB
     [ ] low free: erase oldest files, stop logging
     [ ] speech report remaining minutes and disk full
     [ ] get bytes free early to display when GPS is OFF
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] at 0-speed reset slope adjustment offset
+    [ ] web server show SD free MB
     [ ] web server files to separate directory
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
@@ -31,6 +30,7 @@ esp32
     [x] 1-char 2^n MB free display 0-9
     [x] 1-char sensor status XLRY
     [x] test power lost during logging
+    [x] config file for BT MAC, WiFi password and few parameters
 
 core
 
