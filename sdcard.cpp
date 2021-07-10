@@ -19,9 +19,8 @@ uint8_t* spi_master_rx_buf;
 static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
 // config file parsing
-uint8_t GPSMAC[6];
-char    GPSPIN[20];
-char    APNAME[20], APPASS[20], APHOST[20];
+uint8_t GPS_MAC[6];
+String  GPS_PIN, AP_NAME, AP_PASS, DNS_HOST;
 
 File file_gps, file_accel, file_pcm, file_cfg;
 char filename[50] = "/accel.wav";
@@ -801,16 +800,33 @@ void spi_direct_test(void)
 void read_cfg(void)
 {
   file_cfg = SD_MMC.open("/accelog.cfg", FILE_READ);
+  int linecount = 0;
   Serial.println("*** begin config ***");
   while(file_cfg.available())
   {
     String cfgline = file_cfg.readStringUntil('\n');
-    if(cfgline.length() == 0) // skip empty line
+    if(cfgline.length() < 2) // skip empty and short lines
       continue;
     if(cfgline[0] == '#') // skip comments
       continue;
-    Serial.println(cfgline);
+    int delimpos = cfgline.indexOf(':'); // delimiter position
+    if(delimpos < 2) // skip lines without proper ":" delimiter
+      continue;
+    linecount++;
+    String varname = cfgline.substring(0, delimpos-1);
+    varname.trim(); // inplace trim leading and trailing whitespace
+    String varvalue = cfgline.substring(delimpos+1); // to end of line
+    varvalue.trim(); // inplace trim leading and trailing whitespace
+    if     (varname.equalsIgnoreCase("ap_name")) AP_NAME=varvalue;
+    else if(varname.equalsIgnoreCase("ap_pass")) AP_PASS=varvalue;
+    else
+    {
+      Serial.print("accelog.cfg: error in line ");
+      Serial.println(linecount);
+    }
   }
+  Serial.print("AP_NAME="); Serial.println(AP_NAME);
+  Serial.print("AP_PASS="); Serial.println(AP_PASS);
   Serial.println("*** end config ***");
   file_cfg.close();
 }
