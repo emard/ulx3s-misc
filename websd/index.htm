@@ -5,6 +5,14 @@
   <title>ULX3S SD directory</title>
   <link rel="stylesheet" type="text/css" media="all" href="styles.css"/>
   <script type="text/javascript">
+    // upload local index.htm as remote name /index.htm (needs leading "/")
+    // curl -X POST -F "a=@index.htm; filename=/index.htm" http://192.168.48.181/edit > /dev/null
+    // curl -X DELETE --data "a=/dummy.fil" http://192.168.48.181/edit
+    // curl -X PUT --data "a=/newfolder" http://192.168.48.181/edit > /dev/null
+    // "a" is any argument name, could be data=, arg=, file= anything
+    // list directory
+    // http://192.168.48.181/list?dir=/
+
     // shorten typing: document.getElementById -> $id
     function $id(id) {
       return document.getElementById(id);
@@ -213,10 +221,12 @@
           // append_row("/", "dir", current_path);
           append_row(0, ".", "dir", current_path, 0);
           append_row(0, "..", "dir", current_path, 0);
-          for(var i = 0; i < objJSON.length; i++) {
+          // type[0]="d" for directory, "f" for file, prefix in compare function
+          var sorted_list = objJSON.sort(function(a,b) { return a.type[0]+a.name > b.type[0]+b.name });
+          for(var i = 0; i < sorted_list.length; i++) {
             // var entry_type = objJSON[i].type;
-            append_row(i, objJSON[i].name, objJSON[i].type, current_path,
-            objJSON[i].size);
+            append_row(i, sorted_list[i].name, sorted_list[i].type, current_path,
+            sorted_list[i].size);
           }
 	});
     }
