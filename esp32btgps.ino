@@ -330,6 +330,10 @@ void loop()
   static uint32_t tspeak_ready;
   static struct tm tm, tm_session;
   static int session_log = 0;
+  static int travel_mm = 0; // travelled mm (v*dt)
+  static int travel100m, travel100m_prev = 0; // previous 100m travel
+  static int daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
+  int daytime = 0;
 
   if(web)
   {
@@ -374,7 +378,8 @@ void loop()
           Serial.print(nmea);
 #endif
           knots = nmea2spd(nmea); // parse speed
-          spi_speed_write(knots > 550 ? knots*0.514444e-2 : 0.0); // normal
+          spi_speed_write(fast_enough ? knots*0.514444e-2 : 0.0); // normal
+          //spi_speed_write(knots > 330 ? knots*0.514444e-2 : 0.0); // old normal
           //spi_speed_write(knots > 55 ? knots*0.514444e-2 : 0.0); // debug
           //spi_speed_write(22.0); // debug
           int32_t srvz[2];
@@ -397,8 +402,8 @@ void loop()
           #endif
           // hysteresis for logging
           // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
-          //if (knots > 5) // debug, stationary GPS will record
-          if (knots > 550) // normal
+          //if (knots > 6) // debug, stationary GPS will record
+          if (knots > 660) // normal
           {
             if (fast_enough == 0)
             {
@@ -407,18 +412,19 @@ void loop()
             }
             fast_enough = 1;
           }
-          //if (knots < 2) // debug, stationary GPS will record
-          if (knots < 220) // normal
+          //if (knots < 3) // debug, stationary GPS will record
+          if (knots < 330) // normal
           {
             if (fast_enough)
             {
               close_logs(); // save data in case of power lost
               Serial.print(knots * 1852 / 100000);
               Serial.println("<4 km/h not fast enough - stop logging");
+              travel_mm = 0; // we stopped, reset travel
             }
             fast_enough = 0;
           }
-          int daytime = nmea2s(nmea + 7);
+          daytime = nmea2s(nmea + 7);
           int32_t nmea2ms = daytime * 100 - ct0; // difference from nmea to timer
           if (nmea2ms_sum == 0) // sum is 0 only at reboot
             init_nmea2ms(nmea2ms); // speeds up convergence
@@ -453,9 +459,17 @@ void loop()
                 mount();
                 open_logs(&tm_session);
               }
+              int travel_dt = (864000 + daytime - daytime_prev) % 864000; // ms since last time
+              if(travel_dt < 100) // ok reports are below 10s difference
+                travel_mm += knots * travel_dt * 5144 / 10000;
+              travel100m = travel_mm / 100000; // normal: trigger update every 100 m
+              //travel100m = travel_mm / 1000; // debug: trigger update every 1 m
             }
-            if (tm.tm_sec != prev_sec && tm.tm_sec%5 == 0)
-            { // update RDS every 5 sec
+            daytime_prev = daytime; // for travel_dt
+            //if (tm.tm_sec != prev_sec && tm.tm_sec%5 == 0) // debug: update RDS every 5 sec
+            if (travel100m_prev != travel100m) // normal: update RDS every 100 m
+            {
+              travel100m_prev = travel100m;
               uint8_t iri99 = iriavg*10;
               if(iri99 > 99)
                 iri99 = 99;
