@@ -462,8 +462,8 @@ void loop()
               int travel_dt = (864000 + daytime - daytime_prev) % 864000; // ms since last time
               if(travel_dt < 100) // ok reports are below 10s difference
                 travel_mm += knots * travel_dt * 5144 / 10000;
-              travel100m = travel_mm / 100000; // normal: trigger update every 100 m
-              //travel100m = travel_mm / 1000; // debug: trigger update every 1 m
+              travel100m = travel_mm / 100000; // normal: report every 100 m
+              //travel100m = travel_mm / 1000; // debug: report every 1 m
             }
             daytime_prev = daytime; // for travel_dt
             //if (tm.tm_sec != prev_sec && tm.tm_sec%5 == 0) // debug: update RDS every 5 sec
@@ -498,15 +498,24 @@ void loop()
               if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
                 if (knots < 0)
+                {
                   speakaction[0] = "/speak/wait.wav";
+                  speakaction[1] = sensor_status_file[sensor_check_status];
+                }
                 else
                 {
                   if (fast_enough)
-                    speakaction[0] = "/speak/record.wav";
+                  {
+                    //speakaction[0] = "/speak/record.wav";
+                    speakaction[0] = sensor_status_file[sensor_check_status];
+                    speakaction[1] = NULL;
+                  }
                   else
+                  {
                     speakaction[0] = "/speak/ready.wav";
+                    speakaction[1] = sensor_status_file[sensor_check_status];
+                  }
                 }
-                speakaction[1] = sensor_status_file[sensor_check_status];
                 speakfiles = speakaction;
               }
               prev_min = tm.tm_min;
