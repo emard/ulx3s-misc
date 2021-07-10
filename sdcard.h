@@ -36,3 +36,4 @@ void close_logs(void);
 int are_logs_open(void);
 void spi_slave_test(void);
 void spi_direct_test(void);
+void read_cfg(void);

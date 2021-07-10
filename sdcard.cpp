@@ -18,7 +18,12 @@ uint8_t* spi_master_tx_buf;
 uint8_t* spi_master_rx_buf;
 static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
-File file_gps, file_accel, file_pcm;
+// config file parsing
+uint8_t GPSMAC[6];
+char    GPSPIN[20];
+char    APNAME[20], APPASS[20], APHOST[20];
+
+File file_gps, file_accel, file_pcm, file_cfg;
 char filename[50] = "/accel.wav";
 int card_is_mounted = 0;
 int logs_are_open = 0;
@@ -791,4 +796,21 @@ void spi_direct_test(void)
   }
   Serial.println("");
   // end debug reading ID and printing
+}
+
+void read_cfg(void)
+{
+  file_cfg = SD_MMC.open("/accelog.cfg", FILE_READ);
+  Serial.println("*** begin config ***");
+  while(file_cfg.available())
+  {
+    String cfgline = file_cfg.readStringUntil('\n');
+    if(cfgline.length() == 0) // skip empty line
+      continue;
+    if(cfgline[0] == '#') // skip comments
+      continue;
+    Serial.println(cfgline);
+  }
+  Serial.println("*** end config ***");
+  file_cfg.close();
 }

@@ -198,6 +198,10 @@ void setup() {
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
   init_nmea2ms(0);
 
+  mount();
+  read_cfg();
+  umount();
+
   SerialBT.begin("ESP32", true);
   SerialBT.setPin(pin);
   Serial.println("Bluetooth master started");
