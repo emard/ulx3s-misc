@@ -17,6 +17,7 @@ esp32
     [ ] at 0-speed reset slope adjustment offset
     [ ] web server show SD free MB
     [ ] web server files to separate directory
+    [ ] web MDNS not updating address to dnsmasq
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
     [x] WiFi server
