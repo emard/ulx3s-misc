@@ -27,7 +27,7 @@ uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
 //uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x14, 0x6B, 0xD0};
 // String name = "Garmin GLO #46bd0"; // old from rpi box
 
-char *pin = "1234"; //<- standard pin would be provided by default
+// char *gps_pin = "1234"; //<- standard pin would be provided by default
 
 bool connected = false;
 char *speakfile = NULL;
@@ -180,6 +180,7 @@ void setup() {
   if(web)
   {
     mount();
+    read_cfg();
     web_setup();
     return;
   }
@@ -203,7 +204,7 @@ void setup() {
   umount();
 
   SerialBT.begin("ESP32", true);
-  SerialBT.setPin(pin);
+  SerialBT.setPin(GPS_PIN.c_str());
   Serial.println("Bluetooth master started");
 
   spi_speed_write(0.0); // normal
@@ -215,8 +216,8 @@ void reconnect()
   // to resolve name to address first, but it allows to connect to different devices with the same name.
   // Set CoreDebugLevel to Info to view devices bluetooth address and device names
 
-  //connected = SerialBT.connect(name); // slow
-  connected = SerialBT.connect(address); // fast
+  //connected = SerialBT.connect(name); // slow with String name
+  connected = SerialBT.connect(GPS_MAC); // fast with uint8_t GPS_MAC[6]
 
   // return value "connected" doesn't mean much
   // it is sometimes true even if not connected.

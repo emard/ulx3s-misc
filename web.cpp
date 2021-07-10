@@ -34,9 +34,9 @@
 
 #define DBG_OUTPUT_PORT Serial
 
-const char* ssid = "ra";
-const char* password = "GigabyteBrix";
-const char* host = "esp32sd";
+//const char* ssid = "ra";
+//const char* password = "GigabyteBrix";
+//const char* host = "esp32sd";
 
 WebServer server(80);
 
@@ -269,9 +269,9 @@ void web_setup(void) {
   //DBG_OUTPUT_PORT.setDebugOutput(true);
   //DBG_OUTPUT_PORT.print("\n");
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(AP_NAME.c_str(), AP_PASS.c_str());
   DBG_OUTPUT_PORT.print("Connecting to ");
-  DBG_OUTPUT_PORT.println(ssid);
+  DBG_OUTPUT_PORT.println(AP_NAME.c_str());
 
   // Wait for connection
   uint8_t i = 0;
@@ -280,18 +280,18 @@ void web_setup(void) {
   }
   if (i == 21) {
     DBG_OUTPUT_PORT.print("Could not connect to");
-    DBG_OUTPUT_PORT.print(ssid);
+    DBG_OUTPUT_PORT.print(AP_NAME.c_str());
     DBG_OUTPUT_PORT.println(", reboot to try again.");
     return;
   }
   DBG_OUTPUT_PORT.print("Connected! IP address: ");
   DBG_OUTPUT_PORT.println(WiFi.localIP());
 
-  if (MDNS.begin(host)) {
+  if (MDNS.begin(DNS_HOST.c_str())) {
     MDNS.addService("http", "tcp", 80);
     DBG_OUTPUT_PORT.println("MDNS responder started");
     DBG_OUTPUT_PORT.print("You can now connect to http://");
-    DBG_OUTPUT_PORT.print(host);
+    DBG_OUTPUT_PORT.print(DNS_HOST.c_str());
     DBG_OUTPUT_PORT.println(".local");
   }
 

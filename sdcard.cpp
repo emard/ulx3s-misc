@@ -797,11 +797,17 @@ void spi_direct_test(void)
   // end debug reading ID and printing
 }
 
+void parse_mac(uint8_t *mac, String a)
+{
+  for(int i = 0; i < 6; i++)
+    mac[i] = strtol(a.substring(i*3,i*3+2).c_str(), NULL, 16);
+}
+
 void read_cfg(void)
 {
   file_cfg = SD_MMC.open("/accelog.cfg", FILE_READ);
   int linecount = 0;
-  Serial.println("*** begin config ***");
+  Serial.println("*** open /accelog.cfg ***");
   while(file_cfg.available())
   {
     String cfgline = file_cfg.readStringUntil('\n');
@@ -817,16 +823,25 @@ void read_cfg(void)
     varname.trim(); // inplace trim leading and trailing whitespace
     String varvalue = cfgline.substring(delimpos+1); // to end of line
     varvalue.trim(); // inplace trim leading and trailing whitespace
-    if     (varname.equalsIgnoreCase("ap_name")) AP_NAME=varvalue;
-    else if(varname.equalsIgnoreCase("ap_pass")) AP_PASS=varvalue;
+    if     (varname.equalsIgnoreCase("ap_name" )) AP_NAME  = varvalue;
+    else if(varname.equalsIgnoreCase("ap_pass" )) AP_PASS  = varvalue;
+    else if(varname.equalsIgnoreCase("dns_host")) DNS_HOST = varvalue;
+    else if(varname.equalsIgnoreCase("gps_mac" )) parse_mac(GPS_MAC, varvalue);
+    else if(varname.equalsIgnoreCase("gps_pin" )) GPS_PIN  = varvalue;
     else
     {
       Serial.print("accelog.cfg: error in line ");
       Serial.println(linecount);
     }
   }
-  Serial.print("AP_NAME="); Serial.println(AP_NAME);
-  Serial.print("AP_PASS="); Serial.println(AP_PASS);
-  Serial.println("*** end config ***");
+  char macstr[80];
+  sprintf(macstr, "GPS MAC  : %02X:%02X:%02X:%02X:%02X:%02X",
+    GPS_MAC[0], GPS_MAC[1], GPS_MAC[2], GPS_MAC[3], GPS_MAC[4], GPS_MAC[5]);
+  Serial.println(macstr);
+  Serial.print("GPS_PIN  : "); Serial.println(GPS_PIN);
+  Serial.print("AP_NAME  : "); Serial.println(AP_NAME);
+  Serial.print("AP_PASS  : "); Serial.println(AP_PASS);
+  Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
+  Serial.println("*** close /accelog.cfg ***");
   file_cfg.close();
 }

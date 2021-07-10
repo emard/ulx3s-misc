@@ -12,6 +12,9 @@ extern int fast_enough; // logging flag when fast enough
 extern float iri[2],iriavg;
 extern char iri2digit[4];
 extern RDS rds;
+// config file parsing
+extern uint8_t GPS_MAC[6];
+extern String  GPS_PIN, AP_NAME, AP_PASS, DNS_HOST;
 void mount(void);
 void umount(void);
 void spi_init(void);
