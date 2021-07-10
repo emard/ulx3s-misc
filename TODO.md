@@ -36,13 +36,13 @@ esp32
 
 core
 
-    [ ] latch calc_result from changing while reading
     [ ] diamond makes cleaner/stronger FM signal than trellis
     [ ] log sensor temperature
     [ ] core fm filter and downsample not working
-    [ ] improve audio quality with DACPWM
     [ ] increase speech volume
     [ ] time sync status
+    [x] improve audio quality with DACPWM
+    [x] latch calc_result from changing while reading
     [x] dual frequency output 87.6 and 107.9
     [x] SPI slave for speed and iri
 
