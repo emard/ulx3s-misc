@@ -16,9 +16,9 @@ esp32
     [ ] >9.9 speak "out of scale"
     [ ] at 0-speed reset slope adjustment offset
     [ ] web server show SD free MB
-    [ ] web server sort directories/files
     [ ] web server files to separate directory
     [ ] web MDNS not updating address to dnsmasq
+    [x] web server sort directories/files
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
     [x] WiFi server
