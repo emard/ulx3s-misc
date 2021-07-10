@@ -495,6 +495,7 @@ void loop()
               Serial.println(" kt*100");
 #endif
               flush_logs(); // save data
+              rds_message(&tm);
               if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
                 if (knots < 0)
