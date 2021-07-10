@@ -570,8 +570,21 @@ module top_adxl355log
   assign ant_433mhz = antena; // internal antenna 107.9 MHz
   assign gp0 = antena;        // external antenna 107.9 MHz
 
-  assign audio_l[0] = wav_data[7];
-  assign audio_r[0] = wav_data[7];
+  wire [1:0] dac;
+  dacpwm
+  #(
+    .c_pcm_bits(8),
+    .c_dac_bits(2)
+  )
+  dacpwm_inst
+  (
+    .clk(clk),
+    .pcm(wav_data_signed[15:8]),
+    .dac(dac)
+  );
+  
+  assign audio_l[1:0] = dac;
+  assign audio_r[1:0] = dac;
 
   localparam a_default = 16384; // default sensor reading 1g acceleration
 
