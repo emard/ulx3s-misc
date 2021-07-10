@@ -43,6 +43,9 @@ iri_right   = 0.0
 iri_avg     = 0.0
 lonlat      = None
 lonlat_prev = None
+lonlat_1st  = None
+time_1st    = None
+time_last   = None
 speed_kmh   = 0.0
 kmh_min     = 999.9
 kmh_max     = 0.0
@@ -51,7 +54,7 @@ rarify = 0 # reset counter to rarify kml markers
 
 k = kml.KML()
 ns = '{http://www.opengis.net/kml/2.2}'
-d = kml.Document(ns, 'docid', 'doc name', 'doc description')
+d = kml.Document(ns, id='docid', name='doc name', description='description')
 f = kml.Folder(ns, 'fid', 'f name', 'f description')
 k.append(d)
 d.append(f)
@@ -91,8 +94,12 @@ while f.readinto(mvb):
       #print(i,nmea.decode("utf-8"))
       if nmea[0:6]==b"$GPRMC" and len(nmea)==79:
         lonlat=nmea_latlon2kml(nmea[18:46])
+        if lonlat_1st == None:
+          lonlat_1st = lonlat
         heading=float(nmea[54:59])
         datetime=b"20"+nmea[64:66]+b"-"+nmea[62:64]+b"-"+nmea[60:62]+b"T"+nmea[7:9]+b":"+nmea[9:11]+b":"+nmea[11:15]+b"Z"
+        if time_1st == None:
+          time_1st = datetime
         speed_kt=float(nmea[47:53])
         speed_kmh=speed_kt*1.852
         if speed_kmh > kmh_max:
@@ -107,6 +114,9 @@ while f.readinto(mvb):
             name=("%.2f" % iri_avg),
             description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
             styles=[lsty0])
+          #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
+          #p1_iri_right = kml.Data(name="IRI_RIGHT", display_name="IRI_RIGHT", value="%.2f" % iri_right)
+          #p1.extended_data = kml.UntypedExtendedData(elements=[p1_iri_left, p1_iri_right])
           p1.geometry = LineString([lonlat_prev, lonlat])
           t.timestamp, dummy = t.parse_str(datetime) # "2021-07-03T11:22:33Z"
           p1.timeStamp = t.timestamp
@@ -141,5 +151,22 @@ while f.readinto(mvb):
     # delete, consumed  
     nmea=bytearray(0)
   i += 1
+time_last = datetime
 
-print(k.to_string(prettyprint=True))
+# output to string with hard-replace "visibility" to add LookAt tag
+print(k.to_string(prettyprint=True).replace(
+  "<visibility>1</visibility>",
+  "<visibility>1</visibility>\n\
+    <LookAt>\n\
+      <longitude>%f</longitude>\n\
+      <latitude>%f</latitude>\n\
+      <heading>0</heading>\n\
+      <tilt>0</tilt>\n\
+      <range>2000</range>\n\
+      <altitudeMode>relativeToGround</altitudeMode>\n\
+      <TimeSpan>\n\
+        <begin>%s</begin>\n\
+        <end>%s</end>\n\
+      </TimeSpan>\n\
+    </LookAt>" % (lonlat_1st[0], lonlat_1st[1], time_1st.decode("utf-8"), time_last.decode("utf-8"))
+))
