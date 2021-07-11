@@ -21,13 +21,13 @@ BluetoothSerial SerialBT;
 int web = 0; // set 1 to enable web server for file transfer (main application can not run then)
 
 // TODO: read address from SD card gps.mac
-uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
-// String name = "Garmin GLO #4352e"; // new
+//uint8_t GPS_MAC[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
+// String GPS_NAME = "Garmin GLO #4352e"; // new
 
-//uint8_t address[6] = {0x10, 0xC6, 0xFC, 0x14, 0x6B, 0xD0};
-// String name = "Garmin GLO #46bd0"; // old from rpi box
+//uint8_t GPS_MAC[6] = {0x10, 0xC6, 0xFC, 0x14, 0x6B, 0xD0};
+// String GPS_NAME = "Garmin GLO #46bd0"; // old from rpi box
 
-// char *gps_pin = "1234"; //<- standard pin would be provided by default
+// char *GPS_PIN = "1234"; //<- standard pin would be provided by default
 
 bool connected = false;
 char *speakfile = NULL;
@@ -387,10 +387,10 @@ void loop()
           const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
           iri[0] = srvz[0]*srvz2iri;
           iri[1] = srvz[1]*srvz2iri;
-          iriavg =    sensor_check_status == 0 ? 0.0
-                    : sensor_check_status == 1 ? iri[0]
-                    : sensor_check_status == 2 ? iri[1]
-                    : (iri[0]+iri[1])/2;  // 3, average of both sensors
+          iriavg = sensor_check_status == 0 ? 0.0
+                 : sensor_check_status == 1 ? iri[0]
+                 : sensor_check_status == 2 ? iri[1]
+                 : (iri[0]+iri[1])/2;  // 3, average of both sensors
           char iri_tag[40];
           sprintf(iri_tag, " L%.2fR%.2f ", iri[0], iri[1]);
           write_tag(iri_tag);
@@ -424,7 +424,7 @@ void loop()
             }
             fast_enough = 0;
           }
-          daytime = nmea2s(nmea + 7);
+          daytime = nmea2s(nmea + 7); // x10, 0.1s resolution
           int32_t nmea2ms = daytime * 100 - ct0; // difference from nmea to timer
           if (nmea2ms_sum == 0) // sum is 0 only at reboot
             init_nmea2ms(nmea2ms); // speeds up convergence
@@ -432,15 +432,6 @@ void loop()
           nmea2ms_dif = nmea2ms_sum / 256;
           nmea2ms_log[inmealog++] = nmea2ms;
           write_logs(); // use SPI_MODE1
-          //Serial.println(daytime, DEC);
-          //Serial.println(ct0, HEX);
-          // isolate date
-#if 0
-          char *date_begin = nthchar(nmea, 9, ',');
-          char *date_end = nthchar(nmea, 10, ',');
-          date_end[0] = 0;
-          Serial.println(date_begin);
-#endif
           if (nmea2tm(nmea, &tm))
           {
             static uint8_t prev_min, prev_sec;

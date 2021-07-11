@@ -19,8 +19,8 @@ uint8_t* spi_master_rx_buf;
 static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
 // config file parsing
-uint8_t GPS_MAC[6];
-String  GPS_PIN, AP_NAME, AP_PASS, DNS_HOST;
+uint8_t GPS_MAC[6], OBD_MAC[6];
+String  GPS_PIN, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
 
 File file_gps, file_accel, file_pcm, file_cfg;
 char filename[50] = "/accel.wav";
@@ -828,6 +828,8 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("dns_host")) DNS_HOST = varvalue;
     else if(varname.equalsIgnoreCase("gps_mac" )) parse_mac(GPS_MAC, varvalue);
     else if(varname.equalsIgnoreCase("gps_pin" )) GPS_PIN  = varvalue;
+    else if(varname.equalsIgnoreCase("obd_mac" )) parse_mac(OBD_MAC, varvalue);
+    else if(varname.equalsIgnoreCase("obd_pin" )) OBD_PIN  = varvalue;
     else
     {
       Serial.print("accelog.cfg: error in line ");
@@ -835,10 +837,14 @@ void read_cfg(void)
     }
   }
   char macstr[80];
-  sprintf(macstr, "GPS MAC  : %02X:%02X:%02X:%02X:%02X:%02X",
+  sprintf(macstr, "GPS_MAC  : %02X:%02X:%02X:%02X:%02X:%02X",
     GPS_MAC[0], GPS_MAC[1], GPS_MAC[2], GPS_MAC[3], GPS_MAC[4], GPS_MAC[5]);
   Serial.println(macstr);
   Serial.print("GPS_PIN  : "); Serial.println(GPS_PIN);
+  sprintf(macstr, "OBD_MAC  : %02X:%02X:%02X:%02X:%02X:%02X",
+    OBD_MAC[0], OBD_MAC[1], OBD_MAC[2], OBD_MAC[3], OBD_MAC[4], OBD_MAC[5]);
+  Serial.println(macstr);
+  Serial.print("OBD_PIN  : "); Serial.println(OBD_PIN);
   Serial.print("AP_NAME  : "); Serial.println(AP_NAME);
   Serial.print("AP_PASS  : "); Serial.println(AP_PASS);
   Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
