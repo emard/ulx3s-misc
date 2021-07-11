@@ -18,8 +18,6 @@
 
 BluetoothSerial SerialBT;
 
-int web = 0; // set 1 to enable web server for file transfer (main application can not run then)
-
 // TODO: read address from SD card gps.mac
 //uint8_t GPS_MAC[6] = {0x10, 0xC6, 0xFC, 0x84, 0x35, 0x2E};
 // String GPS_NAME = "Garmin GLO #4352e"; // new
@@ -33,6 +31,10 @@ bool connected = false;
 char *speakfile = NULL;
 char *nospeak[] = {NULL};
 char **speakfiles = nospeak;
+
+// optional loop handler functions
+void loop_gps(void), loop_web(void);
+void (*loop_pointer)() = &loop_gps;
 
 static char *digit_file[] =
 {
@@ -57,6 +59,8 @@ static char *sensor_status_file[] =
   NULL
 };
 static char *speakaction[] = {"/speak/search.wav", NULL, NULL};
+
+uint32_t t_ms; // t = ms();
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -176,12 +180,16 @@ void setup() {
     delay(500);
   }
 
-  web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
+  int web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
   if(web)
   {
+    loop_pointer = &loop_web;
     mount();
     read_cfg();
     web_setup();
+    speakaction[0] = "/speak/record.wav"; // TODO say web server maybe IP too
+    speakaction[1] = NULL;
+    speakfiles = speakaction;
     return;
   }
 
@@ -316,30 +324,74 @@ void set_date_from_tm(struct tm *tm)
 char tag_test[256] = "$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*00\n";
 #endif
 
-void loop()
+// speech handler, call from loop()
+// plays sequence of wav files
+// speakfiles = {"/speak/file1.wav", "/speak/file2.wav", ... , NULL };
+void speech()
 {
+  static uint32_t tprev_wav = t_ms, tprev_wavp = t_ms;
+  static uint32_t tspeak_ready;
+  uint32_t tdelta_wav, tdelta_wavp;
+  if (speakfile == NULL && pcm_is_open == 0) // do we have more files to speak?
+  {
+    if(speakfiles)
+      if(*speakfiles)
+        speakfile = *speakfiles++;
+  }
+  // before starting new word we must check
+  // that previous word has been spoken
+  // both speech end timing methods work
+#if 1
+  // coarse estimate of speech end
+  tdelta_wavp = t_ms - tprev_wavp; // estimate time after last word is spoken
+  if (speakfile != NULL && pcm_is_open == 0 && tdelta_wavp > 370) // 370 ms after last word
+#else
+  // fine estimate of speech end
+  if (speakfile != NULL && pcm_is_open == 0 && (((int32_t)t_ms) - (int32_t)tspeak_ready) > 0) // NULL: we are ready to speak new file,
+#endif
+  {
+    // start speech
+    mount();
+    open_pcm(speakfile); // load buffer with start of the file
+    tprev_wavp = ms(); // reset play timer from now, after start of PCM file
+    tspeak_ready = tprev_wavp+370;
+    tprev_wav = t_ms; // prevent too often starting of the speech
+  }
+  else
+  {
+    // continue speaking from remaining parts of the file
+    // refill wav-play buffer
+    tdelta_wavp = t_ms - tprev_wavp; // how many ms have passed since last refill
+    if (tdelta_wavp > 200 && pcm_is_open) // 200 ms is about 2.2KB to refill
+    {
+      int remaining_bytes;
+      remaining_bytes = play_pcm(tdelta_wavp * 11); // approx 11 samples per ms at 11025 rate
+      tprev_wavp = t_ms;
+      if (!pcm_is_open)
+      {
+        speakfile = NULL; // consumed
+        tspeak_ready = t_ms + remaining_bytes / 11 + 359; // estimate when PCM will be ready
+      }
+    }
+  }
+}
+
+void loop_gps()
+{
+  t_ms = ms();
   static uint32_t tprev;
-  uint32_t t = ms();
   static char nmea[128];
   static char c;
   static int i = 0;
-  uint32_t tdelta = t - tprev;
+  uint32_t tdelta = t_ms - tprev;
   static uint32_t ct0; // first char in line millis timestamp
-  static uint32_t tprev_wav = t, tprev_wavp = t;
-  uint32_t tdelta_wav, tdelta_wavp;
-  static uint32_t tspeak_ready;
   static struct tm tm, tm_session;
   static int session_log = 0;
   static int travel_mm = 0; // travelled mm (v*dt)
   static int travel100m, travel100m_prev = 0; // previous 100m travel
   static int daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
   int daytime = 0;
-
-  if(web)
-  {
-    server.handleClient();
-    return;
-  }
+  static int speak_search_gps = 0;
 
 #if 1
   if (connected && SerialBT.available() > 0)
@@ -509,12 +561,13 @@ void loop()
                   }
                 }
                 speakfiles = speakaction;
+                speak_search_gps = 0;
               }
               prev_min = tm.tm_min;
             }
           }
         }
-      tprev = t;
+      tprev = t_ms;
       i = 0;
     }
   }
@@ -535,77 +588,49 @@ void loop()
       rds_message(NULL);
       reconnect();
       datetime_is_set = 0; // set datetime again
-      tprev = ms();
-      i = 0;
+      i = 0; // reset line buffer write pointer
+      speak_search_gps = 1;
+      // reconnect has waited too much, we must reload t_ms
+      // this will prevent immediately GPS search,
+      // give it 2s to start feeding data
+      t_ms = ms();
+      tprev = t_ms;
+      tdelta = 0;
     }
     else
-      write_logs();
+      write_logs(); // must write log also when BT data is not available
   }
 #endif
-
   if (*speakfiles == NULL && pcm_is_open == 0) // NULL: we are ready to speak new file,
   {
-    tdelta_wav = t - tprev_wav;
-    if (tdelta_wav > 7000 && tdelta > 1000 && tdelta < 4000 && are_logs_open() == 0)
+    // best is to start speech early after bluetooth connect
+    // if 2s silence, report searching for GPS
+    // during bluetooth connect CPU is busy and can not feed speech data
+    if(tdelta > 2000 && speak_search_gps > 0)
     {
-      speakfiles = speakaction;
       speakaction[0] = "/speak/search.wav";
       speakaction[1] = sensor_status_file[sensor_check_status];
+      speakfiles = speakaction;
+      speak_search_gps = 0; // next BT connect will enable it
     }
   }
-  if (speakfile == NULL && pcm_is_open == 0) // do we have more files to speak?
-  {
-    if(speakfiles)
-      if(*speakfiles)
-        speakfile = *speakfiles++;
-  }
-#if 0
-  if (speakfile == NULL && pcm_is_open == 0 && (((int32_t)t) - (int32_t)tspeak_ready) > 0) // NULL: we are ready to speak new file,
-  {
-    // PCM is now ready for next file
-    speakfile = "/speak/1.wav";
-  }
-#endif
-  // before starting new word we must check
-  // that previous word has been spoken 
-  // both speech end timing methods work
-#if 1
-  // coarse estimate of speech end
-  tdelta_wavp = t - tprev_wavp; // estimate time after last word is spoken
-  if (speakfile != NULL && pcm_is_open == 0 && tdelta_wavp > 370) // 370 ms after last word
-#else
-  // fine estimate of speech end
-  if (speakfile != NULL && pcm_is_open == 0 && (((int32_t)t) - (int32_t)tspeak_ready) > 0) // NULL: we are ready to speak new file,
-#endif
-  {
-    // start speech
-    mount();
-    open_pcm(speakfile); // load buffer with start of the file
-    tprev_wavp = ms(); // reset play timer from now, after start of PCM file
-    tspeak_ready = tprev_wavp+370;
-    tprev_wav = t; // prevent too often starting of the speech
-  }
-  else
-  {
-    // continue speaking from remaining parts of the file
-    // refill wav-play buffer
-    tdelta_wavp = t - tprev_wavp; // how many ms have passed since last refill
-    if (tdelta_wavp > 200 && pcm_is_open) // 200 ms is about 2.2KB to refill
-    {
-      int remaining_bytes;
-      remaining_bytes = play_pcm(tdelta_wavp * 11); // approx 11 samples per ms at 11025 rate
-      tprev_wavp = t;
-      if (!pcm_is_open)
-      {
-        speakfile = NULL; // consumed
-        tspeak_ready = t + remaining_bytes / 11 + 359; // estimate when PCM will be ready
-      }
-    }
-  }
+  speech();
 #if 0
   // print adxl data
   spi_slave_test(); // use SPI_MODE3
   //spi_direct_test(); // use SPI_MODE3 if sclk inverted, otherwise SPI_MODE1
   delay(100);
 #endif
+}
+
+void loop_web(void)
+{
+  t_ms = ms();
+  server.handleClient();
+  speech();
+}
+
+void loop(void)
+{
+  (*loop_pointer)();
 }
