@@ -20,6 +20,8 @@ esp32
     [ ] web server show SD free MB
     [ ] web server files to separate directory
     [ ] web MDNS not updating address to dnsmasq
+    [ ] web server list dump only filenames not full path
+    [x] web server show only filename, not full path
     [x] web server sort directories/files
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
