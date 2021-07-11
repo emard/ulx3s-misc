@@ -15,6 +15,8 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] at 0-speed reset slope adjustment offset
+    [ ] btn to stop logging
+    [ ] web server LED blink when activated and connected
     [ ] web server show SD free MB
     [ ] web server files to separate directory
     [ ] web MDNS not updating address to dnsmasq
@@ -41,6 +43,7 @@ core
     [ ] core fm filter and downsample not working
     [ ] increase speech volume
     [ ] time sync status
+    [ ] BTN irq
     [x] improve audio quality with DACPWM
     [x] latch calc_result from changing while reading
     [x] dual frequency output 87.6 and 107.9
