@@ -53,6 +53,11 @@
       return( the_arr.join('/') );
     }
 
+    function FileName(str)
+    {
+      return str.split('\\').pop().split('/').pop();
+    }
+
     function append_row(idnum, name, entry_type, current_path, size) {
       var full_path = name;
       if(name==".") {
@@ -69,13 +74,13 @@
       {
         var base_href = full_path;
         var txt1 = document.createElement('a');
-        var linkText = document.createTextNode(name);
+        var linkText = document.createTextNode(FileName(name));
         txt1.appendChild(linkText);
         txt1.href = base_href;
       } else { // "dir"
         var base_href = "/index.htm?path="+full_path;
         var txt1 = document.createElement('a');
-        var linkText = document.createTextNode(name);
+        var linkText = document.createTextNode(FileName(name));
         txt1.style.color = "yellow";
         txt1.appendChild(linkText);
         txt1.href = base_href;
