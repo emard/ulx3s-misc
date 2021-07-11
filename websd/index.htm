@@ -67,14 +67,12 @@
       td1.id = "name"+idnum;
       if(entry_type == "file")
       {
-        // NOTE no idea why it works but it works, but applies too much "/"
-        //var base_href = location.hostname+"/../"+full_path;
         var base_href = full_path;
         var txt1 = document.createElement('a');
         var linkText = document.createTextNode(name);
         txt1.appendChild(linkText);
         txt1.href = base_href;
-      } else {
+      } else { // "dir"
         var base_href = "/index.htm?path="+full_path;
         var txt1 = document.createElement('a');
         var linkText = document.createTextNode(name);
