@@ -33,7 +33,7 @@ char *nospeak[] = {NULL};
 char **speakfiles = nospeak;
 
 // optional loop handler functions
-void loop_gps(void), loop_web(void);
+void loop_gps(void), loop_obd(void), loop_web(void);
 void (*loop_pointer)() = &loop_gps;
 
 static char *digit_file[] =
@@ -164,6 +164,7 @@ void init_nmea2ms(int32_t d)
     nmea2ms_log[i] = d;
 }
 
+
 void setup() {
   Serial.begin(115200);
   //set_system_time(1527469964);
@@ -192,6 +193,21 @@ void setup() {
     speakfiles = speakaction;
     return;
   }
+
+  int obd = ((spi_btn_read()) & 2); // hold BTN1 and plug power to run OBD2 demo
+  if(obd)
+  {
+    loop_pointer = &loop_obd;
+    mount();
+    read_cfg();
+    SerialBT.begin("ESP32", true);
+    SerialBT.setPin(OBD_PIN.c_str());
+    speakaction[0] = "/speak/2.wav"; // TODO say web server maybe IP too
+    speakaction[1] = NULL;
+    speakfiles = speakaction;
+    return;
+  }
+
 
   pinMode(PIN_IRQ, INPUT);
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
@@ -622,6 +638,74 @@ void loop_gps()
   delay(100);
 #endif
 }
+
+#if 1
+// automatic commands
+void loop_obd(void)
+{
+  static uint32_t tprev, t;
+  t = ms();
+  int16_t tms = (int16_t)(t-tprev);
+  static int sendcmd1 = 0, sendcmd2 = 0;
+
+  if (connected && SerialBT.available())
+  {
+    // read returns char or -1 if unavailable
+    char b = SerialBT.read();
+    Serial.print(b);
+    digitalWrite(PIN_LED,1);
+    tprev=t;
+    sendcmd1 = 1;
+    sendcmd2 = 1;
+  }
+  else
+  {
+    if(tms > 3000)
+    {
+      if(sendcmd1)
+      {
+        SerialBT.print("010d\r"); // read speed km/h (without car, should print "SEARCHING...")
+        Serial.println("request1 010d<enter>");
+      }
+      sendcmd1 = 0;
+    }
+    if(tms > 6000)
+    {
+      if(sendcmd2)
+      {
+        SerialBT.print("010d\r"); // read speed km/h (without car, should print "SEARCHING...")
+        Serial.println("request2 010d<enter>");
+      }
+      sendcmd2 = 0;
+    }
+    if(tms > 10000) // 10 seconds of serial silence
+    {
+      digitalWrite(PIN_LED,0);
+      Serial.println("obd disconnect");
+      connected = SerialBT.connect(OBD_MAC); // fast
+      Serial.println("obd reconnected");
+      tprev = ms();
+      sendcmd1 = 1;
+      sendcmd2 = 1;
+      //digitalWrite(LED_BUILTIN,1);
+    }
+  }
+  speech();
+}
+#else
+// terminal mode
+void loop_obd() {
+  if (Serial.available()) {
+    SerialBT.write(Serial.read());
+    delay(20); // OBD needs slow char-by-char input
+  }
+  if (SerialBT.available()) {
+    Serial.write(SerialBT.read());
+  }
+  speech();
+}
+#endif
+
 
 void loop_web(void)
 {
