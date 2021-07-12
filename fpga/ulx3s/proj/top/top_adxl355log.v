@@ -264,7 +264,8 @@ module top_adxl355log
         // spi_ram_addr: SPI reader core autoincrementing address
         R_ram_do <= spi_bram_cs ? ram[ram_addr]
                   : spi_bptr_cs ? (ram_addr[0] ? r_spi_ram_addr[ram_addr_bits-1:8] : r_spi_ram_addr[7:0])
-                  : spi_calc_cs ? w_calc_result[ram_addr] // calc result array
+                  //: spi_calc_cs ? w_calc_result[ram_addr] // calc result array latched (right sensor more than left??)
+                  : spi_calc_cs ? calc_result[ram_addr] // calc result array unlatched (occasional read while modify?)
                   : /* spi_btn_cs  ? */ btn_debounce;
       end
     end
