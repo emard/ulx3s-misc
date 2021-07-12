@@ -164,7 +164,6 @@ void init_nmea2ms(int32_t d)
     nmea2ms_log[i] = d;
 }
 
-
 void setup() {
   Serial.begin(115200);
   //set_system_time(1527469964);
@@ -205,9 +204,9 @@ void setup() {
     speakaction[0] = "/speak/2.wav"; // TODO say web server maybe IP too
     speakaction[1] = NULL;
     speakfiles = speakaction;
+    Serial.println("OBD demo");
     return;
   }
-
 
   pinMode(PIN_IRQ, INPUT);
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
@@ -643,48 +642,93 @@ void loop_gps()
 // automatic commands
 void loop_obd(void)
 {
-  static uint32_t tprev, t;
-  t = ms();
-  int16_t tms = (int16_t)(t-tprev);
+  t_ms = ms();
+
+  static char c;
+  static int i = 0;
+
+  static uint32_t tprev = t_ms;
+  uint32_t tdelta = t_ms - tprev;
+  static uint32_t ct0; // first char in line millis timestamp
+  static char line[128];
+  char *obd_request_kmh = "010d\r";
+
   static int sendcmd1 = 0, sendcmd2 = 0;
 
   if (connected && SerialBT.available())
   {
     // read returns char or -1 if unavailable
-    char b = SerialBT.read();
-    Serial.print(b);
-    digitalWrite(PIN_LED,1);
-    tprev=t;
-    sendcmd1 = 1;
-    sendcmd2 = 1;
+    // sscanf(obd_answer, "%02x %02x %02x", &dummy1, &dummy2, &speed); // speed is integer km/h
+
+    c = 0;
+#if 1
+    while (SerialBT.available() > 0 && c != '\r')
+    {
+      if (i == 0)
+        ct0 = ms();
+      // read returns char or -1 if unavailable
+      c = SerialBT.read();
+      if (i < sizeof(line) - 3)
+        line[i++] = c;
+    }
+#endif
+    if (i > 5 && c == '\r') // line complete
+    {
+      line[i] = 0;
+      Serial.print(line);
+      pinMode(PIN_LED, OUTPUT);
+      digitalWrite(PIN_LED, LED_ON);
+      if(strcmp(line,"STOPPED\r") == 0)
+        SerialBT.print(obd_request_kmh);
+      // "00 00 00\r" ignore first 2 hex, last 3rd hex integer km/h
+      if(i > 8 && line[5] == ' ') // >8 bytes long and 5th byte is space
+      {
+        // parse last digit
+        //int kmh = strtol("10\r", NULL, 16); // debug
+        int kmh = strtol(line+6, NULL ,16); // normal
+        Serial.print(kmh);
+        Serial.println(" km/h");
+        if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
+        {
+            speak2digits[0] = digit_file[kmh/10%10];
+            speak2digits[1] = digit_file[kmh%10];
+            speakfiles = speak2digits;
+        }
+      }
+      sendcmd1 = 1;
+      sendcmd2 = 1;
+      tprev = t_ms;
+      i = 0;
+    }
   }
   else
   {
-    if(tms > 3000)
+    if(tdelta > 3000)
     {
       if(sendcmd1)
       {
-        SerialBT.print("010d\r"); // read speed km/h (without car, should print "SEARCHING...")
+        SerialBT.print(obd_request_kmh); // read speed km/h (without car, should print "SEARCHING...")
         Serial.println("request1 010d<enter>");
       }
       sendcmd1 = 0;
     }
-    if(tms > 6000)
+    if(tdelta > 6000)
     {
       if(sendcmd2)
       {
-        SerialBT.print("010d\r"); // read speed km/h (without car, should print "SEARCHING...")
+        SerialBT.print(obd_request_kmh); // read speed km/h (without car, should print "SEARCHING...")
         Serial.println("request2 010d<enter>");
       }
       sendcmd2 = 0;
     }
-    if(tms > 10000) // 10 seconds of serial silence
+    if(tdelta > 10000) // 10 seconds of serial silence
     {
-      digitalWrite(PIN_LED,0);
+      pinMode(PIN_LED, INPUT);
       Serial.println("obd disconnect");
       connected = SerialBT.connect(OBD_MAC); // fast
       Serial.println("obd reconnected");
-      tprev = ms();
+      t_ms = ms();
+      tprev = t_ms;
       sendcmd1 = 1;
       sendcmd2 = 1;
       //digitalWrite(LED_BUILTIN,1);
@@ -705,7 +749,6 @@ void loop_obd() {
   speech();
 }
 #endif
-
 
 void loop_web(void)
 {

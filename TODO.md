@@ -5,8 +5,10 @@ esp32
     [ ] SD card compatiblity sandisk
     [ ] sensor hotplug
     [ ] OBD2 support
+    [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
+    [ ] LCD graphic track display
     [ ] GPS time discontinuty warning
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
