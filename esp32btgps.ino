@@ -445,10 +445,8 @@ void loop_gps()
           Serial.print(nmea);
 #endif
           knots = nmea2spd(nmea); // parse speed
+          //knots = 4319; // debug 4319 = 43.19 kt = 22.19 m/s
           spi_speed_write(fast_enough ? knots*0.514444e-2 : 0.0); // normal
-          //spi_speed_write(knots > 330 ? knots*0.514444e-2 : 0.0); // old normal
-          //spi_speed_write(knots > 55 ? knots*0.514444e-2 : 0.0); // debug
-          //spi_speed_write(22.0); // debug
           int32_t srvz[2];
           spi_srvz_read(srvz);
           const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
