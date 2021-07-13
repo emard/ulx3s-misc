@@ -682,6 +682,7 @@ module top_adxl355log
       autoenter <= 0;
   wire autofire = autoenter[19];
 
+  wire slope_ready;
   wire [31:0] slope_l, slope_r;
   slope
   //#(
@@ -691,9 +692,9 @@ module top_adxl355log
   (
     .clk(clk),
     .reset(slope_reset),
-    //.enter(btn_rising[1]),
-    //.enter(autofire),
-    .enter(sync_pulse),
+    .enter(sync_pulse), // normal
+    //.enter(btn_rising[1]), // debug
+    //.enter(autofire), // debug
     .hold(1'b0), // normal
     //.hold(btn_debounce[1]), // debug
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
@@ -709,7 +710,7 @@ module top_adxl355log
     //.slope_l(data[127:96]),
     //.slope_r(data[95:64]),
     //.d0(data[63:32]),
-    .ready()
+    .ready(slope_ready)
   );
 
   wire [63:0] srvz;
@@ -717,8 +718,9 @@ module top_adxl355log
   calc_inst
   (
     .clk(clk),
-    //.enter(btn_rising[1]),
-    .enter(autofire),
+    .enter(slope_ready),  // normal
+    //.enter(btn_rising[1]), // debug
+    //.enter(autofire), // debug
     .slope_l(slope_l), // um/m
     .slope_r(slope_r),
     //.slope_l(ma), // um/m
