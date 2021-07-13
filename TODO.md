@@ -16,7 +16,6 @@ esp32
     [ ] get bytes free early to display when GPS is OFF
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
-    [ ] at 0-speed reset slope adjustment offset
     [ ] btn to stop logging
     [ ] web roaming, multiple ap/pass
     [ ] web upload reports "Error" although it's successful
@@ -44,6 +43,8 @@ esp32
 
 core
 
+    [ ] random inbalance in L/R calc results appears after stop or randomly
+    [x] slope should not reset at 0-speed
     [ ] handle delay from speed measurement to accelerometer reading
     [ ] diamond makes cleaner/stronger FM signal than trellis
     [ ] simplify FM part, PCM is only 8-bit
