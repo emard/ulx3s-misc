@@ -19,6 +19,7 @@ esp32
     [ ] at 0-speed reset slope adjustment offset
     [ ] btn to stop logging
     [ ] web roaming, multiple ap/pass
+    [ ] web upload reports "Error" although it's successful
     [ ] web server LED blink when activated and connected
     [ ] web server show SD free MB
     [ ] web server files to separate directory
