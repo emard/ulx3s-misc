@@ -8,6 +8,8 @@ nfree.wav \
 wait.wav \
 record.wav \
 search.wav \
+lstrong.wav \
+rstrong.wav \
 1.wav \
 
 1.wav : numbers.sh

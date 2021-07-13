@@ -50,7 +50,7 @@ static char *digit_file[] =
   "/speak/9.wav",
   NULL
 };
-static char *speak2digits[] = {digit_file[0], digit_file[0], NULL};
+static char *speak2digits[] = {digit_file[0], digit_file[0], NULL, NULL};
 static char *sensor_status_file[] =
 {
   "/speak/nsensor.wav",
@@ -59,6 +59,13 @@ static char *sensor_status_file[] =
   NULL
 };
 static char *speakaction[] = {"/speak/search.wav", NULL, NULL};
+
+static char *sensor_balance_file[] =
+{
+  NULL, // ok
+  "/speak/lstrong.wav",
+  "/speak/rstrong.wav",
+};
 
 uint32_t t_ms; // t = ms();
 
@@ -537,6 +544,10 @@ void loop_gps()
               {
                 speak2digits[0] = digit_file[iri2digit[0]-'0'];
                 speak2digits[1] = digit_file[iri2digit[2]-'0'];
+                int balance = srvz[0] > 2*srvz[1] ? 1
+                            : srvz[1] > 2*srvz[0] ? 2
+                            : 0;
+                speak2digits[2] = sensor_balance_file[balance];
                 speakfiles = speak2digits;
               }
             }
