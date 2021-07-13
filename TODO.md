@@ -18,6 +18,7 @@ esp32
     [ ] >9.9 speak "out of scale"
     [ ] at 0-speed reset slope adjustment offset
     [ ] btn to stop logging
+    [ ] web roaming, multiple ap/pass
     [ ] web server LED blink when activated and connected
     [ ] web server show SD free MB
     [ ] web server files to separate directory
