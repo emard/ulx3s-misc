@@ -602,7 +602,7 @@ module top_adxl355log
       begin
         vx   <= {vx_ram[0],vx_ram[1]}; // mm/s vx speed
         cvx2 <= {vx_ram[2],vx_ram[3],vx_ram[4],ram_di}; // c/vx^2 speed
-        slope_reset <= {vx_ram[0],vx_ram[1]} == 0;
+        slope_reset <= {vx_ram[0],vx_ram[1]} == 0; // speed 0
       end
     end
   end
@@ -691,7 +691,8 @@ module top_adxl355log
   slope_inst
   (
     .clk(clk),
-    .reset(slope_reset),
+    .reset(1'b0),
+    // .reset(slope_reset), // maybe we should not reset
     .enter(sync_pulse), // normal
     //.enter(btn_rising[1]), // debug
     //.enter(autofire), // debug
