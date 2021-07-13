@@ -46,6 +46,7 @@ core
 
     [ ] handle delay from speed measurement to accelerometer reading
     [ ] diamond makes cleaner/stronger FM signal than trellis
+    [ ] simplify FM part, PCM is only 8-bit
     [ ] log sensor temperature
     [ ] core fm filter and downsample not working
     [ ] increase speech volume
