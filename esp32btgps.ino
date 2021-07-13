@@ -452,7 +452,7 @@ void loop_gps()
           Serial.print(nmea);
 #endif
           knots = nmea2spd(nmea); // parse speed
-          //knots = 4319; // debug 4319 = 43.19 kt = 22.19 m/s
+          //knots = ((spi_btn_read()) & 4) ? 0 : 4319; // debug 4319 = 43.19 kt = 22.19 m/s, press BTN2 to stop
           spi_speed_write(fast_enough ? knots*0.514444e-2 : 0.0); // normal
           int32_t srvz[2];
           spi_srvz_read(srvz);
@@ -544,8 +544,8 @@ void loop_gps()
               {
                 speak2digits[0] = digit_file[iri2digit[0]-'0'];
                 speak2digits[1] = digit_file[iri2digit[2]-'0'];
-                int balance = srvz[0] > 2*srvz[1] ? 1
-                            : srvz[1] > 2*srvz[0] ? 2
+                int balance = (srvz[0]>>1) > srvz[1] ? 1
+                            : (srvz[1]>>1) > srvz[0] ? 2
                             : 0;
                 speak2digits[2] = sensor_balance_file[balance];
                 speakfiles = speak2digits;
