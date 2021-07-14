@@ -46,7 +46,6 @@ core
     [ ] random inbalance in L/R calc results appears after stop or randomly
     [x] slope should not reset at 0-speed
     [ ] handle delay from speed measurement to accelerometer reading
-    [ ] diamond makes cleaner/stronger FM signal than trellis
     [ ] simplify FM part, PCM is only 8-bit
     [ ] log sensor temperature
     [ ] core fm filter and downsample not working
@@ -55,6 +54,7 @@ core
     [ ] BTN irq
     [ ] right sensor makes more IRI than left, bug?
     [ ] bugs with latch calc_result (diamond)
+    [x] output register for trellis clean FM signal
     [x] improve audio quality with DACPWM
     [x] latch calc_result from changing while reading
     [x] dual frequency output 87.6 and 107.9
