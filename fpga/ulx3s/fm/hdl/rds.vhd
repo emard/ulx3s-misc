@@ -122,6 +122,10 @@ architecture RTL of rds is
     signal S_subc_wav_value: signed(C_dbpsk_bits-1 downto 0);
     signal S_subc_pcm: signed(C_dbpsk_bits-1 downto 0); -- 7 bit ADC value for 19kHz pilot sine wave
 
+    signal R_pcm_out: signed(pcm_out'range); -- to FM transmitter
+
+    Signal S_pcm_zero: signed(15 downto 0) := (others => '0');
+
     -- debug PWM output for audible test of internal low pass filter
     signal R_pcm_unsigned_data_l, R_pcm_unsigned_data_r: std_logic_vector(15 downto 0);
     signal R_dac_acc_l, R_dac_acc_r: std_logic_vector(16 downto 0);
@@ -421,25 +425,39 @@ begin
 
     -- output mixing audio and RDS
     mix_mono:  if not C_stereo generate
-      -- mixing mono input audio with RDS DBPSK
-      pcm_out <= R_pcm_in_left_downsample + R_pcm_in_right_downsample + S_rds_mod_pcm;
+      process(clk)
+      begin
+        if rising_edge(clk) then
+          -- mixing mono input audio with RDS DBPSK
+          R_pcm_out <= R_pcm_in_left_downsample + R_pcm_in_right_downsample + S_rds_mod_pcm;
+          --R_pcm_out <= R_pcm_in_left_downsample + R_pcm_in_right_downsample;
+          --R_pcm_out <= S_pcm_zero + S_rds_mod_pcm;
+	end if;
+      end process;
     end generate;
 
     mix_stereo:  if C_stereo generate
-      -- mixing stereo input audio with RDS DBPSK
-      -- (some filtering is requred by the standard)
-      S_pcm_stereo <= (R_pcm_in_left_downsample - R_pcm_in_right_downsample) * S_stereo_pcm;
+      process(clk)
+      begin
+        if rising_edge(clk) then
+          -- mixing stereo input audio with RDS DBPSK
+          -- (some filtering is requred by the standard)
+          S_pcm_stereo <= (R_pcm_in_left_downsample - R_pcm_in_right_downsample) * S_stereo_pcm;
 
-      -- S_stereo_pcm has range -63 .. +63
-      -- pcm_in_left has range -32767 .. +32767
-      -- stereo mixing: we should divide by 4 because
-      -- we mix L+R + (L-R)*sin(38kHz), that rises max amplitude 4 times
-      -- but we divide by 2 and hope for no clipping
-      pcm_out <= R_pcm_in_left_downsample + R_pcm_in_right_downsample
-               + S_pcm_stereo(21 downto 6) -- normalize S_stereo_pcm, shift divide by 64
-               + S_pilot_pcm * 64 -- 16 is too weak, not sure of correct 19kHz pilot amplitude
-               + S_rds_mod_pcm;
+          -- S_stereo_pcm has range -63 .. +63
+          -- pcm_in_left has range -32767 .. +32767
+          -- stereo mixing: we should divide by 4 because
+          -- we mix L+R + (L-R)*sin(38kHz), that rises max amplitude 4 times
+          -- but we divide by 2 and hope for no clipping
+          R_pcm_out <= R_pcm_in_left_downsample + R_pcm_in_right_downsample
+                     + S_pcm_stereo(21 downto 6) -- normalize S_stereo_pcm, shift divide by 64
+                     + S_pilot_pcm * 64 -- 16 is too weak, not sure of correct 19kHz pilot amplitude
+                     + S_rds_mod_pcm;
+	end if;
+      end process;
     end generate; -- mix_stereo
+
+    pcm_out <= R_pcm_out;
 
     rds_debug_output: if c_debug generate
       process(clk)
