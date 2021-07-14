@@ -544,9 +544,11 @@ void loop_gps()
               {
                 speak2digits[0] = digit_file[iri2digit[0]-'0'];
                 speak2digits[1] = digit_file[iri2digit[2]-'0'];
-                int balance = (srvz[0]>>1) > srvz[1] ? 1
-                            : (srvz[1]>>1) > srvz[0] ? 2
-                            : 0;
+                int balance = 0;
+                if(sensor_check_status == 3)
+                  balance = (srvz[0]>>1) > srvz[1] ? 1
+                          : (srvz[1]>>1) > srvz[0] ? 2
+                          : 0;
                 speak2digits[2] = sensor_balance_file[balance];
                 speakfiles = speak2digits;
               }
