@@ -194,7 +194,7 @@ void setup() {
     mount();
     read_cfg();
     web_setup();
-    speakaction[0] = "/speak/record.wav"; // TODO say web server maybe IP too
+    speakaction[0] = "/speak/webserver.wav"; // TODO say web server maybe IP too
     speakaction[1] = NULL;
     speakfiles = speakaction;
     return;
