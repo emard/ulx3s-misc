@@ -10,6 +10,7 @@ record.wav \
 search.wav \
 lstrong.wav \
 rstrong.wav \
+webserver.wav \
 1.wav \
 
 1.wav : numbers.sh
