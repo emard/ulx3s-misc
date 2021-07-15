@@ -61,8 +61,9 @@ core
 
 wav2kml
 
-    [ ] placemark every 100 m
     [ ] snap
     [ ] at stop cut the track and restart new
+    [x] multiple input files
+    [x] placemark every 100 m
     [x] lookat straight above
     [x] report speed range min/max to placemarks
