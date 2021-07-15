@@ -44,7 +44,6 @@ esp32
 core
 
     [ ] random inbalance in L/R calc results appears after stop or randomly
-    [x] slope should not reset at 0-speed
     [ ] handle delay from speed measurement to accelerometer reading
     [ ] simplify FM part, PCM is only 8-bit
     [ ] log sensor temperature
@@ -52,8 +51,7 @@ core
     [ ] increase speech volume
     [ ] time sync status
     [ ] BTN irq
-    [ ] right sensor makes more IRI than left, bug?
-    [ ] bugs with latch calc_result (diamond)
+    [x] slope should not reset at 0-speed
     [x] output register for trellis clean FM signal
     [x] improve audio quality with DACPWM
     [x] latch calc_result from changing while reading
