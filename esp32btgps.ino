@@ -472,6 +472,13 @@ void loop_gps()
             srvz[0], srvz[1], iri[0], iri[1]);
           Serial.println(iri_report);
           #endif
+          daytime = nmea2s(nmea + 7); // x10, 0.1s resolution
+          int32_t nmea2ms = daytime * 100 - ct0; // difference from nmea to timer
+          if (nmea2ms_sum == 0) // sum is 0 only at reboot
+            init_nmea2ms(nmea2ms); // speeds up convergence
+          nmea2ms_sum += nmea2ms - nmea2ms_log[inmealog]; // moving sum
+          nmea2ms_dif = nmea2ms_sum / 256;
+          nmea2ms_log[inmealog++] = nmea2ms;
           // hysteresis for logging
           // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
           //if (knots > 6) // debug, stationary GPS will record
@@ -489,6 +496,7 @@ void loop_gps()
           {
             if (fast_enough)
             {
+              write_stop_delimiter();
               close_logs(); // save data in case of power lost
               Serial.print(knots * 1852 / 100000);
               Serial.println("<4 km/h not fast enough - stop logging");
@@ -496,13 +504,6 @@ void loop_gps()
             }
             fast_enough = 0;
           }
-          daytime = nmea2s(nmea + 7); // x10, 0.1s resolution
-          int32_t nmea2ms = daytime * 100 - ct0; // difference from nmea to timer
-          if (nmea2ms_sum == 0) // sum is 0 only at reboot
-            init_nmea2ms(nmea2ms); // speeds up convergence
-          nmea2ms_sum += nmea2ms - nmea2ms_log[inmealog]; // moving sum
-          nmea2ms_dif = nmea2ms_sum / 256;
-          nmea2ms_log[inmealog++] = nmea2ms;
           write_logs(); // use SPI_MODE1
           if (nmea2tm(nmea, &tm))
           {

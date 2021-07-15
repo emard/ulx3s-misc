@@ -601,6 +601,20 @@ void write_logs(void)
 }
 #endif
 
+void write_stop_delimiter()
+{
+  const uint8_t stop_delimiter[12] = // should result in char '#' (ascii 35)
+  {
+    1, 0, //  1
+    1, 0, //  2
+    0, 0, //  4
+    0, 0, //  8
+    0, 0, // 16
+    1, 0, // 32
+  };
+  if(logs_are_open)
+    file_accel.write(stop_delimiter, sizeof(stop_delimiter));
+}
 
 void write_tag(char *a)
 {
