@@ -7,6 +7,7 @@ from fastkml import kml, styles
 from shapely.geometry import Point, LineString, Polygon
 from sys import argv
 from colorsys import hsv_to_rgb
+from math import sqrt,sin,cos,asin,pi,ceil,atan2
 
 wavfile = argv[1]
 
@@ -17,12 +18,32 @@ mark_every = 25 # placemark every N GPS readings
 show_pps = 0
 
 # input is NMEA string like "4500.112233,N,01500.112233,E"
+# output is (lon,lat) tuple
 def nmea_latlon2kml(ns):
     lat_deg=int(ns[0:2])
     lat_min=float(ns[2:11])
     lon_deg=int(ns[14:17])
     lon_min=float(ns[17:26])
     return (lon_deg+lon_min/60.0,lat_deg+lat_min/60.0)
+
+# helper function for distance
+def haversin(theta:float) -> float:
+  return sin(0.5*theta)**2
+
+# input ( lat1,lon1, lat2,lon2 ) degrees
+# output distance in meters
+def distance(lat1:float, lon1:float, lat2:float, lon2:float) -> float:
+  R=6371.0008e3 # m Earth volumetric radius
+  # convert to radians
+  lat1 *= pi/180.0
+  lon1 *= pi/180.0
+  lat2 *= pi/180.0
+  lon2 *= pi/180.0
+  deltalat=lat2-lat1
+  deltalon=lon2-lon1
+  h=haversin(deltalat)+cos(lat1)*cos(lat2)*haversin(deltalon)
+  dist=2*R*asin(sqrt(h))
+  return dist
 
 # convert value 0-1 to rainbow color pink-red
 # color 0=purple 0.2=blue 0.7=green 0.8=yellow 0.9=orange 1=red
