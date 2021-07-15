@@ -279,7 +279,7 @@ void web_setup(void) {
     delay(500);
   }
   if (i == 21) {
-    DBG_OUTPUT_PORT.print("Could not connect to");
+    DBG_OUTPUT_PORT.print("Could not connect to ");
     DBG_OUTPUT_PORT.print(AP_NAME.c_str());
     DBG_OUTPUT_PORT.println(", reboot to try again.");
     return;
