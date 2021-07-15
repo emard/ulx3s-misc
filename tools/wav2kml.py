@@ -70,8 +70,10 @@ time_last   = None
 speed_kmh   = 0.0
 kmh_min     = 999.9
 kmh_max     = 0.0
-
-rarify = 0 # reset counter to rarify kml markers
+travel      = 0.0 # m
+travel_next = 0.0 # m
+segment_m   = 100.0 # m
+discontinuety_m = 50.0 # m don't draw lines longer than this
 
 k = kml.KML()
 ns = '{http://www.opengis.net/kml/2.2}'
@@ -128,20 +130,23 @@ while f.readinto(mvb):
         if speed_kmh < kmh_min:
           kmh_min = speed_kmh
         if lonlat_prev!=None:
-          ls0 = styles.LineStyle(ns, 
-            color=("%08X" % color32(iri_avg/red_iri)), width=12)
-          lsty0 = styles.Style(styles = [ls0])
-          p1 = kml.Placemark(ns, 'id', 
-            name=("%.2f" % iri_avg),
-            description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
-            styles=[lsty0])
-          #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
-          #p1_iri_right = kml.Data(name="IRI_RIGHT", display_name="IRI_RIGHT", value="%.2f" % iri_right)
-          #p1.extended_data = kml.UntypedExtendedData(elements=[p1_iri_left, p1_iri_right])
-          p1.geometry = LineString([lonlat_prev, lonlat])
-          t.timestamp, dummy = t.parse_str(datetime) # "2021-07-03T11:22:33Z"
-          p1.timeStamp = t.timestamp
-          f2.append(p1)
+          dist_m = distance(lonlat_prev[1], lonlat_prev[0], lonlat[1], lonlat[0])
+          travel += dist_m
+          if dist_m < discontinuety_m: # don't draw too long lines
+            ls0 = styles.LineStyle(ns,
+              color=("%08X" % color32(iri_avg/red_iri)), width=6)
+            lsty0 = styles.Style(styles = [ls0])
+            p1 = kml.Placemark(ns, 'id',
+              name=("%.2f" % iri_avg),
+              description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
+              styles=[lsty0])
+            #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
+            #p1_iri_right = kml.Data(name="IRI_RIGHT", display_name="IRI_RIGHT", value="%.2f" % iri_right)
+            #p1.extended_data = kml.UntypedExtendedData(elements=[p1_iri_left, p1_iri_right])
+            p1.geometry = LineString([lonlat_prev, lonlat])
+            t.timestamp, dummy = t.parse_str(datetime) # "2021-07-03T11:22:33Z"
+            p1.timeStamp = t.timestamp
+            f2.append(p1)
         lonlat_prev = lonlat
       if nmea[0:1]==b"L" and lonlat!=None:
         rpos=nmea.find(b"R")
@@ -151,9 +156,9 @@ while f.readinto(mvb):
         except:
           pass
         iri_avg=(iri_left+iri_right)/2
-        rarify += 1
-        # FIXME mark every 100 m, not by rarify counter
-        if (rarify % mark_every == 0):
+        if travel > travel_next:
+          while travel > travel_next:
+            travel_next += segment_m
           is0 = styles.IconStyle(ns, "id",
             color=("%08X" % color32(iri_avg/red_iri)),
             scale=1.0,
