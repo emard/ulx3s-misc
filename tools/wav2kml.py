@@ -89,94 +89,98 @@ t = kml.TimeStamp()
 
 arrow_icon_href="http://maps.google.com/mapfiles/kml/shapes/arrow.png"
 
-f = open(wavfile, "rb");
-f.seek(44+0*12)
+# buffer to read wav
 b=bytearray(12)
 mvb=memoryview(b)
-i = 0
-prev_i = 0
-prev_corr_i = 0
-nmea=bytearray(0)
-while f.readinto(mvb):
-  a=(b[0]&1) | ((b[2]&1)<<1) | ((b[4]&1)<<2) | ((b[6]&1)<<3) | ((b[8]&1)<<4) | ((b[10]&1)<<5) 
-  if a != 32:
-    c = a
-    # convert control chars<32 to uppercase letters >=64
-    if((a & 0x20) == 0):
-      c ^= 0x40
-    if a != 33 or show_pps:
-      nmea.append(c)
-    if a == 33 and show_pps:
-      x=i-prev_i
-      if(x != 100):
-        #print(i,i-prev_corr_i,x,a)
-        prev_corr_i = i
-      prev_i = i
-  else: # a == 32
-    if(len(nmea)):
-      #print(i,nmea.decode("utf-8"))
-      if nmea[0:6]==b"$GPRMC" and len(nmea)==79:
-        lonlat=nmea_latlon2kml(nmea[18:46])
-        if lonlat_1st == None:
-          lonlat_1st = lonlat
-        heading=float(nmea[54:59])
-        datetime=b"20"+nmea[64:66]+b"-"+nmea[62:64]+b"-"+nmea[60:62]+b"T"+nmea[7:9]+b":"+nmea[9:11]+b":"+nmea[11:15]+b"Z"
-        if time_1st == None:
-          time_1st = datetime
-        speed_kt=float(nmea[47:53])
-        speed_kmh=speed_kt*1.852
-        if speed_kmh > kmh_max:
-          kmh_max = speed_kmh
-        if speed_kmh < kmh_min:
-          kmh_min = speed_kmh
-        if lonlat_prev!=None:
-          dist_m = distance(lonlat_prev[1], lonlat_prev[0], lonlat[1], lonlat[0])
-          travel += dist_m
-          if dist_m < discontinuety_m: # don't draw too long lines
-            ls0 = styles.LineStyle(ns,
-              color=("%08X" % color32(iri_avg/red_iri)), width=6)
-            lsty0 = styles.Style(styles = [ls0])
-            p1 = kml.Placemark(ns, 'id',
+
+for wavfile in argv[1:]:
+  f = open(wavfile, "rb");
+  f.seek(44+0*12)
+  i = 0
+  prev_i = 0
+  prev_corr_i = 0
+  nmea=bytearray(0)
+  while f.readinto(mvb):
+    a=(b[0]&1) | ((b[2]&1)<<1) | ((b[4]&1)<<2) | ((b[6]&1)<<3) | ((b[8]&1)<<4) | ((b[10]&1)<<5)
+    if a != 32:
+      c = a
+      # convert control chars<32 to uppercase letters >=64
+      if((a & 0x20) == 0):
+        c ^= 0x40
+      if a != 33 or show_pps:
+        nmea.append(c)
+      if a == 33 and show_pps:
+        x=i-prev_i
+        if(x != 100):
+          #print(i,i-prev_corr_i,x,a)
+          prev_corr_i = i
+        prev_i = i
+    else: # a == 32
+      if(len(nmea)):
+        #print(i,nmea.decode("utf-8"))
+        if nmea[0:6]==b"$GPRMC" and len(nmea)==79:
+          lonlat=nmea_latlon2kml(nmea[18:46])
+          if lonlat_1st == None:
+            lonlat_1st = lonlat
+          heading=float(nmea[54:59])
+          datetime=b"20"+nmea[64:66]+b"-"+nmea[62:64]+b"-"+nmea[60:62]+b"T"+nmea[7:9]+b":"+nmea[9:11]+b":"+nmea[11:15]+b"Z"
+          if time_1st == None:
+            time_1st = datetime
+          speed_kt=float(nmea[47:53])
+          speed_kmh=speed_kt*1.852
+          if speed_kmh > kmh_max:
+            kmh_max = speed_kmh
+          if speed_kmh < kmh_min:
+            kmh_min = speed_kmh
+          if lonlat_prev!=None:
+            dist_m = distance(lonlat_prev[1], lonlat_prev[0], lonlat[1], lonlat[0])
+            travel += dist_m
+            if dist_m < discontinuety_m: # don't draw too long lines
+              ls0 = styles.LineStyle(ns,
+                color=("%08X" % color32(iri_avg/red_iri)), width=6)
+              lsty0 = styles.Style(styles = [ls0])
+              p1 = kml.Placemark(ns, 'id',
+                name=("%.2f" % iri_avg),
+                description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
+                styles=[lsty0])
+              #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
+              #p1_iri_right = kml.Data(name="IRI_RIGHT", display_name="IRI_RIGHT", value="%.2f" % iri_right)
+              #p1.extended_data = kml.UntypedExtendedData(elements=[p1_iri_left, p1_iri_right])
+              p1.geometry = LineString([lonlat_prev, lonlat])
+              t.timestamp, dummy = t.parse_str(datetime) # "2021-07-03T11:22:33Z"
+              p1.timeStamp = t.timestamp
+              f2.append(p1)
+          lonlat_prev = lonlat
+        if nmea[0:1]==b"L" and lonlat!=None:
+          rpos=nmea.find(b"R")
+          try:
+            iri_left=float(nmea[1:rpos])
+            iri_right=float(nmea[rpos+1:])
+          except:
+            pass
+          iri_avg=(iri_left+iri_right)/2
+          if travel > travel_next:
+            while travel > travel_next:
+              travel_next += segment_m
+            is0 = styles.IconStyle(ns, "id",
+              color=("%08X" % color32(iri_avg/red_iri)),
+              scale=1.0,
+              heading=(180+heading)%360,
+              icon_href=arrow_icon_href)
+            isty0 = styles.Style(styles = [is0])
+            p0 = kml.Placemark(ns, 'id',
               name=("%.2f" % iri_avg),
-              description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
-              styles=[lsty0])
-            #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
-            #p1_iri_right = kml.Data(name="IRI_RIGHT", display_name="IRI_RIGHT", value="%.2f" % iri_right)
-            #p1.extended_data = kml.UntypedExtendedData(elements=[p1_iri_left, p1_iri_right])
-            p1.geometry = LineString([lonlat_prev, lonlat])
-            t.timestamp, dummy = t.parse_str(datetime) # "2021-07-03T11:22:33Z"
-            p1.timeStamp = t.timestamp
-            f2.append(p1)
-        lonlat_prev = lonlat
-      if nmea[0:1]==b"L" and lonlat!=None:
-        rpos=nmea.find(b"R")
-        try:
-          iri_left=float(nmea[1:rpos])
-          iri_right=float(nmea[rpos+1:])
-        except:
-          pass
-        iri_avg=(iri_left+iri_right)/2
-        if travel > travel_next:
-          while travel > travel_next:
-            travel_next += segment_m
-          is0 = styles.IconStyle(ns, "id",
-            color=("%08X" % color32(iri_avg/red_iri)),
-            scale=1.0,
-            heading=(180+heading)%360,
-            icon_href=arrow_icon_href)
-          isty0 = styles.Style(styles = [is0])
-          p0 = kml.Placemark(ns, 'id',
-            name=("%.2f" % iri_avg),
-            description=("L=%.2f R=%.2f\n%.1f km/h (%.1f-%.1f km/h)\n%s" % (iri_left, iri_right, speed_kmh, kmh_min, kmh_max, datetime.decode("utf-8"))),
-            styles=[isty0])
-          p0.geometry = Point(lonlat)
-          p0.timeStamp = t.timestamp
-          f2.append(p0)
-          kmh_max = 0.0
-          kmh_min = 999.9
-    # delete, consumed  
-    nmea=bytearray(0)
-  i += 1
+              description=("L=%.2f R=%.2f\n%.1f km/h (%.1f-%.1f km/h)\n%s" % (iri_left, iri_right, speed_kmh, kmh_min, kmh_max, datetime.decode("utf-8"))),
+              styles=[isty0])
+            p0.geometry = Point(lonlat)
+            p0.timeStamp = t.timestamp
+            f2.append(p0)
+            kmh_max = 0.0
+            kmh_min = 999.9
+      # delete, consumed
+      nmea=bytearray(0)
+    i += 1
+  f.close()
 time_last = datetime
 
 # output to string with hard-replace "visibility" to add LookAt tag
