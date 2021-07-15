@@ -3,6 +3,7 @@
 esp32
 
     [ ] SD card compatiblity sandisk
+    [ ] tunnel mode: if signal is lost at > 40 km/h, assume same speed
     [ ] sensor hotplug
     [ ] OBD2 support
     [ ] RTC support (for OBD without GPS)
