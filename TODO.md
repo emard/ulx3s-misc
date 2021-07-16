@@ -61,6 +61,7 @@ core
 
 wav2kml
 
+    [ ] csv dump
     [ ] snap https://automating-gis-processes.github.io/2017/lessons/L3/nearest-neighbour.html
     [ ] at stop cut the track and restart new
     [x] multiple input files
