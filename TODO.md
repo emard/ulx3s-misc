@@ -9,7 +9,7 @@ esp32
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
     [ ] LCD graphic track display
-    [ ] GPS time discontineuty warning
+    [ ] GPS time discontinuety warning
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
     [ ] speech report remaining minutes and disk full
