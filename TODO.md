@@ -64,7 +64,9 @@ wav2kml
 
     [ ] csv dump
     [ ] snap https://automating-gis-processes.github.io/2017/lessons/L3/nearest-neighbour.html
-    [ ] at stop cut the track and restart new
+        find approached point, path is linear, binary search to refine
+        approached area
+    [x] at stop cut the track and restart new
     [x] multiple input files
     [x] placemark every 100 m
     [x] lookat straight above
