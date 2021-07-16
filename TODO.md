@@ -9,7 +9,7 @@ esp32
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
     [ ] LCD graphic track display
-    [ ] GPS time discontinuty warning
+    [ ] GPS time discontineuty warning
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
     [ ] speech report remaining minutes and disk full
@@ -41,6 +41,7 @@ esp32
     [x] test power lost during logging
     [x] config file for BT MAC, WiFi password and few parameters
     [x] tunnel mode: if signal is lost at > 40 km/h, assume same speed
+    [x] CRC for IRI tags
 
 core
 
