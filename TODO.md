@@ -3,7 +3,6 @@
 esp32
 
     [ ] SD card compatiblity sandisk
-    [ ] tunnel mode: if signal is lost at > 40 km/h, assume same speed
     [ ] sensor hotplug
     [ ] OBD2 support
     [ ] RTC support (for OBD without GPS)
@@ -41,6 +40,7 @@ esp32
     [x] 1-char sensor status XLRY
     [x] test power lost during logging
     [x] config file for BT MAC, WiFi password and few parameters
+    [x] tunnel mode: if signal is lost at > 40 km/h, assume same speed
 
 core
 
@@ -49,7 +49,7 @@ core
     [ ] simplify FM part, PCM is only 8-bit
     [ ] log sensor temperature
     [ ] core fm filter and downsample not working
-    [ ] increase speech volume
+    [ ] increase speech volume (compression?)
     [ ] time sync status
     [ ] BTN irq
     [x] slope should not reset at 0-speed
@@ -61,7 +61,7 @@ core
 
 wav2kml
 
-    [ ] snap
+    [ ] snap https://automating-gis-processes.github.io/2017/lessons/L3/nearest-neighbour.html
     [ ] at stop cut the track and restart new
     [x] multiple input files
     [x] placemark every 100 m
