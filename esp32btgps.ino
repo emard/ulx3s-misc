@@ -452,9 +452,9 @@ void loop_gps()
           Serial.print(nmea);
 #endif
           cknots = nmea2spd(nmea); // parse speed to centi-knots, -1 if no signal
-          //int btn = spi_btn_read();    // debug
-          //if((btn & 4)) cknots = 4319; // debug BTN2 80 km/h or 22 m/s
-          //if((btn & 8)) cknots = -1;   // debug BTN3 tunnel, no signal
+          int btn = spi_btn_read();    // debug
+          if((btn & 4)) cknots = 4319; // debug BTN2 80 km/h or 22 m/s
+          if((btn & 8)) cknots = -1;   // debug BTN3 tunnel, no signal
           if(cknots >= 0) // for tunnel mode keep speed if no signal (cknots < 0)
           {
             speed_mms = (cknots *  5268) >> 10;
@@ -471,7 +471,8 @@ void loop_gps()
                  : sensor_check_status == 2 ? iri[1]
                  : (iri[0]+iri[1])/2;  // 3, average of both sensors
           char iri_tag[40];
-          sprintf(iri_tag, " L%.2fR%.2f ", iri[0], iri[1]);
+          sprintf(iri_tag, " L%.2fR%.2f*00 ", iri[0], iri[1]);
+          write_nmea_crc(iri_tag+1);
           write_tag(iri_tag);
           #if 0
           char iri_report[80];

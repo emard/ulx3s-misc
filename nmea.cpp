@@ -19,14 +19,33 @@ inline uint8_t hex2int(char a)
   return a <= '9' ? a-'0' : a-'A'+10;
 }
 
+inline void int2hex(uint8_t i, char *a)
+{
+  uint8_t nib = i >> 4;
+  a[0] = nib < 10 ? '0'+nib : 'A'+nib-10;
+  nib = i & 15;
+  a[1] = nib < 10 ? '0'+nib : 'A'+nib-10;
+}
+
+// write crc as 2 hex digits after '*'
+// return crc
+uint8_t write_nmea_crc(char *a)
+{
+  uint8_t crc = 0;
+  for(; a[0] != '\0' && a[0] != '*'; a++)
+    crc ^= a[0];
+  if(a[0] != '*')
+    return crc;
+  int2hex(crc, a+1);
+  return crc;
+}
+
 int check_nmea_crc(char *a)
 {
-  int i;
   if(a[0] != '$')
     return 0;
-  a++;
   uint8_t crc = 0;
-  for(i = 1; a[0] != '\0' && a[0] != '*'; i++, a++)
+  for(a++; a[0] != '\0' && a[0] != '*'; a++)
     crc ^= a[0];
   if(a[0] != '*')
     return 0;
