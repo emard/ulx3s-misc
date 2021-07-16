@@ -498,84 +498,6 @@ void flush_logs(void)
   file_accel.flush();
 }
 
-#if 0
-// using ADXL 32-sample buffer is too small, overruns
-void write_logs_old1(void)
-{
-  static uint8_t gps[64];
-  if(logs_are_open == 0)
-    return;
-  #if 1
-  // begin read fifo and write to SD
-  if(adxl355_available()<8)
-    return;
-  uint8_t n = adxl355_rdfifo16();
-  //file_gps.write(gps, sizeof(gps));
-  //if(n == 0)
-  //  return;
-  file_accel.write(spi_master_tx_buf, n*2);
-  if(n < 32)
-    return;
-  Serial.print("overrun");
-  //Serial.print(n);
-  #if 0
-  for(int i = 0; i < 6; i++)
-  {
-    Serial.print(" ");
-    Serial.print(spi_master_tx_buf[i], HEX);
-  }
-  #endif
-  Serial.println("");
-  // end read fifo and write to SD
-  #endif
-}
-#endif
-
-#if 0
-// too complex code
-// write to SD when more than BUF_DATA_WRITE bytes are collected
-#define BUF_DATA_WRITE 2000
-void write_logs(void)
-{
-  static uint16_t prev_ptr = 0;
-  uint16_t ptr, dif;
-
-  ptr = (SPI_READER_BUF_SIZE + spi_slave_ptr() - 2) % SPI_READER_BUF_SIZE; // written content is 2 bytes behind pointer
-  ptr -= ptr % 12; // trim to even number of samples (12 bytes is one full sample)
-  dif = (SPI_READER_BUF_SIZE + ptr - prev_ptr) % SPI_READER_BUF_SIZE;
-  if(dif > BUF_DATA_WRITE)
-  {
-    if(logs_are_open)
-    {
-      if(ptr > prev_ptr)
-      {
-        // 1-part read
-        spi_slave_read(prev_ptr, dif);
-        file_accel.write(spi_master_rx_buf+6, dif);
-        Serial.print("1");
-      }
-      else
-      {
-        uint16_t part1len = SPI_READER_BUF_SIZE - prev_ptr;
-        uint16_t part2len = dif - part1len;
-        // 2-part read
-        spi_slave_read(prev_ptr, part1len);
-        file_accel.write(spi_master_rx_buf+6, part1len);
-        spi_slave_read(0, part2len);
-        file_accel.write(spi_master_rx_buf+6, part2len);
-        Serial.print("2");
-      }
-      Serial.print(" part ptr ");
-      Serial.print(ptr, DEC);
-      Serial.print(" write buf size ");
-      Serial.println(dif, DEC);
-    }
-    prev_ptr = ptr;
-  }
-}
-#endif
-
-#if 1
 void write_logs(void)
 {
   static uint8_t prev_half = 0;
@@ -602,7 +524,6 @@ void write_logs(void)
     //Serial.println(sensor_check_status);
   }
 }
-#endif
 
 void write_stop_delimiter()
 {
@@ -756,11 +677,6 @@ void close_logs(void)
   //file_gps.close();
   //finalize_wav_header();
   file_accel.close();
-}
-
-int are_logs_open()
-{
-  return logs_are_open;
 }
 
 void spi_slave_test(void)
