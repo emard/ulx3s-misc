@@ -28,7 +28,9 @@ int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
 int sensor_check_status = 0;
-int knots = -1; // knots*100
+int cknots    = -1; // centi-knots speed (kt*100)
+int speed_mms = -1; // mm/s speed
+int speed_kmh = -1; // km/h speed
 int fast_enough = 0; // for speed logging hysteresis
 float iri[2], iriavg;
 char iri2digit[4] = "0.0";
@@ -173,13 +175,12 @@ void rds_init(void)
   rds.setmemptr(spi_master_tx_buf+5);
 }
 
-// speed in m/s
-void spi_speed_write(float spd)
+// speed in mm/s
+void spi_speed_write(int spd)
 {
-  float vx       = spd*1.0e3;
-  float cvx2     = spd > 0.1 ? 39240.0/spd : 0.0;
-  uint16_t ivx   = int(vx);
+  float cvx2     = spd > 0 ? 39240.0e3/spd : 0.0;
   uint32_t icvx2 = int(cvx2);
+  uint16_t ivx   = spd > 0 ? spd : 0;
   spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0x2; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
@@ -270,11 +271,13 @@ void rds_message(struct tm *tm)
       free_MB_2n = '0';
     if(free_MB_2n > '9')
       free_MB_2n = '9';
-    if(knots < 0)
-    {
+    if(cknots < 0 && fast_enough == 0)
+    { // no signal and not fast enough (not in tunnel mode)
       sprintf(disp_short, "WAIT  0X");
-      sprintf(disp_long, "%dMB free %02d:%02d WAIT FOR GPS FIX", 
-        free_MB, tm->tm_hour, tm->tm_min);
+      sprintf(disp_long, "%dMB free %02d:%02d %d km/h WAIT FOR GPS FIX",
+        free_MB,
+        tm->tm_hour, tm->tm_min,
+        speed_kmh);
     }
     else
     {
@@ -283,11 +286,11 @@ void rds_message(struct tm *tm)
       else
         sprintf(disp_short, "GO    0X"); // normal
         //sprintf(disp_short, "%3s   0X", iri2digit); // debug
-      sprintf(disp_long, "L=%.2f R=%.2f %dMB free %02d:%02d %d.%02d kt RUN=%d",
+      sprintf(disp_long, "L=%.2f R=%.2f %dMB free %02d:%02d %d km/h RUN=%d",
         iri[0], iri[1],
         free_MB,
         tm->tm_hour, tm->tm_min,
-        knots/100, knots%100,
+        speed_kmh,
         fast_enough);
     }
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);

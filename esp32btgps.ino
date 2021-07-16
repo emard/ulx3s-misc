@@ -237,7 +237,7 @@ void setup() {
   SerialBT.setPin(GPS_PIN.c_str());
   Serial.println("Bluetooth master started");
 
-  spi_speed_write(0.0); // normal
+  spi_speed_write(0); // normal
 }
 
 void reconnect()
@@ -451,9 +451,16 @@ void loop_gps()
           // debug NMEA data
           Serial.print(nmea);
 #endif
-          knots = nmea2spd(nmea); // parse speed
-          //knots = ((spi_btn_read()) & 4) ? 0 : 4319; // debug 4319 = 43.19 kt = 22.19 m/s, press BTN2 to stop
-          spi_speed_write(fast_enough ? knots*0.514444e-2 : 0.0); // normal
+          cknots = nmea2spd(nmea); // parse speed to centi-knots, -1 if no signal
+          //int btn = spi_btn_read();    // debug
+          //if((btn & 4)) cknots = 4319; // debug BTN2 80 km/h or 22 m/s
+          //if((btn & 8)) cknots = -1;   // debug BTN3 tunnel, no signal
+          if(cknots >= 0) // for tunnel mode keep speed if no signal (cknots < 0)
+          {
+            speed_mms = (cknots *  5268) >> 10;
+            speed_kmh = (cknots * 19419) >> 20;
+          }
+          spi_speed_write(fast_enough ? speed_mms : 0); // normal
           int32_t srvz[2];
           spi_srvz_read(srvz);
           const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
@@ -480,26 +487,26 @@ void loop_gps()
           nmea2ms_dif = nmea2ms_sum / 256;
           nmea2ms_log[inmealog++] = nmea2ms;
           // hysteresis for logging
-          // 100 knots = 1 kt = 0.514444 m/s = 1.852 km/h
-          //if (knots > 6) // debug, stationary GPS will record
-          if (knots > 660) // normal
+          // 100 cknots = 1 kt = 0.514444 m/s = 1.852 km/h
+          //if (cknots > 6) // debug, stationary GPS will record
+          if (speed_kmh > 12) // normal
           {
             if (fast_enough == 0)
             {
-              Serial.print(knots * 1852 / 100000);
-              Serial.println(">10 km/h fast enough - start logging");
+              Serial.print(speed_kmh);
+              Serial.println(" km/h fast enough - start logging");
             }
             fast_enough = 1;
           }
-          //if (knots < 3) // debug, stationary GPS will record
-          if (knots < 330) // normal
-          {
+          //if (cknots < 3 && cknots >= 0) // debug, stationary GPS will record
+          if (speed_kmh < 6 && speed_kmh >= 0) // normal
+          { // tunnel mode: ignore negative speed (no signal) when fast enough
             if (fast_enough)
             {
               write_stop_delimiter();
               close_logs(); // save data in case of power lost
-              Serial.print(knots * 1852 / 100000);
-              Serial.println("<4 km/h not fast enough - stop logging");
+              Serial.print(speed_kmh);
+              Serial.println(" km/h not fast enough - stop logging");
               travel_mm = 0; // we stopped, reset travel
             }
             fast_enough = 0;
@@ -523,9 +530,9 @@ void loop_gps()
                 mount();
                 open_logs(&tm_session);
               }
-              int travel_dt = (864000 + daytime - daytime_prev) % 864000; // ms since last time
+              int travel_dt = (864000 + daytime - daytime_prev) % 864000; // seconds*10 since last time
               if(travel_dt < 100) // ok reports are below 10s difference
-                travel_mm += knots * travel_dt * 5144 / 10000;
+                travel_mm += speed_mms * travel_dt / 10;
               travel100m = travel_mm / 100000; // normal: report every 100 m
               //travel100m = travel_mm / 1000; // debug: report every 1 m
             }
@@ -561,14 +568,14 @@ void loop_gps()
               Serial.print(":");
               Serial.print(tm.tm_min);
               Serial.print(" ");
-              Serial.print(knots);
-              Serial.println(" kt*100");
+              Serial.print(speed_kmh);
+              Serial.println(" km/h");
 #endif
               flush_logs(); // save data
               rds_message(&tm);
               if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
-                if (knots < 0)
+                if (speed_kmh < 0) // no signal
                 {
                   speakaction[0] = "/speak/wait.wav";
                   speakaction[1] = sensor_status_file[sensor_check_status];

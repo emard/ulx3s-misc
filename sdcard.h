@@ -7,7 +7,9 @@
 extern int card_is_mounted;
 extern int pcm_is_open;
 extern int sensor_check_status;
-extern int knots; // speed knots, 1 knot = 0.514444 m/s = 1.852 km/h
+extern int cknots; // centi-knots speed, 100 cknots = 1 knot = 0.514444 m/s = 1.852 km/h
+extern int speed_mms; // mm/s speed
+extern int speed_kmh; // km/h speed
 extern int fast_enough; // logging flag when fast enough
 extern float iri[2],iriavg;
 extern char iri2digit[4];
@@ -19,7 +21,7 @@ void mount(void);
 void umount(void);
 void spi_init(void);
 void rds_init(void);
-void spi_speed_write(float spd);
+void spi_speed_write(int spd);
 void spi_srvz_read(int32_t *srvz);
 uint8_t spi_btn_read(void);
 void spi_rds_write(void);
