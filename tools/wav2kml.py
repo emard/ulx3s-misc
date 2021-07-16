@@ -118,7 +118,10 @@ for wavfile in argv[1:]:
     else: # a == 32
       if(len(nmea)):
         #print(i,nmea.decode("utf-8"))
-        if nmea[0:6]==b"$GPRMC" and len(nmea)==79:
+        if nmea.find(b'#') >= 0: # discontinuety, reset travel
+          travel = 0.0
+          travel_next = 0.0
+        elif nmea[0:6]==b"$GPRMC" and len(nmea)==79:
           lonlat=nmea_latlon2kml(nmea[18:46])
           if lonlat_1st == None:
             lonlat_1st = lonlat
@@ -150,12 +153,18 @@ for wavfile in argv[1:]:
               t.timestamp, dummy = t.parse_str(datetime) # "2021-07-03T11:22:33Z"
               p1.timeStamp = t.timestamp
               f2.append(p1)
+            else: # discontinuety, reset travel
+              travel = 0.0
+              travel_next = 0.0
           lonlat_prev = lonlat
         if nmea[0:1]==b"L" and lonlat!=None:
           rpos=nmea.find(b"R")
+          epos=nmea.find(b'*')
+          if epos < 0:
+            epos=nmea.find(b' ')
           try:
             iri_left=float(nmea[1:rpos])
-            iri_right=float(nmea[rpos+1:])
+            iri_right=float(nmea[rpos+1:epos])
           except:
             pass
           iri_avg=(iri_left+iri_right)/2
