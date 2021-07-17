@@ -7,7 +7,8 @@ ncard.wav \
 nfree.wav \
 wait.wav \
 record.wav \
-search.wav \
+searchgps.wav \
+searchobd.wav \
 lstrong.wav \
 rstrong.wav \
 webserver.wav \
