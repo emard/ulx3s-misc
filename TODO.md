@@ -4,7 +4,6 @@ esp32
 
     [ ] SD card compatiblity sandisk
     [ ] sensor hotplug
-    [ ] OBD2 support
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
@@ -23,6 +22,7 @@ esp32
     [ ] web server show SD free MB
     [ ] web server files to separate directory
     [ ] web MDNS not updating address to dnsmasq
+    [ ] web speak when can't connect
     [ ] web server list dump only filenames not full path
     [x] web server show only filename, not full path
     [x] web server sort directories/files
@@ -42,6 +42,8 @@ esp32
     [x] config file for BT MAC, WiFi password and few parameters
     [x] tunnel mode: if signal is lost at > 40 km/h, assume same speed
     [x] CRC for IRI tags
+    [x] OBD2 support
+    [x] OBD2 umount when BT lost
 
 core
 
@@ -53,6 +55,7 @@ core
     [ ] increase speech volume (compression?)
     [ ] time sync status
     [ ] BTN irq
+    [ ] motor vibration (RPM) sensing, conversion to speed
     [x] slope should not reset at 0-speed
     [x] output register for trellis clean FM signal
     [x] improve audio quality with DACPWM
@@ -66,6 +69,7 @@ wav2kml
     [ ] snap https://automating-gis-processes.github.io/2017/lessons/L3/nearest-neighbour.html
         find approached point, path is linear, binary search to refine
         approached area
+    [ ] motor vibration (RPM) sensing, conversion to speed
     [x] at stop cut the track and restart new
     [x] multiple input files
     [x] placemark every 100 m
