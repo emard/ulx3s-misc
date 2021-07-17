@@ -68,6 +68,10 @@ static char *sensor_balance_file[] =
 };
 
 uint32_t t_ms; // t = ms();
+static int travel_mm = 0; // travelled mm (v*dt)
+static int travel100m, travel100m_prev = 0; // previous 100m travel
+static int session_log = 0;
+static struct tm tm, tm_session;
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -200,24 +204,6 @@ void setup() {
     return;
   }
 
-  int obd = ((spi_btn_read()) & 2); // hold BTN1 and plug power to run OBD2 demo
-  if(obd)
-  {
-    loop_pointer = &loop_obd;
-    mount();
-    read_cfg();
-    SerialBT.begin("ESP32", true);
-    SerialBT.setPin(OBD_PIN.c_str());
-    speakaction[0] = "/speak/2.wav"; // TODO say web server maybe IP too
-    speakaction[1] = NULL;
-    speakfiles = speakaction;
-    Serial.println("OBD demo");
-    return;
-  }
-
-  pinMode(PIN_IRQ, INPUT);
-  attachInterrupt(PIN_IRQ, isr_handler, RISING);
-
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS); // Initialise channel MCPWM0A on PPS pin
   MCPWM0.clk_cfg.prescale = 24;                 // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
   MCPWM0.timer[0].period.prescale = 100 / PPSHz - 1; // Set timer 0 prescaler to 9 (6.4MHz/(9+1))=640kHz)
@@ -227,6 +213,25 @@ void setup() {
   MCPWM0.channel[0].generator[0].utea = 1;      // Clear on compare match
   MCPWM0.timer[0].mode.mode = 1;                // Set timer 0 to increment
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
+
+  int obd = ((spi_btn_read()) & 2); // hold BTN1 and plug power to run OBD2 demo
+  if(obd)
+  {
+    loop_pointer = &loop_obd;
+    mount();
+    read_cfg();
+    SerialBT.begin("ESP32", true);
+    SerialBT.setPin(OBD_PIN.c_str());
+    speakaction[0] = "/speak/searchobd.wav"; // TODO say OBD
+    speakaction[1] = NULL;
+    speakfiles = speakaction;
+    Serial.println("OBD demo");
+    return;
+  }
+
+  pinMode(PIN_IRQ, INPUT);
+  attachInterrupt(PIN_IRQ, isr_handler, RISING);
+
   init_nmea2ms(0);
 
   mount();
@@ -398,6 +403,7 @@ void speech()
   }
 }
 
+
 void loop_gps()
 {
   t_ms = ms();
@@ -408,11 +414,8 @@ void loop_gps()
   uint32_t tdelta = t_ms - tprev;
   static uint32_t ct0; // first char in line millis timestamp
   static struct tm tm, tm_session;
-  static int session_log = 0;
-  static int travel_mm = 0; // travelled mm (v*dt)
-  static int travel100m, travel100m_prev = 0; // previous 100m travel
-  static int daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
   int daytime = 0;
+  static int daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
   static int speak_search_gps = 0;
 
 #if 1
@@ -452,9 +455,11 @@ void loop_gps()
           Serial.print(nmea);
 #endif
           cknots = nmea2spd(nmea); // parse speed to centi-knots, -1 if no signal
+          #if 0
           int btn = spi_btn_read();    // debug
-          if((btn & 4)) cknots = 4319; // debug BTN2 80 km/h or 22 m/s
+          if((btn & 4)) cknots = 4320; // debug BTN2 80 km/h or 22 m/s
           if((btn & 8)) cknots = -1;   // debug BTN3 tunnel, no signal
+          #endif
           if(cknots >= 0) // for tunnel mode keep speed if no signal (cknots < 0)
           {
             speed_mms = (cknots *  5268) >> 10;
@@ -643,7 +648,7 @@ void loop_gps()
     // during bluetooth connect CPU is busy and can not feed speech data
     if(tdelta > 2000 && speak_search_gps > 0)
     {
-      speakaction[0] = "/speak/search.wav";
+      speakaction[0] = "/speak/searchgps.wav";
       speakaction[1] = sensor_status_file[sensor_check_status];
       speakfiles = speakaction;
       speak_search_gps = 0; // next BT connect will enable it
@@ -666,22 +671,27 @@ void loop_obd(void)
 
   static char c;
   static int i = 0;
+  uint32_t daytime = 0;
+  static uint32_t daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
+
+  static uint8_t prev_min, prev_sec;
 
   static uint32_t tprev = t_ms;
   uint32_t tdelta = t_ms - tprev;
   static uint32_t ct0; // first char in line millis timestamp
   static char line[128];
   char *obd_request_kmh = "010d\r";
-
   static int sendcmd1 = 0, sendcmd2 = 0;
 
-  if (connected && SerialBT.available())
+  static int speak_search_obd = 0;
+
+  //if ((t_ms & 127) == 0) // debug
+  if (connected && SerialBT.available()) // normal
   {
     // read returns char or -1 if unavailable
-    // sscanf(obd_answer, "%02x %02x %02x", &dummy1, &dummy2, &speed); // speed is integer km/h
-
     c = 0;
 #if 1
+    // normal
     while (SerialBT.available() > 0 && c != '\r')
     {
       if (i == 0)
@@ -691,36 +701,174 @@ void loop_obd(void)
       if (i < sizeof(line) - 3)
         line[i++] = c;
     }
+#else
+    // debug, simulate response
+    ct0 = ms();
+    strcpy(line, "00 00 00\r"); // debug 0 km/h
+    //strcpy(line, "00 00 50\r"); // debug 0x50 = 80 km/h
+    c = '\r';
+    i = 9;
 #endif
     if (i > 5 && c == '\r') // line complete
     {
       line[i] = 0;
-      Serial.print(line);
+      //Serial.println(line);
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
       if(strcmp(line,"STOPPED\r") == 0)
+      {
         SerialBT.print(obd_request_kmh);
+        speed_kmh = -10; // negative means no signal (engine not connected)
+      }
       // "00 00 00\r" ignore first 2 hex, last 3rd hex integer km/h
       if(i > 8 && line[5] == ' ') // >8 bytes long and 5th byte is space
       {
         // parse last digit
-        //int kmh = strtol("10\r", NULL, 16); // debug
-        int kmh = strtol(line+6, NULL ,16); // normal
-        Serial.print(kmh);
+        //speed_kmh = strtol("10\r", NULL, 16); // debug
+        speed_kmh = strtol(line+6, NULL ,16); // normal
+        #if 0
+        Serial.print(speed_kmh);
         Serial.println(" km/h");
         if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
         {
-            speak2digits[0] = digit_file[kmh/10%10];
-            speak2digits[1] = digit_file[kmh%10];
+            speak2digits[0] = digit_file[speed_kmh/10%10];
+            speak2digits[1] = digit_file[speed_kmh%10];
             speakfiles = speak2digits;
+        }
+        #endif
+      } // obd response with speed reading
+      if(1)
+      {
+        #if 0
+        int btn = spi_btn_read();     // debug
+        if((btn & 4)) speed_kmh = 80; // debug BTN2 80 km/h or 22 m/s
+        if((btn & 8)) speed_kmh = -1; // debug BTN3 no signal
+        #endif
+        speed_mms = (speed_kmh * 284444) >> 10; // mm/s
+        cknots    = (speed_kmh *  52679) >> 10; // centi-knots
+        spi_speed_write(fast_enough ? speed_mms : 0); // normal
+
+        int32_t srvz[2];
+        spi_srvz_read(srvz);
+        const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
+        iri[0] = srvz[0]*srvz2iri;
+        iri[1] = srvz[1]*srvz2iri;
+        iriavg = sensor_check_status == 0 ? 0.0
+               : sensor_check_status == 1 ? iri[0]
+               : sensor_check_status == 2 ? iri[1]
+               : (iri[0]+iri[1])/2;  // 3, average of both sensors
+        char iri_tag[40];
+        sprintf(iri_tag, " L%.2fR%.2f*00 ", iri[0], iri[1]);
+        write_nmea_crc(iri_tag+1);
+        write_tag(iri_tag);
+        if (speed_kmh > 12) // normal
+        {
+            if (fast_enough == 0)
+            {
+              Serial.print(speed_kmh);
+              Serial.println(" km/h fast enough - start logging");
+            }
+            fast_enough = 1;
+        }
+        if (speed_kmh < 6 && speed_kmh >= 0) // normal
+        { // tunnel mode: ignore negative speed (no signal) when fast enough
+            if (fast_enough)
+            {
+              write_stop_delimiter();
+              close_logs(); // save data in case of power lost
+              Serial.print(speed_kmh);
+              Serial.println(" km/h not fast enough - stop logging");
+              travel_mm = 0; // we stopped, reset travel
+            }
+            fast_enough = 0;
+        }
+        write_logs(); // use SPI_MODE1
+        getLocalTime(&tm, NULL);
+        if(1)
+        {
+            pinMode(PIN_LED, OUTPUT);
+            digitalWrite(PIN_LED, LED_ON);
+            if(fast_enough)
+            {
+              if(session_log == 0)
+              {
+                tm_session = tm;
+                session_log = 1;
+              }
+              if(session_log != 0)
+              {
+                mount();
+                open_logs(&tm_session);
+              }
+              int travel_dt = ((int32_t) ct0) - ((int32_t) daytime_prev); // ms since last time
+              if(travel_dt < 10000) // ok reports are below 10s difference
+                travel_mm += speed_mms * travel_dt / 1000;
+              travel100m = travel_mm / 100000; // normal: report every 100 m
+              //travel100m = travel_mm / 1000; // debug: report every 1 m
+            }
+            daytime_prev = ct0; // for travel_dt
+            //if (tm.tm_sec != prev_sec && tm.tm_sec%5 == 0) // debug: update RDS every 5 sec
+            if (travel100m_prev != travel100m) // normal: update RDS every 100 m
+            {
+              travel100m_prev = travel100m;
+              uint8_t iri99 = iriavg*10;
+              if(iri99 > 99)
+                iri99 = 99;
+              iri2digit[0]='0'+iri99/10;
+              iri2digit[2]='0'+iri99%10;
+              rds_message(&tm);
+              prev_sec = tm.tm_sec;
+              if (speakfile == NULL && pcm_is_open == 0 && fast_enough > 0)
+              {
+                speak2digits[0] = digit_file[iri2digit[0]-'0'];
+                speak2digits[1] = digit_file[iri2digit[2]-'0'];
+                int balance = 0;
+                if(sensor_check_status == 3)
+                  balance = (srvz[0]>>1) > srvz[1] ? 1
+                          : (srvz[1]>>1) > srvz[0] ? 2
+                          : 0;
+                speak2digits[2] = sensor_balance_file[balance];
+                speakfiles = speak2digits;
+              }
+            }
+            if (tm.tm_min != prev_min)
+            { // speak every minute
+              flush_logs(); // save data
+              rds_message(&tm);
+              if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
+              {
+                if (speed_kmh < 0) // no signal
+                {
+                  speakaction[0] = "/speak/wait.wav";
+                  speakaction[1] = sensor_status_file[sensor_check_status];
+                }
+                else
+                {
+                  if (fast_enough)
+                  {
+                    //speakaction[0] = "/speak/record.wav";
+                    speakaction[0] = sensor_status_file[sensor_check_status];
+                    speakaction[1] = NULL;
+                  }
+                  else
+                  {
+                    speakaction[0] = "/speak/ready.wav";
+                    speakaction[1] = sensor_status_file[sensor_check_status];
+                  }
+                }
+                speakfiles = speakaction;
+                speak_search_obd = 0;
+              }
+              prev_min = tm.tm_min;
+            }
         }
       }
       sendcmd1 = 1;
       sendcmd2 = 1;
       tprev = t_ms;
       i = 0;
-    }
-  }
+    } // end line complete
+  } // end char available
   else
   {
     if(tdelta > 3000)
@@ -744,14 +892,40 @@ void loop_obd(void)
     if(tdelta > 10000) // 10 seconds of serial silence
     {
       pinMode(PIN_LED, INPUT);
-      Serial.println("obd disconnect");
+      digitalWrite(PIN_LED, LED_OFF);
+      close_logs();
+      session_log = 0; // request new timestamp file name
+      ls();
+      umount();
+      rds_message(NULL);
+      //Serial.println("obd disconnect");
       connected = SerialBT.connect(OBD_MAC); // fast
-      Serial.println("obd reconnected");
+      //Serial.println("obd reconnected");
+      i = 0; // reset line buffer write pointer
+      speak_search_obd = 1;
+      // reconnect has waited too much, we must reload t_ms
+      // this will prevent immediately GPS search,
+      // give it 2s to start feeding data
       t_ms = ms();
       tprev = t_ms;
+      tdelta = 0;
       sendcmd1 = 1;
       sendcmd2 = 1;
-      //digitalWrite(LED_BUILTIN,1);
+    }
+    else // without write logs it will report "no sensors"
+      write_logs(); // must write logs even when BT data is not available
+  }
+  if (*speakfiles == NULL && pcm_is_open == 0) // NULL: we are ready to speak new file,
+  {
+    // best is to start speech early after bluetooth connect
+    // if 2s silence, report searching for GPS
+    // during bluetooth connect CPU is busy and can not feed speech data
+    if(tdelta > 2000 && speak_search_obd > 0)
+    {
+      speakaction[0] = "/speak/searchobd.wav";
+      speakaction[1] = sensor_status_file[sensor_check_status];
+      speakfiles = speakaction;
+      speak_search_obd = 0; // next BT connect will enable it
     }
   }
   speech();
