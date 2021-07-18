@@ -64,6 +64,7 @@ discontinuety_m = 50.0 # m don't draw lines longer than this
 
 # timespan is required for kml LookAt
 # here we reset it and track while reading
+datetime    = None
 time_1st    = None
 time_last   = None
 
@@ -207,10 +208,12 @@ for wavfile in argv[1:]:
       nmea=bytearray(0)
     i += 1
   f.close()
-time_last = datetime
+if datetime:
+  time_last = datetime
 
 # output to string with hard-replace "visibility" to add LookAt tag
-print(k.to_string(prettyprint=True).replace(
+if time_last:
+  print(k.to_string(prettyprint=True).replace(
   "<visibility>1</visibility>",
   "<visibility>1</visibility>\n\
     <LookAt>\n\
@@ -225,4 +228,6 @@ print(k.to_string(prettyprint=True).replace(
         <end>%s</end>\n\
       </TimeSpan>\n\
     </LookAt>" % (lonlat_1st[0], lonlat_1st[1], time_1st.decode("utf-8"), time_last.decode("utf-8"))
-))
+  ))
+else:
+  print(k.to_string(prettyprint=True))
