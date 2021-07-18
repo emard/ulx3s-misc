@@ -59,21 +59,13 @@ def color32(color:float) -> int:
   #print("%f %f %f" % (r,g,b) )
   #print("%08x" % color32)
 
-iri_left    = 0.0
-iri_right   = 0.0
-iri_avg     = 0.0
-lonlat      = None
-lonlat_prev = None
-lonlat_1st  = None
-time_1st    = None
-time_last   = None
-speed_kmh   = 0.0
-kmh_min     = 999.9
-kmh_max     = 0.0
-travel      = 0.0 # m
-travel_next = 0.0 # m
 segment_m   = 100.0 # m
 discontinuety_m = 50.0 # m don't draw lines longer than this
+
+# timespan is required for kml LookAt
+# here we reset it and track while reading
+time_1st    = None
+time_last   = None
 
 k = kml.KML()
 ns = '{http://www.opengis.net/kml/2.2}'
@@ -96,9 +88,25 @@ mvb=memoryview(b)
 for wavfile in argv[1:]:
   f = open(wavfile, "rb");
   f.seek(44+0*12)
-  i = 0
+  i = 0 # for PPS signal tracking
   prev_i = 0
   prev_corr_i = 0
+  # state parameters for drawing on the map
+  iri_left    = 0.0
+  iri_right   = 0.0
+  iri_avg     = 0.0
+  lonlat      = None
+  lonlat_prev = None
+  lonlat_diff = None
+  lonlat_1st  = None
+  speed_kt    = 0.0
+  speed_kmh   = 0.0
+  kmh_min     = 999.9
+  kmh_max     = 0.0
+  heading_prev = None
+  travel      = 0.0 # m
+  travel_next = 0.0 # m
+  # set nmea line empty before reading
   nmea=bytearray(0)
   while f.readinto(mvb):
     a=(b[0]&1) | ((b[2]&1)<<1) | ((b[4]&1)<<2) | ((b[6]&1)<<3) | ((b[8]&1)<<4) | ((b[10]&1)<<5)
@@ -121,21 +129,28 @@ for wavfile in argv[1:]:
         if nmea.find(b'#') >= 0: # discontinuety, reset travel
           travel = 0.0
           travel_next = 0.0
-        elif nmea[0:6]==b"$GPRMC" and len(nmea)==79:
-          lonlat=nmea_latlon2kml(nmea[18:46])
+        elif nmea[0:6]==b"$GPRMC" and (len(nmea)==79 or len(nmea)==68): # 68 is lost signal, tunnel mode
+          if len(nmea)==79: # normal mode with signal
+            lonlat=nmea_latlon2kml(nmea[18:46])
+            tunel = 0
+          elif len(nmea)==68: # tunnel mode without signal, keep heading
+            if lonlat_diff:
+              lonlat = ( lonlat[0] + lonlat_diff[0], lonlat[1] + lonlat_diff[1] )
+            tunel = 11 # number of chars in shorter nmea sentence for tunnel mode
           if lonlat_1st == None:
             lonlat_1st = lonlat
-          heading=float(nmea[54:59])
-          datetime=b"20"+nmea[64:66]+b"-"+nmea[62:64]+b"-"+nmea[60:62]+b"T"+nmea[7:9]+b":"+nmea[9:11]+b":"+nmea[11:15]+b"Z"
+          datetime=b"20"+nmea[64-tunel:66-tunel]+b"-"+nmea[62-tunel:64-tunel]+b"-"+nmea[60-tunel:62-tunel]+b"T"+nmea[7:9]+b":"+nmea[9:11]+b":"+nmea[11:15]+b"Z"
           if time_1st == None:
             time_1st = datetime
-          speed_kt=float(nmea[47:53])
+          if tunel == 0:
+            heading=float(nmea[54:59])
+            speed_kt=float(nmea[47:53])
           speed_kmh=speed_kt*1.852
           if speed_kmh > kmh_max:
             kmh_max = speed_kmh
           if speed_kmh < kmh_min:
             kmh_min = speed_kmh
-          if lonlat_prev!=None:
+          if lonlat_prev:
             dist_m = distance(lonlat_prev[1], lonlat_prev[0], lonlat[1], lonlat[0])
             travel += dist_m
             if dist_m < discontinuety_m: # don't draw too long lines
@@ -156,8 +171,10 @@ for wavfile in argv[1:]:
             else: # discontinuety, reset travel
               travel = 0.0
               travel_next = 0.0
+          if lonlat_prev:
+            lonlat_diff = ( lonlat[0] - lonlat_prev[0], lonlat[1] - lonlat_prev[1] )
           lonlat_prev = lonlat
-        if nmea[0:1]==b"L" and lonlat!=None:
+        elif nmea[0:1]==b"L" and lonlat!=None:
           rpos=nmea.find(b"R")
           epos=nmea.find(b'*')
           if epos < 0:
