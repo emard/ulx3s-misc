@@ -7,7 +7,7 @@
 extern int card_is_mounted;
 extern int pcm_is_open;
 extern int sensor_check_status;
-extern int cknots; // centi-knots speed, 100 cknots = 1 knot = 0.514444 m/s = 1.852 km/h
+extern int speed_ckt; // centi-knots speed, 100 ckt = 1 kt = 0.514444 m/s = 1.852 km/h
 extern int speed_mms; // mm/s speed
 extern int speed_kmh; // km/h speed
 extern int fast_enough; // logging flag when fast enough

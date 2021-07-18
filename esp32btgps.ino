@@ -454,16 +454,16 @@ void loop_gps()
           // debug NMEA data
           Serial.print(nmea);
 #endif
-          cknots = nmea2spd(nmea); // parse speed to centi-knots, -1 if no signal
+          speed_ckt = nmea2spd(nmea); // parse speed to centi-knots, -1 if no signal
           #if 0
           int btn = spi_btn_read();    // debug
-          if((btn & 4)) cknots = 4320; // debug BTN2 80 km/h or 22 m/s
-          if((btn & 8)) cknots = -1;   // debug BTN3 tunnel, no signal
+          if((btn & 4)) speed_ckt = 4320; // debug BTN2 80 km/h or 22 m/s
+          if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
           #endif
-          if(cknots >= 0) // for tunnel mode keep speed if no signal (cknots < 0)
+          if(speed_ckt >= 0) // for tunnel mode keep speed if no signal (speed_ckt < 0)
           {
-            speed_mms = (cknots *  5268) >> 10;
-            speed_kmh = (cknots * 19419) >> 20;
+            speed_mms = (speed_ckt *  5268) >> 10;
+            speed_kmh = (speed_ckt * 19419) >> 20;
           }
           spi_speed_write(fast_enough ? speed_mms : 0); // normal
           int32_t srvz[2];
@@ -493,8 +493,8 @@ void loop_gps()
           nmea2ms_dif = nmea2ms_sum / 256;
           nmea2ms_log[inmealog++] = nmea2ms;
           // hysteresis for logging
-          // 100 cknots = 1 kt = 0.514444 m/s = 1.852 km/h
-          //if (cknots > 6) // debug, stationary GPS will record
+          // 100 speed_ckt = 1 kt = 0.514444 m/s = 1.852 km/h
+          //if (speed_ckt > 6) // debug, stationary GPS will record
           if (speed_kmh > 12) // normal
           {
             if (fast_enough == 0)
@@ -504,7 +504,7 @@ void loop_gps()
             }
             fast_enough = 1;
           }
-          //if (cknots < 3 && cknots >= 0) // debug, stationary GPS will record
+          //if (speed_ckt < 3 && speed_ckt >= 0) // debug, stationary GPS will record
           if (speed_kmh < 6 && speed_kmh >= 0) // normal
           { // tunnel mode: ignore negative speed (no signal) when fast enough
             if (fast_enough)
@@ -685,12 +685,12 @@ void loop_obd(void)
 
   static int speak_search_obd = 0;
 
-  //if ((t_ms & 127) == 0) // debug
-  if (connected && SerialBT.available()) // normal
+  if ((t_ms & 127) == 0) // debug
+  //if (connected && SerialBT.available()) // normal
   {
     // read returns char or -1 if unavailable
     c = 0;
-#if 1
+#if 0
     // normal
     while (SerialBT.available() > 0 && c != '\r')
     {
@@ -739,13 +739,13 @@ void loop_obd(void)
       } // obd response with speed reading
       if(1)
       {
-        #if 0
+        #if 1
         int btn = spi_btn_read();     // debug
         if((btn & 4)) speed_kmh = 80; // debug BTN2 80 km/h or 22 m/s
         if((btn & 8)) speed_kmh = -1; // debug BTN3 no signal
         #endif
         speed_mms = (speed_kmh * 284444) >> 10; // mm/s
-        cknots    = (speed_kmh *  52679) >> 10; // centi-knots
+        speed_ckt = (speed_kmh *  52679) >> 10; // centi-knots
         spi_speed_write(fast_enough ? speed_mms : 0); // normal
 
         int32_t srvz[2];
@@ -757,9 +757,19 @@ void loop_obd(void)
                : sensor_check_status == 1 ? iri[0]
                : sensor_check_status == 2 ? iri[1]
                : (iri[0]+iri[1])/2;  // 3, average of both sensors
-        char iri_tag[40];
-        sprintf(iri_tag, " L%.2fR%.2f*00 ", iri[0], iri[1]);
-        write_nmea_crc(iri_tag+1);
+        //char iri_tag[40];
+        //sprintf(iri_tag, " L%.2fR%.2f*00 ", iri[0], iri[1]);
+        char iri_tag[120]; // fake time and location
+        int travel_lat = (travel_mm * 23)>>8; // coarse approximate mm to deg
+        sprintf(iri_tag,
+" $GPRMC,%02d%02d%02d.0,V,46%02d.%06d,N,01600.000000,E,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*18 L%.2fR%.2f*00 ",
+          tm.tm_hour, tm.tm_min, tm.tm_sec,      // hms
+          travel_lat/1000000,travel_lat%1000000, // mm travel to approx decmial deg
+          speed_ckt/100, speed_ckt%100,
+          tm.tm_mday, tm.tm_mon+1, tm.tm_year,   // dmy
+          iri[0], iri[1]
+        );
+        //write_nmea_crc(iri_tag+1);
         write_tag(iri_tag);
         if (speed_kmh > 12) // normal
         {

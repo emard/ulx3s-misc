@@ -28,7 +28,7 @@ int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
 int sensor_check_status = 0;
-int cknots    = -1; // centi-knots speed (kt*100)
+int speed_ckt = -1; // centi-knots speed (kt*100)
 int speed_mms = -1; // mm/s speed
 int speed_kmh = -1; // km/h speed
 int fast_enough = 0; // for speed logging hysteresis
@@ -271,7 +271,7 @@ void rds_message(struct tm *tm)
       free_MB_2n = '0';
     if(free_MB_2n > '9')
       free_MB_2n = '9';
-    if(cknots < 0 && fast_enough == 0)
+    if(speed_ckt < 0 && fast_enough == 0)
     { // no signal and not fast enough (not in tunnel mode)
       sprintf(disp_short, "WAIT  0X");
       sprintf(disp_long, "%dMB free %02d:%02d %d km/h WAIT FOR GPS FIX",

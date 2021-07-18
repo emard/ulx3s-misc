@@ -70,6 +70,8 @@ wav2kml
         find approached point, path is linear, binary search to refine
         approached area
     [ ] motor vibration (RPM) sensing, conversion to speed
+    [ ] calibrate accelerometer heading with GPS
+    [ ] use accelerometer to determine heading in tunnel mode
     [x] at stop cut the track and restart new
     [x] multiple input files
     [x] placemark every 100 m
