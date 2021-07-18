@@ -3,6 +3,9 @@
 esp32
 
     [ ] SD card compatiblity sandisk
+    [ ] BT connect OBD/GPS automatic
+    [ ] OBD start from saved last GPS location
+    [ ] OBD stop count to lon degs
     [ ] sensor hotplug
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
@@ -44,6 +47,7 @@ esp32
     [x] CRC for IRI tags
     [x] OBD2 support
     [x] OBD2 umount when BT lost
+    [x] tag time and speed for OBD mode
 
 core
 
