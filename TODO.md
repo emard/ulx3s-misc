@@ -4,8 +4,7 @@ esp32
 
     [ ] SD card compatiblity sandisk
     [ ] BT connect OBD/GPS automatic
-    [ ] OBD start from saved last GPS location
-    [ ] OBD stop count to lon degs
+    [ ] OBD2 start from saved last GPS location
     [ ] sensor hotplug
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
@@ -15,6 +14,7 @@ esp32
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
     [ ] speech report remaining minutes and disk full
+    [ ] speech tunnel mode locked speed
     [ ] get bytes free early to display when GPS is OFF
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
@@ -47,15 +47,18 @@ esp32
     [x] CRC for IRI tags
     [x] OBD2 support
     [x] OBD2 umount when BT lost
+    [x] OBD2 stop count to lon degs
     [x] tag time and speed for OBD mode
 
 core
 
-    [ ] random inbalance in L/R calc results appears after stop or randomly
+    [ ] significant L/R unbalance at taking the turns
+        clipping (out of range) or
+        different state of slope DC offset compensation?
+    [ ] damp oscillations at slope DC offset compensation
+    [ ] core fm filter and downsample not working (trellis?)
     [ ] handle delay from speed measurement to accelerometer reading
-    [ ] simplify FM part, PCM is only 8-bit
     [ ] log sensor temperature
-    [ ] core fm filter and downsample not working
     [ ] increase speech volume (compression?)
     [ ] time sync status
     [ ] BTN irq
@@ -66,6 +69,7 @@ core
     [x] latch calc_result from changing while reading
     [x] dual frequency output 87.6 and 107.9
     [x] SPI slave for speed and iri
+    [x] random inbalance in L/R calc results (slope ready not used)
 
 wav2kml
 
@@ -73,6 +77,7 @@ wav2kml
     [ ] snap https://automating-gis-processes.github.io/2017/lessons/L3/nearest-neighbour.html
         find approached point, path is linear, binary search to refine
         approached area
+    [ ] on track and placemarks indicate tunnel mode
     [ ] motor vibration (RPM) sensing, conversion to speed
     [ ] calibrate accelerometer heading with GPS
     [ ] use accelerometer to determine heading in tunnel mode
