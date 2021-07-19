@@ -68,10 +68,16 @@ static char *sensor_balance_file[] =
 };
 
 uint32_t t_ms; // t = ms();
-static int travel_mm = 0; // travelled mm (v*dt)
-static int travel100m, travel100m_prev = 0; // previous 100m travel
-static int session_log = 0;
-static struct tm tm, tm_session;
+uint32_t ct0; // first char in line millis timestamp
+char line[256]; // incoming line of data from bluetooth GPS/OBD
+int line_i = 0; // line index
+uint32_t line_tprev; // to determine time of latest incoming complete line
+uint32_t line_tdelta; // time between prev and now
+int travel_mm = 0; // travelled mm (v*dt)
+int travel100m, travel100m_prev = 0; // previous 100m travel
+int session_log = 0;
+struct tm tm, tm_session;
+int speak_search = 0; // 0 - don't search, 1-search gps, 2-search obd
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -214,6 +220,8 @@ void setup() {
   MCPWM0.timer[0].mode.mode = 1;                // Set timer 0 to increment
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
 
+  t_ms = ms();
+  line_tprev = t_ms;
   int obd = ((spi_btn_read()) & 2); // hold BTN1 and plug power to run OBD2 demo
   if(obd)
   {
@@ -412,11 +420,9 @@ void loop_gps()
   static char c;
   static int i = 0;
   uint32_t tdelta = t_ms - tprev;
-  static uint32_t ct0; // first char in line millis timestamp
   static struct tm tm, tm_session;
   int daytime = 0;
   static int daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
-  static int speak_search_gps = 0;
 
 #if 1
   if (connected && SerialBT.available() > 0)
@@ -601,7 +607,7 @@ void loop_gps()
                   }
                 }
                 speakfiles = speakaction;
-                speak_search_gps = 0;
+                speak_search = 0;
               }
               prev_min = tm.tm_min;
             }
@@ -629,7 +635,7 @@ void loop_gps()
       reconnect();
       datetime_is_set = 0; // set datetime again
       i = 0; // reset line buffer write pointer
-      speak_search_gps = 1;
+      speak_search = 1;
       // reconnect has waited too much, we must reload t_ms
       // this will prevent immediately GPS search,
       // give it 2s to start feeding data
@@ -646,12 +652,12 @@ void loop_gps()
     // best is to start speech early after bluetooth connect
     // if 2s silence, report searching for GPS
     // during bluetooth connect CPU is busy and can not feed speech data
-    if(tdelta > 2000 && speak_search_gps > 0)
+    if(tdelta > 2000 && speak_search == 1)
     {
       speakaction[0] = "/speak/searchgps.wav";
       speakaction[1] = sensor_status_file[sensor_check_status];
       speakfiles = speakaction;
-      speak_search_gps = 0; // next BT connect will enable it
+      speak_search = 0; // next BT connect will enable it
     }
   }
   speech();
@@ -682,8 +688,6 @@ void loop_obd(void)
   static char line[128];
   char *obd_request_kmh = "010d\r";
   static int sendcmd1 = 0, sendcmd2 = 0;
-
-  static int speak_search_obd = 0;
 
   if ((t_ms & 127) == 0) // debug
   //if (connected && SerialBT.available()) // normal
@@ -867,7 +871,7 @@ void loop_obd(void)
                   }
                 }
                 speakfiles = speakaction;
-                speak_search_obd = 0;
+                speak_search = 0;
               }
               prev_min = tm.tm_min;
             }
@@ -912,7 +916,7 @@ void loop_obd(void)
       connected = SerialBT.connect(OBD_MAC); // fast
       //Serial.println("obd reconnected");
       i = 0; // reset line buffer write pointer
-      speak_search_obd = 1;
+      speak_search = 2;
       // reconnect has waited too much, we must reload t_ms
       // this will prevent immediately GPS search,
       // give it 2s to start feeding data
@@ -930,12 +934,12 @@ void loop_obd(void)
     // best is to start speech early after bluetooth connect
     // if 2s silence, report searching for GPS
     // during bluetooth connect CPU is busy and can not feed speech data
-    if(tdelta > 2000 && speak_search_obd > 0)
+    if(tdelta > 2000 && speak_search == 2)
     {
       speakaction[0] = "/speak/searchobd.wav";
       speakaction[1] = sensor_status_file[sensor_check_status];
       speakfiles = speakaction;
-      speak_search_obd = 0; // next BT connect will enable it
+      speak_search = 0; // next BT connect will enable it
     }
   }
   speech();
@@ -953,6 +957,88 @@ void loop_obd() {
   speech();
 }
 #endif
+
+void handle_reconnect(void)
+{
+  close_logs();
+  session_log = 0; // request new timestamp file name
+  ls();
+  umount();
+  rds_message(NULL);
+
+  // connect(address) is fast (upto 10 secs max), connect(name) is slow (upto 30 secs max) as it needs
+  // to resolve name to address first, but it allows to connect to different devices with the same name.
+  // Set CoreDebugLevel to Info to view devices bluetooth address and device names
+
+  //connected = SerialBT.connect(name); // slow with String name
+  connected = SerialBT.connect(GPS_MAC); // fast with uint8_t GPS_MAC[6]
+
+  // return value "connected" doesn't mean much
+  // it is sometimes true even if not connected.
+
+  datetime_is_set = 0; // set datetime again
+  line_i = 0; // reset line buffer write pointer
+  speak_search = 1;
+}
+
+void handle_line_complete(void)
+{
+  line[line_i-1] = 0; // replace \r or \n termination with 0
+  Serial.println(line);
+}
+
+void loop_new(void)
+{
+  char c;
+  t_ms = ms();
+  line_tdelta = t_ms - line_tprev;
+  // handle incoming data as lines and reconnect on 10s silence
+  if (connected && SerialBT.available() > 0)
+  {
+    c = 0;
+    while (SerialBT.available() > 0 && c != '\n')
+    {
+      if (line_i == 0)
+        ct0 = ms(); // time when first char in line came
+      // read returns char or -1 if unavailable
+      c = SerialBT.read();
+      if (line_i < sizeof(line) - 3)
+        line[line_i++] = c;
+    }
+    if (line_i > 5 && (c == '\n' || c == '\r')) // line complete
+    { // GPS has '\n', OBD has '\r' line termination
+      line[line_i] = 0; // additionally null-terminate string
+      handle_line_complete();      
+      line_tprev = t_ms; // record time, used to detect silence
+      line_i = 0; // line consumed, start new
+      // BT LED ON
+      pinMode(PIN_LED, OUTPUT);
+      digitalWrite(PIN_LED, LED_ON);
+    }
+    // (*handle_silence)(); // in OBD mode this will retry sending data query
+
+    // check for serial line silence to determine if
+    // GPS/OBD needs to be reconnected
+    // reported 15s silence is possible http://4river.a.la9.jp/gps/report/GLO.htm
+    // for practical debugging we wait for less here
+  }
+  if (line_tdelta > 10000) // 10 seconds of serial silence? then reconnect
+  {
+      // BT LED OFF
+      pinMode(PIN_LED, INPUT);
+      digitalWrite(PIN_LED, LED_OFF);
+      Serial.println("reconnect");
+      handle_reconnect();
+      // reconnect has waited too much, we must reload t_ms
+      // this will prevent immediately GPS search,
+      // give it 2s to start feeding data
+      t_ms = ms();
+      line_tprev = t_ms;
+      line_tdelta = 0;
+  }
+  else
+    write_logs();
+}
 
 void loop_web(void)
 {
