@@ -587,7 +587,7 @@ void loop_gps()
               rds_message(&tm);
               if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
-                if (speed_kmh < 0) // no signal
+                if (speed_ckt < 0) // no signal
                 {
                   speakaction[0] = "/speak/wait.wav";
                   speakaction[1] = sensor_status_file[sensor_check_status];
@@ -688,13 +688,14 @@ void loop_obd(void)
   static char line[128];
   char *obd_request_kmh = "010d\r";
   static int sendcmd1 = 0, sendcmd2 = 0;
+  static int stopcount = 0;
 
-  if ((t_ms & 127) == 0) // debug
-  //if (connected && SerialBT.available()) // normal
+  //if ((t_ms & 127) == 0) // debug
+  if (connected && SerialBT.available()) // normal
   {
     // read returns char or -1 if unavailable
     c = 0;
-#if 0
+#if 1
     // normal
     while (SerialBT.available() > 0 && c != '\r')
     {
@@ -743,7 +744,7 @@ void loop_obd(void)
       } // obd response with speed reading
       if(1)
       {
-        #if 1
+        #if 0
         int btn = spi_btn_read();     // debug
         if((btn & 4)) speed_kmh = 80; // debug BTN2 80 km/h or 22 m/s
         if((btn & 8)) speed_kmh = -1; // debug BTN3 no signal
@@ -764,11 +765,12 @@ void loop_obd(void)
         //char iri_tag[40];
         //sprintf(iri_tag, " L%.2fR%.2f*00 ", iri[0], iri[1]);
         char iri_tag[120]; // fake time and location
-        int travel_lat = (travel_mm * 23)>>8; // coarse approximate mm to deg
+        int travel_lat = (travel_mm * 138)>>8; // coarse approximate mm to minutes
         sprintf(iri_tag,
-" $GPRMC,%02d%02d%02d.0,V,46%02d.%06d,N,01600.000000,E,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*18 L%.2fR%.2f*00 ",
+" $GPRMC,%02d%02d%02d.0,V,4600.%06d,N,016%02d.%06d,E,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*18 L%.2fR%.2f*00 ",
           tm.tm_hour, tm.tm_min, tm.tm_sec,      // hms
-          travel_lat/1000000,travel_lat%1000000, // mm travel to approx decmial deg
+          travel_lat%1000000, // mm travel to approx decmial deg
+          (stopcount << 16)/1000000%1000000,(stopcount << 16)%1000000, // position next line using stopcount
           speed_ckt/100, speed_ckt%100,
           tm.tm_mday, tm.tm_mon+1, tm.tm_year,   // dmy
           iri[0], iri[1]
@@ -790,6 +792,7 @@ void loop_obd(void)
             {
               write_stop_delimiter();
               close_logs(); // save data in case of power lost
+              stopcount++;
               Serial.print(speed_kmh);
               Serial.println(" km/h not fast enough - stop logging");
               travel_mm = 0; // we stopped, reset travel
@@ -848,9 +851,9 @@ void loop_obd(void)
             if (tm.tm_min != prev_min)
             { // speak every minute
               flush_logs(); // save data
-              rds_message(&tm);
               if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
               {
+                rds_message(&tm);
                 if (speed_kmh < 0) // no signal
                 {
                   speakaction[0] = "/speak/wait.wav";
