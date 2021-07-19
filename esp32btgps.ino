@@ -33,7 +33,7 @@ char *nospeak[] = {NULL};
 char **speakfiles = nospeak;
 
 // optional loop handler functions
-void loop_gps(void), loop_obd(void), loop_web(void);
+void loop_gps(void), loop_obd(void), loop_new(void), loop_web(void);
 void (*loop_pointer)() = &loop_gps;
 
 static char *digit_file[] =
@@ -67,10 +67,12 @@ static char *sensor_balance_file[] =
   "/speak/rstrong.wav",
 };
 
+int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
 uint32_t t_ms; // t = ms();
 uint32_t ct0; // first char in line millis timestamp
 char line[256]; // incoming line of data from bluetooth GPS/OBD
 int line_i = 0; // line index
+char line_terminator = '\n'; // '\n' for GPS, '\r' for OBD
 uint32_t line_tprev; // to determine time of latest incoming complete line
 uint32_t line_tdelta; // time between prev and now
 int travel_mm = 0; // travelled mm (v*dt)
@@ -78,6 +80,9 @@ int travel100m, travel100m_prev = 0; // previous 100m travel
 int session_log = 0;
 struct tm tm, tm_session;
 int speak_search = 0; // 0 - don't search, 1-search gps, 2-search obd
+
+uint8_t obd_retry = 3; // bit pattern for OBD retry
+char *obd_request_kmh = "010d\r";
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -686,7 +691,6 @@ void loop_obd(void)
   uint32_t tdelta = t_ms - tprev;
   static uint32_t ct0; // first char in line millis timestamp
   static char line[128];
-  char *obd_request_kmh = "010d\r";
   static int sendcmd1 = 0, sendcmd2 = 0;
   static int stopcount = 0;
 
@@ -969,25 +973,68 @@ void handle_reconnect(void)
   umount();
   rds_message(NULL);
 
+  mode_obd_gps ^= 1; // toggle mode 0:OBD 1:GPS
+  uint8_t *mac_address = mode_obd_gps ? GPS_MAC : OBD_MAC;
+  //Serial.print("trying mode ");
+  //Serial.println(mode_obd_gps);
+
   // connect(address) is fast (upto 10 secs max), connect(name) is slow (upto 30 secs max) as it needs
   // to resolve name to address first, but it allows to connect to different devices with the same name.
   // Set CoreDebugLevel to Info to view devices bluetooth address and device names
 
   //connected = SerialBT.connect(name); // slow with String name
-  connected = SerialBT.connect(GPS_MAC); // fast with uint8_t GPS_MAC[6]
+  connected = SerialBT.connect(mac_address); // fast with uint8_t GPS_MAC[6]
 
   // return value "connected" doesn't mean much
   // it is sometimes true even if not connected.
-
+  line_terminator = mode_obd_gps ? '\n' : '\r';
+  obd_retry = ~0; // initial retry OBD to start reports
   datetime_is_set = 0; // set datetime again
   line_i = 0; // reset line buffer write pointer
   speak_search = 1;
 }
 
-void handle_line_complete(void)
+void handle_gps_line_complete(void)
 {
-  line[line_i-1] = 0; // replace \r or \n termination with 0
+  line[line_i-1] = 0; // replace \n termination with 0
   Serial.println(line);
+}
+
+// convert OBD reading to a fake NMEA line
+// and proceed same as NMEA
+void handle_obd_line_complete(void)
+{
+  line[line_i-1] = 0; // replace \r termination with 0
+  Serial.println(line);
+  if(strcmp(line,"STOPPED") == 0 || strcmp(line,"UNABLE TO CONNECT") == 0)
+  {
+    SerialBT.print(obd_request_kmh); // next request
+    speed_kmh = -10; // negative means no signal (engine not connected)
+  }
+  // "00 00 00\r" ignore first 2 hex, last 3rd hex integer km/h
+  if(line_i >= 8 && line[5] == ' ') // >8 bytes long and 5th byte is space
+  {
+    SerialBT.print(obd_request_kmh); // next request
+     // parse last digit
+  }
+}
+
+void handle_obd_silence(void)
+{
+  if(!connected)
+    return;
+  if(line_tdelta > 3000 && (obd_retry & 1) != 0)
+  {
+    SerialBT.print(obd_request_kmh); // read speed km/h (without car, should print "SEARCHING...")
+    //Serial.println("retry 1");
+    obd_retry &= ~1;
+  }
+  else if(line_tdelta > 6000 && (obd_retry & 2) != 0)
+  {
+    SerialBT.print(obd_request_kmh); // read speed km/h (without car, should print "SEARCHING...")
+    //Serial.println("retry 2");
+    obd_retry &= ~2;
+  }
 }
 
 void loop_new(void)
@@ -999,7 +1046,7 @@ void loop_new(void)
   if (connected && SerialBT.available() > 0)
   {
     c = 0;
-    while (SerialBT.available() > 0 && c != '\n')
+    while(SerialBT.available() > 0 && c != line_terminator) // line not complete
     {
       if (line_i == 0)
         ct0 = ms(); // time when first char in line came
@@ -1008,29 +1055,35 @@ void loop_new(void)
       if (line_i < sizeof(line) - 3)
         line[line_i++] = c;
     }
-    if (line_i > 5 && (c == '\n' || c == '\r')) // line complete
-    { // GPS has '\n', OBD has '\r' line termination
+    if (line_i > 5 && c == line_terminator) // line complete
+    { // GPS has '\n', OBD has '\r' line terminator
       line[line_i] = 0; // additionally null-terminate string
-      handle_line_complete();      
+      if(mode_obd_gps)
+        handle_gps_line_complete();
+      else
+        handle_obd_line_complete();
       line_tprev = t_ms; // record time, used to detect silence
       line_i = 0; // line consumed, start new
       // BT LED ON
       pinMode(PIN_LED, OUTPUT);
       digitalWrite(PIN_LED, LED_ON);
     }
-    // (*handle_silence)(); // in OBD mode this will retry sending data query
-
-    // check for serial line silence to determine if
-    // GPS/OBD needs to be reconnected
-    // reported 15s silence is possible http://4river.a.la9.jp/gps/report/GLO.htm
-    // for practical debugging we wait for less here
   }
+  if(mode_obd_gps == 0)
+    handle_obd_silence();
+  // (*handle_silence)(); // in OBD mode this will retry sending data query
+
+  // finale check for serial line silence to determine if
+  // GPS/OBD needs to be reconnected
+  // reported 15s silence is possible http://4river.a.la9.jp/gps/report/GLO.htm
+  // for practical debugging we wait for less here
+
   if (line_tdelta > 10000) // 10 seconds of serial silence? then reconnect
   {
       // BT LED OFF
       pinMode(PIN_LED, INPUT);
       digitalWrite(PIN_LED, LED_OFF);
-      Serial.println("reconnect");
+      //Serial.println("reconnect");
       handle_reconnect();
       // reconnect has waited too much, we must reload t_ms
       // this will prevent immediately GPS search,
