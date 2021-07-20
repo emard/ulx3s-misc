@@ -19,7 +19,7 @@ esp32
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging
     [ ] web roaming, multiple ap/pass
-    [ ] web upload reports "Error" although it's successful
+    [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
     [ ] web server show SD free MB
     [ ] web server files to separate directory
@@ -52,6 +52,7 @@ esp32
     [x] RDS display GPS/OBD mode
     [x] OBD2 time from saved last GPS location
     [x] OBD2 start from saved last GPS location
+    [x] web upload reports "Error" although it's successful
 
 core
 
