@@ -51,6 +51,7 @@ esp32
     [x] tag time and speed for OBD mode
     [x] BT connect OBD/GPS automatic
     [x] RDS display GPS/OBD mode
+    [x] OBD2 time from saved last GPS location
 
 core
 
