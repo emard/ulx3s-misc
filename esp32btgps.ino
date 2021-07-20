@@ -1176,7 +1176,8 @@ void handle_gps_line_complete(void)
       {
         get_iri();
         char iri_tag[40];
-        sprintf(iri_tag, " L%.2fR%.2f*00 ", iri[0], iri[1]);
+        sprintf(iri_tag, " L%05.2fR%05.2f*00 ",
+          iri[0]>99.99?99.99:iri[0], iri[1]>99.99?99.99:iri[1]);
         write_nmea_crc(iri_tag+1);
         write_tag(iri_tag);
         set_date_from_tm(&tm);
@@ -1233,22 +1234,25 @@ void handle_obd_line_complete(void)
     fake_latlon.lat_umin =                        (last_latlon.lat_umin + travel_lat)%60000000;
     fake_latlon.lon_deg  = last_latlon.lon_deg  + (last_latlon.lon_umin + travel_lon)/60000000;
     fake_latlon.lon_umin =                        (last_latlon.lon_umin + travel_lon)%60000000;
+    // this fake NMEA has the same format like real NMEA from GPS
+    // different is magnetic north, here is 000.0, GPS has nonzero like 003.4
     sprintf(iri_tag,
-" $GPRMC,%02d%02d%02d.0,V,%02d%02d.%06d,N,%03d%02d.%06d,E,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*00 L%.2fR%.2f*00 ",
+" $GPRMC,%02d%02d%02d.0,V,%02d%02d.%06d,N,%03d%02d.%06d,E,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*00 L%05.2fR%05.2f*00 ",
           tm.tm_hour, tm.tm_min, tm.tm_sec,      // hms
           fake_latlon.lat_deg, fake_latlon.lat_umin/1000000, fake_latlon.lat_umin%1000000,
           fake_latlon.lon_deg, fake_latlon.lon_umin/1000000, fake_latlon.lon_umin%1000000,
           speed_ckt/100, speed_ckt%100,
           tm.tm_mday, tm.tm_mon+1, tm.tm_year%100,   // dmy
-          iri[0], iri[1]
+          iri[0]>99.99?99.99:iri[0], iri[1]>99.99?99.99:iri[1]
     );
     write_nmea_crc(iri_tag+1); // CRC for NMEA part
     // safety check for space at expected place, sprintf length can be unpredictable
-    if(iri_tag[81] == ' ')
-      write_nmea_crc(iri_tag+81); // CRC for IRI part
+    if(iri_tag[80] == ' ')
+      write_nmea_crc(iri_tag+80); // CRC for IRI part
+    //Serial.println(iri_tag+81); // debug
     write_tag(iri_tag);
     travel_ct0();
-    iri_tag[81] = 0; // null terminate for lastnmea save
+    iri_tag[80] = 0; // null terminate for lastnmea save
     strcpy(lastnmea, iri_tag+1); // for saving last nmea line
   }
   write_logs(); // use SPI_MODE1
