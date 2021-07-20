@@ -299,10 +299,10 @@
     function uploadComplete(evt) {
       /* This event is raised when the server send back a response */
       // alert(evt.target.responseText);
-      var response = evt.target.responseText;
-      if (response.indexOf("success") == -1)
-        progress_empty();
-      $id("report").innerHTML = response;
+      //var response = evt.target.responseText;
+      //if (response.indexOf("success") == -1)
+      //  progress_empty(); // Error
+      $id("report").innerHTML = "";
       enableUploadButtion();
       // setTimeout(enableUploadButtion, 1000); // too fast upload will crash ESP32
       // window.location.reload(true); // immediately refreshing will crash ESP32
