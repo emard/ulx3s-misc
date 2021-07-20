@@ -1,6 +1,7 @@
 #include "FS.h"
 #include "SD_MMC.h"
 #include "RDS.h"
+#include "nmea.h"
 // hardware buffer size in bytes at fpga core (must be divisible by 12)
 // 3072, 6144, 9216, 12288, 15360
 #define SPI_READER_BUF_SIZE 9216
@@ -15,6 +16,7 @@ extern int mode_obd_gps;
 extern float iri[2],iriavg;
 extern char iri2digit[4];
 extern char lastnmea[256];
+extern struct int_latlon last_latlon;
 extern RDS rds;
 // config file parsing
 extern uint8_t GPS_MAC[6], OBD_MAC[6];

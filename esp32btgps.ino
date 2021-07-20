@@ -1225,15 +1225,21 @@ void handle_obd_line_complete(void)
   if(speed_kmh > 0)
   {
     char iri_tag[120]; // fake time and location
-    int travel_lat = (travel_mm * 138)>>8; // coarse approximate mm to minutes
+    int travel_lat = (travel_mm * 138)>>8; // coarse approximate mm to microminutes
+    int travel_lon = stopcount << 16; // microminutes position next line using stopcount
+    struct int_latlon fake_latlon;
     get_iri();
+    fake_latlon.lat_deg  = last_latlon.lat_deg  + (last_latlon.lat_umin + travel_lat)/60000000;
+    fake_latlon.lat_umin =                        (last_latlon.lat_umin + travel_lat)%60000000;
+    fake_latlon.lon_deg  = last_latlon.lon_deg  + (last_latlon.lon_umin + travel_lon)/60000000;
+    fake_latlon.lon_umin =                        (last_latlon.lon_umin + travel_lon)%60000000;
     sprintf(iri_tag,
-" $GPRMC,%02d%02d%02d.0,V,4600.%06d,N,016%02d.%06d,E,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*00 L%.2fR%.2f*00 ",
+" $GPRMC,%02d%02d%02d.0,V,%02d%02d.%06d,N,%03d%02d.%06d,E,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*00 L%.2fR%.2f*00 ",
           tm.tm_hour, tm.tm_min, tm.tm_sec,      // hms
-          travel_lat%1000000, // mm travel to approx decmial deg
-          (stopcount << 16)/1000000%1000000,(stopcount << 16)%1000000, // position next line using stopcount
+          fake_latlon.lat_deg, fake_latlon.lat_umin/1000000, fake_latlon.lat_umin%1000000,
+          fake_latlon.lon_deg, fake_latlon.lon_umin/1000000, fake_latlon.lon_umin%1000000,
           speed_ckt/100, speed_ckt%100,
-          tm.tm_mday, tm.tm_mon+1, tm.tm_year,   // dmy
+          tm.tm_mday, tm.tm_mon+1, tm.tm_year%100,   // dmy
           iri[0], iri[1]
     );
     write_nmea_crc(iri_tag+1); // CRC for NMEA part
