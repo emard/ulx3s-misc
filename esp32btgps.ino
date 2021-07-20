@@ -424,7 +424,7 @@ void speech()
   }
 }
 
-
+#if 0
 void loop_gps()
 {
   t_ms = ms();
@@ -680,8 +680,9 @@ void loop_gps()
   delay(100);
 #endif
 }
+#endif
 
-#if 1
+#if 0
 // automatic commands
 void loop_obd(void)
 {
