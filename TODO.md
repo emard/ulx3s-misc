@@ -3,7 +3,6 @@
 esp32
 
     [ ] SD card compatiblity sandisk
-    [ ] OBD2 start from saved last GPS location
     [ ] sensor hotplug
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
@@ -52,6 +51,7 @@ esp32
     [x] BT connect OBD/GPS automatic
     [x] RDS display GPS/OBD mode
     [x] OBD2 time from saved last GPS location
+    [x] OBD2 start from saved last GPS location
 
 core
 
