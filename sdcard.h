@@ -14,10 +14,13 @@ extern int fast_enough; // logging flag when fast enough
 extern int mode_obd_gps;
 extern float iri[2],iriavg;
 extern char iri2digit[4];
+extern char lastnmea[256];
 extern RDS rds;
 // config file parsing
 extern uint8_t GPS_MAC[6], OBD_MAC[6];
 extern String  GPS_PIN, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
+extern uint8_t datetime_is_set;
+extern struct tm tm, tm_session; // tm_session gives new filename when reconnected
 void mount(void);
 void umount(void);
 void spi_init(void);
@@ -34,6 +37,9 @@ void open_logs(struct tm *tm);
 void write_logs(void);
 void write_stop_delimiter(void);
 void flush_logs(void);
+void write_last_nmea(void);
+void read_last_nmea(void);
+void set_date_from_tm(struct tm *tm);
 void write_tag(char *a);
 int play_pcm(int n);
 int open_pcm(char *wav); // open wav filename

@@ -78,7 +78,6 @@ uint32_t line_tdelta; // time between prev and now
 int travel_mm = 0; // travelled mm (v*dt)
 int travel100m, travel100m_prev = 0; // previous 100m travel
 int session_log = 0; // request new timestamp filename when reconnected
-struct tm tm, tm_session; // tm_session gives new filename when reconnected
 int speak_search = 0; // 0 - don't search, 1-search gps, 2-search obd
 int32_t srvz[2];
 //int iri_balance = 0;
@@ -234,6 +233,7 @@ void setup() {
 
   t_ms = ms();
   line_tprev = t_ms;
+  #if 0 // old code
   int obd = ((spi_btn_read()) & 2); // hold BTN1 and plug power to run OBD2 demo
   if(obd)
   {
@@ -248,6 +248,7 @@ void setup() {
     Serial.println("OBD demo");
     return;
   }
+  #endif
 
   pinMode(PIN_IRQ, INPUT);
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
@@ -256,6 +257,7 @@ void setup() {
 
   mount();
   read_cfg();
+  read_last_nmea();
   umount();
 
   SerialBT.begin("ESP32", true);
@@ -278,15 +280,6 @@ void reconnect()
   // it is sometimes true even if not connected.
 }
 
-// file creation times should work with this
-void set_system_time(time_t seconds_since_1980)
-{
-  timeval epoch = {seconds_since_1980, 0};
-  const timeval *tv = &epoch;
-  timezone utc = {0, 0};
-  const timezone *tz = &utc;
-  settimeofday(tv, tz);
-}
 
 #if 0
 void set_date_time(int year, int month, int day, int h, int m, int s)
@@ -305,20 +298,6 @@ void set_date_time(int year, int month, int day, int h, int m, int s)
 }
 #endif
 
-// parse NMEA ascii string -> write to struct tm
-int nmea2tm(char *a, struct tm *t)
-{
-  char *b = nthchar(a, 9, ',');
-  if (b == NULL)
-    return 0;
-  t->tm_year  = (b[ 5] - '0') * 10 + (b[ 6] - '0') + 100;
-  t->tm_mon   = (b[ 3] - '0') * 10 + (b[ 4] - '0') - 1;
-  t->tm_mday  = (b[ 1] - '0') * 10 + (b[ 2] - '0');
-  t->tm_hour  = (a[ 7] - '0') * 10 + (a[ 8] - '0');
-  t->tm_min   = (a[ 9] - '0') * 10 + (a[10] - '0');
-  t->tm_sec   = (a[11] - '0') * 10 + (a[12] - '0');
-  return 1;
-}
 
 // parse NMEA ascii string -> return mph x100 speed (negative -1 if no fix)
 int nmea2spd(char *a)
@@ -331,40 +310,6 @@ int nmea2spd(char *a)
   return (b[1] - '0') * 10000 + (b[2] - '0') * 1000 + (b[3] - '0') * 100 + (b[5] - '0') * 10 + (b[6] - '0');
 }
 
-static uint8_t datetime_is_set = 0;
-void set_date_from_tm(struct tm *tm)
-{
-  uint16_t year;
-  uint8_t month, day, h, m, s;
-  time_t t_of_day;
-  if (datetime_is_set)
-    return;
-  t_of_day = mktime(tm);
-  set_system_time(t_of_day);
-  datetime_is_set = 1;
-#if 0
-  char *b = nthchar(a, 9, ',');
-  if (b == NULL)
-    return;
-  year  = (b[ 5] - '0') * 10 + (b[ 6] - '0') + 2000;
-  month = (b[ 3] - '0') * 10 + (b[ 4] - '0');
-  day   = (b[ 1] - '0') * 10 + (b[ 2] - '0');
-  h     = (a[ 7] - '0') * 10 + (a[ 8] - '0');
-  m     = (a[ 9] - '0') * 10 + (a[10] - '0');
-  s     = (a[11] - '0') * 10 + (a[12] - '0');
-#endif
-#if 1
-  year  = tm->tm_year + 1900;
-  month = tm->tm_mon  + 1;
-  day   = tm->tm_mday;
-  h     = tm->tm_hour;
-  m     = tm->tm_min;
-  s     = tm->tm_sec;
-  char pr[80];
-  sprintf(pr, "datetime %04d-%02d-%02d %02d:%02d:%02d", year, month, day, h, m, s);
-  Serial.println(pr);
-#endif
-}
 
 #if 0
 // debug tagger: constant test string
@@ -1026,6 +971,8 @@ void report_status(void)
   static uint8_t prev_min;
   if (tm.tm_min != prev_min)
   { // speak every minute
+    // TODO this file save parts should go to
+    // separate function
     flush_logs(); // save data just in case
     if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
     {
@@ -1112,6 +1059,7 @@ void handle_fast_enough(void)
     {
       write_stop_delimiter();
       close_logs(); // save data in case of power lost
+      write_last_nmea();
       stopcount++;
       Serial.print(speed_kmh);
       Serial.println(" km/h not fast enough - stop logging");
@@ -1144,6 +1092,7 @@ void get_iri(void)
 void handle_reconnect(void)
 {
   close_logs();
+  write_last_nmea();
   session_log = 0; // request new timestamp file name when reconnected
   ls();
   umount();
@@ -1233,6 +1182,7 @@ void handle_gps_line_complete(void)
         set_date_from_tm(&tm);
         handle_session_log(); // will open logs if fast enough (new filename when reconnected)
         travel_gps(); // calculate travel length
+        strcpy(lastnmea, line);
         report_iri();
         report_status();
       }
@@ -1286,14 +1236,14 @@ void handle_obd_line_complete(void)
           tm.tm_mday, tm.tm_mon+1, tm.tm_year,   // dmy
           iri[0], iri[1]
     );
-    #if 1 // TODO
     write_nmea_crc(iri_tag+1); // CRC for NMEA part
-    // safety check space is at expected place, sprintf length can be unpredictable
-    if(iri_tag[80] == ' ')
-      write_nmea_crc(iri_tag+80); // CRC for IRI part
-    #endif
+    // safety check for space at expected place, sprintf length can be unpredictable
+    if(iri_tag[81] == ' ')
+      write_nmea_crc(iri_tag+81); // CRC for IRI part
     write_tag(iri_tag);
     travel_ct0();
+    iri_tag[81] = 0; // null terminate for lastnmea save
+    strcpy(lastnmea, iri_tag+1); // for saving last nmea line
   }
   write_logs(); // use SPI_MODE1
   handle_fast_enough(); // will close logs if not fast enough

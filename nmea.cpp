@@ -14,6 +14,21 @@ int nmea2s(char *nmea)
   return s;
 }
 
+// parse NMEA ascii string -> write to struct tm
+int nmea2tm(char *a, struct tm *t)
+{
+  char *b = nthchar(a, 9, ',');
+  if (b == NULL)
+    return 0;
+  t->tm_year  = (b[ 5] - '0') * 10 + (b[ 6] - '0') + 100;
+  t->tm_mon   = (b[ 3] - '0') * 10 + (b[ 4] - '0') - 1;
+  t->tm_mday  = (b[ 1] - '0') * 10 + (b[ 2] - '0');
+  t->tm_hour  = (a[ 7] - '0') * 10 + (a[ 8] - '0');
+  t->tm_min   = (a[ 9] - '0') * 10 + (a[10] - '0');
+  t->tm_sec   = (a[11] - '0') * 10 + (a[12] - '0');
+  return 1;
+}
+
 inline uint8_t hex2int(char a)
 {
   return a <= '9' ? a-'0' : a-'A'+10;
@@ -32,7 +47,7 @@ inline void int2hex(uint8_t i, char *a)
 uint8_t write_nmea_crc(char *a)
 {
   uint8_t crc = 0;
-  for(; a[0] != '\0' && a[0] != '*'; a++)
+  for(a++; a[0] != '\0' && a[0] != '*'; a++)
     crc ^= a[0];
   if(a[0] != '*')
     return crc;

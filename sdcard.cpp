@@ -1,6 +1,8 @@
 #include "pins.h"
 #include "sdcard.h"
 #include "adxl355.h"
+#include "nmea.h"
+#include <sys/time.h>
 
 // TODO
 // too much of various code is put into this module
@@ -35,6 +37,8 @@ int fast_enough = 0; // for speed logging hysteresis
 int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
 float iri[2], iriavg;
 char iri2digit[4] = "0.0";
+char lastnmea[256];
+struct tm tm, tm_session; // tm_session gives new filename when reconnected
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
@@ -541,6 +545,90 @@ void write_stop_delimiter()
   };
   if(logs_are_open)
     file_accel.write(stop_delimiter, sizeof(stop_delimiter));
+}
+
+void write_last_nmea(void)
+{
+  if (check_nmea_crc(lastnmea))
+  {
+    File file_lastnmea = SD_MMC.open("/lastnmea.txt", FILE_WRITE);
+    file_lastnmea.write((uint8_t *)lastnmea, strlen(lastnmea));
+    file_lastnmea.write('\n');
+    Serial.print("write last nmea: ");
+    Serial.println(lastnmea);
+    file_lastnmea.close();
+  }
+  #if 0 // debug
+  else
+  {
+    Serial.print("last nmea not written\nbad crc:");
+    Serial.println(lastnmea);
+  }
+  #endif
+}
+
+// file creation times should work with this
+void set_system_time(time_t seconds_since_1980)
+{
+  timeval epoch = {seconds_since_1980, 0};
+  const timeval *tv = &epoch;
+  timezone utc = {0, 0};
+  const timezone *tz = &utc;
+  settimeofday(tv, tz);
+}
+
+uint8_t datetime_is_set = 0;
+void set_date_from_tm(struct tm *tm)
+{
+  uint16_t year;
+  uint8_t month, day, h, m, s;
+  time_t t_of_day;
+  if (datetime_is_set)
+    return;
+  t_of_day = mktime(tm);
+  set_system_time(t_of_day);
+  datetime_is_set = 1;
+#if 0
+  char *b = nthchar(a, 9, ',');
+  if (b == NULL)
+    return;
+  year  = (b[ 5] - '0') * 10 + (b[ 6] - '0') + 2000;
+  month = (b[ 3] - '0') * 10 + (b[ 4] - '0');
+  day   = (b[ 1] - '0') * 10 + (b[ 2] - '0');
+  h     = (a[ 7] - '0') * 10 + (a[ 8] - '0');
+  m     = (a[ 9] - '0') * 10 + (a[10] - '0');
+  s     = (a[11] - '0') * 10 + (a[12] - '0');
+#endif
+#if 1
+  year  = tm->tm_year + 1900;
+  month = tm->tm_mon  + 1;
+  day   = tm->tm_mday;
+  h     = tm->tm_hour;
+  m     = tm->tm_min;
+  s     = tm->tm_sec;
+  char pr[80];
+  //sprintf(pr, "datetime %04d-%02d-%02d %02d:%02d:%02d", year, month, day, h, m, s);
+  //Serial.println(pr);
+#endif
+}
+
+void read_last_nmea(void)
+{
+  File file_lastnmea = SD_MMC.open("/lastnmea.txt", FILE_READ);
+  //file_lastnmea.readBytes(lastnmea, strlen(lastnmea));
+  String last_nmea_line = file_lastnmea.readStringUntil('\n');
+  strcpy(lastnmea, last_nmea_line.c_str());
+  Serial.print("read last nmea: ");
+  Serial.println(lastnmea);
+  file_lastnmea.close();
+  if(check_nmea_crc(lastnmea))
+  {
+    if (nmea2tm(lastnmea, &tm))
+      set_date_from_tm(&tm);
+  }
+  else
+    Serial.println("read last nmea bad crc");
+  lastnmea[0] = 0; // prevent immediate next write
 }
 
 void write_tag(char *a)
