@@ -3,7 +3,6 @@
 esp32
 
     [ ] SD card compatiblity sandisk
-    [ ] BT connect OBD/GPS automatic
     [ ] OBD2 start from saved last GPS location
     [ ] sensor hotplug
     [ ] RTC support (for OBD without GPS)
@@ -13,6 +12,7 @@ esp32
     [ ] GPS time discontinuety warning
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
+    [ ] speech report when connected BPS/OBD
     [ ] speech report remaining minutes and disk full
     [ ] speech tunnel mode locked speed
     [ ] get bytes free early to display when GPS is OFF
@@ -49,6 +49,8 @@ esp32
     [x] OBD2 umount when BT lost
     [x] OBD2 stop count to lon degs
     [x] tag time and speed for OBD mode
+    [x] BT connect OBD/GPS automatic
+    [x] RDS display GPS/OBD mode
 
 core
 
