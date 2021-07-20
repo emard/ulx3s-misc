@@ -67,7 +67,6 @@ static char *sensor_balance_file[] =
   "/speak/rstrong.wav",
 };
 
-int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
 uint32_t t_ms; // t = ms();
 uint32_t ct0; // first char in line millis timestamp
 uint32_t ct0_prev; // for travel calculation

@@ -11,6 +11,7 @@ extern int speed_ckt; // centi-knots speed, 100 ckt = 1 kt = 0.514444 m/s = 1.85
 extern int speed_mms; // mm/s speed
 extern int speed_kmh; // km/h speed
 extern int fast_enough; // logging flag when fast enough
+extern int mode_obd_gps;
 extern float iri[2],iriavg;
 extern char iri2digit[4];
 extern RDS rds;

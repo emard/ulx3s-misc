@@ -32,6 +32,7 @@ int speed_ckt = -1; // centi-knots speed (kt*100)
 int speed_mms = -1; // mm/s speed
 int speed_kmh = -1; // km/h speed
 int fast_enough = 0; // for speed logging hysteresis
+int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
 float iri[2], iriavg;
 char iri2digit[4] = "0.0";
 
@@ -302,7 +303,9 @@ void rds_message(struct tm *tm)
     sprintf(disp_long,  "SEARCHING FOR GPS");
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
-  disp_short[6] = free_MB_2n;
+  disp_short[5] = free_MB_2n;
+  char *chr_obd_gps = "OG";
+  disp_short[6] = chr_obd_gps[mode_obd_gps];
   disp_short[7] = sensor_status_decode[sensor_check_status];
   rds.ps(disp_short);
   rds.rt(disp_long);
