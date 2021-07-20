@@ -9,6 +9,7 @@ esp32
     [ ] LCD display IP address and hostname
     [ ] LCD graphic track display
     [ ] GPS time discontinuety warning
+    [ ] OBD2 stop PPS PLL
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
     [ ] speech report when connected BPS/OBD
