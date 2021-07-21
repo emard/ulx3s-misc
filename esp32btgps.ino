@@ -232,9 +232,9 @@ void setup() {
   MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
 
   t_ms = ms();
-  line_tprev = t_ms-6000;
-  // line_tprev sets 6s silence in the past. reconnect comes at 10s silance.
-  // speech starts at 8s silence. Before speech, 2s must be allowed
+  line_tprev = t_ms-5000;
+  // line_tprev sets 5s silence in the past. reconnect comes at 10s silance.
+  // speech starts at 7s silence. Before speech, 2s must be allowed
   // for sensors to start reading data, otherwise it will false report
   // "no sensors".
 
@@ -391,17 +391,23 @@ void report_search(void)
 {
   if (*speakfiles == NULL && pcm_is_open == 0) // NULL: we are ready to speak new file,
   {
-    // After 8s silence, report searching for GPS/OBD.
-    // It must speak early. At 10s silence bluetooth
-    // recoonect starts. During reconnect, CPU
-    // is busy and can not feed speech data.
-    if(line_tdelta > 8000 && speak_search > 0)
+    // After 7s silence, report searching for GPS/OBD.
+    // It must speak early to finish before reconnect.
+    // At 10s silence bluetooth recoonect starts.
+    // During reconnect, CPU is busy and can not 
+    // feed speech data.
+    if(line_tdelta > 7000 && speak_search > 0)
     {
       if(mode_obd_gps)
         speakaction[0] = "/speak/searchobd.wav";
       else
         speakaction[0] = "/speak/searchgps.wav";
-      speakaction[1] = sensor_status_file[sensor_check_status];
+      speakaction[1] = sensor_status_file[sensor_check_status]; // normal
+      #if 0 // debug false report all combinations no sensors
+      static uint8_t x = 0;
+      if(++x > 2) x = 0;
+      speakaction[1] = sensor_status_file[x];
+      #endif
       speakfiles = speakaction;
       speak_search = 0; // consumed, next BT connect will enable it
     }
