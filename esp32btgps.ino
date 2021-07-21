@@ -1096,10 +1096,10 @@ void handle_reconnect(void)
   session_log = 0; // request new timestamp file name when reconnected
   ls();
   umount();
-  rds_message(NULL);
 
   mode_obd_gps ^= 1; // toggle mode 0:OBD 1:GPS
   uint8_t *mac_address = mode_obd_gps ? GPS_MAC : OBD_MAC;
+  rds_message(NULL);
   //Serial.print("trying mode ");
   //Serial.println(mode_obd_gps);
 
