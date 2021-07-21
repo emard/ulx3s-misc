@@ -391,11 +391,10 @@ void report_search(void)
 {
   if (*speakfiles == NULL && pcm_is_open == 0) // NULL: we are ready to speak new file,
   {
-    // best is to start speech early after bluetooth connect
-    // if 8s silence, report searching for GPS/OBD
-    // we must speak early, at 10s silence starts bluetooth
-    // recoonect. During reconnect, CPU
-    // is busy and can not feed speech data
+    // After 8s silence, report searching for GPS/OBD.
+    // It must speak early. At 10s silence bluetooth
+    // recoonect starts. During reconnect, CPU
+    // is busy and can not feed speech data.
     if(line_tdelta > 8000 && speak_search > 0)
     {
       if(mode_obd_gps)
