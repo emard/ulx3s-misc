@@ -79,9 +79,8 @@ core
 wav2kml
 
     [ ] csv dump
-    [ ] snap https://automating-gis-processes.github.io/2017/lessons/L3/nearest-neighbour.html
-        find approached point, path is linear, binary search to refine
-        approached area
+    [ ] snap: some arrows are missing in cut list
+    [ ] snap: statistics
     [ ] on track and placemarks indicate tunnel mode
     [ ] motor vibration (RPM) sensing, conversion to speed
     [ ] calibrate accelerometer heading with GPS
@@ -91,3 +90,4 @@ wav2kml
     [x] placemark every 100 m
     [x] lookat straight above
     [x] report speed range min/max to placemarks
+    [x] snap
