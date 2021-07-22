@@ -122,7 +122,7 @@ class snap:
   def init_snap_segments(self):
     # empty snap lists
     # consits of latlon and timestamp
-    self.snap_list = list()
+    #self.snap_list = list()
     # snap list as associative array (indexed by directonal_index)
     self.snap_aa = {}
     # cut list is larger than snap list,
@@ -191,7 +191,7 @@ class snap:
       nearest_index = None
       nearest_point = None
       index = 0
-      for snap_point in self.snap_list:
+      for index,snap_point in self.snap_aa.items():
         #print(snap_point)
         new_distance = distance(snap_point["lonlat"][1], snap_point["lonlat"][0], self.next_gps[gps_lonlat][1], self.next_gps[gps_lonlat][0])
         # don't consider latest point as snap point
@@ -202,13 +202,13 @@ class snap:
             nearest_index = index
             # current point along the track
             nearest_point = self.next_gps
-        index += 1
+        #index += 1
       cut_index = index # if we don't find nearest previous point, cut to a new point
       if nearest_index != None:
         # print("nearest index ", nearest_index, " distance: ", distance)
         
         # calculate nearest_heading
-        nearest_heading = self.snap_list[nearest_index]["heading"]
+        nearest_heading = self.snap_aa[nearest_index]["heading"]
 
         # states of the snap
         # 0. no snap, searching for a close point
@@ -277,9 +277,10 @@ class snap:
           segment_index = nearest_index
         else:
           segment_index = index
+        directional_index = (cut_index + 1) * direction
         cut_point = {
           "index"     : cut_index,
-          "directional_index" : (cut_index + 1) * direction,
+          "directional_index" : directional_index,
           "lonlat"    : self.next_gps[gps_lonlat],
           "heading"   : nearest_heading, # heading of the first cut
           "timestamp" : self.next_gps[gps_datetime],
@@ -291,8 +292,8 @@ class snap:
         # print snapstate
         # only small number of points are snap points 
         if snapstate != 2:
-          self.snap_list.append(cut_point)
-          self.snap_aa[(cut_index + 1) * direction] = cut_point
+          #self.snap_list.append(cut_point)
+          self.snap_aa[directional_index] = cut_point
         # cut point is each point along the track
         self.cut_list.append(cut_point)
         self.cut_at_length += self.segment_length
@@ -329,11 +330,15 @@ class snap:
     # statistics sums
     for cut_point in self.cut_list:
       key = cut_point["directional_index"]
-      self.snap_aa[key]["n"]           += 1
-      self.snap_aa[key]["sum1_left"]   += cut_point["iri_left"]
-      self.snap_aa[key]["sum2_left"]   += cut_point["iri_left"]*cut_point["iri_left"]
-      self.snap_aa[key]["sum1_right"]  += cut_point["iri_right"]
-      self.snap_aa[key]["sum2_right"]  += cut_point["iri_right"]*cut_point["iri_right"]
+      # FIXME some keys doen't exist
+      try:
+        self.snap_aa[key]["n"]           += 1
+        self.snap_aa[key]["sum1_left"]   += cut_point["iri_left"]
+        self.snap_aa[key]["sum2_left"]   += cut_point["iri_left"]*cut_point["iri_left"]
+        self.snap_aa[key]["sum1_right"]  += cut_point["iri_right"]
+        self.snap_aa[key]["sum2_right"]  += cut_point["iri_right"]*cut_point["iri_right"]
+      except:
+        pass
     # average and standard dev
     for key,value in self.snap_aa.items():
       n = self.snap_aa[key]["n"]
@@ -512,12 +517,32 @@ if True:
   snp = snap()
   snp.snap_segments()
   snp.statistics()
-  #print(len(snp.cut_list))
-  #print("** cut list **")
-  #print(snp.cut_list)
-  #print("** snap list **")
-  #print(snp.snap_list)
-  #for pt in snp.cut_list: # every one for statistics
+
+  # debug: placemarks from individual masurements in the cut_list
+  # (those from which stat was calculated)
+  if False:
+   for pt in snp.cut_list: # every one for statistics
+    flip_heading = 0
+    if pt["directional_index"] < 0:
+      flip_heading = 180;
+    iri_avg = (pt["iri_left"] + pt["iri_right"]) / 2
+    is0 = styles.IconStyle(ns, "id",
+              color=("%08X" % color32(iri_avg/red_iri)),
+              scale=0.7,
+              heading=(180+pt["heading"]+flip_heading)%360,
+              icon_href=arrow_icon_href)
+    isty0 = styles.Style(styles = [is0])
+    p0 = kml.Placemark(ns, 'id',
+              name=("%.2f" % iri_avg),
+              description=("L=%.2f mm/m\nR=%.2f mm/m" %
+                (pt["iri_left"], pt["iri_right"],)),
+              styles=[isty0])
+    p0.geometry = Point(pt["lonlat"])
+    t.timestamp, dummy = t.parse_str(pt["timestamp"])
+    p0.timeStamp = t.timestamp
+    f2.append(p0)
+
+  # placemarks with statistics
   for key,pt in snp.snap_aa.items(): # only the unique snap points
     # some headings are reverse, use directional index
     # to orient them correctly
