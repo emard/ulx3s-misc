@@ -280,6 +280,7 @@ class snap:
         directional_index = (cut_index + 1) * direction
         cut_point = {
           "directional_index" : directional_index,
+          "snapstate" : snapstate,
           "lonlat"    : self.next_gps[gps_lonlat],
           "heading"   : nearest_heading, # heading of the first cut
           "timestamp" : self.next_gps[gps_datetime],
@@ -533,8 +534,10 @@ if True:
     isty0 = styles.Style(styles = [is0])
     p0 = kml.Placemark(ns, 'id',
               name=("%.2f" % iri_avg),
-              description=("L=%.2f mm/m\nR=%.2f mm/m" %
-                (pt["iri_left"], pt["iri_right"],)),
+              description=("L=%.2f mm/m\nR=%.2f mm/m\ndir_ind=%d\nsnapstate=%d" %
+                (pt["iri_left"], pt["iri_right"],
+                 pt["directional_index"], pt["snapstate"],
+                )),
               styles=[isty0])
     p0.geometry = Point(pt["lonlat"])
     t.timestamp, dummy = t.parse_str(pt["timestamp"])
@@ -557,10 +560,20 @@ if True:
     isty0 = styles.Style(styles = [is0])
     p0 = kml.Placemark(ns, 'id',
               name=("%.2f" % iri_avg),
-              description=("L=%.2f ± %.2f mm/m\nR=%.2f ± %.2f mm/m\nN=%d\nValue ± is 2σ = 96%% coverage\n%s" %
-                (pt["avg_left"], 2*pt["std_left"], pt["avg_right"], 2*pt["std_right"],
-                 pt["n"], pt["timestamp"].decode("utf-8"),
-                )),
+              description=(("L=%.2f ± %.2f mm/m\n"
+                            "R=%.2f ± %.2f mm/m\n"
+                            "N=%d\n"
+                            "Value ± is 2σ = 96%% coverage\n"
+                            "dir_ind=%d\n"
+                            "snapstate=%d\n"
+                            "%s"
+                            ) %
+                            (
+                             pt["avg_left"], 2*pt["std_left"], pt["avg_right"], 2*pt["std_right"],
+                             pt["n"], pt["directional_index"], pt["snapstate"],
+                             pt["timestamp"].decode("utf-8"),
+                            )
+              ),
               styles=[isty0])
     p0.geometry = Point(pt["lonlat"])
     t.timestamp, dummy = t.parse_str(pt["timestamp"])
