@@ -349,8 +349,8 @@ class snap:
         sum2_right = self.snap_aa[key]["sum2_right"]
         self.snap_aa[key]["avg_left"]  = sum1_left/n
         self.snap_aa[key]["avg_right"] = sum1_right/n
-        self.snap_aa[key]["std_left"]  = ( n*sum2_left  - sum1_left  * sum1_left  )**0.5/n
-        self.snap_aa[key]["std_right"] = ( n*sum2_right - sum1_right * sum1_right )**0.5/n
+        self.snap_aa[key]["std_left"]  = abs( n*sum2_left  - sum1_left  * sum1_left  )**0.5/n
+        self.snap_aa[key]["std_right"] = abs( n*sum2_right - sum1_right * sum1_right )**0.5/n
 
 segment_m   = 100.0 # m
 discontinuety_m = 50.0 # m don't draw lines longer than this
