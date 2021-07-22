@@ -160,12 +160,7 @@ class snap:
     # intialize first cut
     self.cut_at_length = self.start_length
 
-    while True:
-      if gps_i < len(gps_list):
-        gps = gps_list[gps_i]
-        gps_i += 1
-      else:
-        break;
+    for gps in gps_list:
       # add to the track length using great circle formula
       # prev_prev_gps_track_length = self.prev_gps_track_length
       self.prev_gps_track_length += self.current_gps_segment_length
@@ -309,7 +304,6 @@ class snap:
     #self.init_gps_tracking()
     self.next_snap_index = 0
     self.next_cut_index = 0
-    gps_i = 0
     # print self.snap_list
     # print self.cut_list
     #print("Snap: %d segment cuts to %d snap points" % (len(self.cut_list), len(self.snap_list)))
