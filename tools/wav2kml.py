@@ -45,13 +45,12 @@ def distance(lat1:float, lon1:float, lat2:float, lon2:float) -> float:
   dist=2*R*asin(sqrt(h))
   return dist
 
-def heading(p1, p2):
-        lat1, lon1, lat2, lon2 = map(radians, [p1[0], p1[1], p2[0], p2[1]])
-	# lat1,lon1=[a*pi/180.0 for a in p1]
-	# lat2,lon2=[a*pi/180.0 for a in p2]
-        # Heading = atan2(cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1), sin(lon2-lon1)*cos(lat2))
-        Heading = atan2(cos(lon1)*sin(lon2)-sin(lon1)*cos(lon2)*cos(lat2-lat1), sin(lat2-lat1)*cos(lon2))
-        return degrees(Heading)
+def heading2(p1, p2):
+  lon1,lat1=[a*pi/180.0 for a in p1]
+  lon2,lat2=[a*pi/180.0 for a in p2]
+  # Heading = atan2(cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1), sin(lon2-lon1)*cos(lat2))
+  Heading = atan2(cos(lon1)*sin(lon2)-sin(lon1)*cos(lon2)*cos(lat2-lat1), sin(lat2-lat1)*cos(lon2))
+  return Heading*180.0/pi
 
 # convert value 0-1 to rainbow color pink-red
 # color 0=purple 0.2=blue 0.7=green 0.8=yellow 0.9=orange 1=red
@@ -75,12 +74,14 @@ gps_datetime  = 1
 gps_lonlat    = 2
 gps_speed_kmh = 3
 gps_heading   = 4
+gps_iril      = 5
+gps_irir      = 6
 
 class snap:
   def __init__(self):
     # cut data into segment length [m]
     segment_length = 100.0    # [m]
-    segment_snap   =  10.0    # [m]
+    segment_snap   =   9.0    # [m]
     start_length   =   0.0    # analyze from this length [m]
     stop_length    =   1.0e9  # analyze up to this length [m]
 
@@ -106,8 +107,8 @@ class snap:
     # self.sample_realtime = 0.0
     # associative array for gps entries
     # self.next_gps = { "timestamp" : 0.0, "latlon" : (), "speed" : 0.0 }
-    # (seek, timestamp, lonlat, speed_kmh, heading),
-    self.next_gps = ( (0, None, (), 0.0, 0.0), )
+    # (seek, timestamp, lonlat, speed_kmh, heading, iril, irir),
+    self.next_gps = ( (0, None, (), 0.0, 0.0, 0.0, 0.0), )
     self.prev_gps = self.next_gps
     # self.prev_prev_gps = self.next_gps
     # track length up to prev_gps coordinate in [m]
@@ -122,6 +123,8 @@ class snap:
     # empty snap lists
     # consits of latlon and timestamp
     self.snap_list = list()
+    # snap list as associative array (indexed by directonal_index)
+    self.snap_aa = {}
     # cut list is larger than snap list,
     # it contains each segment cut to be applied
     self.cut_list = list()
@@ -168,7 +171,7 @@ class snap:
       self.prev_gps_track_length += self.current_gps_segment_length
       self.prev_gps = self.next_gps
       self.next_gps = gps
-      if not self.prev_gps:
+      if self.prev_gps == None:
         self.prev_gps = self.next_gps
       # current length (between prev_gps and next_gps)
       # using haversin great circle formula
@@ -201,7 +204,7 @@ class snap:
             nearest_point = self.next_gps
         index += 1
       cut_index = index # if we don't find nearest previous point, cut to a new point
-      if nearest_index:
+      if nearest_index != None:
         # print("nearest index ", nearest_index, " distance: ", distance)
         
         # calculate nearest_heading
@@ -230,14 +233,14 @@ class snap:
             # force the cut,
             # calculate approximate cut position
             cut_index = nearest_index
-            if prev_nearest_index and prev_nearest_index == nearest_index:
+            if prev_nearest_index != None and prev_nearest_index == nearest_index:
               # approximately project point to track
               self.cut_at_length = self.prev_gps_track_length + self.current_gps_segment_length * prev_distance / (prev_distance + distance_m)
             else:
               self.cut_at_length = self.prev_gps_track_length + self.current_gps_segment_length - 1.0e-3
             #print("snap to ", self.cut_at_length)
         elif snapstate >= 2:
-          if distance_m > self.segment_snap/2:
+          if distance_m > self.segment_snap:
             snapstate = 0
       else:
         # no nearest index -> snap state = 0
@@ -256,12 +259,12 @@ class snap:
         #       [ self.prev_gps[gps_lonlat][1], self.next_gps[gps_lonlat][1] ],
         #       [ self.prev_gps[gps_timestamp], self.next_gps[gps_timestamp] ] ]
         #yi = [ numpy.interp(self.cut_at_length, tp, y) for y in yp ]
-        #heading_deg = self.heading(self.prev_gps[gps_lonlat], self.next_gps[gps_lonlat])
-        heading_deg = gps[gps_heading]
+        #heading_deg = heading2(self.prev_gps[gps_lonlat], self.next_gps[gps_lonlat])
+        heading_deg = self.prev_gps[gps_heading]
         # 0-90 and 270-360 is normal heading
         # 90-270 is reverse heading
         direction = 1
-        if nearest_index and snapstate == 2:
+        if nearest_index != None and snapstate == 2:
           heading_difference = ((heading_deg - nearest_heading) % 360)
           # print "heading difference %.02f %.02f" % (heading, nearest_heading)
           if heading_difference > 90 and heading_difference < 270:
@@ -270,23 +273,26 @@ class snap:
           nearest_heading = heading_deg
         #if direction < 0:
         #  print "found reverse heading index %d" % cut_index
-        if nearest_index:
+        if nearest_index != None:
           segment_index = nearest_index
         else:
           segment_index = index
         cut_point = {
           "index"     : cut_index,
           "directional_index" : (cut_index + 1) * direction,
-          "lonlat"    : gps[gps_lonlat],
+          "lonlat"    : self.next_gps[gps_lonlat],
           "heading"   : nearest_heading, # heading of the first cut
-          "timestamp" : gps[gps_datetime],
+          "timestamp" : self.next_gps[gps_datetime],
           "length"    : self.cut_at_length,
+          "iri_left"  : self.next_gps[gps_iril],
+          "iri_right" : self.next_gps[gps_irir],
           }
         # print nearest_heading,heading
         # print snapstate
         # only small number of points are snap points 
         if snapstate != 2:
           self.snap_list.append(cut_point)
+          self.snap_aa[(cut_index + 1) * direction] = cut_point
         # cut point is each point along the track
         self.cut_list.append(cut_point)
         self.cut_at_length += self.segment_length
@@ -306,6 +312,40 @@ class snap:
     # print self.snap_list
     # print self.cut_list
     #print("Snap: %d segment cuts to %d snap points" % (len(self.cut_list), len(self.snap_list)))
+
+  def statistics(self):
+    # convert snap list to associative array
+    # add fields for statistics, reset to 0
+    for key,value in self.snap_aa.items():
+      self.snap_aa[key]["n"]          = 0
+      self.snap_aa[key]["sum1_left"]  = 0.0
+      self.snap_aa[key]["sum2_left"]  = 0.0
+      self.snap_aa[key]["avg_left"]   = 0.0
+      self.snap_aa[key]["std_left"]   = 0.0
+      self.snap_aa[key]["sum1_right"] = 0.0
+      self.snap_aa[key]["sum2_right"] = 0.0
+      self.snap_aa[key]["avg_right"]  = 0.0
+      self.snap_aa[key]["std_right"]  = 0.0
+    # statistics sums
+    for cut_point in self.cut_list:
+      key = cut_point["directional_index"]
+      self.snap_aa[key]["n"]           += 1
+      self.snap_aa[key]["sum1_left"]   += cut_point["iri_left"]
+      self.snap_aa[key]["sum2_left"]   += cut_point["iri_left"]*cut_point["iri_left"]
+      self.snap_aa[key]["sum1_right"]  += cut_point["iri_right"]
+      self.snap_aa[key]["sum2_right"]  += cut_point["iri_right"]*cut_point["iri_right"]
+    # average and standard dev
+    for key,value in self.snap_aa.items():
+      n = self.snap_aa[key]["n"]
+      if n > 0:
+        sum1_left  = self.snap_aa[key]["sum1_left"]
+        sum2_left  = self.snap_aa[key]["sum2_left"]
+        sum1_right = self.snap_aa[key]["sum1_right"]
+        sum2_right = self.snap_aa[key]["sum2_right"]
+        self.snap_aa[key]["avg_left"]  = sum1_left/n
+        self.snap_aa[key]["avg_right"] = sum1_right/n
+        self.snap_aa[key]["std_left"]  = ( n*sum2_left  - sum1_left  * sum1_left  )**0.5/n
+        self.snap_aa[key]["std_right"] = ( n*sum2_right - sum1_right * sum1_right )**0.5/n
 
 segment_m   = 100.0 # m
 discontinuety_m = 50.0 # m don't draw lines longer than this
@@ -411,7 +451,7 @@ for wavfile in argv[1:]:
               lsty0 = styles.Style(styles = [ls0])
               p1 = kml.Placemark(ns, 'id',
                 name=("%.2f" % iri_avg),
-                description=("L=%.2f R=%.2f\n%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
+                description=("L=%.2f mm/m\nR=%.2f mm/m\nv=%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
                 styles=[lsty0])
               #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
               #p1_iri_right = kml.Data(name="IRI_RIGHT", display_name="IRI_RIGHT", value="%.2f" % iri_right)
@@ -437,27 +477,28 @@ for wavfile in argv[1:]:
           except:
             pass
           iri_avg=(iri_left+iri_right)/2
-          if travel > travel_next:
-            while travel > travel_next:
-              travel_next += segment_m
-            is0 = styles.IconStyle(ns, "id",
-              color=("%08X" % color32(iri_avg/red_iri)),
-              scale=1.0,
-              heading=(180+heading)%360,
-              icon_href=arrow_icon_href)
-            isty0 = styles.Style(styles = [is0])
-            p0 = kml.Placemark(ns, 'id',
-              name=("%.2f" % iri_avg),
-              description=("L=%.2f R=%.2f\n%.1f km/h (%.1f-%.1f km/h)\n%s" % (iri_left, iri_right, speed_kmh, kmh_min, kmh_max, datetime.decode("utf-8"))),
-              styles=[isty0])
-            p0.geometry = Point(lonlat)
-            p0.timeStamp = t.timestamp
-            f2.append(p0)
-            kmh_max = 0.0
-            kmh_min = 999.9
+          # disabled placemarks arrows here
+          # placed later from statistics
+          #if travel > travel_next:
+          #  while travel > travel_next:
+          #    travel_next += segment_m
+          #  is0 = styles.IconStyle(ns, "id",
+          #    color=("%08X" % color32(iri_avg/red_iri)),
+          #    scale=0.7,
+          #    heading=(180+heading)%360,
+          #    icon_href=arrow_icon_href)
+          #  isty0 = styles.Style(styles = [is0])
+          #  p0 = kml.Placemark(ns, 'id',
+          #    # name=("%.2f" % iri_avg),
+          #    description=("L=%.2f mm/m\nR=%.2f mm/m\n%.1f km/h (%.1f-%.1f km/h)\n%s" % (iri_left, iri_right, speed_kmh, kmh_min, kmh_max, datetime.decode("utf-8"))),
+          #    styles=[isty0])
+          #  p0.geometry = Point(lonlat)
+          #  p0.timeStamp = t.timestamp
+          #  f2.append(p0)
+          #  kmh_max = 0.0
+          #  kmh_min = 999.9
           # append to GPS list
-          #gps_list.append({"datetime":datetime, "lonlat":lonlat, "speed":speed_kmh, "heading":heading},)
-          gps_list.append((seek, datetime, lonlat, speed_kmh, heading))
+          gps_list.append((seek, datetime, lonlat, speed_kmh, heading, iri_left, iri_right))
       # delete, consumed
       nmea=bytearray(0)
     i += 1
@@ -467,20 +508,33 @@ if datetime:
 
 # at this point gps_list is filled with all GPS readings
 # snap to 100m segments
-if False:
+if True:
   snp = snap()
   snp.snap_segments()
+  snp.statistics()
+  #print(len(snp.cut_list))
+  #print("** cut list **")
+  #print(snp.cut_list)
+  #print("** snap list **")
+  #print(snp.snap_list)
   #for pt in snp.cut_list: # every one for statistics
-  for pt in snp.snap_list: # only the unique snap points
+  for key,pt in snp.snap_aa.items(): # only the unique snap points
+    # some headings are reverse, use directional index
+    # to orient them correctly
+    flip_heading = 0
+    if pt["directional_index"] < 0:
+      flip_heading = 180;
+    iri_avg = (pt["avg_left"] + pt["avg_right"]) / 2
     is0 = styles.IconStyle(ns, "id",
-              color=("%08X" % color32(1.0/red_iri)),
-              scale=2.0,
-              heading=(180+pt["heading"])%360,
+              color=("%08X" % color32(iri_avg/red_iri)),
+              scale=1.0,
+              heading=(180+pt["heading"]+flip_heading)%360,
               icon_href=arrow_icon_href)
     isty0 = styles.Style(styles = [is0])
     p0 = kml.Placemark(ns, 'id',
-              name=("%.2f" % 1.0),
-              description=pt["timestamp"].decode("utf-8"),
+              name=("%.2f" % iri_avg),
+              description=("L=%.2f ± %.2f mm/m\nR=%.2f ± %.2f mm/m\nN=%d\nValue ± is 2σ = 96%% coverage" %
+                (pt["avg_left"], 2*pt["std_left"], pt["avg_right"], 2*pt["std_right"], pt["n"],)),
               styles=[isty0])
     p0.geometry = Point(pt["lonlat"])
     t.timestamp, dummy = t.parse_str(pt["timestamp"])
