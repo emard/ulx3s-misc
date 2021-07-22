@@ -279,7 +279,6 @@ class snap:
           segment_index = index
         directional_index = (cut_index + 1) * direction
         cut_point = {
-          "index"     : cut_index,
           "directional_index" : directional_index,
           "lonlat"    : self.next_gps[gps_lonlat],
           "heading"   : nearest_heading, # heading of the first cut
@@ -558,8 +557,10 @@ if True:
     isty0 = styles.Style(styles = [is0])
     p0 = kml.Placemark(ns, 'id',
               name=("%.2f" % iri_avg),
-              description=("L=%.2f ± %.2f mm/m\nR=%.2f ± %.2f mm/m\nN=%d\nValue ± is 2σ = 96%% coverage" %
-                (pt["avg_left"], 2*pt["std_left"], pt["avg_right"], 2*pt["std_right"], pt["n"],)),
+              description=("L=%.2f ± %.2f mm/m\nR=%.2f ± %.2f mm/m\nN=%d\nValue ± is 2σ = 96%% coverage\n%s" %
+                (pt["avg_left"], 2*pt["std_left"], pt["avg_right"], 2*pt["std_right"],
+                 pt["n"], pt["timestamp"].decode("utf-8"),
+                )),
               styles=[isty0])
     p0.geometry = Point(pt["lonlat"])
     t.timestamp, dummy = t.parse_str(pt["timestamp"])
