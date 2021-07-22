@@ -377,7 +377,7 @@ mvb=memoryview(b)
 
 
 for wavfile in argv[1:]:
-  f = open(wavfile, "rb");
+  f = open(wavfile, "rb")
   seek = 44+0*12
   f.seek(seek)
   i = 0 # for PPS signal tracking
