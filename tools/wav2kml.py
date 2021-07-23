@@ -230,7 +230,8 @@ class snap:
               # approximately project point to track
               self.cut_at_length = self.prev_gps_track_length + self.current_gps_segment_length * prev_distance / (prev_distance + distance_m)
             else:
-              self.cut_at_length = self.prev_gps_track_length + self.current_gps_segment_length - 1.0e-3
+              self.cut_at_length = self.prev_gps_track_length + self.current_gps_segment_length - 1.0e3
+            #self.cut_at_length = self.prev_gps_track_length + self.current_gps_segment_length - 1.0e3
             #print("snap to ", self.cut_at_length)
         elif snapstate >= 2:
           if distance_m > self.segment_snap:
@@ -246,7 +247,7 @@ class snap:
       # to cut for exactly length [m] segments and add this to
       # snap list
       if snapstate != 1: # if not approaching any snap point
-       while self.prev_gps_track_length + self.current_gps_segment_length >= self.cut_at_length:
+       while self.prev_gps_track_length + self.current_gps_segment_length > self.cut_at_length:
         # simplify code - don't interpolate
         #tp = [ self.prev_gps_track_length, self.prev_gps_track_length + self.current_gps_segment_length ]
         #yp = [ [ self.prev_gps[gps_lonlat][0], self.next_gps[gps_lonlat][0] ],
