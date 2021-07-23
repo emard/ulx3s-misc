@@ -81,7 +81,7 @@ class snap:
   def __init__(self):
     # cut data into segment length [m]
     segment_length = 100.0    # [m]
-    segment_snap   =   9.0    # [m]
+    segment_snap   =  10.0    # [m]
     start_length   =   0.0    # analyze from this length [m]
     stop_length    =   1.0e9  # analyze up to this length [m]
 
@@ -122,9 +122,7 @@ class snap:
   def init_snap_segments(self):
     # empty snap lists
     # consits of latlon and timestamp
-    #self.snap_list = list()
-    # snap list as associative array (indexed by directonal_index)
-    self.snap_aa = {}
+    self.snap_list = list()
     # cut list is larger than snap list,
     # it contains each segment cut to be applied
     self.cut_list = list()
@@ -185,8 +183,8 @@ class snap:
       distance_m = None
       nearest_index = None
       nearest_point = None
-      index = None
-      for index,snap_point in self.snap_aa.items():
+      index = 0
+      for snap_point in self.snap_list:
        if snap_point["directional_index"] > 0:
         #print(snap_point)
         new_distance = distance(snap_point["lonlat"][1], snap_point["lonlat"][0], self.next_gps[gps_lonlat][1], self.next_gps[gps_lonlat][0])
@@ -198,13 +196,13 @@ class snap:
             nearest_index = index
             # current point along the track
             nearest_point = self.next_gps
-        #index += 1
+        index += 1
       cut_index = index # if we don't find nearest previous point, cut after last point
       if nearest_index != None:
         # print("nearest index ", nearest_index, " distance: ", distance)
         
         # calculate nearest_heading
-        nearest_heading = self.snap_aa[nearest_index]["heading"]
+        nearest_heading = self.snap_list[nearest_index]["heading"]
 
         # states of the snap
         # 0. no snap, searching for a close point
@@ -289,8 +287,7 @@ class snap:
         # print snapstate
         # only small number of points are snap points 
         if snapstate != 2:
-          self.snap_aa[directional_index] = cut_point
-        #self.snap_aa[directional_index] = cut_point
+          self.snap_list.append(cut_point)
         # cut point is each point along the track
         self.cut_list.append(cut_point)
         self.cut_at_length += self.segment_length
