@@ -188,20 +188,19 @@ class snap:
        if snap_point["directional_index"] > 0:
         #print(snap_point)
         new_distance = distance(snap_point["lonlat"][1], snap_point["lonlat"][0], self.next_gps[gps_lonlat][1], self.next_gps[gps_lonlat][0])
-        # don't consider latest point as snap point
-        # if index < len(self.snap_list)-0:
-          # find the nearest distance and its list index
+        # find the nearest distance and its list index
         if distance_m == None or new_distance < distance_m:
             distance_m = new_distance
             nearest_index = index
             # current point along the track
-            nearest_point = self.next_gps
+            #nearest_point = self.next_gps
+            nearest_point = snap_point
         index += 1
       cut_index = index # if we don't find nearest previous point, cut after last point
       if nearest_index != None:
         # print("nearest index ", nearest_index, " distance: ", distance)
         
-        # calculate nearest_heading
+        # heading of the nearest point
         nearest_heading = self.snap_list[nearest_index]["heading"]
 
         # states of the snap
@@ -239,7 +238,7 @@ class snap:
       else:
         # no nearest index -> snap state = 0
         snapstate = 0
-        cut_index = 0
+        #cut_index = 0 # do we need this?
  
       # if not found in the snap list:
       # add to the length
@@ -268,10 +267,10 @@ class snap:
           nearest_heading = heading_deg
         #if direction < 0:
         #  print "found reverse heading index %d" % cut_index
-        if nearest_index != None:
-          segment_index = nearest_index
-        else:
-          segment_index = index
+        #if nearest_index != None:
+        #  segment_index = nearest_index
+        #else:
+        #  segment_index = index
         directional_index = (cut_index + 1) * direction
         cut_point = {
           "directional_index" : directional_index,
@@ -294,17 +293,6 @@ class snap:
         # we should leave snap distance before
         # looking for the next snap point
         snapstate = 3
-
-    # from snap list generate segment list with similar headings
-
-    # before return
-    # rewind the gps filehandle to start from beginning
-    #self.gps_filehandle.seek(0)
-    #self.init_gps_tracking()
-    self.next_snap_index = 0
-    self.next_cut_index = 0
-    # print self.snap_list
-    # print self.cut_list
     #print("Snap: %d segment cuts to %d snap points" % (len(self.cut_list), len(self.snap_list)))
 
   def statistics(self):
@@ -562,8 +550,11 @@ if True:
                             "%s"
                             ) %
                             (
-                             pt["avg_left"], 2*pt["std_left"], pt["avg_right"], 2*pt["std_right"],
-                             pt["n"], pt["directional_index"], pt["snapstate"],
+                             pt["avg_left" ], 2*pt["std_left" ],
+                             pt["avg_right"], 2*pt["std_right"],
+                             pt["n"],
+                             pt["directional_index"],
+                             pt["snapstate"],
                              pt["timestamp"].decode("utf-8"),
                             )
               ),
