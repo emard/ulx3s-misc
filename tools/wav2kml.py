@@ -185,8 +185,9 @@ class snap:
       distance_m = None
       nearest_index = None
       nearest_point = None
-      index = 0
+      index = None
       for index,snap_point in self.snap_aa.items():
+       if snap_point["directional_index"] > 0:
         #print(snap_point)
         new_distance = distance(snap_point["lonlat"][1], snap_point["lonlat"][0], self.next_gps[gps_lonlat][1], self.next_gps[gps_lonlat][0])
         # don't consider latest point as snap point
@@ -198,7 +199,7 @@ class snap:
             # current point along the track
             nearest_point = self.next_gps
         #index += 1
-      cut_index = index # if we don't find nearest previous point, cut to a new point
+      cut_index = index # if we don't find nearest previous point, cut after last point
       if nearest_index != None:
         # print("nearest index ", nearest_index, " distance: ", distance)
         
@@ -240,13 +241,14 @@ class snap:
       else:
         # no nearest index -> snap state = 0
         snapstate = 0
+        cut_index = 0
  
       # if not found in the snap list:
       # add to the length
       # and when the length is exceeded then interpolate
       # to cut for exactly length [m] segments and add this to
       # snap list
-      if snapstate != 1: # if not near any snap point
+      if snapstate != 1: # if not approaching any snap point
        while self.prev_gps_track_length + self.current_gps_segment_length >= self.cut_at_length:
         # simplify code - don't interpolate
         #tp = [ self.prev_gps_track_length, self.prev_gps_track_length + self.current_gps_segment_length ]
@@ -287,8 +289,8 @@ class snap:
         # print snapstate
         # only small number of points are snap points 
         if snapstate != 2:
-          #self.snap_list.append(cut_point)
           self.snap_aa[directional_index] = cut_point
+        #self.snap_aa[directional_index] = cut_point
         # cut point is each point along the track
         self.cut_list.append(cut_point)
         self.cut_at_length += self.segment_length
@@ -311,40 +313,40 @@ class snap:
   def statistics(self):
     # convert snap list to associative array
     # add fields for statistics, reset to 0
-    for key,value in self.snap_aa.items():
-      self.snap_aa[key]["n"]          = 0
-      self.snap_aa[key]["sum1_left"]  = 0.0
-      self.snap_aa[key]["sum2_left"]  = 0.0
-      self.snap_aa[key]["avg_left"]   = 0.0
-      self.snap_aa[key]["std_left"]   = 0.0
-      self.snap_aa[key]["sum1_right"] = 0.0
-      self.snap_aa[key]["sum2_right"] = 0.0
-      self.snap_aa[key]["avg_right"]  = 0.0
-      self.snap_aa[key]["std_right"]  = 0.0
+    self.snap_stat = {}
+    for pt in self.cut_list:
+      key = pt["directional_index"]
+      value = pt # copy data from cut_list
+      value["n"]          = 0
+      value["sum1_left"]  = 0.0
+      value["sum2_left"]  = 0.0
+      value["avg_left"]   = 0.0
+      value["std_left"]   = 0.0
+      value["sum1_right"] = 0.0
+      value["sum2_right"] = 0.0
+      value["avg_right"]  = 0.0
+      value["std_right"]  = 0.0
+      self.snap_stat[key] = value
     # statistics sums
-    for cut_point in self.cut_list:
-      key = cut_point["directional_index"]
-      # FIXME some keys doen't exist
-      try:
-        self.snap_aa[key]["n"]           += 1
-        self.snap_aa[key]["sum1_left"]   += cut_point["iri_left"]
-        self.snap_aa[key]["sum2_left"]   += cut_point["iri_left"]*cut_point["iri_left"]
-        self.snap_aa[key]["sum1_right"]  += cut_point["iri_right"]
-        self.snap_aa[key]["sum2_right"]  += cut_point["iri_right"]*cut_point["iri_right"]
-      except:
-        pass
+    for pt in self.cut_list:
+      key = pt["directional_index"]
+      self.snap_stat[key]["n"]           += 1
+      self.snap_stat[key]["sum1_left"]   += pt["iri_left"]
+      self.snap_stat[key]["sum2_left"]   += pt["iri_left"]*pt["iri_left"]
+      self.snap_stat[key]["sum1_right"]  += pt["iri_right"]
+      self.snap_stat[key]["sum2_right"]  += pt["iri_right"]*pt["iri_right"]
     # average and standard dev
-    for key,value in self.snap_aa.items():
-      n = self.snap_aa[key]["n"]
+    for key,value in self.snap_stat.items():
+      n = self.snap_stat[key]["n"]
       if n > 0:
-        sum1_left  = self.snap_aa[key]["sum1_left"]
-        sum2_left  = self.snap_aa[key]["sum2_left"]
-        sum1_right = self.snap_aa[key]["sum1_right"]
-        sum2_right = self.snap_aa[key]["sum2_right"]
-        self.snap_aa[key]["avg_left"]  = sum1_left/n
-        self.snap_aa[key]["avg_right"] = sum1_right/n
-        self.snap_aa[key]["std_left"]  = abs( n*sum2_left  - sum1_left  * sum1_left  )**0.5/n
-        self.snap_aa[key]["std_right"] = abs( n*sum2_right - sum1_right * sum1_right )**0.5/n
+        sum1_left  = self.snap_stat[key]["sum1_left"]
+        sum2_left  = self.snap_stat[key]["sum2_left"]
+        sum1_right = self.snap_stat[key]["sum1_right"]
+        sum2_right = self.snap_stat[key]["sum2_right"]
+        self.snap_stat[key]["avg_left"]  = sum1_left/n
+        self.snap_stat[key]["avg_right"] = sum1_right/n
+        self.snap_stat[key]["std_left"]  = abs( n*sum2_left  - sum1_left  * sum1_left  )**0.5/n
+        self.snap_stat[key]["std_right"] = abs( n*sum2_right - sum1_right * sum1_right )**0.5/n
 
 segment_m   = 100.0 # m
 discontinuety_m = 50.0 # m don't draw lines longer than this
@@ -539,7 +541,7 @@ if True:
     f2.append(p0)
 
   # placemarks with statistics
-  for key,pt in snp.snap_aa.items(): # only the unique snap points
+  for key,pt in snp.snap_stat.items(): # only the unique snap points
     # some headings are reverse, use directional index
     # to orient them correctly
     flip_heading = 0
