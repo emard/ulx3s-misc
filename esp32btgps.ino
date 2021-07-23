@@ -87,8 +87,9 @@ int stopcount = 0;
 int daytime = 0;
 int daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
 
-uint8_t obd_retry = 3; // bit pattern for OBD retry
-char *obd_request_kmh = "010d\r";
+char prompt_obd = '>'; // after promot send obd_request_kmh
+char *obd_request_kmh = "010D\r";
+uint8_t obd_retry = 3; // bit pattern for OBD retry in case of silence
 
 // int64_t esp_timer_get_time() returns system microseconds
 int64_t IRAM_ATTR us()
@@ -675,6 +676,7 @@ void handle_gps_line_complete(void)
 void handle_obd_line_complete(void)
 {
   line[line_i-1] = 0; // replace \r termination with 0
+  //write_tag(line); // debug
   //Serial.println(line); // debug
   #if 0 // debug
   if(strcmp(line,"STOPPED") == 0)
@@ -684,20 +686,20 @@ void handle_obd_line_complete(void)
     if((btn & 4)) strcpy(line, "00 00 50"); // debug BTN2 80 km/h or 22 m/s
   }
   #endif
-  if(strcmp(line,"STOPPED") == 0 
-  || strcmp(line,"UNABLE TO CONNECT") == 0
-  || strcmp(line,"ERR93") == 0)
-  {
+  if(line[0] == prompt_obd)
     SerialBT.print(obd_request_kmh); // next request
+  else
+  if(line[0] == 'S' // strcmp(line,"STOPPED") == 0
+  || line[0] == 'U' // strcmp(line,"UNABLE TO CONNECT") == 0
+  || line[0] == 'N' // strcmp(line,"NO DATA") == 0
+  || line[0] == 'E' // strcmp(line,"ERR93") == 0
+  )
     speed_kmh = -1; // negative means no signal (engine not connected)
-  }
-  // "00 00 00" ignore first 2 hex, last 3rd hex integer km/h
+  else
   if(line_i >= 8 && line[5] == ' ') // >8 bytes long and 5th byte is space
-  {
-    SerialBT.print(obd_request_kmh); // next request
+    // "00 00 00" ignore first 2 hex, last 3rd hex integer km/h
     // parse last digit
     speed_kmh = strtol(line+6, NULL ,16); // normal
-  }
   speed_mms = (speed_kmh * 284444) >> 10; // mm/s
   speed_ckt = (speed_kmh *  52679) >> 10; // centi-knots
   spi_speed_write(fast_enough ? speed_mms : 0); // normal
@@ -779,8 +781,8 @@ void loop_run(void)
       if (line_i < sizeof(line) - 3)
         line[line_i++] = c;
     }
-    if (line_i > 5 && c == line_terminator) // line complete
-    { // GPS has '\n', OBD has '\r' line terminator
+    if ((line_i > 5 && c == line_terminator) || c == prompt_obd) // line complete
+    { // GPS has '\n', OBD has '\r' line terminator and '>' prompt
       line[line_i] = 0; // additionally null-terminate string
       if(mode_obd_gps)
         handle_gps_line_complete();
