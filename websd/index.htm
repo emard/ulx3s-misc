@@ -228,8 +228,12 @@
           var sorted_list = objJSON.sort(function(a,b) { return a.type[0]+a.name > b.type[0]+b.name });
           for(var i = 0; i < sorted_list.length; i++) {
             // var entry_type = objJSON[i].type;
-            append_row(i, sorted_list[i].name, sorted_list[i].type, current_path,
-            sorted_list[i].size);
+            if(sorted_list[i].type == "file" || sorted_list[i].type == "dir") {
+              append_row(i, sorted_list[i].name, sorted_list[i].type, current_path, sorted_list[i].size);
+            }
+            if(sorted_list[i].type == "status") {
+              $id('SD_status').innerHTML = bytes2KB(sorted_list[i].size) + " free";
+            }
           }
 	});
     }
@@ -383,7 +387,7 @@
   <a href="index.htm">Home</a>
   <form id="upload_form" enctype="multipart/form-data" method="post">
     <div class="row">
-      <label for="fileToUpload">Save to SD</label>
+      <label id="SD_status" for="fileToUpload">Loading directory...</label>
       <br/>
       <input type="file" name="fileToUpload" id="fileToUpload" onchange="fileSelected();"/>
       <mark id="fileSize"></mark>

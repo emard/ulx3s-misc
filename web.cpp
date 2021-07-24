@@ -218,18 +218,24 @@ void printDirectory() {
   WiFiClient client = server.client();
 
   server.sendContent("[");
+  SD_status();
+  String output;
+  output  = "{\"type\":\"";
+  output += "status";
+  output += "\",\"name\":\"";
+  output += "free";
+  output += "\",\"size\":";
+  output += free_bytes;
+  output += "}";
+  server.sendContent(output);
+
   for (int cnt = 0; true; ++cnt) {
     File entry = dir.openNextFile();
     if (!entry) {
       break;
     }
 
-    String output;
-    if (cnt > 0) {
-      output = ',';
-    }
-
-    output += "{\"type\":\"";
+    output  = ",{\"type\":\"";
     output += (entry.isDirectory()) ? "dir" : "file";
     output += "\",\"name\":\"";
     output += entry.name();

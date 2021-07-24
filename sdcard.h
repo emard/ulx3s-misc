@@ -23,6 +23,7 @@ extern uint8_t GPS_MAC[6], OBD_MAC[6];
 extern String  GPS_PIN, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
 extern uint8_t datetime_is_set;
 extern struct tm tm, tm_session; // tm_session gives new filename when reconnected
+extern size_t free_bytes;
 void mount(void);
 void umount(void);
 void spi_init(void);
@@ -35,6 +36,7 @@ void rds_message(struct tm *tm);
 void adxl355_init(void);
 uint8_t adxl355_available(void);
 void ls(void);
+void SD_status();
 void open_logs(struct tm *tm);
 void write_logs(void);
 void write_stop_delimiter(void);
