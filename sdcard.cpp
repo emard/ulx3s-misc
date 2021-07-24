@@ -41,6 +41,9 @@ char lastnmea[256];
 int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename when reconnected
 
+// SD status
+size_t total_bytes, used_bytes, free_bytes, free_MB;
+
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
   spi_master_tx_buf[0] = a*2; // write reg addr a
@@ -252,6 +255,17 @@ void spi_rds_write(void)
   }
 }
 
+void SD_status(void)
+{
+  if(card_is_mounted)
+  {
+    total_bytes = SD_MMC.totalBytes();
+    used_bytes = SD_MMC.usedBytes();
+    free_bytes = total_bytes-used_bytes;
+    free_MB = free_bytes / (1024 * 1024);
+  }
+}
+
 // integer log2 for MB free
 int iclog2(int x)
 {
@@ -265,18 +279,15 @@ void rds_message(struct tm *tm)
   char disp_short[9], disp_long[65];
   char *sensor_status_decode = "XLRY"; // X-no sensors, L-left only, R-right only, Y-both
   char free_MB_2n = ' ';
+  SD_status();
+  free_MB_2n = '0'+iclog2(free_MB)-1;
+  if(free_MB_2n < '0')
+    free_MB_2n = '0';
+  if(free_MB_2n > '9')
+    free_MB_2n = '9';
   if(tm)
   {
     uint16_t year = tm->tm_year + 1900;
-    size_t total_bytes = SD_MMC.totalBytes();
-    size_t used_bytes = SD_MMC.usedBytes();
-    size_t free_bytes = total_bytes-used_bytes;
-    size_t free_MB = free_bytes / (1024 * 1024);
-    free_MB_2n = '0'+iclog2(free_MB)-1;
-    if(free_MB_2n < '0')
-      free_MB_2n = '0';
-    if(free_MB_2n > '9')
-      free_MB_2n = '9';
     if(speed_ckt < 0 && fast_enough == 0)
     { // no signal and not fast enough (not in tunnel mode)
       sprintf(disp_short, "WAIT  0X");
@@ -396,6 +407,7 @@ void mount(void)
 
 void umount(void)
 {
+  SD_status();
   SD_MMC.end();
   card_is_mounted = 0;
   logs_are_open = 0;
