@@ -15,10 +15,10 @@ esp32
     [ ] speech report when connected BPS/OBD
     [ ] speech report remaining minutes and disk full
     [ ] speech tunnel mode locked speed
-    [ ] get bytes free early to display when GPS is OFF
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging
+    [ ] web MB free
     [ ] web roaming, multiple ap/pass
     [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
@@ -54,6 +54,7 @@ esp32
     [x] OBD2 time from saved last GPS location
     [x] OBD2 start from saved last GPS location
     [x] web upload reports "Error" although it's successful
+    [x] get bytes free early to display when GPS is OFF
 
 core
 
@@ -79,8 +80,6 @@ core
 wav2kml
 
     [ ] csv dump
-    [ ] snap: some arrows are missing in cut list
-    [ ] snap: statistics
     [ ] on track and placemarks indicate tunnel mode
     [ ] motor vibration (RPM) sensing, conversion to speed
     [ ] calibrate accelerometer heading with GPS
