@@ -675,7 +675,7 @@ void handle_gps_line_complete(void)
 // and proceed same as NMEA
 void handle_obd_line_complete(void)
 {
-  line[line_i-1] = 0; // replace \r termination with 0
+  //line[line_i-1] = 0; // replace \r termination with 0
   //write_tag(line); // debug
   //Serial.println(line); // debug
   #if 0 // debug
@@ -686,7 +686,7 @@ void handle_obd_line_complete(void)
     if((btn & 4)) strcpy(line, "00 00 50"); // debug BTN2 80 km/h or 22 m/s
   }
   #endif
-  if(line[0] == prompt_obd)
+  if(line_i > 0 && line[line_i-1] == prompt_obd)
     SerialBT.print(obd_request_kmh); // next request
   else
   if(line[0] == 'S' // strcmp(line,"STOPPED") == 0
@@ -749,18 +749,19 @@ void handle_obd_silence(void)
 {
   if(!connected)
     return;
-  if(line_tdelta > 3000 && (obd_retry & 1) != 0)
+  if(line_tdelta > 5000 && (obd_retry & 1) != 0)
   {
     SerialBT.print(obd_request_kmh); // read speed km/h (without car, should print "SEARCHING...")
-    //Serial.println("retry 1");
     obd_retry &= ~1;
   }
-  else if(line_tdelta > 6000 && (obd_retry & 2) != 0)
+  #if 0
+  else
+  if(line_tdelta > 7000 && (obd_retry & 2) != 0)
   {
     SerialBT.print(obd_request_kmh); // read speed km/h (without car, should print "SEARCHING...")
-    //Serial.println("retry 2");
     obd_retry &= ~2;
   }
+  #endif
 }
 
 void loop_run(void)
@@ -772,7 +773,7 @@ void loop_run(void)
   if (connected && SerialBT.available() > 0)
   {
     c = 0;
-    while(SerialBT.available() > 0 && c != line_terminator) // line not complete
+    while(SerialBT.available() > 0 && c != line_terminator && c != prompt_obd) // line not complete
     {
       if (line_i == 0)
         ct0 = ms(); // time when first char in line came
@@ -781,7 +782,7 @@ void loop_run(void)
       if (line_i < sizeof(line) - 3)
         line[line_i++] = c;
     }
-    if ((line_i > 5 && c == line_terminator) || c == prompt_obd) // line complete
+    if(c == line_terminator || c == prompt_obd ) // line complete
     { // GPS has '\n', OBD has '\r' line terminator and '>' prompt
       line[line_i] = 0; // additionally null-terminate string
       if(mode_obd_gps)
