@@ -18,15 +18,14 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging
-    [ ] web MB free
     [ ] web roaming, multiple ap/pass
     [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
-    [ ] web server show SD free MB
     [ ] web server files to separate directory
     [ ] web MDNS not updating address to dnsmasq
     [ ] web speak when can't connect
     [ ] web server list dump only filenames not full path
+    [ ] web free using JSON var name for bytes free in dir listing
     [x] web server show only filename, not full path
     [x] web server sort directories/files
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
@@ -55,6 +54,7 @@ esp32
     [x] OBD2 start from saved last GPS location
     [x] web upload reports "Error" although it's successful
     [x] get bytes free early to display when GPS is OFF
+    [x] web show MB free
 
 core
 
