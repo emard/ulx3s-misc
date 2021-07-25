@@ -217,10 +217,10 @@ void setup() {
     return;
   }
 
-  for (int i = 0; i < 8; i++)
+  for (int i = 0; i < 6; i++)
   {
+    delay(100);
     adxl355_init();
-    delay(500);
   }
 
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS); // Initialise channel MCPWM0A on PPS pin
