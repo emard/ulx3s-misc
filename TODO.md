@@ -17,8 +17,8 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging and close all files
-    [ ] web shorten time from power to BTN0 reading
     [ ] web roaming, multiple ap/pass
+    [ ] web keep retrying to connect
     [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
     [ ] web server files to separate directory
@@ -56,6 +56,7 @@ esp32
     [x] get bytes free early to display when GPS is OFF
     [x] web show MB free
     [x] SD card compatiblity sandisk
+    [x] web shorten time from power to BTN0 reading
 
 core
 
