@@ -1,4 +1,9 @@
+all:wav kml
+
 wav: wav.c
+	gcc $< -o $@
+
+kml: kml.c
 	gcc $< -o $@
 
 clean:
