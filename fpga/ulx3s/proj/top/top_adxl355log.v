@@ -111,7 +111,7 @@ module top_adxl355log
                         : S_prog_in == 2'b01 ? 2'b10 : 2'b11;
 
   // detecting programming ESP32 and reset timeout
-  reg [C_prog_release_timeout:0] R_prog_release;
+  reg [C_prog_release_timeout:0] R_prog_release = ~0; // all bits 1 to prevent PROG early on BOOT
   always @(posedge clk_25mhz)
   begin
     R_prog_in <= S_prog_in;
