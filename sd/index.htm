@@ -225,16 +225,14 @@
           append_row(0, ".", "dir", current_path, 0);
           append_row(0, "..", "dir", current_path, 0);
           // type[0]="d" for directory, "f" for file, prefix in compare function
-          var sorted_list = objJSON.sort(function(a,b) { return a.type[0]+a.name > b.type[0]+b.name });
+          var sorted_list = objJSON.dir.sort(function(a,b) { return a.type[0]+a.name > b.type[0]+b.name });
           for(var i = 0; i < sorted_list.length; i++) {
             // var entry_type = objJSON[i].type;
             if(sorted_list[i].type == "file" || sorted_list[i].type == "dir") {
               append_row(i, sorted_list[i].name, sorted_list[i].type, current_path, sorted_list[i].size);
             }
-            if(sorted_list[i].type == "status") {
-              $id('SD_status').innerHTML = bytes2KB(sorted_list[i].size) + " free";
-            }
           }
+          $id('SD_status').innerHTML = bytes2KB(objJSON.free_bytes) + " free";
 	});
     }
 

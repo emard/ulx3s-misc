@@ -217,16 +217,11 @@ void printDirectory() {
   server.send(200, "text/json", "");
   WiFiClient client = server.client();
 
-  server.sendContent("[");
   SD_status();
   String output;
-  output  = "{\"type\":\"";
-  output += "status";
-  output += "\",\"name\":\"";
-  output += "free";
-  output += "\",\"size\":";
+  output  = "{\"free_bytes\":";
   output += free_bytes;
-  output += "}";
+  output += ",\"dir\":[";
   server.sendContent(output);
 
   for (int cnt = 0; true; ++cnt) {
@@ -234,8 +229,12 @@ void printDirectory() {
     if (!entry) {
       break;
     }
+    if(cnt == 0)
+      output = "";
+    else
+      output = ",";
 
-    output  = ",{\"type\":\"";
+    output += "{\"type\":\"";
     output += (entry.isDirectory()) ? "dir" : "file";
     output += "\",\"name\":\"";
     output += entry.name();
@@ -245,7 +244,7 @@ void printDirectory() {
     server.sendContent(output);
     entry.close();
   }
-  server.sendContent("]");
+  server.sendContent("]}");
   dir.close();
 }
 
