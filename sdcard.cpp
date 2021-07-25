@@ -22,7 +22,7 @@ static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
 // config file parsing
 uint8_t GPS_MAC[6], OBD_MAC[6];
-String  GPS_PIN, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
+String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
 
 File file_gps, file_accel, file_pcm, file_cfg;
 char filename[50] = "/accel.wav";
@@ -277,6 +277,7 @@ int iclog2(int x)
 void rds_message(struct tm *tm)
 {
   char disp_short[9], disp_long[65];
+  char *name_obd_gps[] = {"OBD", "GPS"};
   char *sensor_status_decode = "XLRY"; // X-no sensors, L-left only, R-right only, Y-both
   char free_MB_2n = ' ';
   SD_status();
@@ -316,12 +317,11 @@ void rds_message(struct tm *tm)
   {
     // null pointer, dummy time
     sprintf(disp_short, "OFF    X");
-    sprintf(disp_long,  "SEARCHING FOR GPS");
+    sprintf(disp_long,  "SEARCHING FOR %s", name_obd_gps[mode_obd_gps]);
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
   disp_short[5] = free_MB_2n;
-  char *chr_obd_gps = "OG";
-  disp_short[6] = chr_obd_gps[mode_obd_gps];
+  disp_short[6] = name_obd_gps[mode_obd_gps][0];
   disp_short[7] = sensor_status_decode[sensor_check_status];
   rds.ps(disp_short);
   rds.rt(disp_long);
@@ -872,8 +872,10 @@ void read_cfg(void)
     if     (varname.equalsIgnoreCase("ap_name" )) AP_NAME  = varvalue;
     else if(varname.equalsIgnoreCase("ap_pass" )) AP_PASS  = varvalue;
     else if(varname.equalsIgnoreCase("dns_host")) DNS_HOST = varvalue;
+    else if(varname.equalsIgnoreCase("gps_name")) GPS_NAME = varvalue;
     else if(varname.equalsIgnoreCase("gps_mac" )) parse_mac(GPS_MAC, varvalue);
     else if(varname.equalsIgnoreCase("gps_pin" )) GPS_PIN  = varvalue;
+    else if(varname.equalsIgnoreCase("obd_name")) OBD_NAME = varvalue;
     else if(varname.equalsIgnoreCase("obd_mac" )) parse_mac(OBD_MAC, varvalue);
     else if(varname.equalsIgnoreCase("obd_pin" )) OBD_PIN  = varvalue;
     else
@@ -883,10 +885,12 @@ void read_cfg(void)
     }
   }
   char macstr[80];
+  Serial.print("GPS_NAME : "); Serial.println(GPS_NAME);
   sprintf(macstr, "GPS_MAC  : %02X:%02X:%02X:%02X:%02X:%02X",
     GPS_MAC[0], GPS_MAC[1], GPS_MAC[2], GPS_MAC[3], GPS_MAC[4], GPS_MAC[5]);
   Serial.println(macstr);
   Serial.print("GPS_PIN  : "); Serial.println(GPS_PIN);
+  Serial.print("OBD_NAME : "); Serial.println(OBD_NAME);
   sprintf(macstr, "OBD_MAC  : %02X:%02X:%02X:%02X:%02X:%02X",
     OBD_MAC[0], OBD_MAC[1], OBD_MAC[2], OBD_MAC[3], OBD_MAC[4], OBD_MAC[5]);
   Serial.println(macstr);

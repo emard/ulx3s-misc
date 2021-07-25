@@ -579,7 +579,8 @@ void handle_reconnect(void)
   umount();
 
   mode_obd_gps ^= 1; // toggle mode 0:OBD 1:GPS
-  uint8_t *mac_address = mode_obd_gps ? GPS_MAC : OBD_MAC;
+  String   bt_name     = mode_obd_gps ? GPS_NAME : OBD_NAME;
+  uint8_t *mac_address = mode_obd_gps ? GPS_MAC  : OBD_MAC;
   rds_message(NULL);
   //Serial.print("trying mode ");
   //Serial.println(mode_obd_gps);
@@ -588,8 +589,10 @@ void handle_reconnect(void)
   // to resolve name to address first, but it allows to connect to different devices with the same name.
   // Set CoreDebugLevel to Info to view devices bluetooth address and device names
 
-  //connected = SerialBT.connect(name); // slow with String name
-  connected = SerialBT.connect(mac_address); // fast with uint8_t GPS_MAC[6]
+  if(bt_name.length())
+    connected = SerialBT.connect(bt_name); // 30s connect with String name
+  else
+    connected = SerialBT.connect(mac_address); // 15s connect with uint8_t GPS_MAC[6] but some devices reboot esp32
 
   // return value "connected" doesn't mean much
   // it is sometimes true even if not connected.
