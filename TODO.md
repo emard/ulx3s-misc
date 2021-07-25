@@ -17,6 +17,7 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging and close all files
+    [ ] web server bug eraseing HTML name when file in non-root directory is deleted
     [ ] web roaming, multiple ap/pass
     [ ] web keep retrying to connect
     [ ] wep upload success readyState == 4, status == 200
@@ -25,7 +26,7 @@ esp32
     [ ] web MDNS not updating address to dnsmasq
     [ ] web speak when can't connect
     [ ] web server list dump only filenames not full path
-    [ ] web free using JSON var name for bytes free in dir listing
+    [x] web free using JSON var name for bytes free in dir listing
     [x] web server show only filename, not full path
     [x] web server sort directories/files
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
