@@ -3,6 +3,7 @@
 esp32
 
     [ ] sensor hotplug
+    [ ] kml generation?
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
