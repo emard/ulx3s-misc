@@ -203,11 +203,6 @@ void setup() {
   spi_init();
   rds_init();
   spi_rds_write();
-  for (int i = 0; i < 8; i++)
-  {
-    adxl355_init();
-    delay(500);
-  }
 
   int web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
   if(web)
@@ -220,6 +215,12 @@ void setup() {
     speakaction[1] = NULL;
     speakfiles = speakaction;
     return;
+  }
+
+  for (int i = 0; i < 8; i++)
+  {
+    adxl355_init();
+    delay(500);
   }
 
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS); // Initialise channel MCPWM0A on PPS pin
