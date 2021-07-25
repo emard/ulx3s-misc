@@ -2,7 +2,6 @@
 
 esp32
 
-    [ ] SD card compatiblity sandisk
     [ ] sensor hotplug
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
@@ -17,7 +16,8 @@ esp32
     [ ] speech tunnel mode locked speed
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
-    [ ] btn to stop logging
+    [ ] btn to stop logging and close all files
+    [ ] web shorten time from power to BTN0 reading
     [ ] web roaming, multiple ap/pass
     [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
@@ -55,6 +55,7 @@ esp32
     [x] web upload reports "Error" although it's successful
     [x] get bytes free early to display when GPS is OFF
     [x] web show MB free
+    [x] SD card compatiblity sandisk
 
 core
 
@@ -90,3 +91,8 @@ wav2kml
     [x] lookat straight above
     [x] report speed range min/max to placemarks
     [x] snap
+
+math
+
+    [ ] verify method - make the offline analysys
+
