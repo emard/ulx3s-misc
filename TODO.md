@@ -7,6 +7,7 @@ esp32
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
     [ ] LCD graphic track display
+    [ ] script for binary upload
     [ ] GPS time discontinuety warning
     [ ] OBD2 stop PPS PLL
     [ ] TA flag at errors
@@ -17,7 +18,6 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging and close all files
-    [ ] web server bug eraseing HTML name when file in non-root directory is deleted
     [ ] web roaming, multiple ap/pass
     [ ] web keep retrying to connect
     [ ] wep upload success readyState == 4, status == 200
@@ -58,6 +58,7 @@ esp32
     [x] web show MB free
     [x] SD card compatiblity sandisk
     [x] web shorten time from power to BTN0 reading
+    [x] web server bug eraseing HTML name when file in non-root directory is deleted
 
 core
 
