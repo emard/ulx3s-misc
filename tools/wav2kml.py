@@ -565,12 +565,12 @@ if True:
     p0.timeStamp = t.timestamp
     f2.append(p0)
 
-# output to string with hard-replace "visibility" to add LookAt tag
+# output to string with hard-replace "description" to add LookAt tag
 if True:
   if time_last:
     print(k.to_string(prettyprint=True).replace(
-  "<visibility>1</visibility>",
-  "<visibility>1</visibility>\n\
+  "<description>description</description>",
+  "<description>description</description>\n\
     <LookAt>\n\
       <longitude>%f</longitude>\n\
       <latitude>%f</latitude>\n\
