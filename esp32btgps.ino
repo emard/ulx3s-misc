@@ -38,33 +38,33 @@ void (*loop_pointer)() = &loop_run;
 
 static char *digit_file[] =
 {
-  "/speak/0.wav",
-  "/speak/1.wav",
-  "/speak/2.wav",
-  "/speak/3.wav",
-  "/speak/4.wav",
-  "/speak/5.wav",
-  "/speak/6.wav",
-  "/speak/7.wav",
-  "/speak/8.wav",
-  "/speak/9.wav",
+  "/profilog/speak/0.wav",
+  "/profilog/speak/1.wav",
+  "/profilog/speak/2.wav",
+  "/profilog/speak/3.wav",
+  "/profilog/speak/4.wav",
+  "/profilog/speak/5.wav",
+  "/profilog/speak/6.wav",
+  "/profilog/speak/7.wav",
+  "/profilog/speak/8.wav",
+  "/profilog/speak/9.wav",
   NULL
 };
 static char *speak2digits[] = {digit_file[0], digit_file[0], NULL, NULL};
 static char *sensor_status_file[] =
 {
-  "/speak/nsensor.wav",
-  "/speak/nright.wav",
-  "/speak/nleft.wav",
+  "/profilog/speak/nsensor.wav",
+  "/profilog/speak/nright.wav",
+  "/profilog/speak/nleft.wav",
   NULL
 };
-static char *speakaction[] = {"/speak/search.wav", NULL, NULL};
+static char *speakaction[] = {"/profilog/speak/search.wav", NULL, NULL};
 
 static char *sensor_balance_file[] =
 {
   NULL, // ok
-  "/speak/lstrong.wav",
-  "/speak/rstrong.wav",
+  "/profilog/speak/lstrong.wav",
+  "/profilog/speak/rstrong.wav",
 };
 
 uint32_t t_ms; // t = ms();
@@ -211,7 +211,7 @@ void setup() {
     mount();
     read_cfg();
     web_setup();
-    speakaction[0] = "/speak/webserver.wav"; // TODO say web server maybe IP too
+    speakaction[0] = "/profilog/speak/webserver.wav"; // TODO say web server maybe IP too
     speakaction[1] = NULL;
     speakfiles = speakaction;
     return;
@@ -249,7 +249,7 @@ void setup() {
     read_cfg();
     SerialBT.begin("ESP32", true);
     SerialBT.setPin(OBD_PIN.c_str());
-    speakaction[0] = "/speak/searchobd.wav"; // TODO say OBD
+    speakaction[0] = "/profilog/speak/searchobd.wav"; // TODO say OBD
     speakaction[1] = NULL;
     speakfiles = speakaction;
     Serial.println("OBD demo");
@@ -325,7 +325,7 @@ char tag_test[256] = "$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTU
 
 // speech handler, call from loop()
 // plays sequence of wav files
-// speakfiles = {"/speak/file1.wav", "/speak/file2.wav", ... , NULL };
+// speakfiles = {"/profilog/speak/file1.wav", "/profilog/speak/file2.wav", ... , NULL };
 void speech()
 {
   static uint32_t tprev_wav = t_ms, tprev_wavp = t_ms;
@@ -401,9 +401,9 @@ void report_search(void)
     if(line_tdelta > 7000 && speak_search > 0)
     {
       if(mode_obd_gps)
-        speakaction[0] = "/speak/searchobd.wav";
+        speakaction[0] = "/profilog/speak/searchobd.wav";
       else
-        speakaction[0] = "/speak/searchgps.wav";
+        speakaction[0] = "/profilog/speak/searchgps.wav";
       speakaction[1] = sensor_status_file[sensor_check_status]; // normal
       #if 0 // debug false report all combinations no sensors
       static uint8_t x = 0;
@@ -460,20 +460,20 @@ void report_status(void)
       rds_message(&tm);
       if (speed_ckt < 0) // no signal
       {
-        speakaction[0] = "/speak/wait.wav";
+        speakaction[0] = "/profilog/speak/wait.wav";
         speakaction[1] = sensor_status_file[sensor_check_status];
       }
       else
       {
         if (fast_enough)
         {
-          //speakaction[0] = "/speak/record.wav";
+          //speakaction[0] = "/profilog/speak/record.wav";
           speakaction[0] = sensor_status_file[sensor_check_status];
           speakaction[1] = NULL;
         }
         else
         {
-          speakaction[0] = "/speak/ready.wav";
+          speakaction[0] = "/profilog/speak/ready.wav";
           speakaction[1] = sensor_status_file[sensor_check_status];
         }
       }

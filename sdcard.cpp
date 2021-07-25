@@ -25,7 +25,9 @@ uint8_t GPS_MAC[6], OBD_MAC[6];
 String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
 
 File file_gps, file_accel, file_pcm, file_cfg;
-char filename[50] = "/accel.wav";
+char filename_data[256] = "/profilog/data/accel.wav";
+char *filename_lastnmea = "/profilog/var/lastnmea.txt";
+char lastnmea[256]; // here is read content from filename_lastnmea
 int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
@@ -37,9 +39,8 @@ int fast_enough = 0; // for speed logging hysteresis
 int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
 float iri[2], iriavg;
 char iri2digit[4] = "0.0";
-char lastnmea[256];
 int_latlon last_latlon; // degrees and microminutes
-struct tm tm, tm_session; // tm_session gives new filename when reconnected
+struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 
 // SD status
 size_t total_bytes, used_bytes, free_bytes, free_MB;
@@ -485,26 +486,26 @@ void open_logs(struct tm *tm)
   if(logs_are_open != 0)
     return;
   #if 1
-  sprintf(filename, "/%04d%02d%02d-%02d%02d.wav",
+  sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
   #else
-  sprintf(filename, "/%04d%02d%02d.wav",
+  sprintf(filename_data, "/profilog/data/%04d%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
   #endif
   #if 1
-  //SD_MMC.remove(filename);
-  file_accel = SD_MMC.open(filename, FILE_APPEND);
+  //SD_MMC.remove(filename_data);
+  file_accel = SD_MMC.open(filename_data, FILE_APPEND);
   // check appending file position (SEEK_CUR) and if 0 then write header
   if(file_accel.position() == 0)
     write_wav_header();
   #else
-  SD_MMC.remove(filename);
-  SD_MMC.remove("/accel.wav");
-  file_accel = SD_MMC.open(filename, FILE_WRITE);
+  SD_MMC.remove(filename_data);
+  SD_MMC.remove("/profilog/data/accel.wav");
+  file_accel = SD_MMC.open(filename_data, FILE_WRITE);
   write_wav_header();
   #endif
   #if 1
-  Serial.print(filename);
+  Serial.print(filename_data);
   Serial.print(" @");
   Serial.println(file_accel.position());
   #endif
@@ -564,7 +565,7 @@ void write_last_nmea(void)
 {
   if (check_nmea_crc(lastnmea))
   {
-    File file_lastnmea = SD_MMC.open("/lastnmea.txt", FILE_WRITE);
+    File file_lastnmea = SD_MMC.open(filename_lastnmea, FILE_WRITE);
     file_lastnmea.write((uint8_t *)lastnmea, strlen(lastnmea));
     file_lastnmea.write('\n');
     Serial.print("write last nmea: ");
@@ -627,7 +628,7 @@ void set_date_from_tm(struct tm *tm)
 
 void read_last_nmea(void)
 {
-  File file_lastnmea = SD_MMC.open("/lastnmea.txt", FILE_READ);
+  File file_lastnmea = SD_MMC.open(filename_lastnmea, FILE_READ);
   //file_lastnmea.readBytes(lastnmea, strlen(lastnmea));
   String last_nmea_line = file_lastnmea.readStringUntil('\n');
   strcpy(lastnmea, last_nmea_line.c_str());
@@ -851,9 +852,9 @@ void parse_mac(uint8_t *mac, String a)
 
 void read_cfg(void)
 {
-  file_cfg = SD_MMC.open("/accelog.cfg", FILE_READ);
+  file_cfg = SD_MMC.open("/profilog/config/profilog.cfg", FILE_READ);
   int linecount = 0;
-  Serial.println("*** open /accelog.cfg ***");
+  Serial.println("*** open /profilog/config/profilog.cfg ***");
   while(file_cfg.available())
   {
     String cfgline = file_cfg.readStringUntil('\n');
@@ -880,7 +881,7 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("obd_pin" )) OBD_PIN  = varvalue;
     else
     {
-      Serial.print("accelog.cfg: error in line ");
+      Serial.print("/profilog/config/profilog.cfg: error in line ");
       Serial.println(linecount);
     }
   }
@@ -898,6 +899,6 @@ void read_cfg(void)
   Serial.print("AP_NAME  : "); Serial.println(AP_NAME);
   Serial.print("AP_PASS  : "); Serial.println(AP_PASS);
   Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
-  Serial.println("*** close /accelog.cfg ***");
+  Serial.println("*** close /profilog/config/profilog.cfg ***");
   file_cfg.close();
 }
