@@ -229,8 +229,7 @@ void kml_arrow(struct s_kml_arrow *ka)
     ka->lon, ka->lat);
   kmlbuf[str_kml_arrow_pos_lonlat+22] = '<'; // replace null
 
-  // FIXME heading 360 float
-  sprintf(kmlbuf+str_kml_arrow_pos_heading, "%05.1f", (float)(((int)ka->heading+180)%360));
+  sprintf(kmlbuf+str_kml_arrow_pos_heading, "%05.1f", (float)(((int)(10*ka->heading)+1800)%3600)/10.0);
   kmlbuf[str_kml_arrow_pos_heading+5] = '<'; // replace null
 
   sprintf(kmlbuf+str_kml_arrow_pos_color, "%08X", color32(1024*ka->value/red_iri));
