@@ -510,14 +510,12 @@ void open_log_wav(struct tm *tm)
   #endif
 }
 
-void flush_logs(void)
+void flush_log_wav(void)
 {
-  if(logs_are_open != 0)
-    return;
   file_accel.flush();
 }
 
-void write_logs(void)
+void write_log_wav(void)
 {
   static uint8_t prev_half = 0;
   uint8_t half;
@@ -544,7 +542,7 @@ void write_logs(void)
   }
 }
 
-void write_stop_delimiter()
+void write_stop_delimiter_wav()
 {
   const uint8_t stop_delimiter[12] = // should result in char '#' (ascii 35)
   {
@@ -900,7 +898,6 @@ void read_cfg(void)
 
 void open_logs(struct tm *tm)
 {
-  //return;
   if(logs_are_open != 0)
     return;
   if(log_wav_kml&1)
@@ -910,9 +907,30 @@ void open_logs(struct tm *tm)
   logs_are_open = 1;
 }
 
+void write_logs()
+{
+  if(log_wav_kml&1)
+    write_log_wav();
+}
+
+void write_stop_delimiter()
+{
+  if(logs_are_open == 0)
+    return;
+  if(log_wav_kml&1)
+    write_stop_delimiter_wav();
+}
+
+void flush_logs()
+{
+  if(logs_are_open == 0)
+    return;
+  if(log_wav_kml&1)
+    flush_log_wav();
+}
+
 void close_logs()
 {
-  //return;
   if(logs_are_open == 0)
     return;
   if(log_wav_kml&1)
