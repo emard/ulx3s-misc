@@ -1,5 +1,6 @@
 #include "pins.h"
 #include "web.h"
+#include "kml.h"
 #include <sys/time.h>
 
 #include "BluetoothSerial.h"
@@ -239,6 +240,8 @@ void setup() {
   // speech starts at 7s silence. Before speech, 2s must be allowed
   // for sensors to start reading data, otherwise it will false report
   // "no sensors".
+
+  kml_init(); // sets globals using strlen/strstr
 
   #if 0 // old code
   int obd = ((spi_btn_read()) & 2); // hold BTN1 and plug power to run OBD2 demo
@@ -642,7 +645,7 @@ void handle_gps_line_complete(void)
       write_tag(line);
       //Serial.println(line); // debug
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
-      #if 0
+      #if 1
       int btn = spi_btn_read();    // debug
       if((btn & 4)) speed_ckt = 4320; // debug BTN2 80 km/h or 22 m/s
       if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal

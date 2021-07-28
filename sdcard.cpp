@@ -2,6 +2,7 @@
 #include "sdcard.h"
 #include "adxl355.h"
 #include "nmea.h"
+#include "kml.h"
 #include <sys/time.h>
 
 // TODO
@@ -788,9 +789,9 @@ void close_log_wav(void)
 
 void write_kml_header(void)
 {
-  //kml_header();
-  //file_kml.write((uint8_t *)kmlbuf, str_kml_header_len);
-  file_kml.write('H');
+  kml_header();
+  file_kml.write((uint8_t *)kmlbuf, str_kml_header_len);
+  // file_kml.write('H');
 }
 
 // finalize kml file, no more writes after this
