@@ -24,7 +24,7 @@ static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 uint8_t GPS_MAC[6], OBD_MAC[6];
 String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
 
-File file_gps, file_accel, file_pcm, file_cfg;
+File file_kml, file_accel, file_pcm, file_cfg;
 char filename_data[256] = "/profilog/data/accel.wav";
 char *filename_lastnmea = "/profilog/var/lastnmea.txt";
 char lastnmea[256]; // here is read content from filename_lastnmea
@@ -41,7 +41,7 @@ float iri[2], iriavg;
 char iri2digit[4] = "0.0";
 int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
-uint8_t log_wav_kml = 1; // 1-wav 2-kml 3-both
+uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 
 // SD status
 size_t total_bytes, used_bytes, free_bytes, free_MB;
@@ -786,6 +786,46 @@ void close_log_wav(void)
   file_accel.close();
 }
 
+void write_kml_header(void)
+{
+  //kml_header();
+  //file_kml.write((uint8_t *)kmlbuf, str_kml_header_len);
+  file_kml.write('H');
+}
+
+// finalize kml file, no more writes after this
+void write_kml_footer(void)
+{
+  //kml_footer("2021-07-24T11:54:19.0Z", "2021-07-24T11:54:19.0Z"); // generate kml footer in kmlbuf
+  //file_kml.write((uint8_t *)kmlbuf, str_kml_footer_len);
+  file_kml.write('F');
+}
+
+void open_log_kml(struct tm *tm)
+{
+  #if 1
+  sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.kml",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
+  #else
+  sprintf(filename_data, "/profilog/data/%04d%02d%02d.kml",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
+  #endif
+  file_kml = SD_MMC.open(filename_data, FILE_APPEND);
+  // check appending file position (SEEK_CUR) and if 0 then write header
+  if(file_kml.position() == 0)
+    write_kml_header();
+  #if 1
+  Serial.print(filename_data);
+  Serial.print(" @");
+  Serial.println(file_kml.position());
+  #endif
+}
+
+void close_log_kml(void)
+{
+  file_kml.close();
+}
+
 void spi_slave_test(void)
 {
   static uint8_t count = 0;
@@ -902,8 +942,8 @@ void open_logs(struct tm *tm)
     return;
   if(log_wav_kml&1)
     open_log_wav(tm);
-  //if(log_wav_kml&2)
-  //  open_log_kml(tm);
+  if(log_wav_kml&2)
+    open_log_kml(tm);
   logs_are_open = 1;
 }
 
@@ -935,7 +975,7 @@ void close_logs()
     return;
   if(log_wav_kml&1)
     close_log_wav();
-  //if(log_wav_kml&2)
-  //  close_log_kml();
+  if(log_wav_kml&2)
+    close_log_kml();
   logs_are_open = 0;
 }
