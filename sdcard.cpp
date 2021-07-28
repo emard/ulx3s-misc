@@ -41,6 +41,7 @@ float iri[2], iriavg;
 char iri2digit[4] = "0.0";
 int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
+uint8_t log_wav_kml = 1; // 1-wav 2-kml 3-both
 
 // SD status
 size_t total_bytes, used_bytes, free_bytes, free_MB;
@@ -481,10 +482,8 @@ int sensor_check(void)
   return retval;
 }
 
-void open_logs(struct tm *tm)
+void open_log_wav(struct tm *tm)
 {
-  if(logs_are_open != 0)
-    return;
   #if 1
   sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
@@ -509,7 +508,6 @@ void open_logs(struct tm *tm)
   Serial.print(" @");
   Serial.println(file_accel.position());
   #endif
-  logs_are_open = 1;
 }
 
 void flush_logs(void)
@@ -783,12 +781,9 @@ void finalize_wav_header(void)
   Serial.println(pos, DEC);  
 }
 
-void close_logs(void)
+void close_log_wav(void)
 {
-  if(logs_are_open == 0)
-    return;
   logs_are_open = 0;
-  //file_gps.close();
   //finalize_wav_header();
   file_accel.close();
 }
@@ -901,4 +896,28 @@ void read_cfg(void)
   Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
   Serial.println("*** close /profilog/config/profilog.cfg ***");
   file_cfg.close();
+}
+
+void open_logs(struct tm *tm)
+{
+  //return;
+  if(logs_are_open != 0)
+    return;
+  if(log_wav_kml&1)
+    open_log_wav(tm);
+  //if(log_wav_kml&2)
+  //  open_log_kml(tm);
+  logs_are_open = 1;
+}
+
+void close_logs()
+{
+  //return;
+  if(logs_are_open == 0)
+    return;
+  if(log_wav_kml&1)
+    close_log_wav();
+  //if(log_wav_kml&2)
+  //  close_log_kml();
+  logs_are_open = 0;
 }
