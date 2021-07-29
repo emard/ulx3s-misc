@@ -2,6 +2,7 @@
 #include <stdint.h> // uint32_t etc
 #include <string.h>
 #include <stdlib.h> // abs
+#include "kml.h"
 
 /*
 longitude -180..180 (x-direction, EW)
