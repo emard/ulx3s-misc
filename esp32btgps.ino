@@ -645,7 +645,7 @@ void draw_kml_line(char *line)
 {
   struct int_latlon ilatlon;
   static int ipt = 0; // current point index, alternates 0/1
-  static char timestamp[23] = "2000-00-00T00:00:00.0Z";
+  static char timestamp[23] = "2000-01-01T00:00:00.0Z";
   if(log_wav_kml&2)
   { // only if kml mode is enabled, save CPU if when not enabled
     strcpy(lastnmea, line); // copy line to last nmea as tmp buffer (overwritten by parser)
@@ -697,8 +697,8 @@ void draw_kml_line(char *line)
       x_kml_arrow->timestamp = timestamp;
       kml_arrow(x_kml_arrow);
     }
-    //write_log_kml(0); // normal
-    write_log_kml(1); // debug (for OBD)
+    write_log_kml(0); // normal
+    //write_log_kml(1); // debug (for OBD)
     ipt ^= 1; // toggle 0/1
   }
 }
@@ -718,7 +718,7 @@ void handle_gps_line_complete(void)
       write_tag(line);
       //Serial.println(line); // debug
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
-      #if 1 // debug
+      #if 0 // debug
       int btn = spi_btn_read();    // debug
       if((btn & 4)) speed_ckt = 4320; // debug BTN2 80 km/h or 22 m/s
       if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
@@ -759,7 +759,7 @@ void handle_obd_line_complete(void)
   //line[line_i-1] = 0; // replace \r termination with 0
   //write_tag(line); // debug
   Serial.println(line); // debug
-  #if 1 // debug
+  #if 0 // debug
   if(line[1] == 'E') // match 'E' in "SEARCHING"
   {
     strcpy(line, "00 00 00"); // debug last hex represents 0 km/h
