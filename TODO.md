@@ -3,7 +3,8 @@
 esp32
 
     [ ] sensor hotplug
-    [ ] kml generation?
+    [ ] kml iterate old logs and finalize
+    [x] kml generation
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
@@ -19,7 +20,7 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging and close all files
-    [ ] web visited link different color
+    [ ] web visited links in different color
     [ ] web roaming, multiple ap/pass
     [ ] web keep retrying to connect
     [ ] wep upload success readyState == 4, status == 200
