@@ -483,8 +483,20 @@ int sensor_check(void)
   return retval;
 }
 
+void generate_filename_wav(struct tm *tm)
+{
+  #if 1
+  sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.wav",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
+  #else // one file per day
+  sprintf(filename_data, "/profilog/data/%04d%02d%02d.wav",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
+  #endif
+}
+
 void open_log_wav(struct tm *tm)
 {
+  generate_filename_wav(tm);
   #if 1
   sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
@@ -816,15 +828,20 @@ void write_log_kml(uint8_t force)
   }
 }
 
-void open_log_kml(struct tm *tm)
+void generate_filename_kml(struct tm *tm)
 {
   #if 1
   sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.kml",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
-  #else
+  #else // one file per day
   sprintf(filename_data, "/profilog/data/%04d%02d%02d.kml",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
   #endif
+}
+
+void open_log_kml(struct tm *tm)
+{
+  generate_filename_kml(tm);
   file_kml = SD_MMC.open(filename_data, FILE_APPEND);
   // check appending file position (SEEK_CUR) and if 0 then write header
   if(file_kml.position() == 0)
@@ -987,14 +1004,6 @@ void flush_logs()
     flush_log_wav();
 }
 
-void finalize_logs()
-{
-  if(logs_are_open == 0)
-    return;
-  if(log_wav_kml&2)
-    write_kml_footer();
-}
-
 void close_logs()
 {
   if(logs_are_open == 0)
@@ -1004,4 +1013,59 @@ void close_logs()
   if(log_wav_kml&2)
     close_log_kml();
   logs_are_open = 0;
+}
+
+void finalize_kml(File &kml)
+{
+  kml.seek(kml.size() - 7);
+  String file_end = kml.readString();
+  if(file_end != "</kml>\n")
+  {
+    String file_name = kml.name();
+    Serial.print("Finalizing ");
+    Serial.println(file_name);
+    kml.close();
+    File wkml = SD_MMC.open(file_name, FILE_APPEND);
+    wkml.write((uint8_t *)str_kml_footer_simple, strlen(str_kml_footer_simple));
+    wkml.close();
+  }
+}
+
+// finalize everyting except
+// the file that would be opened
+// as session based on time (tm)
+void finalize_data(struct tm *tm){
+    if(card_is_mounted == 0)
+      return;
+    if(logs_are_open)
+      return;
+    const char *dirname = "/profilog/data";
+    Serial.printf("Finalizng directory: %s\n", dirname);
+
+    File root = SD_MMC.open(dirname);
+    if(!root){
+        Serial.println("Failed to open directory");
+        return;
+    }
+    if(!root.isDirectory()){
+        Serial.println("Not a directory");
+        return;
+    }
+    generate_filename_kml(tm);
+    File file = root.openNextFile();
+    while(file){
+        if(file.isDirectory()){
+            Serial.print("  DIR : ");
+            Serial.println(file.name());
+        } else {
+            Serial.print("  FILE: ");
+            Serial.print(file.name());
+            Serial.print("  SIZE: ");
+            Serial.println(file.size());
+            if(strstr(file.name(),".kml") > 0)
+              if(strcmp(file.name(), filename_data) != 0) // different name
+                finalize_kml(file);
+        }
+        file = root.openNextFile();
+    }
 }
