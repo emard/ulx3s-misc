@@ -11,6 +11,7 @@ heading      0..360
 */
 
 char kmlbuf[8192]; // 4-8K for write efficiency
+int kmlbuf_start = 0; // start write from this, if arrow start from 0, or len to skip arrow
 int kmlbuf_len = 0; // max write position
 int kmlbuf_pos = 0; // current write position
 uint8_t kmlbuf_has_arrow = 0;
@@ -160,6 +161,8 @@ void kml_buf_init(void)
     strcpy(a, str_kml_line);
   
   kmlbuf_pos = str_kml_arrow_len; // write position past arrow, default to first line
+  kmlbuf_start = str_kml_arrow_len; // same as above is file write default starting point
+
 }
 
 void kml_header(void)
@@ -265,6 +268,7 @@ void kml_write(uint8_t force)
     // fwrite(kmlbuf+str_kml_arrow_len, kmlbuf_pos-str_kml_arrow_len, 1, fkml);
   }
   kmlbuf_pos = str_kml_arrow_len; // consumed, default start next write past arrow
+  kmlbuf_start = str_kml_arrow_len;
 }
 
 void kml_content(void)

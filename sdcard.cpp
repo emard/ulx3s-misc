@@ -800,6 +800,21 @@ void write_kml_footer(void)
   file_kml.write('F');
 }
 
+// force = 0: if kml buffer is full write
+// force = 1: write immediately what is in the buffer
+void write_log_kml(uint8_t force)
+{
+  //printf("kmlbuf_pos %d\n", kmlbuf_pos);
+  if(
+    (force == 0 && kmlbuf_pos < kmlbuf_len-str_kml_line_len-1) // write if force or buffer full
+  ||(kmlbuf_pos <= kmlbuf_start) // nothing to write
+  )
+    return;
+  file_kml.write((uint8_t *)kmlbuf+kmlbuf_start, kmlbuf_pos-kmlbuf_start);
+  kmlbuf_pos = str_kml_arrow_len; // consumed, default start next write past arrow
+  kmlbuf_start = str_kml_arrow_len; // same as kmlbuf_pos default write to file from this point
+}
+
 void open_log_kml(struct tm *tm)
 {
   #if 1
@@ -813,6 +828,7 @@ void open_log_kml(struct tm *tm)
   // check appending file position (SEEK_CUR) and if 0 then write header
   if(file_kml.position() == 0)
     write_kml_header();
+  kml_buf_init(); // fill kml buffer with arrow and line content
   #if 1
   Serial.print(filename_data);
   Serial.print(" @");
@@ -950,6 +966,8 @@ void write_logs()
 {
   if(log_wav_kml&1)
     write_log_wav();
+  if(log_wav_kml&2)
+    write_log_kml(0); // write logs, no force
 }
 
 void write_stop_delimiter()
