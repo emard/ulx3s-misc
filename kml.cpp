@@ -9,7 +9,6 @@ latitude   -90..90  (y-direction, NS)
 heading      0..360
 */
 
-FILE *fkml;
 char kmlbuf[8192]; // 4-8K for write efficiency
 int kmlbuf_len = 0; // max write position
 int kmlbuf_pos = 0; // current write position
@@ -33,7 +32,7 @@ struct s_kml_line x_kml_line[1];
 #if 0
 void kml_open(void)
 {
-  fkml = fopen("/tmp/demo.kml", "wb");
+//  fkml = fopen("/tmp/demo.kml", "wb");
 }
 #endif
 
@@ -267,12 +266,12 @@ void kml_write(uint8_t force)
     return;  // there is space for another line, don't write yet
   if(kmlbuf_has_arrow)
   { // write lines including the arrow
-    fwrite(kmlbuf, kmlbuf_pos, 1, fkml);
+    // fwrite(kmlbuf, kmlbuf_pos, 1, fkml);
     kmlbuf_has_arrow = 0; // consumed
   }
   else
   { // skip arrow, write only lines
-    fwrite(kmlbuf+str_kml_arrow_len, kmlbuf_pos-str_kml_arrow_len, 1, fkml);
+    // fwrite(kmlbuf+str_kml_arrow_len, kmlbuf_pos-str_kml_arrow_len, 1, fkml);
   }
   kmlbuf_pos = str_kml_arrow_len; // consumed, default start next write past arrow
 }
@@ -320,12 +319,12 @@ void kml_footer(char *begin, char *end)
   memcpy(kmlbuf+str_kml_footer_pos_begin, begin, 22);
   memcpy(kmlbuf+str_kml_footer_pos_end, end, 22);
 
-  fwrite(kmlbuf, str_kml_footer_len, 1, fkml);
+  // fwrite(kmlbuf, str_kml_footer_len, 1, fkml);
 }
 
 void kml_close(void)
 {
-  fclose(fkml);
+  // fclose(fkml);
 }
 
 #if 0
