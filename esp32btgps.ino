@@ -643,20 +643,21 @@ void nmea_time_log(void)
 // remembers last point, keeps alternating 2-points
 void draw_kml_line(char *line)
 {
+  struct int_latlon ilatlon;
   static int ipt = 0; // current point index, alternates 0/1
   static char timestamp[23] = "2000-00-00T00:00:00.0Z";
   if(log_wav_kml&2)
   { // only if kml mode is enabled, save CPU if when not enabled
     strcpy(lastnmea, line); // copy line to last nmea as tmp buffer (overwritten by parser)
-    // parse lastnmea -> last_latlon (parsing spoils nmea string)
-    nmea2latlon(lastnmea, &last_latlon);
+    // parse lastnmea -> ilatlon (parsing spoils nmea string)
+    nmea2latlon(lastnmea, &ilatlon);
     float *lat = &(x_kml_line->lat[ipt]);
     float *lon = &(x_kml_line->lon[ipt]);
-    *lat = last_latlon.lat_deg + abs(last_latlon.lat_umin)*1.66666666e-8;
-    if(last_latlon.lat_umin < 0)
+    *lat = ilatlon.lat_deg + abs(ilatlon.lat_umin)*1.66666666e-8;
+    if(ilatlon.lat_umin < 0)
       *lat = -*lat;
-    *lon = last_latlon.lon_deg + abs(last_latlon.lon_umin)*1.66666666e-8;
-    if(last_latlon.lon_umin < 0)
+    *lon = ilatlon.lon_deg + abs(ilatlon.lon_umin)*1.66666666e-8;
+    if(ilatlon.lon_umin < 0)
       *lon = -*lon;
     x_kml_line->value = iriavg;
     x_kml_line->left  = iri[0];
