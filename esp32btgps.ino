@@ -730,10 +730,16 @@ void handle_obd_line_complete(void)
     // this fake NMEA has the same format like real NMEA from GPS
     // different is magnetic north, here is 000.0, GPS has nonzero like 003.4
     sprintf(iri_tag,
-" $GPRMC,%02d%02d%02d.0,V,%02d%02d.%06d,N,%03d%02d.%06d,E,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*00 L%05.2fR%05.2f*00 ",
+" $GPRMC,%02d%02d%02d.0,V,%02d%02d.%06d,%c,%03d%02d.%06d,%c,%03d.%02d,000.0,%02d%02d%02d,000.0,E,N*00 L%05.2fR%05.2f*00 ",
           tm.tm_hour, tm.tm_min, tm.tm_sec,      // hms
-          fake_latlon.lat_deg, fake_latlon.lat_umin/1000000, fake_latlon.lat_umin%1000000,
-          fake_latlon.lon_deg, fake_latlon.lon_umin/1000000, fake_latlon.lon_umin%1000000,
+          fake_latlon.lat_deg,
+          abs(fake_latlon.lat_umin)/1000000,
+          abs(fake_latlon.lat_umin)%1000000,
+          fake_latlon.lat_umin >= 0 ? 'N' : 'S',
+          fake_latlon.lon_deg,
+          abs(fake_latlon.lon_umin)/1000000,
+          abs(fake_latlon.lon_umin)%1000000,
+          fake_latlon.lon_umin >= 0 ? 'E' : 'W',
           speed_ckt/100, speed_ckt%100,
           tm.tm_mday, tm.tm_mon+1, tm.tm_year%100,   // dmy
           iri[0]>99.99?99.99:iri[0], iri[1]>99.99?99.99:iri[1]
