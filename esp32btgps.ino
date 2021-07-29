@@ -632,9 +632,10 @@ void nmea_time_log(void)
 
 // from nmea line draw a kml line,
 // remembers last point, keeps alternating 2-points
-void draw_kml_line(char *line)
+void draw_kml_line(char *line, struct tm *tm)
 {
   static int ipt = 0; // current point index, alternates 0/1
+  static char timestamp[23] = "2000-00-00T00:00:00.0Z";
   if(log_wav_kml&2)
   { // only if kml mode is enabled, save CPU if when not enabled
     strcpy(lastnmea, line); // copy line to last nmea as tmp buffer (overwritten by parser)
@@ -649,8 +650,21 @@ void draw_kml_line(char *line)
     if(last_latlon.lon_umin < 0)
       *lon = -*lon;
     x_kml_line->value = 1.0;
-    x_kml_line->timestamp = "2021-07-24T11:54:19.0Z";
-    //kml_demo_line(); // TODO should use last_latlon here
+    char *b = nthchar(line, 9, ','); // position to date, line[7] is frst char of time
+    timestamp[ 2] = b[5]; // year/10
+    timestamp[ 3] = b[6]; // year%10
+    timestamp[ 5] = b[3]; // month/10
+    timestamp[ 6] = b[4]; // month%10
+    timestamp[ 8] = b[1]; // day/10
+    timestamp[ 9] = b[2]; // day%10
+    timestamp[11] = line[ 7]; // hour/10
+    timestamp[12] = line[ 8]; // hour%10
+    timestamp[14] = line[ 9]; // minute/10
+    timestamp[15] = line[10]; // minute%10
+    timestamp[17] = line[11]; // second/10
+    timestamp[18] = line[12]; // second%10
+    timestamp[20] = line[14]; // 1/10 second
+    x_kml_line->timestamp = timestamp;
     kml_line(x_kml_line);
     write_log_kml(0);
     ipt ^= 1; // toggle 0/1
@@ -697,7 +711,7 @@ void handle_gps_line_complete(void)
         set_date_from_tm(&tm);
         handle_session_log(); // will open logs if fast enough (new filename when reconnected)
         travel_gps(); // calculate travel length
-        draw_kml_line(line);
+        draw_kml_line(line, &tm);
         strcpy(lastnmea, line); // copy line to last nmea for storage
         report_iri();
         report_status();

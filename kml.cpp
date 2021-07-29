@@ -227,6 +227,8 @@ void kml_line(struct s_kml_line *kl)
   sprintf(a+str_kml_line_pos_name, "%5.2f", kl->value < 99.99 ? kl->value : 99.99);
   kmlbuf[kmlbuf_pos+str_kml_line_pos_name+5] = '<'; // replace null
 
+  memcpy(a+str_kml_line_pos_time, kl->timestamp, 22);
+
   kmlbuf_pos += str_kml_line_len;
 }
 

@@ -16,6 +16,7 @@ int nmea2s(char *nmea)
 }
 
 // parse NMEA ascii string -> write to struct tm
+// int seconds, doesn't handle 1/10 seconds
 int nmea2tm(char *a, struct tm *t)
 {
   char *b = nthchar(a, 9, ',');
