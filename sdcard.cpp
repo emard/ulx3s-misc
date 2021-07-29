@@ -40,7 +40,7 @@ int fast_enough = 0; // for speed logging hysteresis
 int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
 float iri[2], iriavg;
 char iri2digit[4] = "0.0";
-int_latlon last_latlon; // degrees and microminutes
+struct int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 

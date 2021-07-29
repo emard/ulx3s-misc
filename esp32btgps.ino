@@ -667,12 +667,15 @@ void handle_gps_line_complete(void)
           iri[0]>99.99?99.99:iri[0], iri[1]>99.99?99.99:iri[1]);
         write_nmea_crc(iri_tag+1);
         write_tag(iri_tag);
-        kml_demo_line();
-        write_log_kml(0);
         set_date_from_tm(&tm);
         handle_session_log(); // will open logs if fast enough (new filename when reconnected)
         travel_gps(); // calculate travel length
-        strcpy(lastnmea, line);
+        strcpy(lastnmea, line); // copy line to last nmea
+        // parse lastnmea -> last_latlon (parsing spoils nmea string)
+        nmea2latlon(lastnmea, &last_latlon);
+        kml_demo_line(); // TODO should use last_latlon here
+        write_log_kml(0);
+        strcpy(lastnmea, line); // copy line to last nmea for storage
         report_iri();
         report_status();
       }
