@@ -46,6 +46,8 @@ const char *str_kml_line = "\
         <description>\
 L=LEFT5 mm/m\n\
 R=RIGHT mm/m\n\
+v=SPEED km/h\n\
+TIMEDESCR0123456789012\n\
         </description>\n\
         <visibility>1</visibility>\n\
         <Style>\n\
@@ -64,6 +66,8 @@ R=RIGHT mm/m\n\
 ";
 int str_kml_line_pos_lonlat;
 int str_kml_line_pos_time;
+int str_kml_line_pos_timed;
+int str_kml_line_pos_speed;
 int str_kml_line_pos_name;
 int str_kml_line_pos_left;
 int str_kml_line_pos_right;
@@ -76,6 +80,8 @@ const char *str_kml_arrow = "\
         <description>\
 L=LEFT5 mm/m\n\
 R=RIGHT mm/m\n\
+v=SPEED km/h\n\
+TIMEDESCR0123456789012\n\
         </description>\n\
         <visibility>1</visibility>\n\
         <Style>\n\
@@ -99,6 +105,8 @@ R=RIGHT mm/m\n\
 int str_kml_arrow_pos_lonlat;
 int str_kml_arrow_pos_heading;
 int str_kml_arrow_pos_time;
+int str_kml_arrow_pos_timed;
+int str_kml_arrow_pos_speed;
 int str_kml_arrow_pos_name;
 int str_kml_arrow_pos_left;
 int str_kml_arrow_pos_right;
@@ -145,7 +153,9 @@ void kml_init(void)
   str_kml_line_pos_name        = strstr(str_kml_line, "NAME"      ) - str_kml_line;
   str_kml_line_pos_left        = strstr(str_kml_line, "LEFT"      ) - str_kml_line;
   str_kml_line_pos_right       = strstr(str_kml_line, "RIGHT"     ) - str_kml_line;
+  str_kml_line_pos_speed       = strstr(str_kml_line, "SPEED"     ) - str_kml_line;
   str_kml_line_pos_time        = strstr(str_kml_line, "TIMESTAMP" ) - str_kml_line;
+  str_kml_line_pos_timed       = strstr(str_kml_line, "TIMEDESCR" ) - str_kml_line;
   str_kml_line_pos_color       = strstr(str_kml_line, "COLOR"     ) - str_kml_line;
   str_kml_line_len             = strlen(str_kml_line);
 
@@ -154,7 +164,9 @@ void kml_init(void)
   str_kml_arrow_pos_name       = strstr(str_kml_arrow, "NAME"      ) - str_kml_arrow;
   str_kml_arrow_pos_left       = strstr(str_kml_arrow, "LEFT"      ) - str_kml_arrow;
   str_kml_arrow_pos_right      = strstr(str_kml_arrow, "RIGHT"     ) - str_kml_arrow;
+  str_kml_arrow_pos_speed      = strstr(str_kml_arrow, "SPEED" ) - str_kml_arrow;
   str_kml_arrow_pos_time       = strstr(str_kml_arrow, "TIMESTAMP" ) - str_kml_arrow;
+  str_kml_arrow_pos_timed      = strstr(str_kml_arrow, "TIMEDESCR" ) - str_kml_arrow;
   str_kml_arrow_pos_color      = strstr(str_kml_arrow, "COLOR"     ) - str_kml_arrow;
   str_kml_arrow_len            = strlen(str_kml_arrow);
 
@@ -252,7 +264,11 @@ void kml_line(struct s_kml_line *kl)
   sprintf(a+str_kml_line_pos_right, "%5.2f", kl->right < 99.99 ? kl->right : 99.99);
   kmlbuf[kmlbuf_pos+str_kml_line_pos_right+5] = ' '; // replace null
 
+  sprintf(a+str_kml_line_pos_speed, "%5.1f", kl->speed_kmh);
+  kmlbuf[kmlbuf_pos+str_kml_line_pos_speed+5] = ' '; // replace null
+
   memcpy(a+str_kml_line_pos_time, kl->timestamp, 22);
+  memcpy(a+str_kml_line_pos_timed, kl->timestamp, 22);
 
   kmlbuf_pos += str_kml_line_len;
 }
@@ -281,7 +297,11 @@ void kml_arrow(struct s_kml_arrow *ka)
   sprintf(kmlbuf+str_kml_arrow_pos_right, "%5.2f", ka->right < 99.99 ? ka->right : 99.99);
   kmlbuf[str_kml_arrow_pos_right+5] = ' '; // replace null
 
+  sprintf(kmlbuf+str_kml_arrow_pos_speed, "%5.1f", ka->speed_kmh);
+  kmlbuf[str_kml_arrow_pos_speed+5] = ' '; // replace null
+
   memcpy(kmlbuf+str_kml_arrow_pos_time, ka->timestamp, 22);
+  memcpy(kmlbuf+str_kml_arrow_pos_timed, ka->timestamp, 22);
 
   kmlbuf_start = 0; // include arrow in the output
 }

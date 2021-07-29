@@ -654,6 +654,7 @@ void draw_kml_line(char *line)
     x_kml_line->value = iriavg;
     x_kml_line->left  = iri[0];
     x_kml_line->right = iri[1];
+    x_kml_line->speed_kmh = speed_mms*3.6e-3;
     char *b = nthchar(line, 9, ','); // position to date, line[7] is frst char of time
     timestamp[ 2] = b[5]; // year/10
     timestamp[ 3] = b[6]; // year%10
@@ -677,6 +678,7 @@ void draw_kml_line(char *line)
       x_kml_arrow->value = iriavg;
       x_kml_arrow->left  = iri[0];
       x_kml_arrow->right = iri[1];
+      x_kml_arrow->speed_kmh = x_kml_line->speed_kmh;
       char *b = nthchar(line, 8, ','); // position to heading
       char str_heading[5] = "0000"; // storage for parsing
       str_heading[0] = b[1];
