@@ -689,7 +689,7 @@ void draw_kml_line(char *line)
       str_heading[0] = b[1];
       str_heading[1] = b[2];
       str_heading[2] = b[3];
-      str_heading[3] = b[5];
+      str_heading[3] = b[5]; // skip b[4]=='.'
       //str_heading[4] = 0;
       int iheading = strtol(str_heading, NULL, 10); // parse as integer
       x_kml_arrow->heading   = iheading*0.1; // convert to float

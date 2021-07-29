@@ -269,6 +269,8 @@ void kml_arrow(struct s_kml_arrow *ka)
   sprintf(kmlbuf+str_kml_arrow_pos_name, "%5.2f", ka->value < 99.99 ? ka->value : 99.99);
   kmlbuf[str_kml_arrow_pos_name+5] = '<'; // replace null
 
+  memcpy(kmlbuf+str_kml_arrow_pos_time, ka->timestamp, 22);
+
   kmlbuf_start = 0; // include arrow in the output
 }
 
