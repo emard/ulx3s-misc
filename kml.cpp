@@ -218,7 +218,7 @@ void kml_line(struct s_kml_line *kl)
   char *a = kmlbuf+kmlbuf_pos;
 
   sprintf(a+str_kml_line_pos_lonlat, "%+011.6f,%+010.6f %+011.6f,%+010.6f",
-    kl->lon1, kl->lat1, kl->lon2, kl->lat2);
+    kl->lon[0], kl->lat[0], kl->lon[1], kl->lat[1]);
   kmlbuf[kmlbuf_pos+str_kml_line_pos_lonlat+45] = '<'; // replace null
 
   sprintf(a+str_kml_line_pos_color, "%08X", color32(1024*kl->value/red_iri));
@@ -253,10 +253,10 @@ void kml_arrow(struct s_kml_arrow *ka)
 
 void kml_demo_line(void)
 {
-    x_kml_line->lon1      = 16.000000;
-    x_kml_line->lat1      = 46.000000 +  0 * 0.00001;
-    x_kml_line->lon2      = 16.000000;
-    x_kml_line->lat2      = 46.000000 +  1 * 0.00001;
+    x_kml_line->lon[0]    = 16.000000;
+    x_kml_line->lat[0]    = 46.000000 +  0 * 0.00001;
+    x_kml_line->lon[1]    = 16.000000;
+    x_kml_line->lat[1]    = 46.000000 +  1 * 0.00001;
     x_kml_line->value     = 1.0;
     x_kml_line->timestamp = "2021-07-24T11:54:19.0Z";
     kml_line(x_kml_line);
@@ -297,10 +297,10 @@ void kml_content(void)
 
   for(i = 0; i < 3000; i += step)
   {
-    x_kml_line->lon1      = 16.000000;
-    x_kml_line->lat1      = 46.000000 +  i       * 0.00001;
-    x_kml_line->lon2      = 16.000000;
-    x_kml_line->lat2      = 46.000500 + (i+step) * 0.00001;
+    x_kml_line->lon[0]    = 16.000000;
+    x_kml_line->lat[0]    = 46.000000 +  i       * 0.00001;
+    x_kml_line->lon[1]    = 16.000000;
+    x_kml_line->lat[1]    = 46.000500 + (i+step) * 0.00001;
     x_kml_line->value     = i/1024.0;
     x_kml_line->timestamp = "2021-07-24T11:54:19.0Z";
     kml_line(x_kml_line);

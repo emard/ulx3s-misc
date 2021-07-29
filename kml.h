@@ -9,7 +9,7 @@ struct s_kml_arrow
 
 struct s_kml_line
 {
-  float lon1, lat1, lon2, lat2, value;
+  float lon[2], lat[2], value;
   char *timestamp, *description;
 };
 
