@@ -4,7 +4,6 @@ esp32
 
     [ ] sensor hotplug
     [ ] kml iterate old logs and finalize
-    [x] kml generation
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
@@ -62,6 +61,8 @@ esp32
     [x] SD card compatiblity sandisk
     [x] web shorten time from power to BTN0 reading
     [x] web server bug eraseing HTML name when file in non-root directory is deleted
+    [x] kml OBD mode bugs last latlon overwritten
+    [x] kml generation
 
 core
 
