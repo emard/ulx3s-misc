@@ -649,7 +649,9 @@ void draw_kml_line(char *line, struct tm *tm)
     *lon = last_latlon.lon_deg + abs(last_latlon.lon_umin)*1.66666666e-8;
     if(last_latlon.lon_umin < 0)
       *lon = -*lon;
-    x_kml_line->value = 1.0;
+    x_kml_line->value = iriavg;
+    x_kml_line->left  = iri[0];
+    x_kml_line->right = iri[1];
     char *b = nthchar(line, 9, ','); // position to date, line[7] is frst char of time
     timestamp[ 2] = b[5]; // year/10
     timestamp[ 3] = b[6]; // year%10
@@ -661,9 +663,9 @@ void draw_kml_line(char *line, struct tm *tm)
     timestamp[12] = line[ 8]; // hour%10
     timestamp[14] = line[ 9]; // minute/10
     timestamp[15] = line[10]; // minute%10
-    timestamp[17] = line[11]; // second/10
-    timestamp[18] = line[12]; // second%10
-    timestamp[20] = line[14]; // 1/10 second
+    timestamp[17] = line[11]; // int(second)/10
+    timestamp[18] = line[12]; // int(second)%10
+    timestamp[20] = line[14]; // second*10%10 (1/10 seconds)
     x_kml_line->timestamp = timestamp;
     kml_line(x_kml_line);
     write_log_kml(0);

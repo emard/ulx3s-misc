@@ -3,14 +3,14 @@
 
 struct s_kml_arrow
 {
-  float lon, lat, value, heading;
+  float lon, lat, value, left, right, heading;
   char *timestamp, *description;
 };
 extern struct s_kml_arrow x_kml_arrow[];
 
 struct s_kml_line
 {
-  float lon[2], lat[2], value;
+  float lon[2], lat[2], value, left, right;
   char *timestamp, *description;
 };
 extern struct s_kml_line x_kml_line[];
