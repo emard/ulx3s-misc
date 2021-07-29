@@ -73,7 +73,9 @@ int str_kml_line_len;
 const char *str_kml_arrow = "\
       <Placemark id=\"id\">\n\
         <name>NAME5</name>\n\
-        <description>DESCRIPTION1234567890123456789012345678901234567890\n\
+        <description>\
+L=LEFT5 mm/m\n\
+R=RIGHT mm/m\n\
         </description>\n\
         <visibility>1</visibility>\n\
         <Style>\n\
@@ -98,6 +100,8 @@ int str_kml_arrow_pos_lonlat;
 int str_kml_arrow_pos_heading;
 int str_kml_arrow_pos_time;
 int str_kml_arrow_pos_name;
+int str_kml_arrow_pos_left;
+int str_kml_arrow_pos_right;
 int str_kml_arrow_pos_color;
 int str_kml_arrow_len;
 
@@ -148,6 +152,8 @@ void kml_init(void)
   str_kml_arrow_pos_lonlat     = strstr(str_kml_arrow, "LONLAT"    ) - str_kml_arrow;
   str_kml_arrow_pos_heading    = strstr(str_kml_arrow, "HEAD"      ) - str_kml_arrow;
   str_kml_arrow_pos_name       = strstr(str_kml_arrow, "NAME"      ) - str_kml_arrow;
+  str_kml_arrow_pos_left       = strstr(str_kml_arrow, "LEFT"      ) - str_kml_arrow;
+  str_kml_arrow_pos_right      = strstr(str_kml_arrow, "RIGHT"     ) - str_kml_arrow;
   str_kml_arrow_pos_time       = strstr(str_kml_arrow, "TIMESTAMP" ) - str_kml_arrow;
   str_kml_arrow_pos_color      = strstr(str_kml_arrow, "COLOR"     ) - str_kml_arrow;
   str_kml_arrow_len            = strlen(str_kml_arrow);
@@ -268,6 +274,12 @@ void kml_arrow(struct s_kml_arrow *ka)
 
   sprintf(kmlbuf+str_kml_arrow_pos_name, "%5.2f", ka->value < 99.99 ? ka->value : 99.99);
   kmlbuf[str_kml_arrow_pos_name+5] = '<'; // replace null
+
+  sprintf(kmlbuf+str_kml_arrow_pos_left, "%5.2f", ka->left < 99.99 ? ka->left : 99.99);
+  kmlbuf[str_kml_arrow_pos_left+5] = ' '; // replace null
+
+  sprintf(kmlbuf+str_kml_arrow_pos_right, "%5.2f", ka->right < 99.99 ? ka->right : 99.99);
+  kmlbuf[str_kml_arrow_pos_right+5] = ' '; // replace null
 
   memcpy(kmlbuf+str_kml_arrow_pos_time, ka->timestamp, 22);
 
