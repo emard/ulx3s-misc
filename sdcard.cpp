@@ -789,9 +789,7 @@ void close_log_wav(void)
 
 void write_kml_header(void)
 {
-  kml_header();
-  file_kml.write((uint8_t *)kmlbuf, str_kml_header_len);
-  // file_kml.write('H');
+  file_kml.write((uint8_t *)str_kml_header, str_kml_header_len);
 }
 
 // finalize kml file, no more writes after this

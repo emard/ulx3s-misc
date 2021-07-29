@@ -3,6 +3,7 @@
 extern char *kmlbuf;
 extern int kmlbuf_len;
 extern int kmlbuf_pos;
+extern char *str_kml_header;
 extern int str_kml_header_len;
 extern int str_kml_footer_len;
 
