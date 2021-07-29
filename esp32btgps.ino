@@ -752,7 +752,7 @@ void handle_obd_line_complete(void)
 {
   //line[line_i-1] = 0; // replace \r termination with 0
   //write_tag(line); // debug
-  Serial.println(line); // debug
+  //Serial.println(line); // debug
   #if 0 // debug
   if(line[1] == 'E') // match 'E' in "SEARCHING"
   {
