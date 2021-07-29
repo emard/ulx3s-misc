@@ -18,8 +18,7 @@ uint8_t kmlbuf_has_arrow = 0;
 float red_iri = 2.5;
 
 struct s_kml_arrow x_kml_arrow[1];
-
-struct s_kml_line x_kml_line[1];
+struct s_kml_line  x_kml_line[1];
 
 #if 0
 void kml_open(void)
@@ -160,7 +159,6 @@ void kml_init(void)
   str_kml_footer_pos_end       = strstr(str_kml_footer, "TIMEEND"  ) - str_kml_footer;
   str_kml_footer_len           = strlen(str_kml_footer);
 
-
   str_kml_footer_simple_len    = strlen(str_kml_footer_simple);
 }
 // init buffer for subsequent adding lines and arrows
@@ -178,7 +176,6 @@ void kml_buf_init(void)
   
   kmlbuf_pos = str_kml_arrow_len; // write position past arrow, default to first line
   kmlbuf_start = str_kml_arrow_len; // same as above is file write default starting point
-
 }
 
 void kml_header(void)
@@ -272,66 +269,8 @@ void kml_arrow(struct s_kml_arrow *ka)
   sprintf(kmlbuf+str_kml_arrow_pos_name, "%5.2f", ka->value < 99.99 ? ka->value : 99.99);
   kmlbuf[str_kml_arrow_pos_name+5] = '<'; // replace null
 
-  kmlbuf_has_arrow = 1;
+  kmlbuf_start = 0; // include arrow in the output
 }
-
-void kml_demo_line(void)
-{
-    x_kml_line->lon[0]    = 16.000000;
-    x_kml_line->lat[0]    = 46.000000 +  0 * 0.00001;
-    x_kml_line->lon[1]    = 16.000000;
-    x_kml_line->lat[1]    = 46.000000 +  1 * 0.00001;
-    x_kml_line->value     = 1.0;
-    x_kml_line->timestamp = "2021-07-24T11:54:19.0Z";
-    kml_line(x_kml_line);
-}
-
-#if 0
-// if buffer is full then write
-void kml_write(uint8_t force)
-{
-  //printf("kmlbuf_pos %d\n", kmlbuf_pos);
-  if(force == 0 && kmlbuf_pos < kmlbuf_len-str_kml_line_len-1)
-    return;  // there is space for another line, don't write yet
-  if(kmlbuf_has_arrow)
-  { // write lines including the arrow
-    // fwrite(kmlbuf, kmlbuf_pos, 1, fkml);
-    kmlbuf_has_arrow = 0; // consumed
-  }
-  else
-  { // skip arrow, write only lines
-    // fwrite(kmlbuf+str_kml_arrow_len, kmlbuf_pos-str_kml_arrow_len, 1, fkml);
-  }
-  kmlbuf_pos = str_kml_arrow_len; // consumed, default start next write past arrow
-  kmlbuf_start = str_kml_arrow_len;
-}
-
-void kml_content(void)
-{
-  int i;
-  const int step = 8;
-
-  x_kml_arrow->lon       = 16.000000;
-  x_kml_arrow->lat       = 46.000000;
-  x_kml_arrow->heading   =  0.0;
-  x_kml_arrow->value     =  1.0;
-  x_kml_arrow->timestamp = "2021-07-24T11:54:19.0Z";
-  kml_arrow(x_kml_arrow);
-  kml_write(0);
-
-  for(i = 0; i < 3000; i += step)
-  {
-    x_kml_line->lon[0]    = 16.000000;
-    x_kml_line->lat[0]    = 46.000000 +  i       * 0.00001;
-    x_kml_line->lon[1]    = 16.000000;
-    x_kml_line->lat[1]    = 46.000500 + (i+step) * 0.00001;
-    x_kml_line->value     = i/1024.0;
-    x_kml_line->timestamp = "2021-07-24T11:54:19.0Z";
-    kml_line(x_kml_line);
-    kml_write(0);
-  }
-}
-#endif
 
 void kml_footer(char *begin, char *end)
 {
@@ -348,26 +287,4 @@ void kml_footer(char *begin, char *end)
 
   memcpy(kmlbuf+str_kml_footer_pos_begin, begin, 22);
   memcpy(kmlbuf+str_kml_footer_pos_end, end, 22);
-
-  // fwrite(kmlbuf, str_kml_footer_len, 1, fkml);
 }
-
-void kml_close(void)
-{
-  // fclose(fkml);
-}
-
-#if 0
-int main(int argc, char *argv[])
-{
-  kml_init();
-  kml_open();
-  kml_header();
-  kml_buf_init();
-  kml_content();
-  kml_footer("2021-07-24T00:00:32.6Z", "2021-07-24T14:59:26.4Z");
-  kml_close();
-  printf("line %d bytes\narrow %d bytes\nkml_buf_len %d bytes\n",
-    str_kml_line_len, str_kml_arrow_len, kmlbuf_len);
-}
-#endif

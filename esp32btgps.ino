@@ -677,7 +677,27 @@ void draw_kml_line(char *line)
     timestamp[20] = line[14]; // second*10%10 (1/10 seconds)
     x_kml_line->timestamp = timestamp;
     kml_line(x_kml_line);
-    write_log_kml(0);
+    if(travel100m_prev != travel100m) // every 100m draw arrow
+    {
+      x_kml_arrow->lat   = *lat;
+      x_kml_arrow->lon   = *lon;
+      x_kml_arrow->value = iriavg;
+      x_kml_arrow->left  = iri[0];
+      x_kml_arrow->right = iri[1];
+      char *b = nthchar(line, 8, ','); // position to heading
+      char str_heading[5] = "0000"; // storage for parsing
+      str_heading[0] = b[1];
+      str_heading[1] = b[2];
+      str_heading[2] = b[3];
+      str_heading[3] = b[5];
+      //str_heading[4] = 0;
+      int iheading = strtol(str_heading, NULL, 10); // parse as integer
+      x_kml_arrow->heading   = iheading*0.1; // convert to float
+      x_kml_arrow->timestamp = timestamp;
+      kml_arrow(x_kml_arrow);
+    }
+    write_log_kml(0); // normal
+    //write_log_kml(1); // debug (for OBD)
     ipt ^= 1; // toggle 0/1
   }
 }
@@ -697,7 +717,7 @@ void handle_gps_line_complete(void)
       write_tag(line);
       //Serial.println(line); // debug
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
-      #if 0 // debug
+      #if 1 // debug
       int btn = spi_btn_read();    // debug
       if((btn & 4)) speed_ckt = 4320; // debug BTN2 80 km/h or 22 m/s
       if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
