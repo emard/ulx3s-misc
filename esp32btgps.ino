@@ -575,6 +575,15 @@ void get_iri(void)
 
 void handle_reconnect(void)
 {
+  // write footer to kml
+  // FIXME iterate over all old files except the one
+  // having current session name and write footer to
+  // those files that don't have it.
+  // after footer, there should be no more appending to the file.
+  // if file is appended with new kml line data.
+  // This will result in a messy kml file that googleearth
+  // refuses to open
+  finalize_logs();
   close_logs();
   write_last_nmea();
   session_log = 0; // request new timestamp file name when reconnected

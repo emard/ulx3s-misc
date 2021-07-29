@@ -789,15 +789,13 @@ void close_log_wav(void)
 
 void write_kml_header(void)
 {
-  file_kml.write((uint8_t *)str_kml_header, str_kml_header_len);
+  file_kml.write((uint8_t *)str_kml_header, strlen(str_kml_header));
 }
 
 // finalize kml file, no more writes after this
 void write_kml_footer(void)
 {
-  //kml_footer("2021-07-24T11:54:19.0Z", "2021-07-24T11:54:19.0Z"); // generate kml footer in kmlbuf
-  //file_kml.write((uint8_t *)kmlbuf, str_kml_footer_len);
-  file_kml.write('F');
+  file_kml.write((uint8_t *)str_kml_footer_simple, strlen(str_kml_footer_simple));
 }
 
 // force = 0: if kml buffer is full write
@@ -987,6 +985,14 @@ void flush_logs()
     return;
   if(log_wav_kml&1)
     flush_log_wav();
+}
+
+void finalize_logs()
+{
+  if(logs_are_open == 0)
+    return;
+  if(log_wav_kml&2)
+    write_kml_footer();
 }
 
 void close_logs()

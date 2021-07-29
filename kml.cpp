@@ -126,6 +126,14 @@ int str_kml_footer_pos_begin;
 int str_kml_footer_pos_end;
 int str_kml_footer_len;
 
+// simple constant footer, no LookAt
+const char *str_kml_footer_simple = "\
+    </Folder>\n\
+  </Document>\n\
+</kml>\n\
+";
+int str_kml_footer_simple_len;
+
 void kml_init(void)
 {
   str_kml_header_len           = strlen(str_kml_header);
@@ -151,8 +159,10 @@ void kml_init(void)
   str_kml_footer_pos_begin     = strstr(str_kml_footer, "TIMEBEGIN") - str_kml_footer;
   str_kml_footer_pos_end       = strstr(str_kml_footer, "TIMEEND"  ) - str_kml_footer;
   str_kml_footer_len           = strlen(str_kml_footer);
-}
 
+
+  str_kml_footer_simple_len    = strlen(str_kml_footer_simple);
+}
 // init buffer for subsequent adding lines and arrows
 // first entry is arrow (not always used)
 // subsequent entries are lines until end of buffer

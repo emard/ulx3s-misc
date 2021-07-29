@@ -55,6 +55,7 @@ int play_pcm(int n);
 int open_pcm(char *wav); // open wav filename
 void beep_pcm(int n);
 void write_rds(uint8_t *a, int n);
+void finalize_logs(void);
 void close_logs(void);
 void spi_slave_test(void);
 void spi_direct_test(void);
