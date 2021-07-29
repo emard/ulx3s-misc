@@ -78,6 +78,8 @@ bool loadFromSdCard(String path) {
     dataType = "audio/wav";
   } else if (path.endsWith(".xml")) {
     dataType = "text/xml";
+  } else if (path.endsWith(".kml")) {
+    dataType = "application/kml";
   } else if (path.endsWith(".pdf")) {
     dataType = "application/pdf";
   } else if (path.endsWith(".zip")) {
