@@ -16,18 +16,8 @@ int kmlbuf_pos = 0; // current write position
 uint8_t kmlbuf_has_arrow = 0;
 float red_iri = 2.5;
 
-struct s_kml_arrow
-{
-  float lon, lat, value, heading;
-  char *timestamp, *description;
-};
 struct s_kml_arrow x_kml_arrow[1];
 
-struct s_kml_line
-{
-  float lon1, lat1, lon2, lat2, value;
-  char *timestamp, *description;
-};
 struct s_kml_line x_kml_line[1];
 
 #if 0
