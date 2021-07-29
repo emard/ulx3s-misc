@@ -84,7 +84,7 @@ char *nthchar(char *a, int n, char c)
 
 // parsing this will write null-delimiters into a
 // so "a" will be broken afterwards
-// TODO N-S E-W is not handled yet, N E assumed
+// negative microminutes mean S or W
 void nmea2latlon(char *a, struct int_latlon *latlon)
 {
   int umin;
@@ -96,6 +96,8 @@ void nmea2latlon(char *a, struct int_latlon *latlon)
   umin += strtol(a+20, NULL, 10)*1000000;  // add integer minutes to microminutes
   a[20] = 0;
   latlon->lat_deg  = strtol(a+18, NULL, 10);
+  if(a[30]=='S')
+    umin = -umin;
   latlon->lat_umin = umin;
 
   a[44] = 0; // replace ','->0
@@ -104,5 +106,7 @@ void nmea2latlon(char *a, struct int_latlon *latlon)
   umin += strtol(a+35, NULL, 10)*1000000;  // add integer minutes to microminutes
   a[35] = 0;
   latlon->lon_deg  = strtol(a+32, NULL, 10);
+  if(a[45]=='W')
+    umin = -umin;
   latlon->lon_umin = umin;
 }
