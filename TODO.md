@@ -3,6 +3,7 @@
 esp32
 
     [ ] sensor hotplug
+    [ ] config log mode wav/kml
     [ ] kml iterate old logs and finalize
     [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
