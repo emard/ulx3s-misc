@@ -696,8 +696,8 @@ void draw_kml_line(char *line)
       x_kml_arrow->timestamp = timestamp;
       kml_arrow(x_kml_arrow);
     }
-    write_log_kml(0); // normal
-    //write_log_kml(1); // debug (for OBD)
+    //write_log_kml(0); // normal
+    write_log_kml(1); // debug (for OBD)
     ipt ^= 1; // toggle 0/1
   }
 }
@@ -758,7 +758,7 @@ void handle_obd_line_complete(void)
   //line[line_i-1] = 0; // replace \r termination with 0
   //write_tag(line); // debug
   Serial.println(line); // debug
-  #if 0 // debug
+  #if 1 // debug
   if(line[1] == 'E') // match 'E' in "SEARCHING"
   {
     strcpy(line, "00 00 00"); // debug last hex represents 0 km/h
