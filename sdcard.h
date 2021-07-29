@@ -27,6 +27,8 @@ extern String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
 extern uint8_t datetime_is_set;
 extern struct tm tm, tm_session; // tm_session gives new filename when reconnected
 extern size_t free_bytes;
+extern uint8_t log_wav_kml; // 1-wav 2-kml 3-both
+
 void mount(void);
 void umount(void);
 void spi_init(void);
