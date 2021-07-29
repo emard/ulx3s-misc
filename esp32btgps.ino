@@ -630,6 +630,33 @@ void nmea_time_log(void)
   nmea2ms_log[inmealog++] = nmea2ms;
 }
 
+// from nmea line draw a kml line,
+// remembers last point, keeps alternating 2-points
+void draw_kml_line(char *line)
+{
+  static int ipt = 0; // current point index, alternates 0/1
+  if(log_wav_kml&2)
+  { // only if kml mode is enabled, save CPU if when not enabled
+    strcpy(lastnmea, line); // copy line to last nmea as tmp buffer (overwritten by parser)
+    // parse lastnmea -> last_latlon (parsing spoils nmea string)
+    nmea2latlon(lastnmea, &last_latlon);
+    float *lat = &(x_kml_line->lat[ipt]);
+    float *lon = &(x_kml_line->lon[ipt]);
+    *lat = last_latlon.lat_deg + abs(last_latlon.lat_umin)*1.66666666e-8;
+    if(last_latlon.lat_umin < 0)
+      *lat = -*lat;
+    *lon = last_latlon.lon_deg + abs(last_latlon.lon_umin)*1.66666666e-8;
+    if(last_latlon.lon_umin < 0)
+      *lon = -*lon;
+    x_kml_line->value = 1.0;
+    x_kml_line->timestamp = "2021-07-24T11:54:19.0Z";
+    //kml_demo_line(); // TODO should use last_latlon here
+    kml_line(x_kml_line);
+    write_log_kml(0);
+    ipt ^= 1; // toggle 0/1
+  }
+}
+
 void handle_gps_line_complete(void)
 {
   line[line_i-1] = 0; // replace \n termination with 0
@@ -670,11 +697,7 @@ void handle_gps_line_complete(void)
         set_date_from_tm(&tm);
         handle_session_log(); // will open logs if fast enough (new filename when reconnected)
         travel_gps(); // calculate travel length
-        strcpy(lastnmea, line); // copy line to last nmea
-        // parse lastnmea -> last_latlon (parsing spoils nmea string)
-        nmea2latlon(lastnmea, &last_latlon);
-        kml_demo_line(); // TODO should use last_latlon here
-        write_log_kml(0);
+        draw_kml_line(line);
         strcpy(lastnmea, line); // copy line to last nmea for storage
         report_iri();
         report_status();
@@ -723,10 +746,10 @@ void handle_obd_line_complete(void)
     int travel_lon = stopcount << 16; // microminutes position next line using stopcount
     struct int_latlon fake_latlon;
     get_iri();
-    fake_latlon.lat_deg  = last_latlon.lat_deg  + (last_latlon.lat_umin + travel_lat)/60000000;
-    fake_latlon.lat_umin =                        (last_latlon.lat_umin + travel_lat)%60000000;
-    fake_latlon.lon_deg  = last_latlon.lon_deg  + (last_latlon.lon_umin + travel_lon)/60000000;
-    fake_latlon.lon_umin =                        (last_latlon.lon_umin + travel_lon)%60000000;
+    fake_latlon.lat_deg  = last_latlon.lat_deg  + (abs(last_latlon.lat_umin) + travel_lat)/60000000;
+    fake_latlon.lat_umin =                        (abs(last_latlon.lat_umin) + travel_lat)%60000000;
+    fake_latlon.lon_deg  = last_latlon.lon_deg  + (abs(last_latlon.lon_umin) + travel_lon)/60000000;
+    fake_latlon.lon_umin =                        (abs(last_latlon.lon_umin) + travel_lon)%60000000;
     // this fake NMEA has the same format like real NMEA from GPS
     // different is magnetic north, here is 000.0, GPS has nonzero like 003.4
     sprintf(iri_tag,
