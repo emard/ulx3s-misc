@@ -19,6 +19,7 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging and close all files
+    [ ] web visited link different color
     [ ] web roaming, multiple ap/pass
     [ ] web keep retrying to connect
     [ ] wep upload success readyState == 4, status == 200
