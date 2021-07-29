@@ -831,14 +831,14 @@ void handle_obd_silence(void)
 {
   if(!connected)
     return;
-  if(line_tdelta > 5000 && (obd_retry & 1) != 0)
+  if(line_tdelta > 7000 && (obd_retry & 1) != 0)
   {
     SerialBT.print(obd_request_kmh); // read speed km/h (without car, should print "SEARCHING...")
     obd_retry &= ~1;
   }
   #if 0
   else
-  if(line_tdelta > 7000 && (obd_retry & 2) != 0)
+  if(line_tdelta > 12000 && (obd_retry & 2) != 0)
   {
     SerialBT.print(obd_request_kmh); // read speed km/h (without car, should print "SEARCHING...")
     obd_retry &= ~2;
