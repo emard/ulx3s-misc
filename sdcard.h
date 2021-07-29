@@ -1,3 +1,6 @@
+#ifndef SDCARD_H
+#define SDCARD_H
+
 #include "FS.h"
 #include "SD_MMC.h"
 #include "RDS.h"
@@ -53,3 +56,5 @@ void close_logs(void);
 void spi_slave_test(void);
 void spi_direct_test(void);
 void read_cfg(void);
+
+#endif

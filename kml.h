@@ -10,4 +10,5 @@ extern int str_kml_footer_len;
 void kml_init(void);
 void kml_header(void);
 void kml_footer(char *begin, char *end);
+
 #endif
