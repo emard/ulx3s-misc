@@ -48,6 +48,7 @@ void write_last_nmea(void);
 void read_last_nmea(void);
 void set_date_from_tm(struct tm *tm);
 void write_tag(char *a);
+void write_log_kml(uint8_t force);
 int play_pcm(int n);
 int open_pcm(char *wav); // open wav filename
 void beep_pcm(int n);

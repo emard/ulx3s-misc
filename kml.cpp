@@ -251,6 +251,17 @@ void kml_arrow(struct s_kml_arrow *ka)
   kmlbuf_has_arrow = 1;
 }
 
+void kml_demo_line(void)
+{
+    x_kml_line->lon1      = 16.000000;
+    x_kml_line->lat1      = 46.000000 +  0 * 0.00001;
+    x_kml_line->lon2      = 16.000000;
+    x_kml_line->lat2      = 46.000000 +  1 * 0.00001;
+    x_kml_line->value     = 1.0;
+    x_kml_line->timestamp = "2021-07-24T11:54:19.0Z";
+    kml_line(x_kml_line);
+}
+
 #if 0
 // if buffer is full then write
 void kml_write(uint8_t force)

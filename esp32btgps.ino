@@ -667,6 +667,8 @@ void handle_gps_line_complete(void)
           iri[0]>99.99?99.99:iri[0], iri[1]>99.99?99.99:iri[1]);
         write_nmea_crc(iri_tag+1);
         write_tag(iri_tag);
+        kml_demo_line();
+        write_log_kml(0);
         set_date_from_tm(&tm);
         handle_session_log(); // will open logs if fast enough (new filename when reconnected)
         travel_gps(); // calculate travel length
