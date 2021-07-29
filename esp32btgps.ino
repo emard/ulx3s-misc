@@ -641,7 +641,7 @@ void nmea_time_log(void)
 
 // from nmea line draw a kml line,
 // remembers last point, keeps alternating 2-points
-void draw_kml_line(char *line, struct tm *tm)
+void draw_kml_line(char *line)
 {
   static int ipt = 0; // current point index, alternates 0/1
   static char timestamp[23] = "2000-00-00T00:00:00.0Z";
@@ -697,7 +697,7 @@ void handle_gps_line_complete(void)
       write_tag(line);
       //Serial.println(line); // debug
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
-      #if 1
+      #if 0 // debug
       int btn = spi_btn_read();    // debug
       if((btn & 4)) speed_ckt = 4320; // debug BTN2 80 km/h or 22 m/s
       if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
@@ -722,7 +722,7 @@ void handle_gps_line_complete(void)
         set_date_from_tm(&tm);
         handle_session_log(); // will open logs if fast enough (new filename when reconnected)
         travel_gps(); // calculate travel length
-        draw_kml_line(line, &tm);
+        draw_kml_line(line);
         strcpy(lastnmea, line); // copy line to last nmea for storage
         report_iri();
         report_status();
@@ -737,9 +737,9 @@ void handle_obd_line_complete(void)
 {
   //line[line_i-1] = 0; // replace \r termination with 0
   //write_tag(line); // debug
-  //Serial.println(line); // debug
+  Serial.println(line); // debug
   #if 0 // debug
-  if(strcmp(line,"STOPPED") == 0)
+  if(line[1] == 'E') // match 'E' in "SEARCHING"
   {
     strcpy(line, "00 00 00"); // debug last hex represents 0 km/h
     int btn = spi_btn_read(); // debug
@@ -800,6 +800,7 @@ void handle_obd_line_complete(void)
     write_tag(iri_tag);
     travel_ct0();
     iri_tag[80] = 0; // null terminate for lastnmea save
+    draw_kml_line(iri_tag+1); // for kml file generation
     strcpy(lastnmea, iri_tag+1); // for saving last nmea line
   }
   write_logs(); // use SPI_MODE1
