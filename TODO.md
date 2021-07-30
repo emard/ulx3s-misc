@@ -23,13 +23,13 @@ esp32
     [ ] web keep retrying to connect
     [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
-    [ ] web server files to separate directory
     [ ] web MDNS not updating address to dnsmasq
     [ ] web speak when can't connect
     [ ] web server list dump only filenames not full path
     [x] web free using JSON var name for bytes free in dir listing
     [x] web server show only filename, not full path
     [x] web server sort directories/files
+    [x] web server files to separate directory
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
     [x] WiFi server
@@ -65,6 +65,7 @@ esp32
     [x] kml iterate old logs and finalize
     [x] web finalize before starting server
     [x] config log mode wav/kml
+    [x] kml date in the document description
 
 core
 
