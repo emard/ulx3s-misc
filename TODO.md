@@ -10,6 +10,7 @@ esp32
     [ ] kml->kmz zip https://github.com/lbernstone/miniz-esp32
     [ ] kml handle missing sensors
     [ ] sensor hotplug
+    [ ] sensor range 2-4-8 g (must notify range in wav)
     [ ] script for binary exe upload to esp32 and fpga
     [ ] GPS time discontinuety warning
     [ ] TA flag at errors
