@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h> // abs
 #include "kml.h"
+#include "nmea.h"
 
 /*
 longitude -180..180 (x-direction, EW)
@@ -30,11 +31,11 @@ void kml_open(void)
 const char *str_kml_header = "\
 <kml xmlns=\"http://www.opengis.net/kml/2.2\">\n\
   <Document id=\"docid\">\n\
-    <name>profilog</name>\n\
-    <description>onboard kml</description>\n\
+    <name>TIMEDESCR0123456789012</name>\n\
+    <description>profilog from onboard kml generator</description>\n\
     <visibility>1</visibility>\n\
     <Folder id=\"folderid\">\n\
-      <name>recorded track</name>\n\
+      <name>Recorded data</name>\n\
       <description>\
 Speed-time 100 m segment cuts without statistics.\n\
 Click any point on the track to display mm/m value of a 100 m\n\
@@ -46,6 +47,7 @@ removing dependency on actual speed at which measurement has been done.\
       </description>\n\
       <visibility>1</visibility>\n\
 ";
+int str_kml_header_pos_time;
 int str_kml_header_len;
 
 const char *str_kml_line = "\
@@ -155,6 +157,7 @@ int str_kml_footer_simple_len;
 
 void kml_init(void)
 {
+  str_kml_header_pos_time      = strstr(str_kml_header, "TIMEDESCR" ) - str_kml_header;
   str_kml_header_len           = strlen(str_kml_header);
 
   str_kml_line_pos_lonlat      = strstr(str_kml_line, "LONLAT"    ) - str_kml_line;
@@ -204,9 +207,11 @@ void kml_buf_init(void)
   kmlbuf_start = str_kml_arrow_len; // same as above is file write default starting point
 }
 
-void kml_header(void)
+void kml_header(char *timestamp)
 {
   strcpy(kmlbuf, str_kml_header);
+  nmea2kmltime(timestamp, kmlbuf+str_kml_header_pos_time);
+  kmlbuf[str_kml_header_pos_time+22] = '<'; // replace null
 }
 
 // color 0-1023

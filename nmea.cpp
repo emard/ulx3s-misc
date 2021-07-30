@@ -31,6 +31,31 @@ int nmea2tm(char *a, struct tm *t)
   return 1;
 }
 
+// from GPRMC nmea timedate
+// to 22-byte len kml timestamp (23 bytes including null termination)
+int nmea2kmltime(char *nmea, char *kml)
+{
+  char *b = nthchar(nmea, 9, ',');
+  if (b == NULL)
+    return 0;
+  strcpy(kml, "2000-01-01T00:00:00.0Z");
+  // position to date, nmea[7] is first char of time
+  kml[ 2] = b[5]; // year/10
+  kml[ 3] = b[6]; // year%10
+  kml[ 5] = b[3]; // month/10
+  kml[ 6] = b[4]; // month%10
+  kml[ 8] = b[1]; // day/10
+  kml[ 9] = b[2]; // day%10
+  kml[11] = nmea[ 7]; // hour/10
+  kml[12] = nmea[ 8]; // hour%10
+  kml[14] = nmea[ 9]; // minute/10
+  kml[15] = nmea[10]; // minute%10
+  kml[17] = nmea[11]; // int(second)/10
+  kml[18] = nmea[12]; // int(second)%10
+  kml[20] = nmea[14]; // second*10%10 (1/10 seconds)
+  return 1;
+}
+
 inline uint8_t hex2int(char a)
 {
   return a <= '9' ? a-'0' : a-'A'+10;

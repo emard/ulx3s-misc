@@ -8,6 +8,7 @@ struct int_latlon
 };
 int nmea2s(char *nmea);
 int nmea2tm(char *a, struct tm *t);
+int nmea2kmltime(char *nmea, char *kml);
 void nmea2latlon(char *a, struct int_latlon *latlon);
 inline uint8_t hex2int(char a);
 uint8_t write_nmea_crc(char *a);

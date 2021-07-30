@@ -31,7 +31,7 @@ extern int str_kml_footer_simple_len;
 
 void kml_init(void);
 void kml_buf_init(void);
-void kml_header(void);
+void kml_header(char *timestamp);
 void kml_footer(char *begin, char *end);
 
 void kml_arrow(struct s_kml_arrow *ka);

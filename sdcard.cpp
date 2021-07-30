@@ -803,7 +803,8 @@ void close_log_wav(void)
 
 void write_kml_header(void)
 {
-  file_kml.write((uint8_t *)str_kml_header, strlen(str_kml_header));
+  kml_header(lastnmea);
+  file_kml.write((uint8_t *)kmlbuf, strlen(str_kml_header));
 }
 
 // finalize kml file, no more writes after this

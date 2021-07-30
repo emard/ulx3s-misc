@@ -657,20 +657,7 @@ void draw_kml_line(char *line)
     x_kml_line->left  = iri[0];
     x_kml_line->right = iri[1];
     x_kml_line->speed_kmh = speed_mms*3.6e-3;
-    char *b = nthchar(line, 9, ','); // position to date, line[7] is frst char of time
-    timestamp[ 2] = b[5]; // year/10
-    timestamp[ 3] = b[6]; // year%10
-    timestamp[ 5] = b[3]; // month/10
-    timestamp[ 6] = b[4]; // month%10
-    timestamp[ 8] = b[1]; // day/10
-    timestamp[ 9] = b[2]; // day%10
-    timestamp[11] = line[ 7]; // hour/10
-    timestamp[12] = line[ 8]; // hour%10
-    timestamp[14] = line[ 9]; // minute/10
-    timestamp[15] = line[10]; // minute%10
-    timestamp[17] = line[11]; // int(second)/10
-    timestamp[18] = line[12]; // int(second)%10
-    timestamp[20] = line[14]; // second*10%10 (1/10 seconds)
+    nmea2kmltime(line, timestamp);
     x_kml_line->timestamp = timestamp;
     kml_line(x_kml_line);
     if(travel100m_prev != travel100m) // every 100m draw arrow
