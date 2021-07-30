@@ -918,9 +918,11 @@ void parse_mac(uint8_t *mac, String a)
 
 void read_cfg(void)
 {
-  file_cfg = SD_MMC.open("/profilog/config/profilog.cfg", FILE_READ);
+  char *filename_cfg = "/profilog/config/profilog.cfg";
+  file_cfg = SD_MMC.open(filename_cfg, FILE_READ);
   int linecount = 0;
-  Serial.println("*** open /profilog/config/profilog.cfg ***");
+  Serial.print("*** open ");
+  Serial.println(filename_cfg);
   while(file_cfg.available())
   {
     String cfgline = file_cfg.readStringUntil('\n');
@@ -947,7 +949,8 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("obd_pin" )) OBD_PIN  = varvalue;
     else
     {
-      Serial.print("/profilog/config/profilog.cfg: error in line ");
+      Serial.print(filename_cfg);
+      Serial.print(": error in line ");
       Serial.println(linecount);
     }
   }
@@ -965,7 +968,8 @@ void read_cfg(void)
   Serial.print("AP_NAME  : "); Serial.println(AP_NAME);
   Serial.print("AP_PASS  : "); Serial.println(AP_PASS);
   Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
-  Serial.println("*** close /profilog/config/profilog.cfg ***");
+  Serial.print("*** close ");
+  Serial.println(filename_cfg);
   file_cfg.close();
 }
 
