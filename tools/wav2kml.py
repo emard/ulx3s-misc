@@ -346,13 +346,26 @@ lonlat_1st  = None
 
 k = kml.KML()
 ns = '{http://www.opengis.net/kml/2.2}'
-d = kml.Document(ns, id='docid', name='doc name', description='description')
-f = kml.Folder(ns, 'fid', 'f name', 'f description')
+d = kml.Document(ns, id='docid', name='DATETIME', description='profilog from wav2kml generator')
+#f = kml.Folder(ns, 'fid', 'f name', 'f description')
 k.append(d)
-d.append(f)
-nf = kml.Folder(ns, 'nested-fid', 'nested f name', 'nested f description')
-f.append(nf)
-f2 = kml.Folder(ns, 'id2', 'name2', 'description2')
+#d.append(f)
+#nf = kml.Folder(ns, 'nested-fid', 'nested f name', 'nested f description')
+#f.append(nf)
+recorded_data_description="\
+100 m segment cuts with statistics.\n\
+Click any point on the track to display mm/m value of a 100 m\n\
+segment measured before the point. Value represents average\n\
+rectified speed in the shock absorber over 100 m segment\n\
+and divided by standard speed of 80 km/h. Value comes from the\n\
+numeric model that calculates response at standard speed,\n\
+removing dependency on actual speed at which measurement has been done.\n\
+\n\
+Color codes:\n\
+2.5 RED, 2.0 YELLOW, 1.5 GREEN, 1.0 CYAN\n\
+0.5 BLUE, 0.3 VIOLET, 0.0 MAGENTA\n\
+"
+f2 = kml.Folder(ns, id='folderid', name='Recorded data', description=recorded_data_description)
 d.append(f2)
 t = kml.TimeStamp()
 
@@ -361,7 +374,6 @@ arrow_icon_href="http://maps.google.com/mapfiles/kml/shapes/arrow.png"
 # buffer to read wav
 b=bytearray(12)
 mvb=memoryview(b)
-
 
 for wavfile in argv[1:]:
   f = open(wavfile, "rb")
