@@ -36,14 +36,18 @@ const char *str_kml_header = "\
     <visibility>1</visibility>\n\
     <Folder id=\"folderid\">\n\
       <name>Recorded data</name>\n\
-      <description>\
+      <description>\n\
 Speed-time 100 m segment cuts without statistics.\n\
 Click any point on the track to display mm/m value of a 100 m\n\
 segment measured before the point. Value represents average\n\
 rectified speed in the shock absorber over 100 m segment\n\
 and divided by standard speed of 80 km/h. Value comes from the\n\
 numeric model that calculates response at standard speed,\n\
-removing dependency on actual speed at which measurement has been done.\
+removing dependency on actual speed at which measurement has been done.\n\
+\n\
+Color codes:\n\
+2.5 RED, 2.0 YELLOW, 1.5 GREEN, 1.0 CYAN\n\
+0.5 BLUE, 0.3 VIOLET, 0.0 MAGENTA\n\
       </description>\n\
       <visibility>1</visibility>\n\
 ";
