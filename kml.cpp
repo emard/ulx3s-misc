@@ -30,12 +30,18 @@ void kml_open(void)
 const char *str_kml_header = "\
 <kml xmlns=\"http://www.opengis.net/kml/2.2\">\n\
   <Document id=\"docid\">\n\
-    <name>doc name</name>\n\
-    <description>description</description>\n\
+    <name>profilog</name>\n\
+    <description>onboard kml</description>\n\
     <visibility>1</visibility>\n\
-    <Folder id=\"id1\">\n\
-      <name>name1</name>\n\
-      <description>description1</description>\n\
+    <Folder id=\"folderid\">\n\
+      <name>recorded track</name>\n\
+      <description>\
+ Speed-time segments cuts without statistics.\n\
+ Each point represents a 100 m segment measured before this point.\n\
+ Value is expressed as mm/m units, representing average rectified speed\n\
+ in the suspension unit over 100 m segment, normalized to standard\n\
+ speed of 80 km/h.\n\
+      </description>\n\
       <visibility>1</visibility>\n\
 ";
 int str_kml_header_len;
