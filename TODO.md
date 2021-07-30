@@ -6,6 +6,8 @@ esp32
     [ ] LCD display IP address and hostname
     [ ] LCD graphic track display
     [ ] RTC support (for OBD without GPS)
+    [ ] color scale config and description
+    [ ] kml handle missing sensors
     [ ] sensor hotplug
     [ ] script for binary exe upload to esp32 and fpga
     [ ] GPS time discontinuety warning
