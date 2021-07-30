@@ -37,6 +37,8 @@ int speed_ckt = -1; // centi-knots speed (kt*100)
 int speed_mms = -1; // mm/s speed
 int speed_kmh = -1; // km/h speed
 int fast_enough = 0; // for speed logging hysteresis
+uint8_t KMH_START = 12, KMH_STOP = 6; // km/h start/stop speed hystereis
+uint8_t KMH_BTN = 0; // debug btn2 for fake km/h
 int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
 float iri[2], iriavg;
 char iri2digit[4] = "0.0";
@@ -947,6 +949,10 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("obd_name")) OBD_NAME = varvalue;
     else if(varname.equalsIgnoreCase("obd_mac" )) parse_mac(OBD_MAC, varvalue);
     else if(varname.equalsIgnoreCase("obd_pin" )) OBD_PIN  = varvalue;
+    else if(varname.equalsIgnoreCase("log_mode")) log_wav_kml = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("kmh_stop")) KMH_STOP = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("kmh_btn" )) KMH_BTN = strtol(varvalue.c_str(), NULL,10);
     else
     {
       Serial.print(filename_cfg);
@@ -968,6 +974,10 @@ void read_cfg(void)
   Serial.print("AP_NAME  : "); Serial.println(AP_NAME);
   Serial.print("AP_PASS  : "); Serial.println(AP_PASS);
   Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
+  Serial.print("LOG_MODE : "); Serial.println(log_wav_kml);
+  Serial.print("KMH_START: "); Serial.println(KMH_START);
+  Serial.print("KMH_STOP : "); Serial.println(KMH_STOP);
+  Serial.print("KMH_BTN  : "); Serial.println(KMH_BTN);
   Serial.print("*** close ");
   Serial.println(filename_cfg);
   file_cfg.close();

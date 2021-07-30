@@ -528,7 +528,7 @@ void travel_ct0(void)
 
 void handle_fast_enough(void)
 {
-  if (speed_kmh > 12) // normal
+  if (speed_kmh > KMH_START) // normal
   {
     if (fast_enough == 0)
     {
@@ -537,7 +537,7 @@ void handle_fast_enough(void)
     }
     fast_enough = 1;
   }
-  if (speed_kmh < 6 && speed_kmh >= 0) // normal
+  if (speed_kmh < KMH_STOP && speed_kmh >= 0) // normal
   { // tunnel mode: ignore negative speed (no signal) when fast enough
     if (fast_enough)
     {
@@ -712,11 +712,12 @@ void handle_gps_line_complete(void)
       write_tag(line);
       //Serial.println(line); // debug
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
-      #if 0 // debug
-      int btn = spi_btn_read();    // debug
-      if((btn & 4)) speed_ckt = 4320; // debug BTN2 80 km/h or 22 m/s
-      if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
-      #endif
+      if(KMH_BTN) // debug
+      {
+        int btn = spi_btn_read();    // debug
+        if((btn & 4)) speed_ckt = KMH_BTN*54; // debug BTN2 4320 ckt = 80 km/h = 22 m/s
+        if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
+      }
       if(speed_ckt >= 0) // for tunnel mode keep speed if no signal (speed_ckt < 0)
       {
         speed_mms = (speed_ckt *  5268) >> 10;
@@ -753,14 +754,13 @@ void handle_obd_line_complete(void)
   //line[line_i-1] = 0; // replace \r termination with 0
   //write_tag(line); // debug
   //Serial.println(line); // debug
-  #if 0 // debug
+  if(KMH_BTN) // debug
   if(line[1] == 'E') // match 'E' in "SEARCHING"
   {
     strcpy(line, "00 00 00"); // debug last hex represents 0 km/h
     int btn = spi_btn_read(); // debug
-    if((btn & 4)) strcpy(line, "00 00 50"); // debug BTN2 80 km/h or 22 m/s
+    if((btn & 4)) sprintf(line, "00 00 %02X", KMH_BTN); // debug BTN2 default 80 km/h
   }
-  #endif
   if(line_i > 0 && line[line_i-1] == prompt_obd)
     SerialBT.print(obd_request_kmh); // next request
   else
