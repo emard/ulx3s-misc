@@ -2,16 +2,13 @@
 
 esp32
 
-    [ ] sensor hotplug
-    [ ] config log mode wav/kml
-    [ ] kml iterate old logs and finalize
-    [ ] RTC support (for OBD without GPS)
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
     [ ] LCD graphic track display
-    [ ] script for binary upload
+    [ ] RTC support (for OBD without GPS)
+    [ ] sensor hotplug
+    [ ] script for binary exe upload to esp32 and fpga
     [ ] GPS time discontinuety warning
-    [ ] OBD2 stop PPS PLL
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
     [ ] speech report when connected BPS/OBD
@@ -20,6 +17,7 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging and close all files
+    [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color
     [ ] web roaming, multiple ap/pass
     [ ] web keep retrying to connect
@@ -64,6 +62,9 @@ esp32
     [x] web server bug eraseing HTML name when file in non-root directory is deleted
     [x] kml OBD mode bugs last latlon overwritten
     [x] kml generation
+    [x] kml iterate old logs and finalize
+    [x] web finalize before starting server
+    [x] config log mode wav/kml
 
 core
 
