@@ -1,1 +1,1 @@
-veb server.
+veb
