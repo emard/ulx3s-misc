@@ -23,17 +23,17 @@ esp32
     [ ] btn to stop logging and close all files
     [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color
-    [ ] web roaming, multiple ap/pass
     [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
     [ ] web MDNS not updating address to dnsmasq
-    [ ] web speak when can't connect
+    [ ] web speak IP address
     [ ] web server list dump only filenames not full path
     [x] web free using JSON var name for bytes free in dir listing
     [x] web server show only filename, not full path
     [x] web server sort directories/files
     [x] web server files to separate directory
     [x] web keep retrying to connect
+    [x] web roaming, multiple ap/pass
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
     [x] WiFi server
