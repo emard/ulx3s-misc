@@ -26,7 +26,6 @@ esp32
     [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
     [ ] web MDNS not updating address to dnsmasq
-    [ ] web speak IP address
     [ ] web server list dump only filenames not full path
     [x] web free using JSON var name for bytes free in dir listing
     [x] web server show only filename, not full path
@@ -34,6 +33,7 @@ esp32
     [x] web server files to separate directory
     [x] web keep retrying to connect
     [x] web roaming, multiple ap/pass
+    [x] web speak IP address
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
     [x] WiFi server
