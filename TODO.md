@@ -24,7 +24,6 @@ esp32
     [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color
     [ ] web roaming, multiple ap/pass
-    [ ] web keep retrying to connect
     [ ] wep upload success readyState == 4, status == 200
     [ ] web server LED blink when activated and connected
     [ ] web MDNS not updating address to dnsmasq
@@ -34,6 +33,7 @@ esp32
     [x] web server show only filename, not full path
     [x] web server sort directories/files
     [x] web server files to separate directory
+    [x] web keep retrying to connect
     [x] EPS32 send to SPI speed, c/speed, report and tag iri
     [x] spoken report when sensors are missing
     [x] WiFi server
