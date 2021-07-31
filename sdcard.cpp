@@ -4,6 +4,7 @@
 #include "nmea.h"
 #include "kml.h"
 #include <sys/time.h>
+#include <WiFi.h> // for rds_report_ip()
 
 // TODO
 // too much of various code is put into this module
@@ -338,6 +339,37 @@ void rds_message(struct tm *tm)
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
+}
+
+void rds_report_ip(struct tm *tm)
+{
+  static uint8_t tmwait_prev;
+  uint8_t tmwait_new = tm->tm_sec/10;
+  char disp_short[9], disp_long[65];
+  if(tm)
+    if(tmwait_new != tmwait_prev)
+    {
+      tmwait_prev = tmwait_new;
+      IPAddress IP = WiFi.localIP();
+      String str_IP = WiFi.localIP().toString();
+      const char *c_str_IP = str_IP.c_str();
+      if((tmwait_new&1)) // print first and second half alternatively
+        sprintf(disp_short, "%d.%d.", IP[0], IP[1]);
+      else
+        sprintf(disp_short, ".%d.%d", IP[2], IP[3]);
+      sprintf(disp_long,  "http://%s", c_str_IP);
+      rds.ps(disp_short);
+      rds.rt(disp_long);
+      rds.ct(tm->tm_year + 1900, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
+      Serial.println(disp_short);
+      Serial.println(disp_long);
+      spi_master_tx_buf[0] = 0; // 1: write ram
+      spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
+      spi_master_tx_buf[2] = 0; // addr [23:16]
+      spi_master_tx_buf[3] = 0; // addr [15: 8]
+      spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+      master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
+    }
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
