@@ -12,6 +12,7 @@ searchobd.wav \
 lstrong.wav \
 rstrong.wav \
 webserver.wav \
+point.wav \
 1.wav \
 
 1.wav : numbers.sh
