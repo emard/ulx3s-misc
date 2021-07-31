@@ -5,8 +5,7 @@
 
 extern WebServer server;
 
-// how to handle hasSD?
-// by some shared global var maybe
+void monitorWiFi(void); // call it repeatedly from loop() to reconnect
 void web_setup(void);
 
 #endif

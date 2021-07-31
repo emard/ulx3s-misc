@@ -900,6 +900,7 @@ void loop_web(void)
 {
   t_ms = ms();
   server.handleClient();
+  monitorWiFi();
   speech();
 }
 

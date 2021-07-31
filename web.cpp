@@ -26,6 +26,7 @@
 */
 
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
@@ -38,6 +39,8 @@
 //const char* password = "GigabyteBrix";
 //const char* host = "esp32sd";
 
+boolean connectioWasAlive = false;
+WiFiMulti wifiMulti;
 WebServer server(80);
 
 #define hasSD card_is_mounted
@@ -269,12 +272,36 @@ void handleNotFound() {
   DBG_OUTPUT_PORT.print(message);
 }
 
+void monitorWiFi()
+{
+  if(wifiMulti.run() == WL_CONNECTED)
+  {
+    if(connectioWasAlive == false)
+    {
+      connectioWasAlive = true;
+      DBG_OUTPUT_PORT.print("Connected to \"");
+      DBG_OUTPUT_PORT.print(WiFi.SSID().c_str());
+      DBG_OUTPUT_PORT.print("\" as IP: ");
+      DBG_OUTPUT_PORT.println(WiFi.localIP());
+    }
+  }
+  else // wifiMulti.run() != WL_CONNECTED
+  {
+    if(connectioWasAlive == true)
+    {
+      connectioWasAlive = false;
+      DBG_OUTPUT_PORT.println("Disconnected, trying to reconnect");
+    }
+  }
+}
+
 // how to handle hasSD?
 // by some shared global var maybe
 void web_setup(void) {
   //DBG_OUTPUT_PORT.begin(115200);
   //DBG_OUTPUT_PORT.setDebugOutput(true);
   //DBG_OUTPUT_PORT.print("\n");
+  #if 0
   WiFi.mode(WIFI_STA);
   WiFi.begin(AP_NAME.c_str(), AP_PASS.c_str());
   DBG_OUTPUT_PORT.print("Connecting to ");
@@ -293,6 +320,14 @@ void web_setup(void) {
   }
   DBG_OUTPUT_PORT.print("Connected! IP address: ");
   DBG_OUTPUT_PORT.println(WiFi.localIP());
+  #endif
+
+  #if 1
+  delay(1000);
+  wifiMulti.addAP(AP_NAME.c_str(), AP_PASS.c_str()); // can add multiple NAME/PASS
+  for(int i = 0; i < 3; i++)
+    monitorWiFi();
+  #endif
 
   if (MDNS.begin(DNS_HOST.c_str())) {
     MDNS.addService("http", "tcp", 80);
