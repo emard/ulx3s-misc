@@ -23,7 +23,8 @@ extern struct int_latlon last_latlon;
 extern RDS rds;
 // config file parsing
 extern uint8_t GPS_MAC[6], OBD_MAC[6];
-extern String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
+#define AP_MAX 16 /* max number of APs */
+extern String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_PASS[], DNS_HOST;
 extern uint8_t datetime_is_set;
 extern struct tm tm, tm_session; // tm_session gives new filename when reconnected
 extern size_t free_bytes;

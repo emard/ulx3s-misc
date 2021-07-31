@@ -303,15 +303,34 @@ void web_setup(void) {
   //DBG_OUTPUT_PORT.setDebugOutput(true);
   //DBG_OUTPUT_PORT.print("\n");
 
-  wifiMulti.addAP(AP_NAME.c_str(), AP_PASS.c_str()); // repeat to add multiple NAME/PASS
+  for(int i = 0; i < AP_MAX; i++)
+    if(AP_PASS[i].length() > 2)
+    {
+      int delimpos = AP_PASS[i].indexOf(':');
+      if(delimpos > 1)
+      {
+        String ap_name = AP_PASS[i].substring(0, delimpos);
+        String ap_pass = AP_PASS[i].substring(delimpos+1);
+        #if 0
+        DBG_OUTPUT_PORT.print("ap_name: \"");
+        DBG_OUTPUT_PORT.print(ap_name);
+        DBG_OUTPUT_PORT.print("\" ap_pass: \"");
+        DBG_OUTPUT_PORT.print(ap_pass);
+        DBG_OUTPUT_PORT.println("\"");
+        #endif
+        wifiMulti.addAP(ap_name.c_str(), ap_pass.c_str());
+      }
+    }
   monitorWiFi();
 
   if (MDNS.begin(DNS_HOST.c_str())) {
     MDNS.addService("http", "tcp", 80);
+    #if 0
     DBG_OUTPUT_PORT.println("MDNS responder started");
     DBG_OUTPUT_PORT.print("You can now connect to http://");
     DBG_OUTPUT_PORT.print(DNS_HOST.c_str());
     DBG_OUTPUT_PORT.println(".local");
+    #endif
   }
 
   server.on("/list", HTTP_GET, printDirectory);

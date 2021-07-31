@@ -23,7 +23,7 @@ static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
 
 // config file parsing
 uint8_t GPS_MAC[6], OBD_MAC[6];
-String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_NAME, AP_PASS, DNS_HOST;
+String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_PASS[AP_MAX], DNS_HOST;
 
 File file_kml, file_accel, file_pcm, file_cfg;
 char filename_data[256] = "/profilog/data/accel.wav";
@@ -926,9 +926,11 @@ void read_cfg(void)
   int linecount = 0;
   Serial.print("*** open ");
   Serial.println(filename_cfg);
+  int ap_n = 0; // AP counter
   while(file_cfg.available())
   {
     String cfgline = file_cfg.readStringUntil('\n');
+    linecount++;
     if(cfgline.length() < 2) // skip empty and short lines
       continue;
     if(cfgline[0] == '#') // skip comments
@@ -936,13 +938,11 @@ void read_cfg(void)
     int delimpos = cfgline.indexOf(':'); // delimiter position
     if(delimpos < 2) // skip lines without proper ":" delimiter
       continue;
-    linecount++;
-    String varname = cfgline.substring(0, delimpos-1);
+    String varname = cfgline.substring(0, delimpos);
     varname.trim(); // inplace trim leading and trailing whitespace
     String varvalue = cfgline.substring(delimpos+1); // to end of line
     varvalue.trim(); // inplace trim leading and trailing whitespace
-    if     (varname.equalsIgnoreCase("ap_name" )) AP_NAME  = varvalue;
-    else if(varname.equalsIgnoreCase("ap_pass" )) AP_PASS  = varvalue;
+    if     (varname.equalsIgnoreCase("ap_pass" )) {if(ap_n<AP_MAX) AP_PASS[ap_n++] = varvalue; }
     else if(varname.equalsIgnoreCase("dns_host")) DNS_HOST = varvalue;
     else if(varname.equalsIgnoreCase("gps_name")) GPS_NAME = varvalue;
     else if(varname.equalsIgnoreCase("gps_mac" )) parse_mac(GPS_MAC, varvalue);
@@ -972,8 +972,8 @@ void read_cfg(void)
     OBD_MAC[0], OBD_MAC[1], OBD_MAC[2], OBD_MAC[3], OBD_MAC[4], OBD_MAC[5]);
   Serial.println(macstr);
   Serial.print("OBD_PIN  : "); Serial.println(OBD_PIN);
-  Serial.print("AP_NAME  : "); Serial.println(AP_NAME);
-  Serial.print("AP_PASS  : "); Serial.println(AP_PASS);
+  for(int i = 0; i < ap_n; i++)
+  { Serial.print("AP_PASS  : "); Serial.println(AP_PASS[i]); }
   Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
   Serial.print("LOG_MODE : "); Serial.println(log_wav_kml);
   Serial.print("KMH_START: "); Serial.println(KMH_START);
