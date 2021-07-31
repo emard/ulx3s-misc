@@ -5,7 +5,7 @@
 
 extern WebServer server;
 
-void monitorWiFi(void); // call it repeatedly from loop() to reconnect
+int monitorWiFi(void); // call it repeatedly from loop() to reconnect
 void web_setup(void);
 
 #endif

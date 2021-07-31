@@ -273,7 +273,7 @@ void handleNotFound() {
 }
 
 // call this from loop() repeatedly
-void monitorWiFi()
+int monitorWiFi()
 {
   if(wifiMulti.run() == WL_CONNECTED)
   {
@@ -285,6 +285,7 @@ void monitorWiFi()
       DBG_OUTPUT_PORT.print("\" as IP: ");
       DBG_OUTPUT_PORT.println(WiFi.localIP());
     }
+    return 1;
   }
   else // wifiMulti.run() != WL_CONNECTED
   {
@@ -294,6 +295,7 @@ void monitorWiFi()
       DBG_OUTPUT_PORT.println("Disconnected, trying to reconnect");
     }
   }
+  return 0;
 }
 
 // how to handle hasSD?

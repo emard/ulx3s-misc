@@ -2,6 +2,7 @@
 #include "web.h"
 #include "kml.h"
 #include <sys/time.h>
+#include <WiFi.h> // to speak IP
 
 #include "BluetoothSerial.h"
 // set Board->ESP32 Arduino->ESP32 Dev Module
@@ -67,6 +68,8 @@ static char *sensor_balance_file[] =
   "/profilog/speak/lstrong.wav",
   "/profilog/speak/rstrong.wav",
 };
+
+static char *speakip[16] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, };
 
 uint32_t t_ms; // t = ms();
 uint32_t ct0; // first char in line millis timestamp
@@ -896,13 +899,38 @@ void loop_run(void)
   speech(); // runs speech PCM
 }
 
+void speak_report_ip(struct tm *tm)
+{
+  if(tm->tm_sec%20 == 0) // speak every 20s
+  if(speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
+  {
+    String str_IP = WiFi.localIP().toString();
+    const char *c_str_IP = str_IP.c_str();
+    int i, n = str_IP.length();
+    if(n > 15)
+      n = 15;
+    for(i = 0; i < n; i++)
+    {
+      char c = c_str_IP[i];
+      if(c >= '0' && c <= '9')
+        speakip[i] = digit_file[c-'0'];
+      else
+        speakip[i] = "/profilog/speak/point.wav";
+    }
+    speakip[i] = NULL; // terminator
+    speakfiles = speakip;
+  }
+}
+
 void loop_web(void)
 {
   t_ms = ms();
   server.handleClient();
-  monitorWiFi();
+  int is_connected = monitorWiFi();
   getLocalTime(&tm, NULL);
   rds_report_ip(&tm);
+  if(is_connected)
+    speak_report_ip(&tm);
   speech();
 }
 
