@@ -272,6 +272,7 @@ void handleNotFound() {
   DBG_OUTPUT_PORT.print(message);
 }
 
+// call this from loop() repeatedly
 void monitorWiFi()
 {
   if(wifiMulti.run() == WL_CONNECTED)
@@ -301,33 +302,9 @@ void web_setup(void) {
   //DBG_OUTPUT_PORT.begin(115200);
   //DBG_OUTPUT_PORT.setDebugOutput(true);
   //DBG_OUTPUT_PORT.print("\n");
-  #if 0
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(AP_NAME.c_str(), AP_PASS.c_str());
-  DBG_OUTPUT_PORT.print("Connecting to ");
-  DBG_OUTPUT_PORT.println(AP_NAME.c_str());
 
-  // Wait for connection
-  uint8_t i = 0;
-  while (WiFi.status() != WL_CONNECTED && i++ < 20) {//wait 10 seconds
-    delay(500);
-  }
-  if (i == 21) {
-    DBG_OUTPUT_PORT.print("Could not connect to ");
-    DBG_OUTPUT_PORT.print(AP_NAME.c_str());
-    DBG_OUTPUT_PORT.println(", reboot to try again.");
-    return;
-  }
-  DBG_OUTPUT_PORT.print("Connected! IP address: ");
-  DBG_OUTPUT_PORT.println(WiFi.localIP());
-  #endif
-
-  #if 1
-  delay(1000);
-  wifiMulti.addAP(AP_NAME.c_str(), AP_PASS.c_str()); // can add multiple NAME/PASS
-  for(int i = 0; i < 3; i++)
-    monitorWiFi();
-  #endif
+  wifiMulti.addAP(AP_NAME.c_str(), AP_PASS.c_str()); // repeat to add multiple NAME/PASS
+  monitorWiFi();
 
   if (MDNS.begin(DNS_HOST.c_str())) {
     MDNS.addService("http", "tcp", 80);
