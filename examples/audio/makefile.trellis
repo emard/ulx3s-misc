@@ -24,6 +24,7 @@ TOP_MODULE_FILE = hdl/$(TOP_MODULE).v
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
   hdl/trianglewave.v \
+  hdl/squarewave.v \
   hdl/sinewave.v \
   hdl/dacpwm.v \
   hdl/i2s_v.v
