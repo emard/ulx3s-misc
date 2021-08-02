@@ -362,9 +362,10 @@ numeric model that calculates response at standard speed,\n\
 removing dependency on actual speed at which measurement has been done.\n\
 \n\
 Color codes:\n\
-2.5 RED, 2.0 YELLOW, 1.5 GREEN, 1.0 CYAN\n\
-0.5 BLUE, 0.3 VIOLET, 0.0 MAGENTA\n\
-"
+%.1f RED, %.1f YELLOW, %.1f GREEN, %.1f CYAN\n\
+%.1f BLUE, %.1f VIOLET, 0.0 MAGENTA\n\
+" % (red_iri, 2.0/2.5*red_iri, 1.5/2.5*red_iri, 1.0/2.5*red_iri,
+0.5/2.5*red_iri, 0.3/2.5*red_iri)
 f2 = kml.Folder(ns, id='folderid', name='Recorded data', description=recorded_data_description)
 d.append(f2)
 t = kml.TimeStamp()
