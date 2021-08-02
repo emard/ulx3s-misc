@@ -75,6 +75,11 @@ esp32
 
 core
 
+    [ ] at stops, quick slope DC removal
+    [ ] slope DC removal with proportional slope speed (relative to 0-slope)
+    [ ] accel DC removal, for high freq (many zero cross) use last zero-cross
+        to apply next slope calculation. This is to avoid random sampling
+        which may generate large slope noise.
     [ ] significant L/R unbalance at taking the turns
         clipping (out of range) or
         different state of slope DC offset compensation?
