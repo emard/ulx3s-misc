@@ -25,16 +25,19 @@ use work.coefficients.all; -- coefficients matrix
 
 entity slope is
 generic (
-  a_default: integer := 15872; -- default accel sensor reading (ideally 16384 measuring 1g)
+  a_default: integer := 4000; -- default accel sensor reading
+  -- 16000 measuring 1g at +-2g range
+  --  8000 measuring 1g at +-4g range
+  --  4000 measuring 1g at +-8g range
   scale: integer := 16; -- 16 bits scale
   int_sample_rate_hz: integer := 1000; -- Hz accel input sample rate
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
   -- 1.0e6 to scale resulting slope to um/s
   -- 9.81 = 1g standard gravity
-  -- 16384 sensor reading for 1g
+  -- 16000 sensor reading for 1g
   -- 1e-3 delta t (1/1kHz sample_rate)
-  -- 65536*1.0e6*1e-3*9.81/16384 = 39240
-  int_vx2_scale: integer := 39240 -- not used here, used in ESP32
+  -- 65536*1.0e6*1e-3*9.81/16000 = 40181.76 -- used in ESP32, spi_write_speed()
+  int_vx2_scale: integer := 40182 -- not used here
 );
 port (
   clk              : in  std_logic;
@@ -42,8 +45,8 @@ port (
   enter            : in  std_logic; -- '1' pulse to enter acceleration and speed for every
   hold             : in  std_logic; -- hold adjustment correction
   vx               : in  std_logic_vector(15 downto 0); -- mm/s, actually um travel for each 1kHz pulse, unsigned
-  cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx^2 = 2452500/vx^2 signed
-  azl, azr         : in  std_logic_vector(15 downto 0); -- acceleration signed 16384 = 1g
+  cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx = 40181.76/vx signed
+  azl, azr         : in  std_logic_vector(15 downto 0); -- acceleration signed 16000 = 1g
   slope_l, slope_r : out std_logic_vector(31 downto 0); -- um/m slope signed
   ready            : out std_logic; -- '1' pulse when result is ready
   d0, d1, d2, d3   : out std_logic_vector(31 downto 0) -- debug outputs
