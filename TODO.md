@@ -7,6 +7,8 @@ esp32
     [ ] LCD graphic track display
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
+    [ ] notify g-range in wav
+    [ ] notify g-range in kml
     [ ] kml->kmz zip https://github.com/lbernstone/miniz-esp32
     [ ] kml handle missing sensors
     [ ] sensor hotplug
