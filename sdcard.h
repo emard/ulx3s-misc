@@ -31,6 +31,7 @@ extern size_t free_bytes;
 extern uint8_t log_wav_kml; // 1-wav 2-kml 3-both
 extern uint8_t KMH_START, KMH_STOP;
 extern uint8_t KMH_BTN;
+extern uint8_t G_RANGE; // +-2/4/8 g sensor range for reading +-32000
 
 void mount(void);
 void umount(void);

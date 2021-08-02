@@ -84,7 +84,6 @@ int travel100m, travel100m_prev = 0; // previous 100m travel
 int session_log = 0; // request new timestamp filename when reconnected
 int speak_search = 1; // 0 - don't search, 1-search gps, 2-search obd
 int32_t srvz[2];
-//int iri_balance = 0;
 int stopcount = 0;
 
 // form nmea and travel in GPS mode
@@ -223,12 +222,6 @@ void setup() {
     return;
   }
 
-  for (int i = 0; i < 6; i++)
-  {
-    delay(100);
-    adxl355_init();
-  }
-
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS); // Initialise channel MCPWM0A on PPS pin
   MCPWM0.clk_cfg.prescale = 24;                 // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
   MCPWM0.timer[0].period.prescale = 100 / PPSHz - 1; // Set timer 0 prescaler to 9 (6.4MHz/(9+1))=640kHz)
@@ -274,6 +267,14 @@ void setup() {
   read_cfg();
   read_last_nmea();
   umount();
+
+  // accelerometer range +-2/4/8g can be changed from cfg file
+  // ADXL should be initialized after reading cfg file
+  for (int i = 0; i < 6; i++)
+  {
+    delay(100);
+    adxl355_init();
+  }
 
   SerialBT.begin("ESP32", true);
   SerialBT.setPin(GPS_PIN.c_str());
@@ -561,21 +562,14 @@ void handle_fast_enough(void)
 void get_iri(void)
 {
   spi_srvz_read(srvz);
-  const float srvz2iri = 2.5e-6; // (1e-3 * 0.25/100)
+  float srvz2iri = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : 10.0e-6 /* G_RANGE == 8 * ;
+  // 2.5e-6 = (1e-3 * 0.25/100)
   iri[0] = srvz[0]*srvz2iri;
   iri[1] = srvz[1]*srvz2iri;
   iriavg = sensor_check_status == 0 ? 0.0
          : sensor_check_status == 1 ? iri[0]
          : sensor_check_status == 2 ? iri[1]
          : (iri[0]+iri[1])/2;  // 3, average of both sensors
-  #if 0
-  // calculated at report every 100m to save CPU cycles
-  iri_balance = 0;
-  if(sensor_check_status == 3)
-    iri_balance = (srvz[0]>>1) > srvz[1] ? 1 //  left > 2*right
-                : (srvz[1]>>1) > srvz[0] ? 2 // right > 2*left
-                : 0;
-  #endif
 }
 
 void handle_reconnect(void)

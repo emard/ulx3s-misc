@@ -46,6 +46,7 @@ char iri2digit[4] = "0.0";
 struct int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
+uint8_t G_RANGE = 8; // +-2/4/8 g sensor range (at digital reading +-32000)
 
 // SD status
 size_t total_bytes, used_bytes, free_bytes, free_MB;
@@ -91,7 +92,7 @@ void adxl355_init(void)
   // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
   // high speed i2c, INT1,INT2 active high
   //delay(100);
-  adxl355_write_reg(RANGE, 1);
+  adxl355_write_reg(RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : 3 /* G_RANGE == 8 */);
   // sample rate i=0-10, 4kHz/2^i, 0:4kHz ... 10:3.906Hz
   //delay(100);
   adxl355_write_reg(FILTER, 0);
@@ -983,6 +984,7 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("obd_mac" )) parse_mac(OBD_MAC, varvalue);
     else if(varname.equalsIgnoreCase("obd_pin" )) OBD_PIN  = varvalue;
     else if(varname.equalsIgnoreCase("log_mode")) log_wav_kml = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("g_range"))  G_RANGE = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_stop")) KMH_STOP = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_btn" )) KMH_BTN = strtol(varvalue.c_str(), NULL,10);
@@ -1008,6 +1010,7 @@ void read_cfg(void)
   { Serial.print("AP_PASS  : "); Serial.println(AP_PASS[i]); }
   Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
   Serial.print("LOG_MODE : "); Serial.println(log_wav_kml);
+  Serial.print("G_RANGE  : "); Serial.println(G_RANGE);
   Serial.print("KMH_START: "); Serial.println(KMH_START);
   Serial.print("KMH_STOP : "); Serial.println(KMH_STOP);
   Serial.print("KMH_BTN  : "); Serial.println(KMH_BTN);
