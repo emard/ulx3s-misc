@@ -581,9 +581,8 @@ if True:
 if True:
   if time_last:
     print(k.to_string(prettyprint=True).replace(
-  "<description>description</description>",
-  "<description>description</description>\n\
-    <LookAt>\n\
+  "</Document>",
+    "<LookAt>\n\
       <longitude>%f</longitude>\n\
       <latitude>%f</latitude>\n\
       <heading>0</heading>\n\
@@ -594,7 +593,8 @@ if True:
         <begin>%s</begin>\n\
         <end>%s</end>\n\
       </TimeSpan>\n\
-    </LookAt>" % (lonlat_1st[0], lonlat_1st[1], time_1st.decode("utf-8"), time_last.decode("utf-8"))
+    </LookAt>\n\
+  </Document>" % (lonlat_1st[0], lonlat_1st[1], time_1st.decode("utf-8"), time_last.decode("utf-8"))
     ))
   else:
     print(k.to_string(prettyprint=True))
