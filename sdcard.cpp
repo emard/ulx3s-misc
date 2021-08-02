@@ -194,7 +194,7 @@ void rds_init(void)
 // speed in mm/s
 void spi_speed_write(int spd)
 {
-  float cvx2     = spd > 0 ? 39240.0e3/spd : 0.0;
+  float cvx2     = spd > 0 ? 40181.76e3/spd : 0.0; // 1e3 factor because speed is in mm/s not m/s
   uint32_t icvx2 = int(cvx2);
   uint16_t ivx   = spd > 0 ? spd : 0;
   spi_master_tx_buf[0] = 0; // 0: write ram
