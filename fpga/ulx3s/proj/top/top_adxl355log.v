@@ -601,7 +601,7 @@ module top_adxl355log
       if(ram_addr[2:0] == 5)
       begin
         vx   <= {vx_ram[0],vx_ram[1]}; // mm/s vx speed
-        cvx2 <= {vx_ram[2],vx_ram[3],vx_ram[4],ram_di}; // c/vx^2 speed
+        cvx2 <= {vx_ram[2],vx_ram[3],vx_ram[4],ram_di}; // c/vx speed
         slope_reset <= {vx_ram[0],vx_ram[1]} == 0; // speed 0
       end
     end
@@ -699,7 +699,7 @@ module top_adxl355log
     .hold(1'b0), // normal
     //.hold(btn_debounce[1]), // debug
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
-    //.cvx2(39240/22), // int_vx2_scale/vx, vx in m/s, 1783 for 22 m/s
+    //.cvx2(40182/22), // int_vx2_scale/vx, vx in m/s, 1826 for 22 m/s
     .vx(vx), // vx in mm/s
     .cvx2(cvx2), // int_vx2_scale/vx, vx in m/s
     //.azl(ma), // btn

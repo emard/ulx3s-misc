@@ -46,7 +46,7 @@ port (
   hold             : in  std_logic; -- hold adjustment correction
   vx               : in  std_logic_vector(15 downto 0); -- mm/s, actually um travel for each 1kHz pulse, unsigned
   cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx = 40181.76/vx signed
-  azl, azr         : in  std_logic_vector(15 downto 0); -- acceleration signed 16000 = 1g
+  azl, azr         : in  std_logic_vector(15 downto 0); -- acceleration signed 16000 = 1g at +-2g range
   slope_l, slope_r : out std_logic_vector(31 downto 0); -- um/m slope signed
   ready            : out std_logic; -- '1' pulse when result is ready
   d0, d1, d2, d3   : out std_logic_vector(31 downto 0) -- debug outputs
