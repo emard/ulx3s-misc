@@ -92,7 +92,7 @@ void adxl355_init(void)
   // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
   // high speed i2c, INT1,INT2 active high
   //delay(100);
-  adxl355_write_reg(RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : 3 /* G_RANGE == 8 */);
+  adxl355_write_reg(RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
   // sample rate i=0-10, 4kHz/2^i, 0:4kHz ... 10:3.906Hz
   //delay(100);
   adxl355_write_reg(FILTER, 0);
