@@ -562,7 +562,7 @@ void handle_fast_enough(void)
 void get_iri(void)
 {
   spi_srvz_read(srvz);
-  float srvz2iri = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : 10.0e-6 /* G_RANGE == 8 * ;
+  float srvz2iri = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ;
   // 2.5e-6 = (1e-3 * 0.25/100)
   iri[0] = srvz[0]*srvz2iri;
   iri[1] = srvz[1]*srvz2iri;
