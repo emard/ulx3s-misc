@@ -25,7 +25,7 @@ use work.coefficients.all; -- coefficients matrix
 
 entity slope is
 generic (
-  a_default: integer := 0; -- slope DC removal accel compensation at power up
+  g_initial: integer := 0; -- slope DC removal accel compensation at power up
   -- 16000 measuring 1g at +-2g range
   --  8000 measuring 1g at +-4g range
   --  4000 measuring 1g at +-8g range
@@ -57,71 +57,119 @@ architecture RTL of slope is
   signal ix, ix_next: unsigned(31 downto 0); -- traveled distance um
   signal ivx: unsigned(15 downto 0);
   signal sl, sr, sr_next, sl_next : signed(31+scale downto 0); -- sum of const/vz, 42 bits (last 10 bits dropped at output)
-  signal iazl, iazr : signed(15 downto 0); -- z-acceleration signed
-  signal adifl, adifr : signed(15 downto 0) := to_signed(-a_default,16); -- z-acceleration differential adjust
-  signal cntadj: unsigned(6 downto 0); -- counter how often to adjust slope
-  signal next_interval : std_logic;
+  signal iazl, iazr : signed(15 downto 0); -- z-acceleration, DC removed
+  signal gzl, gzr : signed(15 downto 0) := to_signed(g_initial,16); -- g used to remove slope DC offset
+  constant avg_bits: integer := 4; -- bits to collect az sum to average
+  signal avg_n: unsigned(avg_bits-1 downto 0); -- counter
+  signal sgzl, sgzr : signed(15+avg_bits downto 0); -- sum to average g used to remove slope DC offset
+  signal agzl, agzr : signed(15 downto 0) := to_signed(g_initial,16); -- average g used to remove slope DC offset
+  constant cntadj_bits: integer := 5; -- every 2**n next_interval control slope DC offset
+  signal cntadj: unsigned(cntadj_bits-1 downto 0); -- counter
+  signal control_now: std_logic := '0'; -- control enable
+  signal next_interval : std_logic; -- every 25cm x-interval
   constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
-  signal icvx2: signed(31 downto 0);
+  signal icvx2: signed(31 downto 0); -- constant/vx
   signal avz2l, avz2r: signed(icvx2'length+iazl'length-1 downto 0); -- multiplier result 48-bit
 begin
-  ivx <= unsigned(vx);
+  ivx <= unsigned(vx); -- same value, vhdl type conversion
+
+  -- sum to average gz
   process(clk)
   begin
     if rising_edge(clk) then
-      --if enter = '1' and hold = '0' then
-      --if enter = '1' and cntadj = to_unsigned(0,cntadj'length) and hold = '0' then
-      if reset = '1' then
-        adifl  <= not signed(azl); -- approx -signed(azl)
-        adifr  <= not signed(azr); -- approx -signed(azr)
-        --cntadj <= (others => '0');
-      else
-      if next_interval = '1' and cntadj = to_unsigned(0,cntadj'length) and hold = '0' then
-        -- slowly adjust acceleration to prevent slope build up DC
-        if sl < 0 then
-          if avz2l < 0 then -- derivative
-            adifl <= adifl + 2;
-          else
-            adifl <= adifl + 1;
-          end if;
+      if enter = '1' then
+        if avg_n = to_unsigned(0,avg_n'length) then
+          -- averaged values, shift-divided by N
+          agzl <= sgzl(15+avg_bits downto avg_bits);
+          agzr <= sgzr(15+avg_bits downto avg_bits);
+          -- reset sum
+          sgzl <= (others => '0');
+          sgzr <= (others => '0');
         else
-          if sl > 0 then
-            if avz2l > 0 then -- derivative
-              adifl <= adifl - 2;
-            else
-              adifl <= adifl - 1;
-            end if;
-          end if;
+          -- accumulate sum
+          sgzl <= sgzl + signed(azl);
+          sgzr <= sgzr + signed(azr);
         end if;
-        if sr < 0 then
-          if avz2r < 0 then
-            adifr <= adifr + 2;
-          else
-            adifr <= adifr + 1;
-          end if;
-        else
-          if sr > 0 then
-            if avz2r > 0 then
-              adifr <= adifr - 2;
-            else
-              adifr <= adifr - 1;
-            end if;
-          end if;
-        end if;
+        avg_n <= avg_n + 1;
       end if;
-      iazl <= adifl + signed(azl);
-      iazr <= adifr + signed(azr);
-      if next_interval = '1' then
+    end if;
+  end process;
+
+  -- when to control: run counter and generate control_now enable signal
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if next_interval = '1' and hold = '0' then
+        if cntadj = to_unsigned(0,cntadj'length) then
+          control_now <= '1';
+        else
+          control_now <= '0';
+        end if;
         cntadj <= cntadj + 1;
+      else
+        control_now <= '0';
       end if;
+    end if;
+  end process;
+  
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        gzl <= signed(azl); -- use current value
+        gzr <= signed(azr); -- use current value
+        --gzl <= agzl; -- use average value
+        --gzr <= agzr; -- use average value
+      else
+        if control_now = '1' then
+          -- slowly adjust acceleration to prevent slope build up DC
+          -- too fast adjustment increases iri
+          if sl(sl'high) = '1' then -- sl < 0
+            if avz2l(avz2l'high) = '1' then -- avz2l < 0 (sl derivative)
+              gzl <= gzl - 2;
+            else
+              gzl <= gzl - 1;
+            end if;
+          else -- sl >= 0
+            if avz2l(avz2l'high) = '0' then -- avz2l >= 0 (sl derivative)
+              gzl <= gzl + 2;
+            else
+              gzl <= gzl + 1;
+            end if;
+          end if;
+          if sr(sr'high) = '1' then -- sr < 0
+            if avz2r(avz2r'high) = '1' then -- avz2r < 0 (sr derivative)
+              gzr <= gzr - 2;
+            else
+              gzr <= gzr - 1;
+            end if;
+          else -- sr >= 0
+            if avz2r(avz2r'high) = '0' then -- avz2r >= 0 (sr derivative)
+              gzr <= gzr + 2;
+            else
+              gzr <= gzr + 1;
+            end if;
+          end if;
+        end if;
       end if; -- if reset = '1' then .. else
+    end if;
+  end process;
+
+  -- subtract g in z-direction (gzl, gzr) from sensors reading
+  -- this is not real g but a controlled value close to g
+  -- that prevents slope to accumulate large DC offset
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      iazl <= signed(azl) - gzl;
+      iazr <= signed(azr) - gzr;
     end if;
   end process;
 
   icvx2  <= signed(cvx2);
 
   -- x_inc should be less than interval_x
-  ix_next  <= (others => '0') when reset = '1' else ix + ivx;
+  ix_next  <= ix + ivx;
   sl_next  <= (others => '0') when reset = '1' else sl + avz2l(31+scale downto 0);
   sr_next  <= (others => '0') when reset = '1' else sr + avz2r(31+scale downto 0);
 
@@ -158,5 +206,4 @@ begin
   slope_r <= std_logic_vector(sr(31+scale downto scale));
   ready <= next_interval;
   
-  d0 <= x"0000" & std_logic_vector(adifl);
 end;

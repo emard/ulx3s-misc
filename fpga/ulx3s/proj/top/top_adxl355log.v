@@ -607,10 +607,12 @@ module top_adxl355log
     slope_reset <= vx == 0; // speed 0
   end
   
-  // trying to fix synth problems
+  // NOTE reg delay, trying to fix synth problems
   reg slope_reset2;
   always @(posedge clk)
+  begin
     slope_reset2 <= slope_reset;
+  end
 
   reg  signed [31:0] ma = a_default;
   reg  signed [31:0] mb = a_default;
@@ -702,7 +704,8 @@ module top_adxl355log
     .enter(sync_pulse), // normal
     //.enter(btn_rising[1]), // debug
     //.enter(autofire), // debug
-    .hold(1'b0), // normal
+    //.hold(1'b0), // normal
+    .hold(1'b1), // don't remove slope DC
     //.hold(btn_debounce[1]), // debug
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
     //.cvx2(40182/22), // int_vx2_scale/vx, vx in m/s, 1826 for 22 m/s
