@@ -25,7 +25,7 @@ use work.coefficients.all; -- coefficients matrix
 
 entity slope is
 generic (
-  a_default: integer := 4000; -- default accel sensor reading
+  a_default: integer := 0; -- slope DC removal accel compensation at power up
   -- 16000 measuring 1g at +-2g range
   --  8000 measuring 1g at +-4g range
   --  4000 measuring 1g at +-8g range
@@ -56,10 +56,10 @@ end;
 architecture RTL of slope is
   signal ix, ix_next: unsigned(31 downto 0); -- traveled distance um
   signal ivx: unsigned(15 downto 0);
-  signal sl, sr, sr_next, sl_next : signed(31+scale downto 0); -- sum of const/vz^2, 42 bits (last 10 bits dropped at output)
+  signal sl, sr, sr_next, sl_next : signed(31+scale downto 0); -- sum of const/vz, 42 bits (last 10 bits dropped at output)
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration signed
   signal adifl, adifr : signed(15 downto 0) := to_signed(-a_default,16); -- z-acceleration differential adjust
-  signal cntadj: unsigned(0 downto 0); -- counter how often to adjust slope
+  signal cntadj: unsigned(6 downto 0); -- counter how often to adjust slope
   signal next_interval : std_logic;
   constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
   signal icvx2: signed(31 downto 0);
@@ -71,6 +71,11 @@ begin
     if rising_edge(clk) then
       --if enter = '1' and hold = '0' then
       --if enter = '1' and cntadj = to_unsigned(0,cntadj'length) and hold = '0' then
+      if reset = '1' then
+        adifl  <= not signed(azl); -- approx -signed(azl)
+        adifr  <= not signed(azr); -- approx -signed(azr)
+        --cntadj <= (others => '0');
+      else
       if next_interval = '1' and cntadj = to_unsigned(0,cntadj'length) and hold = '0' then
         -- slowly adjust acceleration to prevent slope build up DC
         if sl < 0 then
@@ -109,28 +114,22 @@ begin
       if next_interval = '1' then
         cntadj <= cntadj + 1;
       end if;
+      end if; -- if reset = '1' then .. else
     end if;
   end process;
 
   icvx2  <= signed(cvx2);
 
-  -- x_inc should be less tnan interval_x
-  ix_next  <= ix + ivx;
-  sl_next  <= sl + avz2l(31+scale downto 0);
-  sr_next  <= sr + avz2r(31+scale downto 0);
+  -- x_inc should be less than interval_x
+  ix_next  <= (others => '0') when reset = '1' else ix + ivx;
+  sl_next  <= (others => '0') when reset = '1' else sl + avz2l(31+scale downto 0);
+  sr_next  <= (others => '0') when reset = '1' else sr + avz2r(31+scale downto 0);
 
   process(clk)
   begin
     if rising_edge(clk) then
-      avz2l <= iazl * icvx2; -- differential of slope
-      avz2r <= iazr * icvx2; -- differential of slope
-      if reset = '1' then
-        ix <= (others => '0');
-        sl <= (others => '0');
-        sr <= (others => '0');
-        next_interval <= '0';
-      else
-        if enter = '1' then
+        -- FIXME reset is not working, synth problems
+        if enter = '1' or reset = '1' then
           if ix > interval_x then
             ix <= ix_next - interval_x;
             next_interval <= '1';
@@ -143,7 +142,14 @@ begin
         else
           next_interval <= '0';
         end if;
-      end if;
+    end if;
+  end process;
+
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      avz2l <= iazl * icvx2; -- differential of slope
+      avz2r <= iazr * icvx2; -- differential of slope
     end if;
   end process;
 

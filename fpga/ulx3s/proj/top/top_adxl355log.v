@@ -602,10 +602,15 @@ module top_adxl355log
       begin
         vx   <= {vx_ram[0],vx_ram[1]}; // mm/s vx speed
         cvx2 <= {vx_ram[2],vx_ram[3],vx_ram[4],ram_di}; // c/vx speed
-        slope_reset <= {vx_ram[0],vx_ram[1]} == 0; // speed 0
       end
     end
+    slope_reset <= vx == 0; // speed 0
   end
+  
+  // trying to fix synth problems
+  reg slope_reset2;
+  always @(posedge clk)
+    slope_reset2 <= slope_reset;
 
   reg  signed [31:0] ma = a_default;
   reg  signed [31:0] mb = a_default;
@@ -691,8 +696,9 @@ module top_adxl355log
   slope_inst
   (
     .clk(clk),
-    .reset(1'b0),
-    // .reset(slope_reset), // maybe we should not reset
+    //.reset(1'b0),
+    //.reset(btn_debounce[1]), // debug
+    .reset(slope_reset2), // check is reset working (synth problems)
     .enter(sync_pulse), // normal
     //.enter(btn_rising[1]), // debug
     //.enter(autofire), // debug
