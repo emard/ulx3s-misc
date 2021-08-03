@@ -135,7 +135,8 @@ begin
             next_interval <= '1';
           else
             ix <= ix_next;
-            next_interval <= '0';
+            -- next_interval <= '0'; -- do not reset srvz buffer
+            next_interval <= reset; -- persistent reset will zero-fill srvz buffer
           end if;
           sl <= sl_next;
           sr <= sr_next;
