@@ -60,7 +60,7 @@ architecture RTL of slope is
   signal sl_prev, sr_prev, dsl, dsr : signed(31+scale downto 0); -- previous slope for derivative
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration, DC removed
   signal gzl, gzr : signed(15 downto 0) := to_signed(g_initial,16); -- g used to remove slope DC offset
-  constant avg_bits: integer := 8; -- bits to collect az sum to average
+  constant avg_bits: integer := 4; -- every 2**n measurements sum to average agzl, agzr
   signal avg_n: unsigned(avg_bits-1 downto 0); -- counter
   signal sgzl, sgzr : signed(15+avg_n'length downto 0); -- sum to average g used to remove slope DC offset
   constant sg0: signed := to_signed(0,sgzl'length); -- 0 for reset sum
@@ -176,8 +176,10 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      iazl <= signed(azl) - gzl;
-      iazr <= signed(azr) - gzr;
+      --iazl <= signed(azl) - gzl; -- current values
+      --iazr <= signed(azr) - gzr; -- current values
+      iazl <= agzl - gzl; -- average values (tyre ribs removal)
+      iazr <= agzr - gzr; -- average values (tyre ribs removal)
     end if;
   end process;
 
@@ -191,7 +193,6 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-        -- FIXME reset is not working, synth problems
         if enter = '1' or reset = '1' then
           if ix > interval_x then
             ix <= ix_next - interval_x;
@@ -212,8 +213,8 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      avz2l <= iazl * icvx2; -- differential of slope
-      avz2r <= iazr * icvx2; -- differential of slope
+      avz2l <= iazl * icvx2;
+      avz2r <= iazr * icvx2;
     end if;
   end process;
 
