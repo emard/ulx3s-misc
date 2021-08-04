@@ -700,12 +700,12 @@ module top_adxl355log
     .clk(clk),
     //.reset(1'b0),
     //.reset(btn_debounce[1]), // debug
-    .reset(slope_reset2), // check is reset working (synth problems)
+    .reset(slope_reset2), // check is reset working (delayed, sometimes fixes synth problems)
     .enter(sync_pulse), // normal
     //.enter(btn_rising[1]), // debug
     //.enter(autofire), // debug
-    //.hold(1'b0), // normal
-    .hold(1'b1), // don't remove slope DC
+    .hold(1'b0), // normal
+    //.hold(1'b1), // don't remove slope DC (DC offset control possible malfunction, synth problems)
     //.hold(btn_debounce[1]), // debug
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
     //.cvx2(40182/22), // int_vx2_scale/vx, vx in m/s, 1826 for 22 m/s
@@ -719,7 +719,8 @@ module top_adxl355log
     .slope_r(slope_r), // um/m
     //.slope_l(data[127:96]),
     //.slope_r(data[95:64]),
-    //.d0(data[63:32]),
+    //.d0(slope_ag),
+    //.d1(slope_aa),
     .ready(slope_ready)
   );
 
@@ -752,6 +753,8 @@ module top_adxl355log
   assign data[ 31: 0]  = slope_r;
   assign data[127:96]  = srvz[63:32];
   assign data[ 95:64]  = srvz[31: 0];
+  //assign data[127:96]  = slope_aa;
+  //assign data[ 95:64]  = slope_ag;
   //assign data[ 63:32]  = vx;
   //assign data[ 31: 0]  = cvx2;
 
