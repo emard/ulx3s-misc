@@ -61,7 +61,8 @@ architecture RTL of slope is
   signal gzl, gzr : signed(15 downto 0) := to_signed(g_initial,16); -- g used to remove slope DC offset
   constant avg_bits: integer := 4; -- bits to collect az sum to average
   signal avg_n: unsigned(avg_bits-1 downto 0); -- counter
-  signal sgzl, sgzr : signed(15+avg_bits downto 0); -- sum to average g used to remove slope DC offset
+  signal sgzl, sgzr : signed(15+avg_n'length downto 0); -- sum to average g used to remove slope DC offset
+  constant sg0: signed := to_signed(0,sgzl'length); -- 0 for reset sum
   signal agzl, agzr : signed(15 downto 0) := to_signed(g_initial,16); -- average g used to remove slope DC offset
   constant cntadj_bits: integer := 5; -- every 2**n next_interval control slope DC offset
   signal cntadj: unsigned(cntadj_bits-1 downto 0); -- counter
@@ -80,11 +81,11 @@ begin
       if enter = '1' then
         if avg_n = to_unsigned(0,avg_n'length) then
           -- averaged values, shift-divided by N
-          agzl <= sgzl(15+avg_bits downto avg_bits);
-          agzr <= sgzr(15+avg_bits downto avg_bits);
-          -- reset sum
-          sgzl <= (others => '0');
-          sgzr <= (others => '0');
+          agzl <= sgzl(15+avg_n'length downto avg_n'length);
+          agzr <= sgzr(15+avg_n'length downto avg_n'length);
+          -- reset sum, take first element
+          sgzl <= sg0 + signed(azl);
+          sgzr <= sg0 + signed(azr);
         else
           -- accumulate sum
           sgzl <= sgzl + signed(azl);
@@ -111,15 +112,15 @@ begin
       end if;
     end if;
   end process;
-  
+
   process(clk)
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        gzl <= signed(azl); -- use current value
-        gzr <= signed(azr); -- use current value
-        --gzl <= agzl; -- use average value
-        --gzr <= agzr; -- use average value
+        --gzl <= signed(azl); -- use current value
+        --gzr <= signed(azr); -- use current value
+        gzl <= agzl; -- use average value
+        gzr <= agzr; -- use average value
       else
         if control_now = '1' then
           -- slowly adjust acceleration to prevent slope build up DC
@@ -206,4 +207,6 @@ begin
   slope_r <= std_logic_vector(sr(31+scale downto scale));
   ready <= next_interval;
   
+  d0 <= std_logic_vector(agzl) & std_logic_vector(agzr);
+  d1 <= std_logic_vector(azl) & std_logic_vector(azr);
 end;
