@@ -56,7 +56,8 @@ end;
 architecture RTL of slope is
   signal ix, ix_next: unsigned(31 downto 0); -- traveled distance um
   signal ivx: unsigned(15 downto 0);
-  signal sl, sr, sr_next, sl_next : signed(31+scale downto 0); -- sum of const/vz, 42 bits (last 10 bits dropped at output)
+  signal sl, sr, sl_next, sr_next : signed(31+scale downto 0); -- sum of const/vz, 42 bits (last 10 bits dropped at output)
+  signal sl_prev, sr_prev, dsl, dsr : signed(31+scale downto 0); -- previous slope for derivative
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration, DC removed
   signal gzl, gzr : signed(15 downto 0) := to_signed(g_initial,16); -- g used to remove slope DC offset
   constant avg_bits: integer := 8; -- bits to collect az sum to average
@@ -64,7 +65,7 @@ architecture RTL of slope is
   signal sgzl, sgzr : signed(15+avg_n'length downto 0); -- sum to average g used to remove slope DC offset
   constant sg0: signed := to_signed(0,sgzl'length); -- 0 for reset sum
   signal agzl, agzr : signed(15 downto 0) := to_signed(g_initial,16); -- average g used to remove slope DC offset
-  constant cntadj_bits: integer := 7; -- every 2**n next_interval control slope DC offset
+  constant cntadj_bits: integer := 1; -- every 2**n next_interval control slope DC offset
   -- cndatj_bits too small: compensation fast but increase iri too much
   -- cntadj_bits too large: comensation too slow, less iri increase
   -- check iri when sensor is idle and at lowest practical speeds 10 or 20 km/h
@@ -106,16 +107,17 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      if next_interval = '1' and hold = '0' then
-        if cntadj = to_unsigned(0,cntadj'length) then
-          control_now <= '1';
-        else
-          control_now <= '0';
-        end if;
-        cntadj <= cntadj + 1;
-      else
-        control_now <= '0';
-      end if;
+      --if next_interval = '1' and hold = '0' then
+      --  if cntadj = to_unsigned(0,cntadj'length) then
+      --    control_now <= '1';
+      --  else
+      --    control_now <= '0';
+      --  end if;
+      --  cntadj <= cntadj + 1;
+      --else
+      --  control_now <= '0';
+      --end if;
+      control_now <= next_interval and not hold;
     end if;
   end process;
 
@@ -134,28 +136,32 @@ begin
           -- slowly adjust acceleration to prevent slope build up DC
           -- too fast adjustment increases iri
           if sl(sl'high) = '1' then -- sl < 0
-            if avz2l(avz2l'high) = '1' then -- avz2l < 0 (sl derivative)
-              gzl <= gzl - 2;
-            else -- avz2l >= 0
+            --if avz2l(avz2l'high) = '1' then -- avz2l < 0 (sl derivative)
+            if dsl(dsl'high) = '1' then -- dsl < 0 (sl derivative) slope is falling
+            --  gzl <= gzl - 2;
+            --else -- avz2l >= 0
               gzl <= gzl - 1;
             end if;
           else -- sl >= 0
-            if avz2l(avz2l'high) = '0' then -- avz2l >= 0 (sl derivative)
-              gzl <= gzl + 2;
-            else -- avz2l < 0
+            -- if avz2l(avz2l'high) = '0' then -- avz2l >= 0 (sl derivative)
+            if dsl(dsl'high) = '0' then -- dsl >= 0 (sl derivative) slope is rising
+            --  gzl <= gzl + 2;
+            --else -- avz2l < 0
               gzl <= gzl + 1;
             end if;
           end if;
           if sr(sr'high) = '1' then -- sr < 0
-            if avz2r(avz2r'high) = '1' then -- avz2r < 0 (sr derivative)
-              gzr <= gzr - 2;
-            else -- avz2r >= 0
+            --if avz2r(avz2r'high) = '1' then -- avz2r < 0 (sr derivative)
+            if dsr(dsr'high) = '1' then -- dsr < 0 (sl derivative) slope is falling
+            --  gzr <= gzr - 2;
+            --else -- avz2r >= 0
               gzr <= gzr - 1;
             end if;
           else -- sr >= 0
-            if avz2r(avz2r'high) = '0' then -- avz2r >= 0 (sr derivative)
-              gzr <= gzr + 2;
-            else -- avz2r < 0
+            --if avz2r(avz2r'high) = '0' then -- avz2r >= 0 (sr derivative)
+            if dsr(dsr'high) = '0' then -- dsr >= 0 (sl derivative) slope is rising
+            --  gzr <= gzr + 2;
+            --else -- avz2r < 0
               gzr <= gzr + 1;
             end if;
           end if;
@@ -208,6 +214,26 @@ begin
     if rising_edge(clk) then
       avz2l <= iazl * icvx2; -- differential of slope
       avz2r <= iazr * icvx2; -- differential of slope
+    end if;
+  end process;
+
+  -- slove derivative
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        dsl <= (others => '0');
+        dsr <= (others => '0');
+        sl_prev <= (others => '0');
+        sr_prev <= (others => '0');
+      else
+        if control_now = '1' then
+          dsl <= sl - sl_prev;
+          dsr <= sr - sr_prev;
+          sl_prev <= sl;
+          sr_prev <= sr;
+        end if;
+      end if;
     end if;
   end process;
 
