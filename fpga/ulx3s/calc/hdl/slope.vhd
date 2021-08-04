@@ -59,18 +59,23 @@ architecture RTL of slope is
   signal sl, sr, sr_next, sl_next : signed(31+scale downto 0); -- sum of const/vz, 42 bits (last 10 bits dropped at output)
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration, DC removed
   signal gzl, gzr : signed(15 downto 0) := to_signed(g_initial,16); -- g used to remove slope DC offset
-  constant avg_bits: integer := 4; -- bits to collect az sum to average
+  constant avg_bits: integer := 8; -- bits to collect az sum to average
   signal avg_n: unsigned(avg_bits-1 downto 0); -- counter
   signal sgzl, sgzr : signed(15+avg_n'length downto 0); -- sum to average g used to remove slope DC offset
   constant sg0: signed := to_signed(0,sgzl'length); -- 0 for reset sum
   signal agzl, agzr : signed(15 downto 0) := to_signed(g_initial,16); -- average g used to remove slope DC offset
-  constant cntadj_bits: integer := 5; -- every 2**n next_interval control slope DC offset
+  constant cntadj_bits: integer := 7; -- every 2**n next_interval control slope DC offset
+  -- cndatj_bits too small: compensation fast but increase iri too much
+  -- cntadj_bits too large: comensation too slow, less iri increase
+  -- check iri when sensor is idle and at lowest practical speeds 10 or 20 km/h
   signal cntadj: unsigned(cntadj_bits-1 downto 0); -- counter
   signal control_now: std_logic := '0'; -- control enable
   signal next_interval : std_logic; -- every 25cm x-interval
   constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
   signal icvx2: signed(31 downto 0); -- constant/vx
   signal avz2l, avz2r: signed(icvx2'length+iazl'length-1 downto 0); -- multiplier result 48-bit
+  --constant negative_not_too_large: signed(avz2l'length-1 downto scale+10) := (others => '1');
+  --constant positive_not_too_large: signed(avz2l'length-1 downto scale+10) := (others => '0');
 begin
   ivx <= unsigned(vx); -- same value, vhdl type conversion
 
@@ -96,7 +101,8 @@ begin
     end if;
   end process;
 
-  -- when to control: run counter and generate control_now enable signal
+  -- when to control slope DC removal:
+  -- run counter and generate control_now enable signal
   process(clk)
   begin
     if rising_edge(clk) then
@@ -122,32 +128,34 @@ begin
         gzl <= agzl; -- use average value
         gzr <= agzr; -- use average value
       else
-        if control_now = '1' then
+        if control_now = '1' then -- slope DC remove control
+          -- when both slope sign and derivative sign are both the same
+          -- in the direction that drives slope away from 0 then
           -- slowly adjust acceleration to prevent slope build up DC
           -- too fast adjustment increases iri
           if sl(sl'high) = '1' then -- sl < 0
             if avz2l(avz2l'high) = '1' then -- avz2l < 0 (sl derivative)
               gzl <= gzl - 2;
-            else
+            else -- avz2l >= 0
               gzl <= gzl - 1;
             end if;
           else -- sl >= 0
             if avz2l(avz2l'high) = '0' then -- avz2l >= 0 (sl derivative)
               gzl <= gzl + 2;
-            else
+            else -- avz2l < 0
               gzl <= gzl + 1;
             end if;
           end if;
           if sr(sr'high) = '1' then -- sr < 0
             if avz2r(avz2r'high) = '1' then -- avz2r < 0 (sr derivative)
               gzr <= gzr - 2;
-            else
+            else -- avz2r >= 0
               gzr <= gzr - 1;
             end if;
           else -- sr >= 0
             if avz2r(avz2r'high) = '0' then -- avz2r >= 0 (sr derivative)
               gzr <= gzr + 2;
-            else
+            else -- avz2r < 0
               gzr <= gzr + 1;
             end if;
           end if;
