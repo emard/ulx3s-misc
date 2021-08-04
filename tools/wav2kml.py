@@ -362,8 +362,8 @@ numeric model that calculates response at standard speed,\n\
 removing dependency on actual speed at which measurement has been done.\n\
 \n\
 Color codes:\n\
-%.1f RED, %.1f YELLOW, %.1f GREEN, %.1f CYAN\n\
-%.1f BLUE, %.1f VIOLET, 0.0 MAGENTA\n\
+<font color=\"red\">%.1f</font>, <font color=\"orange\">%.1f</font>, <font color=\"green\">%.1f</font>, <font color=\"cyan\">%.1f</font>, \
+<font color=\"blue\">%.1f</font>, <font color=\"violet\">%.1f</font>, <font color=\"magenta\">0.0</font>\n\
 " % (red_iri, 2.0/2.5*red_iri, 1.5/2.5*red_iri, 1.0/2.5*red_iri,
 0.5/2.5*red_iri, 0.3/2.5*red_iri)
 f2 = kml.Folder(ns, id='folderid', name='Recorded data', description=recorded_data_description)
