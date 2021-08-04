@@ -115,6 +115,8 @@ wav2kml
     [x] lookat straight above
     [x] report speed range min/max to placemarks
     [x] snap
+    [x] colorized description
+        https://developers.google.com/kml/documentation/kml_tut
 
 math
 
