@@ -12,12 +12,11 @@ esp32
     [ ] kml->kmz zip https://github.com/lbernstone/miniz-esp32
     [ ] kml handle missing sensors
     [ ] sensor hotplug
-    [ ] sensor range 2-4-8 g (must notify range in wav)
     [ ] script for binary exe upload to esp32 and fpga
-    [ ] GPS time discontinuety warning
+    [ ] GPS time discontinuety bug warning
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
-    [ ] speech report when connected BPS/OBD
+    [ ] speech report when connected GPS/OBD
     [ ] speech report remaining minutes and disk full
     [ ] speech tunnel mode locked speed
     [ ] fix wav file to open with wave.open("file.wav","r")
@@ -56,7 +55,7 @@ esp32
     [x] OBD2 umount when BT lost
     [x] OBD2 stop count to lon degs
     [x] tag time and speed for OBD mode
-    [x] BT connect OBD/GPS automatic
+    [x] BT connect GPS/OBD automatic
     [x] RDS display GPS/OBD mode
     [x] OBD2 time from saved last GPS location
     [x] OBD2 start from saved last GPS location
@@ -72,25 +71,29 @@ esp32
     [x] web finalize before starting server
     [x] config log mode wav/kml
     [x] kml date in the document description
+    [x] sensor range +-2-4-8 g configurable
 
 core
 
-    [ ] at stops, quick slope DC removal
-    [ ] slope DC removal with proportional slope speed (relative to 0-slope)
-    [ ] accel DC removal, for high freq (many zero cross) use last zero-cross
-        to apply next slope calculation. This is to avoid random sampling
+    [ ] low speed mode: accel DC 16-point average to filter out freqs
+        higher than 62.5 Hz.
+        Tyre ribs pattern repeats every 2.5 cm. At 10 km/h it
+        generates about 100 Hz +-1 g sinewave.
+    [ ] accel DC removal
+    [ ] for high freq (many zero crossing of DC removed line)
+        use last zero-cross as value for next slope calculation.
+        This is to avoid random sampling
         which may generate large slope noise.
-    [ ] significant L/R unbalance at taking the turns
-        clipping (out of range) or
-        different state of slope DC offset compensation?
-    [ ] damp oscillations at slope DC offset compensation
     [ ] core fm filter and downsample not working (trellis?)
     [ ] handle delay from speed measurement to accelerometer reading
     [ ] log sensor temperature
     [ ] increase speech volume (compression?)
     [ ] time sync status
     [ ] BTN irq
-    [ ] motor vibration (RPM) sensing, conversion to speed
+    [ ] tyre ribs or motor vibration (RPM) sensing, conversion to speed
+    [x] damp oscillations at slope DC offset compensation
+    [x] at stops, quick slope DC removal
+    [x] improved slope DC removal
     [x] slope should not reset at 0-speed
     [x] output register for trellis clean FM signal
     [x] improve audio quality with DACPWM
