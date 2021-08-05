@@ -29,6 +29,8 @@ extern int str_kml_arrow_len;
 extern const char *str_kml_footer_simple;
 extern int str_kml_footer_simple_len;
 
+extern float red_iri;
+
 void kml_init(void);
 void kml_buf_init(void);
 void kml_header(char *timestamp);

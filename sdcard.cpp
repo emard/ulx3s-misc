@@ -837,7 +837,7 @@ void close_log_wav(void)
 void write_kml_header(void)
 {
   kml_header(lastnmea);
-  file_kml.write((uint8_t *)kmlbuf, strlen(str_kml_header));
+  file_kml.write((uint8_t *)kmlbuf, strlen(kmlbuf));
 }
 
 // finalize kml file, no more writes after this
@@ -984,6 +984,7 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("obd_mac" )) parse_mac(OBD_MAC, varvalue);
     else if(varname.equalsIgnoreCase("obd_pin" )) OBD_PIN  = varvalue;
     else if(varname.equalsIgnoreCase("log_mode")) log_wav_kml = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("red_iri"))  red_iri = strtof(varvalue.c_str(), NULL);
     else if(varname.equalsIgnoreCase("g_range"))  G_RANGE = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_stop")) KMH_STOP = strtol(varvalue.c_str(), NULL,10);
@@ -1010,6 +1011,8 @@ void read_cfg(void)
   { Serial.print("AP_PASS  : "); Serial.println(AP_PASS[i]); }
   Serial.print("DNS_HOST : "); Serial.println(DNS_HOST);
   Serial.print("LOG_MODE : "); Serial.println(log_wav_kml);
+  char chr_red_iri[20]; sprintf(chr_red_iri, "%.1f", red_iri);
+  Serial.print("RED_IRI  : "); Serial.println(chr_red_iri);
   Serial.print("G_RANGE  : "); Serial.println(G_RANGE);
   Serial.print("KMH_START: "); Serial.println(KMH_START);
   Serial.print("KMH_STOP : "); Serial.println(KMH_STOP);

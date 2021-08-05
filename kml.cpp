@@ -31,28 +31,28 @@ void kml_open(void)
 const char *str_kml_header = "\
 <kml xmlns=\"http://www.opengis.net/kml/2.2\">\n\
   <Document id=\"docid\">\n\
-    <name>TIMEDESCR0123456789012</name>\n\
-    <description>profilog from onboard kml generator</description>\n\
-    <visibility>1</visibility>\n\
-    <Folder id=\"folderid\">\n\
-      <name>Recorded data</name>\n\
-      <description>\n\
-Speed-time 100 m segment cuts without statistics.\n\
+    <name>%22s</name>\n\
+    <description>\
+<![CDATA[\n\
+Speed-time 100 m segment cuts without statistics.<br/>\n\
 Click any point on the track to display mm/m value of a 100 m\n\
 segment measured before the point. Value represents average\n\
 rectified speed in the shock absorber over 100 m segment\n\
 and divided by standard speed of 80 km/h. Value comes from the\n\
 numeric model that calculates response at standard speed,\n\
-removing dependency on actual speed at which measurement has been done.\n\
-\n\
-Color codes:\n\
-2.5 RED, 2.0 YELLOW, 1.5 GREEN, 1.0 CYAN\n\
-0.5 BLUE, 0.3 VIOLET, 0.0 MAGENTA\n\
-      </description>\n\
+removing dependency on actual speed at which measurement has been done.<br/>\n\
+<br/>\n\
+Color codes: \
+<font color=\"red\">%.1f</font>, <font color=\"orange\">%.1f</font>, <font color=\"green\">%.1f</font>, <font color=\"cyan\">%.1f</font>, \
+<font color=\"blue\">%.1f</font>, <font color=\"violet\">%.1f</font>, <font color=\"magenta\">0.0</font><br/>\n\
+]]>\n\
+    </description>\n\
+    <visibility>1</visibility>\n\
+    <Folder id=\"folderid\">\n\
+      <name>Recorded data</name>\n\
+      <description>onboard kml generator</description>\n\
       <visibility>1</visibility>\n\
 ";
-int str_kml_header_pos_time;
-int str_kml_header_len;
 
 const char *str_kml_line = "\
       <Placemark id=\"id\">\n\
@@ -161,9 +161,6 @@ int str_kml_footer_simple_len;
 
 void kml_init(void)
 {
-  str_kml_header_pos_time      = strstr(str_kml_header, "TIMEDESCR" ) - str_kml_header;
-  str_kml_header_len           = strlen(str_kml_header);
-
   str_kml_line_pos_lonlat      = strstr(str_kml_line, "LONLAT"    ) - str_kml_line;
   str_kml_line_pos_name        = strstr(str_kml_line, "NAME"      ) - str_kml_line;
   str_kml_line_pos_left        = strstr(str_kml_line, "LEFT"      ) - str_kml_line;
@@ -213,9 +210,12 @@ void kml_buf_init(void)
 
 void kml_header(char *timestamp)
 {
-  strcpy(kmlbuf, str_kml_header);
-  nmea2kmltime(timestamp, kmlbuf+str_kml_header_pos_time);
-  kmlbuf[str_kml_header_pos_time+22] = '<'; // replace null
+  char kmltime[23];
+  nmea2kmltime(timestamp, kmltime);
+  sprintf(kmlbuf, str_kml_header,
+    kmltime,
+    red_iri, 2.0/2.5*red_iri, 1.5/2.5*red_iri, 1.0/2.5*red_iri,
+    0.5/2.5*red_iri, 0.3/2.5*red_iri);
 }
 
 // color 0-1023
