@@ -30,7 +30,7 @@ bat_btn_d = 28; // cut for button
 bat_btn_x = 19; // position from edge
 
 bat_charger_dim=[9,9]; // connector cut
-bat_charger_pos=[15,-1]; // connector center position
+bat_charger_pos=[9,-1]; // connector center position
 
 hold_holes = [hold_pcbside-hold_holedist/2,hold_pcbside+hold_holedist/2, hold_batside+bat_screw_dist/2, hold_batside-bat_screw_dist/2]; // list of holes position relative to center
 
@@ -450,11 +450,11 @@ module print_box_cover()
     mgrip_box_cover();
 }
 
-assembly();
+//assembly();
 //print_bar();
 //print_grip();
 //print_bat(0); // batt_rear
-//print_bat(1); // batt_front
+print_bat(1); // batt_front
 //print_box_holder();
 //print_box();
 //print_box_cover();
