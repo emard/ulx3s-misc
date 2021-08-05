@@ -924,7 +924,18 @@ void loop_web(void)
   getLocalTime(&tm, NULL);
   rds_report_ip(&tm);
   if(is_connected)
+  {
+    // WiFi LED ON
+    pinMode(PIN_LED, OUTPUT);
+    digitalWrite(PIN_LED, LED_ON);
     speak_report_ip(&tm);
+  }
+  else
+  {
+    // WiFi LED OFF
+    pinMode(PIN_LED, INPUT);
+    digitalWrite(PIN_LED, LED_OFF);
+  }
   speech();
 }
 
