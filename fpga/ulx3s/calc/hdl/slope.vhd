@@ -60,6 +60,8 @@ architecture RTL of slope is
   signal sl_prev, sr_prev, dsl, dsr : signed(31+scale downto 0); -- previous slope for derivative
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration, DC removed
   signal gzl, gzr : signed(15 downto 0) := to_signed(g_initial,16); -- g used to remove slope DC offset
+  -- avg_bits = 4 -> <62.5  Hz
+  -- avg_bits = 5 -> <31.25 Hz
   constant avg_bits: integer := 4; -- every 2**n measurements sum to average agzl, agzr
   signal avg_n: unsigned(avg_bits-1 downto 0); -- counter
   signal sgzl, sgzr : signed(15+avg_n'length downto 0); -- sum to average g used to remove slope DC offset
@@ -80,6 +82,7 @@ architecture RTL of slope is
 begin
   ivx <= unsigned(vx); -- same value, vhdl type conversion
 
+  -- TODO if/generate avg_enable
   -- sum to average gz
   process(clk)
   begin
