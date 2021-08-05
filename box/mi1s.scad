@@ -22,13 +22,17 @@ bat_hold_back = [-7,-17]+(bat_hold_d-[18,40])/2; // move holder back: rear,front
 bat_screw_d1 = 5;
 bat_screw_d2 = 9;
 bat_screw_h  = 3;
+bat_screw_dist = 18; // distance between 2 screws
 
 bat_clr = [0.5,0.5,0.5]; // from each side
 bat_cut = [99,30,12]; // cut for connector
 bat_btn_d = 28; // cut for button
 bat_btn_x = 19; // position from edge
 
-hold_holes = [hold_pcbside-hold_holedist/2,hold_pcbside+hold_holedist/2, hold_batside]; // list of holes position relative to center
+bat_charger_dim=[9,9]; // connector cut
+bat_charger_pos=[15,-1]; // connector center position
+
+hold_holes = [hold_pcbside-hold_holedist/2,hold_pcbside+hold_holedist/2, hold_batside+bat_screw_dist/2, hold_batside-bat_screw_dist/2]; // list of holes position relative to center
 
 // bar
 hold_sh  = 3.5; // spacer height
@@ -133,7 +137,8 @@ module bat_holder(j)
       // outer shell
       cube([bat_hold_d[j]+bat_hold_t*2,bat_dim[1]+bat_hold_t*2,bat_dim[2]+bat_hold_t*2]+bat_clr*2,center=true);
       // screw mount
-      translate([-bat_hold_back[j],-bat_dim[2]-bat_hold_t-bat_screw_h+0.01,0])
+      for(i=[-1:2:1])
+        translate([-bat_hold_back[j],-bat_dim[2]-bat_hold_t-bat_screw_h+0.01,i*bat_screw_dist/2])
         rotate([-90,0,0])
         cylinder(d1=bat_screw_d1,d2=bat_screw_d2,h=bat_screw_h,$fn=24);
     }
@@ -143,8 +148,20 @@ module bat_holder(j)
     // cut for connector
     translate([0,0,0])
       cube(bat_cut,center=true);
+    // cut for charger
+    if(j > 0.5) // only on front side
+    translate([-bat_hold_d[j]/2+bat_charger_dim[0]/2+bat_charger_pos[0],bat_dim[1]/2,bat_charger_pos[1]])
+    {
+      cube([bat_charger_dim[0],bat_dim[1]/2,bat_charger_dim[1]],center=true);
+      // print-friendly circles
+      for(k=[-1:2:1])
+      translate([k*bat_charger_dim[0]/2,0,0])
+        rotate([90,0,0])
+          cylinder(d=bat_charger_dim[1],h=bat_dim[1]/2,$fn=12,center=true);
+    }
     // cut for screw
-    translate([-bat_hold_back[j],-bat_dim[1]/2,0])
+    for(i=[-1:2:1])
+      translate([-bat_hold_back[j],-bat_dim[1]/2,i*bat_screw_dist/2])
       rotate([-90,0,0])
         cylinder(d=screw_in,h=bat_dim[1]/2,$fn=12,center=true);
     // cut for button
@@ -195,7 +212,7 @@ module holder_bar()
     {
       cube([hold_w,hold_l,hold_t],  center=true);
       // reinforcement spacers
-        for(i=[0:1:2])
+        for(i=[0:1:3])
           translate([0,hold_holes[i],hold_t/2+hold_sh/2])
         cylinder(d2=hold_sd1,d1=hold_sd2,h=hold_sh,$fn=24,center=true);
             //cube([hold_w,hold_w,hold_t], center=true);
@@ -206,7 +223,7 @@ module holder_bar()
       cylinder(d=screw_thru,h=hold_t*2,$fn=12,center=true);
     // pcb holes
     
-    for(i=[0:1:2])
+    for(i=[0:1:3])
     translate([0,hold_holes[i],0])
     {
       // main hole
