@@ -307,7 +307,7 @@ module mgrip_box()
       cube(mgrip_box_dim,center=true);
       // side screw mounts
       for(i=[-1:2:1])
-      translate([0,i*(mgrip_box_dim[1]/2+box_t/2),-mgrip_box_dim[2]/2+box_cover_screw_w/2])
+      translate([0,i*(mgrip_box_dim[1]/2+box_t/2),-i*mgrip_box_dim[2]/2+i*box_cover_screw_w/2])
       difference()
       {
         cube([mgrip_box_dim[0],box_cover_screw_w,box_cover_screw_w],center=true);
@@ -331,12 +331,12 @@ module mgrip_box()
     // connector out cut
     translate(box_translate+[-15,20,2.5 ])
       cube([15,10,9],center=true);
-    // cable out cut
-    translate(box_translate+[-17.5,0,9])
+    // cut for cable
+    translate(box_translate+[-17.5,28,9])
       cube([1.01,100,5],center=true);
     // cut for cover screws
     for(i=[-1:2:1])
-      translate(box_translate+[0,i*(mgrip_box_dim[1]/2+box_t/2),-mgrip_box_dim[2]/2+box_cover_screw_w/2])
+      translate(box_translate+[0,i*(mgrip_box_dim[1]/2+box_t/2),-i*mgrip_box_dim[2]/2+i*box_cover_screw_w/2])
         // holes for screws
         rotate([0,90,0])
         cylinder(d=screw_in,h=100,$fn=12,center=true);
@@ -367,7 +367,7 @@ module mgrip_box_cover()
     {
       cube([box_t,mgrip_box_dim[1],mgrip_box_dim[2]],center=true);
       for(i=[-1:2:1])
-        translate([0,i*(mgrip_box_dim[1]+box_t)/2,-mgrip_box_dim[2]/2+box_cover_screw_w/2])
+        translate([0,i*(mgrip_box_dim[1]+box_t)/2,-i*mgrip_box_dim[2]/2+i*box_cover_screw_w/2])
           difference()
           {
             cube([box_t,box_cover_screw_w,box_cover_screw_w],center=true);
@@ -450,11 +450,11 @@ module print_box_cover()
     mgrip_box_cover();
 }
 
-//assembly();
+assembly();
 //print_bar();
 //print_grip();
 //print_bat(0); // batt_rear
-print_bat(1); // batt_front
+//print_bat(1); // batt_front
 //print_box_holder();
 //print_box();
 //print_box_cover();
