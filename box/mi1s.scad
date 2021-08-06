@@ -363,17 +363,22 @@ module mgrip_box_cover()
   add_h = tan(mgrip_angle)*(mgrip_d2+mgrip_hold_t*2+mgrip_hold_clr*2);
   box_translate = [box_x,0,mgrip_box_dim[2]/2+mgrip_hold_h/2+sin(mgrip_angle)*mgrip_d2/2];
 
-    translate(box_translate+[-22,0,0])
+    difference()
     {
+      translate(box_translate+[-22,0,0])
+      {
       cube([box_t,mgrip_box_dim[1],mgrip_box_dim[2]],center=true);
       for(i=[-1:2:1])
         translate([0,i*(mgrip_box_dim[1]+box_t)/2,-i*mgrip_box_dim[2]/2+i*box_cover_screw_w/2])
-          difference()
-          {
             cube([box_t,box_cover_screw_w,box_cover_screw_w],center=true);
+      }
+      // cut for screw
+      for(i=[-1:2:1])
+        translate(box_translate+[-22,0,0])
+          translate([0,i*(mgrip_box_dim[1]+box_t)/2,-i*mgrip_box_dim[2]/2+i*box_cover_screw_w/2])
             rotate([0,90,0])
               cylinder(d=screw_thru,h=100,$fn=12,center=true);
-          }
+
     }
 }
 
