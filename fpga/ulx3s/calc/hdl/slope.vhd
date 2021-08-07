@@ -146,32 +146,20 @@ begin
           -- slowly adjust acceleration to prevent slope build up DC
           -- too fast adjustment increases iri
           if sl(sl'high) = '1' then -- sl < 0
-            --if avz2l(avz2l'high) = '1' then -- avz2l < 0 (sl derivative)
             if dsl(dsl'high) = '1' then -- dsl < 0 (sl derivative) slope is falling
-            --  gzl <= gzl - 2;
-            --else -- avz2l >= 0
               gzl <= gzl - 1;
             end if;
           else -- sl >= 0
-            -- if avz2l(avz2l'high) = '0' then -- avz2l >= 0 (sl derivative)
             if dsl(dsl'high) = '0' then -- dsl >= 0 (sl derivative) slope is rising
-            --  gzl <= gzl + 2;
-            --else -- avz2l < 0
               gzl <= gzl + 1;
             end if;
           end if;
           if sr(sr'high) = '1' then -- sr < 0
-            --if avz2r(avz2r'high) = '1' then -- avz2r < 0 (sr derivative)
             if dsr(dsr'high) = '1' then -- dsr < 0 (sl derivative) slope is falling
-            --  gzr <= gzr - 2;
-            --else -- avz2r >= 0
               gzr <= gzr - 1;
             end if;
           else -- sr >= 0
-            --if avz2r(avz2r'high) = '0' then -- avz2r >= 0 (sr derivative)
             if dsr(dsr'high) = '0' then -- dsr >= 0 (sl derivative) slope is rising
-            --  gzr <= gzr + 2;
-            --else -- avz2r < 0
               gzr <= gzr + 1;
             end if;
           end if;
