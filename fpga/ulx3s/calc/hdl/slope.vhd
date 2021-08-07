@@ -186,10 +186,10 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      --iazl <= signed(azl) - gzl; -- current values
-      --iazr <= signed(azr) - gzr; -- current values
-      iazl <= agzl - gzl; -- average values (tyre ribs removal)
-      iazr <= agzr - gzr; -- average values (tyre ribs removal)
+      iazl <= signed(azl) - gzl; -- current values
+      iazr <= signed(azr) - gzr; -- current values
+      --iazl <= agzl - gzl; -- average values (tyre ribs removal)
+      --iazr <= agzr - gzr; -- average values (tyre ribs removal)
     end if;
   end process;
 
