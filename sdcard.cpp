@@ -47,6 +47,7 @@ struct int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 uint8_t G_RANGE = 8; // +-2/4/8 g sensor range (at digital reading +-32000)
+uint8_t FILTER_CONF = 0; // see datasheet adxl355 p.38 0:1kHz ... 10:0.977Hz
 
 // SD status
 size_t total_bytes, used_bytes, free_bytes, free_MB;
@@ -91,13 +92,10 @@ void adxl355_init(void)
   adxl355_write_reg(POWER_CTL, 0); // turn device ON
   // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
   // high speed i2c, INT1,INT2 active high
-  //delay(100);
   adxl355_write_reg(RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
-  // sample rate i=0-10, 4kHz/2^i, 0:4kHz ... 10:3.906Hz
-  //delay(100);
-  adxl355_write_reg(FILTER, 0);
+  // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
+  adxl355_write_reg(FILTER, FILTER_CONF);
   // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
-  //delay(100);
   adxl355_write_reg(SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
   adxl355_ctrl(0); // request core indirect mode
   delay(2); // wait for direct mode to finish
@@ -984,8 +982,9 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("obd_mac" )) parse_mac(OBD_MAC, varvalue);
     else if(varname.equalsIgnoreCase("obd_pin" )) OBD_PIN  = varvalue;
     else if(varname.equalsIgnoreCase("log_mode")) log_wav_kml = strtol(varvalue.c_str(), NULL,10);
-    else if(varname.equalsIgnoreCase("red_iri"))  red_iri = strtof(varvalue.c_str(), NULL);
-    else if(varname.equalsIgnoreCase("g_range"))  G_RANGE = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("red_iri" )) red_iri = strtof(varvalue.c_str(), NULL);
+    else if(varname.equalsIgnoreCase("g_range" )) G_RANGE = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("filter"  )) FILTER_CONF = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_stop")) KMH_STOP = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_btn" )) KMH_BTN = strtol(varvalue.c_str(), NULL,10);
@@ -1014,6 +1013,7 @@ void read_cfg(void)
   char chr_red_iri[20]; sprintf(chr_red_iri, "%.1f", red_iri);
   Serial.print("RED_IRI  : "); Serial.println(chr_red_iri);
   Serial.print("G_RANGE  : "); Serial.println(G_RANGE);
+  Serial.print("FILTER   : "); Serial.println(FILTER_CONF);
   Serial.print("KMH_START: "); Serial.println(KMH_START);
   Serial.print("KMH_STOP : "); Serial.println(KMH_STOP);
   Serial.print("KMH_BTN  : "); Serial.println(KMH_BTN);
