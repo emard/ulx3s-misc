@@ -84,8 +84,8 @@ class response:
     # conversion to int with scale foctor
     self.int_ST = (self.ST * (1<<self.scale_int_matrix)).astype(np.int32)
     self.int_PR = (self.PR * (1<<self.scale_int_matrix)).astype(np.int32)
-    print(self.int_ST)
-    print(self.int_PR)
+    #print(self.int_ST)
+    #print(self.int_PR)
 
   # integer multiply for int-scale matrix element
   # a: int matrix element, int-scaled 1<<20 = about 1e6
