@@ -3,16 +3,23 @@
 -- LICENSE=BSD
 
 -- From acceleration and speed, calculate slope
--- at every interval_mm
+-- and report it at every interval_mm of x-travel
+
+-- Fpr every accelerometer sample interval dt=1/1000 s
+-- current slope is calculated as the sum:
+-- slope += az*dt/vx
+
+-- external CPU provides vx and cvx2 = dt/vx scaled
+-- to a factor for fixed-point arithmetic
 
 -- Slope should not build up much DC to avoid
 -- numeric overflow in the response calculator.
 -- Simplified PID loop adjusts acceleration offset
--- +-2 at each interval_mm, generating damped
--- oscillations that lead to DC offset removal.
--- Oscillation amplitude and frequency contribute
--- to about 0.01 mm/m IRI noise which has
--- insignificant impact to the measurement.
+-- at each interval_mm, generating slope oscillations.
+-- which leads to IRI noise of about:
+-- 0.20 mm/m at 10 km/h
+-- 0.10 mm/m at 20 km/h
+-- 0.01 mm/m at 80 km/h
 
 library ieee;
 use ieee.std_logic_1164.all;
