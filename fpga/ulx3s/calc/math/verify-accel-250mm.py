@@ -96,6 +96,11 @@ for i in range(1,points):
   #print("%6.2f %6.2f %9.5f" % (x[i],z[i],iri2[i]))
 
 # show it graphically
-plot(x,z,"", x,iri,"", x,sz,"", x,iri2,"")
+plot(
+  x,    z, "",
+  x,  iri, "",
+  x,   sz, "",
+  x, iri2, ""
+)
 grid()
 show()
