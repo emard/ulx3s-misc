@@ -38,6 +38,7 @@ generic (
   --  4000 measuring 1g at +-8g range
   scale: integer := 16; -- 16 bits scale
   int_sample_rate_hz: integer := 1000; -- Hz accel input sample rate
+  slope_reconstruction: integer := 0; -- 0: no reconstruction, use X-axis at +2g range: slope = ax * (1000000/16000) [um/m], 1: Z-axis slope reconstruction
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
   -- 1.0e6 to scale resulting slope to um/s
   -- 9.81 = 1g standard gravity
@@ -54,7 +55,7 @@ port (
   hold             : in  std_logic; -- hold adjustment correction
   vx               : in  std_logic_vector(15 downto 0); -- mm/s, actually um travel for each 1kHz pulse, unsigned
   cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx[mm/s] = 40181760/vx[mm/s] signed
-  azl, azr         : in  std_logic_vector(15 downto 0); -- acceleration signed 16000 = 1g at +-2g range
+  axl, axr, ayl, ayr, azl, azr : in  std_logic_vector(15 downto 0); -- acceleration signed 16000 = 1g at +-2g range
   slope_l, slope_r : out std_logic_vector(31 downto 0); -- um/m slope signed
   ready            : out std_logic; -- '1' pulse when result is ready
   d0, d1, d2, d3   : out std_logic_vector(31 downto 0) -- debug outputs
@@ -64,6 +65,10 @@ end;
 architecture RTL of slope is
   signal ix, ix_next: unsigned(31 downto 0); -- traveled distance um
   signal ivx: unsigned(15 downto 0);
+  signal slx, srx: signed(15 downto 0); -- simple slope from X-axis without Z-reconstruction
+  signal saxl, saxr: signed(15 downto 0); -- type converted signed axl,axr
+  constant csax2sl: signed(15 downto 0) := to_signed(1000000/16000, 16); -- constant from 1g = 16000 to um/m
+  signal eslx, esrx: signed(slx'length+csax2sl'length-1 downto 0); -- full width multiply result
   signal sl, sr, sl_next, sr_next : signed(31+scale downto 0); -- sum of const/vz, 42 bits (last 10 bits dropped at output)
   signal sl_prev, sr_prev, dsl, dsr : signed(31+scale downto 0); -- previous slope for derivative
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration, DC removed
@@ -182,6 +187,16 @@ begin
     end if;
   end process;
 
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if enter = '1' then -- enter=1 means accelerometer input is ready
+        saxl <= signed(axl);
+        saxr <= signed(axr);
+      end if;
+    end if;
+  end process;
+
   icvx2  <= signed(cvx2);
 
   -- x_inc should be less than interval_x
@@ -237,8 +252,25 @@ begin
     end if;
   end process;
 
-  slope_l <= std_logic_vector(sl(31+scale downto scale));
-  slope_r <= std_logic_vector(sr(31+scale downto scale));
+  g_no_slope_reconstruction:
+  if slope_reconstruction = 0 generate
+    process(clk)
+    begin
+      if rising_edge(clk) then
+        eslx <= saxl * csax2sl;
+        esrx <= saxr * csax2sl;
+      end if;
+    end process;
+    slope_l <= std_logic_vector(eslx);
+    slope_r <= std_logic_vector(esrx);
+  end generate;
+
+  g_yes_slope_reconstruction:
+  if slope_reconstruction = 1 generate
+    slope_l <= std_logic_vector(sl(31+scale downto scale));
+    slope_r <= std_logic_vector(sr(31+scale downto scale));
+  end generate;
+
   ready <= next_interval;
   
   d0 <= std_logic_vector(agzl) & std_logic_vector(agzr);
