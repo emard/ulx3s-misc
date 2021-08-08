@@ -83,7 +83,7 @@ int travel_mm = 0; // travelled mm (v*dt)
 int travel100m, travel100m_prev = 0; // previous 100m travel
 int session_log = 0; // request new timestamp filename when reconnected
 int speak_search = 1; // 0 - don't search, 1-search gps, 2-search obd
-int32_t srvz[2];
+uint32_t srvz[2];
 int stopcount = 0;
 
 // form nmea and travel in GPS mode

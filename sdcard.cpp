@@ -210,7 +210,7 @@ void spi_speed_write(int spd)
 }
 
 // returns [um/m] sum abs(vz) over 100m/0.25m = 400 points integer
-void spi_srvz_read(int32_t *srvz)
+void spi_srvz_read(uint32_t *srvz)
 {
   spi_master_tx_buf[0] = 1; // 1: read ram
   spi_master_tx_buf[1] = 0x2; // addr [31:24] msb

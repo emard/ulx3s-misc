@@ -38,7 +38,7 @@ void umount(void);
 void spi_init(void);
 void rds_init(void);
 void spi_speed_write(int spd);
-void spi_srvz_read(int32_t *srvz);
+void spi_srvz_read(uint32_t *srvz);
 uint8_t spi_btn_read(void);
 void spi_rds_write(void);
 void rds_message(struct tm *tm);
