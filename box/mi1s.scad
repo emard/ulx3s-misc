@@ -6,7 +6,7 @@ mudguard_w=40;
 mudguard_t=5;
 
 hold_l = stand_w+12; // 1mm space on each side
-hold_w = 15;
+hold_w = 25;
 hold_t = 4;
 hold_holedist = 30*2.54; // pcb hole mount
 hold_pcbside = 20; // move PCB on a side
