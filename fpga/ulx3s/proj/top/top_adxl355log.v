@@ -457,7 +457,11 @@ module top_adxl355log
       end
     end
   end
+  wire [15:0] axl = {r_accel[ 0], r_accel[ 1]};
+  wire [15:0] ayl = {r_accel[ 2], r_accel[ 3]};
   wire [15:0] azl = {r_accel[ 4], r_accel[ 5]};
+  wire [15:0] axr = {r_accel[ 6], r_accel[ 7]};
+  wire [15:0] ayr = {r_accel[ 8], r_accel[ 9]};
   wire [15:0] azr = {r_accel[10], r_accel[11]};
 
   //assign led = {spi_ram_x, spi_ram_wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
@@ -708,9 +712,9 @@ module top_adxl355log
     //.hold(1'b1), // don't remove slope DC (DC offset control possible malfunction, synth problems)
     //.hold(btn_debounce[1]), // debug
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
-    //.cvx2(40182/22), // int_vx2_scale/vx, vx in m/s, 1826 for 22 m/s
+    //.cvx2(40181760/22000), // int_vx2_scale/vx, vx in mm/s, 1826 for 22000 mm/s
     .vx(vx), // vx in mm/s
-    .cvx2(cvx2), // int_vx2_scale/vx, vx in m/s
+    .cvx2(cvx2), // int_vx2_scale/vx, vx in mm/s
     //.azl(ma), // btn
     //.azr(mb), // btn
     .azl(azl), // from left  sensor
