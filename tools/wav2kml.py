@@ -12,7 +12,6 @@ from math import sqrt,sin,cos,asin,pi,ceil,atan2
 wavfile = argv[1]
 
 red_iri = 2.5 # colorization
-mark_every = 25 # placemark every N GPS readings
 
 # PPS tag appears as "!" in the data stream
 show_pps = 0
