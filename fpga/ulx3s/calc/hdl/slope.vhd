@@ -97,8 +97,8 @@ begin
       if enter = '1' then
         if avg_n = to_unsigned(0,avg_n'length) then
           -- averaged values, shift-divided by N
-          agzl <= sgzl(15+avg_n'length downto avg_n'length);
-          agzr <= sgzr(15+avg_n'length downto avg_n'length);
+          agzl <= sgzl(agzl'length+avg_n'length-1 downto avg_n'length);
+          agzr <= sgzr(agzr'length+avg_n'length-1 downto avg_n'length);
           -- reset sum, take first element
           sgzl <= sg0 + signed(azl);
           sgzr <= sg0 + signed(azr);
