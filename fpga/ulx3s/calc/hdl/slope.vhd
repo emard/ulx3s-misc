@@ -43,8 +43,9 @@ generic (
   -- 9.81 = 1g standard gravity
   -- 16000 sensor reading for 1g
   -- 1e-3 delta t (1/1kHz sample_rate)
-  -- 65536*1.0e6*1e-3*9.81/16000 = 40181.76 -- used in ESP32, spi_write_speed()
-  int_vx2_scale: integer := 40182 -- not used here
+  -- 1000 for speed in mm/s
+  -- 65536*1.0e6*1e-3*9.81/16000*1000 = 40181760 -- used in ESP32, spi_write_speed()
+  int_vx2_scale: integer := 40181760 -- not used here
 );
 port (
   clk              : in  std_logic;
@@ -52,7 +53,7 @@ port (
   enter            : in  std_logic; -- '1' pulse to enter acceleration and speed for every
   hold             : in  std_logic; -- hold adjustment correction
   vx               : in  std_logic_vector(15 downto 0); -- mm/s, actually um travel for each 1kHz pulse, unsigned
-  cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx = 40181.76/vx signed
+  cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx[mm/s] = 40181760/vx[mm/s] signed
   azl, azr         : in  std_logic_vector(15 downto 0); -- acceleration signed 16000 = 1g at +-2g range
   slope_l, slope_r : out std_logic_vector(31 downto 0); -- um/m slope signed
   ready            : out std_logic; -- '1' pulse when result is ready
