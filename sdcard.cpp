@@ -192,16 +192,15 @@ void rds_init(void)
 // speed in mm/s
 void spi_speed_write(int spd)
 {
-  float cvx2     = spd > 0 ? 40181.76e3/spd : 0.0; // 1e3 factor because speed is in mm/s not m/s
-  uint32_t icvx2 = int(cvx2);
-  uint16_t ivx   = spd > 0 ? spd : 0;
+  uint32_t icvx2 = spd > 0 ? 40181760/spd : 0; // spd is in mm/s
+  uint16_t vx    = spd > 0 ? spd : 0;
   spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0x2; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
-  spi_master_tx_buf[5] = ivx>>8;
-  spi_master_tx_buf[6] = ivx;
+  spi_master_tx_buf[5] = vx>>8;
+  spi_master_tx_buf[6] = vx;
   spi_master_tx_buf[7] = icvx2>>24;
   spi_master_tx_buf[8] = icvx2>>16;
   spi_master_tx_buf[9] = icvx2>>8;
