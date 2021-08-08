@@ -9,7 +9,7 @@ package coefficients is
 
 type coefficients_type is array(0 to 5*4-1) of real;
 
--- 50 mm (200 samples in 100 m)
+-- 50 mm (2000 samples in 100 m)
 constant coefficients_50mm_matrix: coefficients_type := (
 -- 0*4 ST matrix 4x4
   0.9998452  ,  2.235208e-3,  1.062545e-4,  1.476399e-5, -- 0*4+
@@ -79,15 +79,15 @@ constant coefficients_250mm_matrix_debug: coefficients_type := (
 others => 0.0
 );
 
-constant  interval_mm : integer := 250; -- mm sampling interval (don't touch)
+constant  interval_mm : integer :=  50; -- mm sampling interval (edit also esp32btgps.ino G_RANGE)
 constant  length_m    : integer := 100; --  m length
 
 -- choose one 50-250 mm depending on interval_mm
 constant coefficients_active_matrix: coefficients_type :=
-  coefficients_250mm_matrix;
+--  coefficients_250mm_matrix;
 --  coefficients_200mm_matrix;
 --  coefficients_195mm_matrix;
---  coefficients_50mm_matrix;
+  coefficients_50mm_matrix;
 
 -- python3 to verify result (may differ in last digit due to roundoff)
 -- use result <= z0; debug line
