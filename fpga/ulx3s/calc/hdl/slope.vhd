@@ -74,11 +74,11 @@ architecture RTL of slope is
   signal sgzl, sgzr : signed(15+avg_n'length downto 0); -- sum to average g used to remove slope DC offset
   constant sg0: signed := to_signed(0,sgzl'length); -- 0 for reset sum
   signal agzl, agzr : signed(15 downto 0) := to_signed(g_initial,16); -- average g used to remove slope DC offset
-  constant cntadj_bits: integer := 1; -- every 2**n next_interval control slope DC offset
+  --constant cntadj_bits: integer := 1; -- every 2**n next_interval control slope DC offset
   -- cndatj_bits too small: compensation fast but increase iri too much
   -- cntadj_bits too large: comensation too slow, less iri increase
   -- check iri when sensor is idle and at lowest practical speeds 10 or 20 km/h
-  signal cntadj: unsigned(cntadj_bits-1 downto 0); -- counter
+  --signal cntadj: unsigned(cntadj_bits-1 downto 0); -- counter
   signal control_now: std_logic := '0'; -- control enable
   signal next_interval : std_logic; -- every 25cm x-interval
   constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
