@@ -717,8 +717,10 @@ module top_adxl355log
     .cvx2(cvx2), // int_vx2_scale/vx, vx in mm/s
     //.azl(ma), // btn
     //.azr(mb), // btn
-    .azl(azl), // from left  sensor
-    .azr(azr), // from right sensor
+    .axl(axl), // X from left  sensor
+    .axr(axr), // X from right sensor
+    .azl(azl), // Z from left  sensor
+    .azr(azr), // Z from right sensor
     .slope_l(slope_l), // um/m
     .slope_r(slope_r), // um/m
     //.slope_l(data[127:96]),
