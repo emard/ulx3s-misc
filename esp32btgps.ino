@@ -562,8 +562,10 @@ void handle_fast_enough(void)
 void get_iri(void)
 {
   spi_srvz_read(srvz);
-  float srvz2iri = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ;
-  // 2.5e-6 = (1e-3 * 0.25/100)
+  // 2.5e-6 = (1e-3 * 0.25/100) for 2g range
+  //float srvz2iri = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ; // for interval = 250 mm
+  // 0.5e-6 = (1e-3 * 0.05/100) for 2g range
+  float srvz2iri = G_RANGE == 2 ? 0.5e-6 : G_RANGE == 4 ? 1.0e-6 : /* G_RANGE == 8 ? */  2.0e-6 ; // for interval = 50 mm
   iri[0] = srvz[0]*srvz2iri;
   iri[1] = srvz[1]*srvz2iri;
   iriavg = sensor_check_status == 0 ? 0.0
