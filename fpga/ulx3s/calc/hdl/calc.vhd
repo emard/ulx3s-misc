@@ -30,7 +30,11 @@ port (
 end;
 
 architecture RTL of calc is
-  type int32_coefficients_type is array(0 to 2047) of signed(31 downto 0); -- 12*4 for matrix calc + 2*512 for running sum l,r
+  constant n_points: integer := length_m*1000/interval_mm; -- default 400 points for 250 mm interval
+  constant matrix_size: integer := 12*4; -- storage size for matrix constants and variables
+  constant total_size: integer := matrix_size+2*n_points; -- total storage size required for BRAM
+  constant bram_addr_bits: integer := integer(ceil(log2(real(total_size)+0.5))); -- number of BRAM address bits
+  type int32_coefficients_type is array(0 to total_size-1) of signed(31 downto 0); -- 12*4 for matrix calc + 2*n_points for running sum l,r
   -- function to scale and convert real matrix to integers
   function matrix_real2int(x: coefficients_type; scale: integer)
     return int32_coefficients_type is
@@ -53,18 +57,23 @@ architecture RTL of calc is
   signal yp: signed(31 downto 0); -- slope register
   signal a,b,ra,rb,c,c_calc: signed(31 downto 0);
   signal ab: signed(63 downto 0);
-  constant cnt_bits: integer := 9; -- 0-256, stop at 511 (some skipped)
-  signal cnt: unsigned(cnt_bits-1 downto 0) := (others => '1'); -- don't start before enter
+  signal ia, ib: unsigned(bram_addr_bits-1 downto 0); -- indexes for matrix calc and running sum
+  -- running sum
+  constant irs_min : unsigned(ib'length-2 downto 0) := to_unsigned(matrix_size/2, ib'length-1); -- first index set to skip matrix (/2 because ib=irs_head*2)
+  constant irs_max : unsigned(ib'length-2 downto 0) := irs_min+n_points-1; -- last index: after this, wraparound to irs_min
+  signal   irs_tail: unsigned(ib'length-2 downto 0) := irs_min; -- tail index for running sum, initialized to min
+  --alias  irs_head  : unsigned(ib'length-2 downto 0) is irs_tail; -- same as tail
+  -- state counter
+  constant cnt_bits: integer := 9; -- 0-256, stop at 511 (some skipped) calc state counter
+  signal cnt: unsigned(cnt_bits-1 downto 0) := (others => '1'); -- stopped state, don't start calc before enter
   alias cnt_element: unsigned(1 downto 0) is cnt(1 downto 0); -- 0-3 one element calc
   alias cnt_row    : unsigned(4 downto 2) is cnt(4 downto 2); -- 0-4 one row    of ST
   alias cnt_col    : unsigned(6 downto 5) is cnt(6 downto 5); -- 0-3 one column of ST
   alias cnt_ch     : unsigned(7 downto 7) is cnt(7 downto 7); -- 0-1 two channels
   alias cnt_above_row : unsigned(cnt_bits-1 downto cnt_element'length+cnt_row'length) is cnt(cnt_bits-1 downto cnt_element'length+cnt_row'length);
-  constant n_points: integer := length_m*1000/interval_mm; -- default 400 points for 250 mm interval
+  constant cnt_pad0: unsigned(ia'length-1 downto cnt_ch'length+cnt_col'length+cnt_row'length) := (others => '0'); -- zero-pad high bits to make ia/ib address
   --constant i_points: unsigned(8 downto 0) := to_unsigned(512-n_points, 9);
-  signal ia, ib: unsigned(10 downto 0); -- indexes for matrix 0-2047
-  signal irs_head: unsigned(8 downto 0) := to_unsigned(n_points, 9); -- head index running sum 0-511
-  signal irs_tail: unsigned(8 downto 0) := (others => '0'); -- tail index running sum 0-511
+  --signal irs_tail: unsigned(9 downto 0) := (others => '0'); -- tail index running sum 0-511
   signal matrix_write: std_logic := '0';
   signal swap_z: std_logic := '1'; -- swaps Z0 or Z1
   type z_type is array(0 to 3) of signed(31 downto 0);
@@ -113,10 +122,10 @@ begin
               case cnt_row is -- one row of ST
                 when "000" => -- 0
                   c <= (others => '0');
-                  ia <= "00000" & x"4" & cnt_col; -- PR(i) one columnt of ST
+                  ia <= cnt_pad0 & x"4" & cnt_col; -- PR(i) one columnt of ST
                 when "001" => -- 1
-                  ia <= "00000" & "00" & cnt_col & "00"; -- ST(i,0)
-                  ib <= "00000" & "10" & (not swap_z) & cnt_ch & "00"; -- Zz(0)
+                  ia <= cnt_pad0 & "00" & cnt_col & "00"; -- ST(i,0)
+                  ib <= cnt_pad0 & "10" & (not swap_z) & cnt_ch & "00"; -- Zz(0)
                   -- ib <= to_unsigned((2*swap_z + cnt_ch + 8)*4, 7); -- Zz(0) -> Z0(0)
                 when "010" | "011" | "100" => -- 2,3,4
                   ia(1 downto 0) <= ia(1 downto 0) + 1; -- ST(i,1) ST(i,2) ST(i,3)
@@ -128,7 +137,7 @@ begin
             when "10" => -- 2 = cnt_element
               c <= c_calc; -- PR(0)*YP or ST(0,0)*Z1(0)
               if cnt_row = "100" then -- set write address
-                ib <= "00000" & "10" & swap_z & cnt_ch & cnt_col;
+                ib <= cnt_pad0 & "10" & swap_z & cnt_ch & cnt_col;
               end if;
             when "11" => -- 3 = cnt_element result ready
               --if cnt_row = "000" then -- debug store first value
@@ -158,40 +167,38 @@ begin
           if cnt(cnt_bits-2) = '0' then
             case cnt(3 downto 0) is
               when x"0" =>
-                ib <= "01" & irs_tail;
+                ib <= irs_tail & '0';
                 rvz(0) <= abs(vz(0));
                 c <= abs(vz(0)); -- data to store
               when x"2" =>
                 -- running sum, subtract tail
                 srvz(0) <= srvz(0)+c-rb; -- normal
-                --srvz(0) <= c; -- debug
-                --srvz(0) <= rb; -- debug
-                --srvz(0) <= to_signed(0,32-11) & signed(ib); -- debug
-              when x"3" =>
-                ib <= "01" & irs_head; -- address to write
+              --when x"3" =>
+              --  ib <= irs_head & '0'; -- address to write (NOTE obsolete because head=tail)
               when x"4" =>
                 matrix_write <= '1';
               when x"5" =>
                 matrix_write <= '0';
               -- -------------------
               when x"6" =>
-                ib <= "10" & irs_tail;
+                ib <= irs_tail & '1';
                 rvz(1) <= abs(vz(1));
                 c <= abs(vz(1)); -- data to store
               when x"8" =>
                 -- running sum, subtract tail
                 srvz(1) <= srvz(1)+c-rb; -- normal
-                --srvz(1) <= rb; -- debug
-                --srvz(1) <= to_signed(0,32-11) & signed(ib); -- debug
-              when x"9" =>
-                ib <= "10" & irs_head; -- address to write
+              --when x"9" =>
+              --  ib <= irs_head & '1'; -- address to write (NOTE obsolete because head=tail)
               when x"A" =>
                 matrix_write <= '1';
               when x"B" =>
                 matrix_write <= '0';
               when x"F" =>
-                irs_head <= irs_head + 1; -- advance for the next time
-                irs_tail <= irs_tail + 1;
+                if irs_tail = irs_max then -- NOTE if head outside of min/max, it will overwrite matrix!
+                  irs_tail <= irs_min; -- wraparound
+                else
+                  irs_tail <= irs_tail + 1; -- advance for the next time
+                end if;
                 cnt(cnt_bits-2) <= '1'; -- end
               when others =>
             end case;
