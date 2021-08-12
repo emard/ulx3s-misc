@@ -420,7 +420,8 @@ for wavfile in argv[1:]:
         if nmea.find(b'#') >= 0: # discontinuety, reset travel
           travel = 0.0
           travel_next = 0.0
-        elif nmea[0:6]==b"$GPRMC" and (len(nmea)==79 or len(nmea)==68): # 68 is lost signal, tunnel mode
+        elif nmea[0:6]==b"$GPRMC" and (len(nmea)==79 or len(nmea)==68) and nmea[-3]==42: # 68 is lost signal, tunnel mode
+          # nmea[-3]="*" checks for asterisk on the right place. Not full crc check
           if len(nmea)==79: # normal mode with signal
             lonlat=nmea_latlon2kml(nmea[18:46])
             tunel = 0
