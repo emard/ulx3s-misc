@@ -2,6 +2,7 @@
 
 esp32
 
+    [ ] tunnel mode kml generate follow the same direction
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
     [ ] LCD graphic track display
