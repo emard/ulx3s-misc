@@ -583,7 +583,7 @@ if True:
   if time_last:
     print(k.to_string(prettyprint=True).replace(
   "</Document>",
-    "<LookAt>\n\
+  "  <LookAt>\n\
       <longitude>%f</longitude>\n\
       <latitude>%f</latitude>\n\
       <heading>0</heading>\n\
