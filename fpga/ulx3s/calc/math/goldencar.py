@@ -5,6 +5,7 @@
 # from numpy import *
 
 import numpy as np
+import coefficients # the coef calculator
 
 # circular sample buffer for
 # full segment: 100 m (IRI100)
@@ -53,39 +54,42 @@ class response:
   def set_sampling_interval(self, interval_m = 0.25):
     self.interval_m = interval_m
     self.interval_mm = int(self.interval_m * self.scale_int_x + 0.5)
+    self.ST, self.PR = coefficients.st_pr(M = interval_m)
     # coefficients taken from p.36 of WTP-46
     # http://documentos.bancomundial.org/curated/es/851131468160775725/pdf/multi-page.pdf
-    if self.interval_mm == 50:
-      self.ST = np.array([
-        [  0.9998452  ,  2.235208e-3,  1.062545e-4,  1.476399e-5  ],
-        [ -0.1352583  ,  0.9870245  ,  7.098568e-2,  1.292695e-2  ],
-        [  1.030173e-3,  9.842664e-5,  0.9882941  ,  2.143501e-3  ],
-        [  0.8983268  ,  8.617964e-2,-10.2297     ,  0.9031446    ]
-      ])
-      self.PR = np.array([
-           4.858894e-5,
-           6.427258e-2,
-           1.067582e-2,
-           9.331372
-      ])
-    if self.interval_mm == 250:
-      self.ST = np.array([
-        [  0.9966071  ,  1.091514e-2, -2.083274e-3,  3.190145e-4  ],
-        [ -0.5563044  ,  0.9438768  , -0.8324718  ,  5.064701e-2  ],
-        [  2.153176e-2,  2.126763e-3,  0.7508714  ,  8.221888e-3  ],
-        [  3.335013   ,  0.3376467  ,-39.12762    ,  0.4347564    ]
-      ])
-      self.PR = np.array([
-           5.476107e-3,
-           1.388776   ,
-           0.2275968  ,
-          35.79262
-      ])
+    #if self.interval_mm == 50:
+    #  self.ST = np.array([
+    #    [  0.9998452  ,  2.235208e-3,  1.062545e-4,  1.476399e-5  ],
+    #    [ -0.1352583  ,  0.9870245  ,  7.098568e-2,  1.292695e-2  ],
+    #    [  1.030173e-3,  9.842664e-5,  0.9882941  ,  2.143501e-3  ],
+    #    [  0.8983268  ,  8.617964e-2,-10.2297     ,  0.9031446    ]
+    #  ])
+    #  self.PR = np.array([
+    #       4.858894e-5,
+    #       6.427258e-2,
+    #       1.067582e-2,
+    #       9.331372
+    #  ])
+    #if self.interval_mm == 250:
+    #  self.ST = np.array([
+    #    [  0.9966071  ,  1.091514e-2, -2.083274e-3,  3.190145e-4  ],
+    #    [ -0.5563044  ,  0.9438768  , -0.8324718  ,  5.064701e-2  ],
+    #    [  2.153176e-2,  2.126763e-3,  0.7508714  ,  8.221888e-3  ],
+    #    [  3.335013   ,  0.3376467  ,-39.12762    ,  0.4347564    ]
+    #  ])
+    #  self.PR = np.array([
+    #       5.476107e-3,
+    #       1.388776   ,
+    #       0.2275968  ,
+    #      35.79262
+    #  ])
     # conversion to int with scale foctor
     self.int_ST = (self.ST * (1<<self.scale_int_matrix)).astype(np.int32)
     self.int_PR = (self.PR * (1<<self.scale_int_matrix)).astype(np.int32)
-    #print(self.int_ST)
-    #print(self.int_PR)
+    print(self.ST)
+    print(self.PR)
+    print(self.int_ST)
+    print(self.int_PR)
 
   # integer multiply for int-scale matrix element
   # a: int matrix element, int-scaled 1<<20 = about 1e6
