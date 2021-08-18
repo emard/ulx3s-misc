@@ -20,8 +20,11 @@ show_pps = 0
 # IRI averaging length (m)
 iri_length = 100
 
-# slope sampling length (m)
+# equal-distance slope sampling length (m)
 sampling_length = 0.05
+
+# equal-time acclererometer sample time
+az_sample_dt = 1/1000 # s (1kHz accelerometer sample rate)    
 
 # number of buffered vz speed points for IRI averaging
 n_buf_points = int(iri_length/sampling_length + 0.5)
@@ -31,6 +34,11 @@ rvz_buf = np.zeros((n_buf_points,2)).astype(np.uint32)
 rvz_buf_ptr = 0 # buffer pointer, runs 0 .. n_buf_points-1, next wraparound to 0
 # sum of rectified speeds in um/s, dimension 2 is for 0=left, 1=right
 srvz = np.zeros(2).astype(np.uint32)
+# slope reconstructed from z-accel and x-speed
+slope = np.zeros(2).astype(np.float32)
+
+azl0 = 1.0 # average azl (to remove slope DC offset)
+azr0 = 1.0 # average azr (to remove slope DC offset)
 
 # Z state matrix left,right (used for iterative slope entry at each sampling interval)
 ZL = np.zeros(4).astype(np.float32)
@@ -99,6 +107,15 @@ def slope2model(slope_l:float, slope_r:float):
   ZL = np.matmul(ST, ZL) + PR * slope_l
   ZR = np.matmul(ST, ZR) + PR * slope_r
   # return (ZL[0] - ZL[2], ZR[0] - ZR[2]) # shock absorber speed
+
+# slope reconstruction from equal-time sampled z-accel and x-speed
+# updates global slope[0] = left, slope[1] = right
+# TODO: maintain average azl0, azr0 to remove slope DC offset
+def az2slope(azl:float, azr:float, vx:float):
+  global slope
+  c = az_sample_dt / vx
+  slope[0] += (azl - azl0) * c
+  slope[1] += (azr - azr0) * c
 
 # initialization before first data entry
 # usually called at stops because slope is difficult to keep after the stop
@@ -716,7 +733,7 @@ if True:
   else:
     print(k.to_string(prettyprint=True))
 
-#st_pr()
+#st_pr(DX=sampling_length)
 #print(ST)
 #print(PR)
 #print(n_buf_points)
@@ -725,3 +742,7 @@ if True:
 #print(rvz_buf, srvz)
 #enter_slope(0.0e-3,0.0e-3)
 #print(rvz_buf, srvz)
+#az2slope(1+0.01,1-0.01,22.2222)
+#print(slope)
+#az2slope(1-0.01,1+0.01,22.2222)
+#print(slope)
