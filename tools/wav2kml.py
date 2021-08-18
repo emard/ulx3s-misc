@@ -14,7 +14,7 @@ wavfile = argv[1]
 
 calculate  = 1 # 0:IRI from wav tags, 1:IRI calculated from wav data
 g_scale    = 2 # 2/4/8 g is 32000 integer reading
-aint2float = g_scale / 32000 # conversion factor from acceleration integer to float
+aint2float = g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
 
 red_iri = 2.5 # colorization
 
@@ -40,10 +40,13 @@ rvz_buf_ptr = 0 # buffer pointer, runs 0 .. n_buf_points-1, next wraparound to 0
 srvz = np.zeros(2).astype(np.uint32)
 # slope reconstructed from z-accel and x-speed
 slope = np.zeros(2).astype(np.float32)
+# for slope DC remove
+slope_prev = np.zeros(2).astype(np.float32)
 
 azl0 = 1.0 # average azl (to remove slope DC offset)
 azr0 = 1.0 # average azr (to remove slope DC offset)
-
+azl0d = 0.0 # delta azl (to remove slope DC offset)
+azr0d = 0.0 # delta azr (to remove slope DC offset)
 
 # Z state matrix left,right (used for iterative slope entry at each sampling interval)
 ZL = np.zeros(4).astype(np.float32)
@@ -122,16 +125,32 @@ def az2slope(azl:float, azr:float, vx:float):
   slope[0] += (azl - azl0) * c
   slope[1] += (azr - azr0) * c
 
+def slope_dc_remove():
+  global azl0, azr0, azl0d, azr0d, slope_prev
+  if slope[0] > 0 and slope[0] > slope_prev[0]:
+    azl0d = 1.0e-5
+  if slope[0] < 0 and slope[0] < slope_prev[0]:
+    azl0d = 1.0e-5
+  if slope[1] > 0 and slope[1] > slope_prev[1]:
+    azr0d = 1.0e-5
+  if slope[1] < 0 and slope[1] < slope_prev[1]:
+    azr0d = 1.0e-5
+  azl0 += azl0d
+  azr0 += azr0d
+  slope_prev = slope
+
 # initialization before first data entry
 # usually called at stops because slope is difficult to keep after the stop
 def reset_iri():
-  global ZL, ZR, rvz_buf, rvz_buf_ptr, srvz
+  global ZL, ZR, rvz_buf, rvz_buf_ptr, srvz, slope, slope_prev
   # multiply all matrix elements with 0 resets them to 0
   ZL *= 0
   ZR *= 0
   srvz *= 0
   rvz_buf *= 0
   rvz_buf_ptr = 0
+  slope *= 0
+  slope_prev *= 0
 
 # enter slope, calculate running average
 def enter_slope(slope_l, slope_r):
@@ -545,7 +564,8 @@ for wavfile in argv[1:]:
   travel_sampling = 0.0 # m for sampling_interval triggering
   # set nmea line empty before reading
   nmea=bytearray(0)
-  ac = np.zeros(6).astype(np.int16) # current accelerations vector
+  ac = np.zeros(6).astype(np.int16) # current integer accelerations vector
+  #acf = np.zeros(6).astype(np.float32) # [g] current float accelerations vector
   while f.readinto(mvb):
     seek += 12 # bytes per sample
     a=(b[0]&1) | ((b[2]&1)<<1) | ((b[4]&1)<<2) | ((b[6]&1)<<3) | ((b[8]&1)<<4) | ((b[10]&1)<<5)
@@ -555,7 +575,8 @@ for wavfile in argv[1:]:
       if speed_kmh > 4:
         if enter_accel(ac[2]*aint2float, ac[5]*aint2float, speed_kmh/3.6):
           enter_slope(slope[0],slope[1])
-          # print(srvz)
+          slope_dc_remove()
+          #print(srvz / n_buf_points / (80/3.6))
     if a != 32:
       c = a
       # convert control chars<32 to uppercase letters >=64
