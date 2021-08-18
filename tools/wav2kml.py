@@ -93,8 +93,8 @@ def st_pr(DX = 0.05, K1 = 653.0, K2 = 62.3, MU = 0.15, C = 6.0):
   #print(PR)
 
 # enter slope (dimensionless, m vertical per m horizontal) at sampling interval DX
-# simulates vehicle response, returns shock absorber speed (m/s)
-def vz_from_slope(slope_l:float, slope_r:float):
+# into a model that simulates vehicle response
+def slope2model(slope_l:float, slope_r:float):
   global ZL, ZR
   ZL = np.matmul(ST, ZL) + PR * slope_l
   ZR = np.matmul(ST, ZR) + PR * slope_r
@@ -114,15 +114,23 @@ def reset_iri():
 # enter slope, calculate running average
 def enter_slope(slope_l, slope_r):
   global rvz_buf, rvz_buf_ptr, srvz
-  vz_from_slope(slope_l, slope_r) # updates ZL, ZR
+  slope2model(slope_l, slope_r) # updates ZL, ZR
   # scale shock absorber speed to integer um/s
   rvz = np.array([ int(abs(1.0e6 * (ZL[0]-ZL[2]))), int(abs(1.0e6 * (ZR[0]-ZR[2]))) ]).astype(np.uint32)
+  # running average
   srvz += rvz - rvz_buf[rvz_buf_ptr] # subtract from sum old data 100 m before
   rvz_buf[rvz_buf_ptr] = rvz # new data
   # next pointer with wraparound
   rvz_buf_ptr += 1
   if rvz_buf_ptr >= n_buf_points:
     rvz_buf_ptr = 0
+
+# integrate z-acceleration in time domain
+# updates slope in z/x space domain
+# needs x-speed as input 
+# (vx = vehicle speed at the time when azl,azr accel are measured)
+def accel2slope(azl, azr, vx):
+  return [0,0]
 
 # input is NMEA string like "4500.112233,N,01500.112233,E"
 # output is (lon,lat) tuple
