@@ -12,6 +12,10 @@ import numpy as np
 
 wavfile = argv[1]
 
+calculate  = 1 # 0:IRI from wav tags, 1:IRI calculated from wav data
+g_scale    = 2 # 2/4/8 g is 32000 integer reading
+aint2float = g_scale / 32000 # conversion factor from acceleration integer to float
+
 red_iri = 2.5 # colorization
 
 # PPS tag appears as "!" in the data stream
@@ -24,7 +28,7 @@ iri_length = 100
 sampling_length = 0.05
 
 # equal-time acclererometer sample time
-az_sample_dt = 1/1000 # s (1kHz accelerometer sample rate)    
+a_sample_dt = 1/1000 # s (1kHz accelerometer sample rate)    
 
 # number of buffered vz speed points for IRI averaging
 n_buf_points = int(iri_length/sampling_length + 0.5)
@@ -39,6 +43,7 @@ slope = np.zeros(2).astype(np.float32)
 
 azl0 = 1.0 # average azl (to remove slope DC offset)
 azr0 = 1.0 # average azr (to remove slope DC offset)
+
 
 # Z state matrix left,right (used for iterative slope entry at each sampling interval)
 ZL = np.zeros(4).astype(np.float32)
@@ -113,7 +118,7 @@ def slope2model(slope_l:float, slope_r:float):
 # TODO: maintain average azl0, azr0 to remove slope DC offset
 def az2slope(azl:float, azr:float, vx:float):
   global slope
-  c = az_sample_dt / vx
+  c = a_sample_dt / vx
   slope[0] += (azl - azl0) * c
   slope[1] += (azr - azr0) * c
 
@@ -142,12 +147,20 @@ def enter_slope(slope_l, slope_r):
   if rvz_buf_ptr >= n_buf_points:
     rvz_buf_ptr = 0
 
-# integrate z-acceleration in time domain
+# integrate z-acceleration in time domain 
 # updates slope in z/x space domain
 # needs x-speed as input 
 # (vx = vehicle speed at the time when azl,azr accel are measured)
-def accel2slope(azl, azr, vx):
-  return [0,0]
+# for small vx model is inaccurate. at vx=0 division by zero
+# returns 1 when slope is ready (each sampling_interval), otherwise 0
+def enter_accel(azl:float, azr:float, vx:float):
+  global travel_sampling
+  az2slope(azl, azr, vx)
+  travel_sampling += vx * a_sample_dt
+  if travel_sampling > sampling_length:
+    travel_sampling -= sampling_length
+    return 1
+  return 0
 
 # input is NMEA string like "4500.112233,N,01500.112233,E"
 # output is (lon,lat) tuple
@@ -529,11 +542,20 @@ for wavfile in argv[1:]:
   heading_prev = None
   travel      = 0.0 # m
   travel_next = 0.0 # m
+  travel_sampling = 0.0 # m for sampling_interval triggering
   # set nmea line empty before reading
   nmea=bytearray(0)
+  ac = np.zeros(6).astype(np.int16) # current accelerations vector
   while f.readinto(mvb):
     seek += 12 # bytes per sample
     a=(b[0]&1) | ((b[2]&1)<<1) | ((b[4]&1)<<2) | ((b[6]&1)<<3) | ((b[8]&1)<<4) | ((b[10]&1)<<5)
+    if calculate:
+      for i in range(0,6):
+        ac[i] = int.from_bytes(b[i*2:i*2+2],byteorder="little",signed=True)
+      if speed_kmh > 4:
+        if enter_accel(ac[2]*aint2float, ac[5]*aint2float, speed_kmh/3.6):
+          enter_slope(slope[0],slope[1])
+          # print(srvz)
     if a != 32:
       c = a
       # convert control chars<32 to uppercase letters >=64
@@ -553,6 +575,8 @@ for wavfile in argv[1:]:
         if nmea.find(b'#') >= 0: # discontinuety, reset travel
           travel = 0.0
           travel_next = 0.0
+          if calculate:
+            reset_iri()
         elif nmea[0:6]==b"$GPRMC" and (len(nmea)==79 or len(nmea)==68) and nmea[-3]==42: # 68 is lost signal, tunnel mode
           # nmea[-3]="*" checks for asterisk on the right place. Not full crc check
           if len(nmea)==79: # normal mode with signal
