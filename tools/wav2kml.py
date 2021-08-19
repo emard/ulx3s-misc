@@ -12,7 +12,7 @@ import numpy as np
 
 wavfile = argv[1]
 
-calculate  = 0 # 0:IRI from wav tags, 1:IRI calculated from wav data (doesn't work yet)
+calculate  = 1 # 0:IRI from wav tags, 1:IRI calculated from wav data (doesn't work yet)
 g_scale    = 2 # 2/4/8 g is 32000 integer reading
 aint2float = 9.81 * g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
 
@@ -42,6 +42,8 @@ srvz = np.zeros(2).astype(np.uint32)
 slope = np.zeros(2).astype(np.float32)
 # for slope DC remove
 slope_prev = np.zeros(2).astype(np.float32)
+
+ac = np.zeros(6).astype(np.int16) # current integer accelerations vector
 
 azl0 = 9.81 # average azl (to remove slope DC offset)
 azr0 = 9.81 # average azr (to remove slope DC offset)
@@ -126,20 +128,20 @@ def az2slope(azl:float, azr:float, vx:float):
 def slope_dc_remove():
   global azl0, azr0, slope_prev
   if slope[0] > 0 and slope[0] > slope_prev[0]:
-    azl0 += 1.0e-5
+    azl0 += 1.0e-4
   if slope[0] < 0 and slope[0] < slope_prev[0]:
-    azl0 -= 1.0e-5
+    azl0 -= 1.0e-4
   if slope[1] > 0 and slope[1] > slope_prev[1]:
-    azr0 += 1.0e-5
+    azr0 += 1.0e-4
   if slope[1] < 0 and slope[1] < slope_prev[1]:
-    azr0 -= 1.0e-5
+    azr0 -= 1.0e-4
   slope_prev[0] = slope[0]
   slope_prev[1] = slope[1]
 
 # initialization before first data entry
 # usually called at stops because slope is difficult to keep after the stop
 def reset_iri():
-  global ZL, ZR, rvz_buf, rvz_buf_ptr, srvz, slope, slope_prev
+  global ZL, ZR, rvz_buf, rvz_buf_ptr, srvz, slope, slope_prev, azl0, azr0
   # multiply all matrix elements with 0 resets them to 0
   ZL *= 0
   ZR *= 0
@@ -148,6 +150,9 @@ def reset_iri():
   rvz_buf_ptr = 0
   slope *= 0
   slope_prev *= 0
+  # reset DC compensation to current accelerometer reading
+  azl0 = ac[2]*aint2float
+  azr0 = ac[5]*aint2float
 
 # enter slope, calculate running average
 def enter_slope(slope_l, slope_r):
@@ -561,8 +566,6 @@ for wavfile in argv[1:]:
   travel_sampling = 0.0 # m for sampling_interval triggering
   # set nmea line empty before reading
   nmea=bytearray(0)
-  ac = np.zeros(6).astype(np.int16) # current integer accelerations vector
-  #acf = np.zeros(6).astype(np.float32) # [g] current float accelerations vector
   while f.readinto(mvb):
     seek += 12 # bytes per sample
     a=(b[0]&1) | ((b[2]&1)<<1) | ((b[4]&1)<<2) | ((b[6]&1)<<3) | ((b[8]&1)<<4) | ((b[10]&1)<<5)
@@ -571,13 +574,16 @@ for wavfile in argv[1:]:
         ac[i] = int.from_bytes(b[i*2:i*2+2],byteorder="little",signed=True)
       if speed_kmh > 4:
         # ac[2] Z-left, ac[5] Z-right
+        #print(ac[2]*aint2float, ac[5]*aint2float, azl0, azr0)
         if enter_accel(ac[2]*aint2float, ac[5]*aint2float, speed_kmh/3.6):
           enter_slope(slope[0],slope[1])
           slope_dc_remove()
           #print(ac[2]*aint2float, ac[5]*aint2float)
           #print(azl0, azr0)
           #print(slope)
-          # iri is expressed as 1e3 mm/m so divide by 1000 with 80.0e3 instead 80
+          # srvz is scaled 1e6
+          # iri when printed should be scaled as 1e3 mm/m so
+          # divide srvz by 1000 with 80.0e3 instead 80
           # FIXME currently srvz is too small, results in 0.2-0.4 instead of 2-4
           #print(srvz / (n_buf_points * 80.0e3/3.6))
     if a != 32:
@@ -632,7 +638,10 @@ for wavfile in argv[1:]:
               lsty0 = styles.Style(styles = [ls0])
               p1 = kml.Placemark(ns, 'id',
                 name=("%.2f" % iri_avg),
-                description=("L=%.2f mm/m\nR=%.2f mm/m\nv=%.1f km/h\n%s" % (iri_left, iri_right, speed_kmh, datetime.decode("utf-8"))),
+                description=("L=%.2f mm/m\nR=%.2f mm/m\nL2=%.2f, R2=%.2f\nv=%.1f km/h\n%s" % 
+                  (iri_left, iri_right,
+                   srvz[0] / (n_buf_points * 80.0e3/3.6), srvz[1] / (n_buf_points * 80.0e3/3.6),
+                   speed_kmh, datetime.decode("utf-8"))),
                 styles=[lsty0])
               #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
               #p1_iri_right = kml.Data(name="IRI_RIGHT", display_name="IRI_RIGHT", value="%.2f" % iri_right)
@@ -710,8 +719,9 @@ if True:
     isty0 = styles.Style(styles = [is0])
     p0 = kml.Placemark(ns, 'id',
               name=("%.2f" % iri_avg),
-              description=("L=%.2f mm/m\nR=%.2f mm/m\ndir_ind=%d\nsnapstate=%d" %
+              description=("L=%.2f mm/m\nR=%.2f mm/m\nL2=%.2f, R2=%.2f\ndir_ind=%d\nsnapstate=%d" %
                 (pt["iri_left"], pt["iri_right"],
+                 srvz[0] / (n_buf_points * 80.0e3/3.6), srvz[1] / (n_buf_points * 80.0e3/3.6),
                  pt["directional_index"], pt["snapstate"],
                 )),
               styles=[isty0])
