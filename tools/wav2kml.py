@@ -12,7 +12,7 @@ import numpy as np
 
 wavfile = argv[1]
 
-calculate  = 1 # 0:IRI from wav tags, 1:IRI calculated from wav data
+calculate  = 0 # 0:IRI from wav tags, 1:IRI calculated from wav data (doesn't work yet)
 g_scale    = 2 # 2/4/8 g is 32000 integer reading
 aint2float = 9.81 * g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
 
@@ -45,8 +45,6 @@ slope_prev = np.zeros(2).astype(np.float32)
 
 azl0 = 9.81 # average azl (to remove slope DC offset)
 azr0 = 9.81 # average azr (to remove slope DC offset)
-azl0d = 0.0 # delta azl (to remove slope DC offset)
-azr0d = 0.0 # delta azr (to remove slope DC offset)
 
 # Z state matrix left,right (used for iterative slope entry at each sampling interval)
 ZL = np.zeros(4).astype(np.float32)
@@ -116,9 +114,9 @@ def slope2model(slope_l:float, slope_r:float):
   ZR = np.matmul(ST, ZR) + PR * slope_r
   # return (ZL[0] - ZL[2], ZR[0] - ZR[2]) # shock absorber speed
 
-# slope reconstruction from equal-time sampled z-accel and x-speed
+# slope reconstruction from equal-time sampled z-accel and vehicle x-speed
 # updates global slope[0] = left, slope[1] = right
-# TODO: maintain average azl0, azr0 to remove slope DC offset
+# needs regularly updated azl0, azr0 for slope DC remove
 def az2slope(azl:float, azr:float, vx:float):
   global slope
   c = a_sample_dt / vx
@@ -128,13 +126,13 @@ def az2slope(azl:float, azr:float, vx:float):
 def slope_dc_remove():
   global azl0, azr0, slope_prev
   if slope[0] > 0 and slope[0] > slope_prev[0]:
-    azl0 += 1.0e-3
+    azl0 += 1.0e-5
   if slope[0] < 0 and slope[0] < slope_prev[0]:
-    azl0 -= 1.0e-3
+    azl0 -= 1.0e-5
   if slope[1] > 0 and slope[1] > slope_prev[1]:
-    azr0 += 1.0e-3
+    azr0 += 1.0e-5
   if slope[1] < 0 and slope[1] < slope_prev[1]:
-    azr0 -= 1.0e-3
+    azr0 -= 1.0e-5
   slope_prev[0] = slope[0]
   slope_prev[1] = slope[1]
 
@@ -571,16 +569,17 @@ for wavfile in argv[1:]:
     if calculate:
       for i in range(0,6):
         ac[i] = int.from_bytes(b[i*2:i*2+2],byteorder="little",signed=True)
-      ac[2] = 15990
-      ac[5] = 16020
       if speed_kmh > 4:
+        # ac[2] Z-left, ac[5] Z-right
         if enter_accel(ac[2]*aint2float, ac[5]*aint2float, speed_kmh/3.6):
           enter_slope(slope[0],slope[1])
           slope_dc_remove()
-          print(ac[2]*aint2float, ac[5]*aint2float)
-          print(azl0, azr0)
-          print(slope)
-          #print(srvz / n_buf_points / (80/3.6))
+          #print(ac[2]*aint2float, ac[5]*aint2float)
+          #print(azl0, azr0)
+          #print(slope)
+          # iri is expressed as 1e3 mm/m so divide by 1000 with 80.0e3 instead 80
+          # FIXME currently srvz is too small, results in 0.2-0.4 instead of 2-4
+          #print(srvz / (n_buf_points * 80.0e3/3.6))
     if a != 32:
       c = a
       # convert control chars<32 to uppercase letters >=64
