@@ -72,10 +72,12 @@ mgrip_hole_h = 8.4; // M3 tightening hole pos from top
 mgrip_hole_x = 3.5; // move holes front
 mgrip_hole_d = 3.5; // M3 thru dia
 
-sensor_pcb  = [20.4,20.4,1.6]; // xyz pcb size
+sensor_pcb  = [20.4,20.4,1.6]; // xyz pcb size ADXL355
+//sensor_pcb  = [25.4,20.4,1.6]; // xyz pcb size ADXRS290
+
+sensor_conn_dim = [12.5,6,55.5]; // ADXRS290
 sensor_dist = 2.54*9;
 sensor_clr  = [0.4, 0.4, 0.4]; // sensor xyz clearance in the box 0.2 - very tight
-sensor_conn_dim = [12.5,6,55.5];
 
 sensor_rail_w = 1; // sensor rail width
 sensor_rail_z = -3; // sensor rail up/down
@@ -84,7 +86,7 @@ box_t = 2; // box wall thickness
 box_x = -4; // move box x relative to holder
 box_cover_screw_w = 6; // width of screw holder for the cover
 
-mgrip_box_internal = [34,sensor_pcb[1]+sensor_dist+2*sensor_clr[1],16];
+mgrip_box_internal = [sensor_pcb[0]+sensor_conn_dim[0]+sensor_clr[0]+0.7,sensor_pcb[1]+sensor_dist+2*sensor_clr[1],16];
 
 mgrip_box_dim = mgrip_box_internal+[box_t,box_t*2,box_t*2];
 
@@ -312,7 +314,7 @@ module mgrip_box()
       {
         cube([mgrip_box_dim[0],box_cover_screw_w,box_cover_screw_w],center=true);
         // angular cuts for print friendly
-        translate([10,0,0])
+        translate([11,0,0])
         rotate([0,0,-i*45])
           cube([100,18,18],center=true);
         // holes for screws
@@ -332,7 +334,7 @@ module mgrip_box()
     translate(box_translate+[-15,20,2.5 ])
       cube([15,10,9],center=true);
     // cut for cable
-    translate(box_translate+[-17.5,28,9])
+    translate(box_translate+[/*-17.5*/ -mgrip_box_internal[0]/2-0.5 ,28,9])
       cube([1.01,100,5],center=true);
     // cut for cover screws
     for(i=[-1:2:1])
