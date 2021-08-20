@@ -72,12 +72,12 @@ mgrip_hole_h = 8.4; // M3 tightening hole pos from top
 mgrip_hole_x = 3.5; // move holes front
 mgrip_hole_d = 3.5; // M3 thru dia
 
-sensor_pcb  = [20.4,20.4,1.6]; // xyz pcb size ADXL355
-//sensor_pcb  = [25.4,20.4,1.6]; // xyz pcb size ADXRS290
+//sensor_pcb  = [20.4,20.4,1.6]; // xyz pcb size ADXL355
+sensor_pcb  = [25.4,20.4,1.6]; // xyz pcb size ADXRS290
 
 sensor_conn_dim = [12.5,6,55.5]; // ADXRS290
 sensor_dist = 2.54*9;
-sensor_clr  = [0.4, 0.4, 0.4]; // sensor xyz clearance in the box 0.2 - very tight
+sensor_clr  = [0.4, 0.4, 0.2]; // sensor xyz clearance in the box 0.2 - very tight
 
 sensor_rail_w = 1; // sensor rail width
 sensor_rail_z = -3; // sensor rail up/down
@@ -457,13 +457,13 @@ module print_box_cover()
     mgrip_box_cover();
 }
 
-assembly();
+//assembly();
 //print_bar();
 //print_grip();
 //print_bat(0); // batt_rear
 //print_bat(1); // batt_front
 //print_box_holder();
-//print_box();
+print_box();
 //print_box_cover();
 //spacer(2);
 
