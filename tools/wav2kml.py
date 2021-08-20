@@ -32,7 +32,7 @@ a_sample_dt = 1/1000 # s (1kHz accelerometer sample rate)
 
 # number of buffered vz speed points for IRI averaging
 n_buf_points = int(iri_length/sampling_length + 0.5)
-# vz speed buffer contains values scaled as unsigned integer (um/s)
+rvz = np.zeros(2).astype(np.uint32)# vz speed contains values scaled as unsigned integer (um/s)
 # dimension 2 is for 0=left 1=right index
 rvz_buf = np.zeros((n_buf_points,2)).astype(np.uint32)
 rvz_buf_ptr = 0 # buffer pointer, runs 0 .. n_buf_points-1, next wraparound to 0
@@ -110,6 +110,9 @@ def st_pr(DX = 0.05, K1 = 653.0, K2 = 62.3, MU = 0.15, C = 6.0):
 
 # enter slope (dimensionless, m vertical per m horizontal) at sampling interval DX
 # into a model that simulates vehicle response
+# ST 4x4 state transition matrix
+# ZL, ZR 4-dim state space vectors
+# PR 4-dim partial response vector
 def slope2model(slope_l:float, slope_r:float):
   global ZL, ZR
   ZL = np.matmul(ST, ZL) + PR * slope_l
@@ -155,11 +158,12 @@ def reset_iri():
   azr0 = ac[5]*aint2float
 
 # enter slope, calculate running average
-def enter_slope(slope_l, slope_r):
-  global rvz_buf, rvz_buf_ptr, srvz
+def enter_slope(slope_l:float, slope_r:float):
+  global rvz, rvz_buf, rvz_buf_ptr, srvz
   slope2model(slope_l, slope_r) # updates ZL, ZR
   # scale shock absorber speed to integer um/s
-  rvz = np.array([ int(abs(1.0e6 * (ZL[0]-ZL[2]))), int(abs(1.0e6 * (ZR[0]-ZR[2]))) ]).astype(np.uint32)
+  rvz[0] = int(abs(1.0e6 * (ZL[0]-ZL[2])))
+  rvz[1] = int(abs(1.0e6 * (ZR[0]-ZR[2])))
   # running average
   srvz += rvz - rvz_buf[rvz_buf_ptr] # subtract from sum old data 100 m before
   rvz_buf[rvz_buf_ptr] = rvz # new data
@@ -575,6 +579,7 @@ for wavfile in argv[1:]:
       if speed_kmh > 4:
         # ac[2] Z-left, ac[5] Z-right
         #print(ac[2]*aint2float, ac[5]*aint2float, azl0, azr0)
+        #print(ac[2],ac[5],speed_kmh)
         if enter_accel(ac[2]*aint2float, ac[5]*aint2float, speed_kmh/3.6):
           enter_slope(slope[0],slope[1])
           slope_dc_remove()
@@ -585,6 +590,7 @@ for wavfile in argv[1:]:
           # iri when printed should be scaled as 1e3 mm/m so
           # divide srvz by 1000 with 80.0e3 instead 80
           # FIXME currently srvz is too small, results in 0.2-0.4 instead of 2-4
+          #print(srvz)
           #print(srvz / (n_buf_points * 80.0e3/3.6))
     if a != 32:
       c = a
