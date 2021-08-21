@@ -588,10 +588,10 @@ for wavfile in argv[1:]:
           #print(slope)
           # srvz is scaled 1e6
           # iri when printed should be scaled as 1e3 mm/m so
-          # divide srvz by 1000 with 80.0e3 instead 80
+          # divide srvz by 1000
           # FIXME currently srvz is too small, results in 0.2-0.4 instead of 2-4
           #print(srvz)
-          #print(srvz / (n_buf_points * 80.0e3/3.6))
+          #print(srvz / (n_buf_points * 1000))
     if a != 32:
       c = a
       # convert control chars<32 to uppercase letters >=64
@@ -646,7 +646,7 @@ for wavfile in argv[1:]:
                 name=("%.2f" % iri_avg),
                 description=("L=%.2f mm/m\nR=%.2f mm/m\nL2=%.2f, R2=%.2f\nv=%.1f km/h\n%s" % 
                   (iri_left, iri_right,
-                   srvz[0] / (n_buf_points * 80.0e3/3.6), srvz[1] / (n_buf_points * 80.0e3/3.6),
+                   srvz[0] / (n_buf_points*1000), srvz[1] / (n_buf_points*1000),
                    speed_kmh, datetime.decode("utf-8"))),
                 styles=[lsty0])
               #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
@@ -727,7 +727,7 @@ if True:
               name=("%.2f" % iri_avg),
               description=("L=%.2f mm/m\nR=%.2f mm/m\nL2=%.2f, R2=%.2f\ndir_ind=%d\nsnapstate=%d" %
                 (pt["iri_left"], pt["iri_right"],
-                 srvz[0] / (n_buf_points * 80.0e3/3.6), srvz[1] / (n_buf_points * 80.0e3/3.6),
+                 srvz[0] / (n_buf_points*1000), srvz[1] / (n_buf_points*1000),
                  pt["directional_index"], pt["snapstate"],
                 )),
               styles=[isty0])
