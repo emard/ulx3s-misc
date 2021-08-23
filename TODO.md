@@ -82,6 +82,9 @@ core
     [ ] time sync status
     [ ] BTN irq
     [ ] tyre ribs or motor vibration (RPM) sensing, conversion to speed
+    [ ] spi slave setting for cmd to auto-read registers 
+        adxl355  : 8*2+1
+        adxrs290 : 128+8
     [x] damp oscillations at slope DC offset compensation
     [x] at stops, quick slope DC removal
     [x] improved slope DC removal
