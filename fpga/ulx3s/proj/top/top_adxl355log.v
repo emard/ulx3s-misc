@@ -194,11 +194,11 @@ module top_adxl355log
 
   wire spi_bram_cs = ram_addr[27:24] == 4'h0; // read bram
   wire spi_bptr_cs = ram_addr[27:24] == 4'h1; // read bram ptr
-  wire spi_calc_cs = ram_addr[27:24] == 4'h2; // read/write to 0x02xxxxxx writes 32-bit speed mm/s and g*const/speed^2
+  wire spi_calc_cs = ram_addr[27:24] == 4'h2; // read/write to 0x02xxxxxx writes 32-bit speed mm/s and const/speed
   wire spi_wav_cs  = ram_addr[27:24] == 4'h5; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
   wire spi_tag_cs  = ram_addr[27:24] == 4'h6; // write to 0x06xxxxxx writes 6-bit tags
   wire spi_btn_cs  = ram_addr[27:24] == 4'hB; // read from 0x0Bxxxxxx reads BTN state
-  wire spi_rds_cs  = ram_addr[27:24] == 4'hD; // write to 0x0Dxxxxxx writes 52 bytes of RDS encoded data for 8-char text display
+  wire spi_rds_cs  = ram_addr[27:24] == 4'hD; // write to 0x0Dxxxxxx writes 273 bytes of RDS encoded data for text display
   wire spi_ctrl_cs = ram_addr[27:24] == 4'hF;
 
   generate
