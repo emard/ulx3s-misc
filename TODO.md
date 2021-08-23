@@ -76,16 +76,6 @@ esp32
 
 core
 
-    [ ] low speed mode: accel DC 16-point average to filter out freqs
-        higher than 62.5 Hz.
-        Tyre ribs pattern repeats every 2.5 cm. At 10 km/h it
-        generates about 100 Hz +-1 g sinewave.
-    [ ] accel DC removal
-    [ ] for high freq (many zero crossing of DC removed line)
-        use last zero-cross as value for next slope calculation.
-        This is to avoid random sampling
-        which may generate large slope noise.
-    [ ] core fm filter and downsample not working (trellis?)
     [ ] handle delay from speed measurement to accelerometer reading
     [ ] log sensor temperature
     [ ] increase speech volume (compression?)
