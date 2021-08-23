@@ -89,14 +89,14 @@ void adxl355_init(void)
   delay(2); // wait for request to be accepted
   for(int i = 0; i < 4; i++)
     adxl355_read_reg(i);
-  adxl355_write_reg(POWER_CTL, 0); // turn device ON
+  adxl355_write_reg(ADXL355_POWER_CTL, 0); // turn device ON
   // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
   // high speed i2c, INT1,INT2 active high
-  adxl355_write_reg(RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
+  adxl355_write_reg(ADXL355_RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
   // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
-  adxl355_write_reg(FILTER, FILTER_CONF);
+  adxl355_write_reg(ADXL355_FILTER, FILTER_CONF);
   // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
-  adxl355_write_reg(SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
+  adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
   adxl355_ctrl(0); // request core indirect mode
   delay(2); // wait for direct mode to finish
 }
@@ -104,7 +104,7 @@ void adxl355_init(void)
 uint8_t adxl355_available(void)
 {
   // read number of entries in the fifo
-  spi_master_tx_buf[0] = FIFO_ENTRIES*2+1; // FIFO_ENTRIES read request
+  spi_master_tx_buf[0] = ADXL355_FIFO_ENTRIES*2+1; // FIFO_ENTRIES read request
   //digitalWrite(PIN_CSN, 0);
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 2);
   //digitalWrite(PIN_CSN, 1);
@@ -144,8 +144,8 @@ uint8_t adxl355_rdfifo16(void)
   //n = 1; // debug
   for(uint8_t i = 0; i != n; i++)
   {
-    spi_master_tx_buf[0] = FIFO_DATA*2+1; // FIFO_DATA read request
-    //spi_master_tx_buf[0] = XDATA3*2+1; // current data
+    spi_master_tx_buf[0] = ADXL355_FIFO_DATA*2+1; // FIFO_DATA read request
+    //spi_master_tx_buf[0] = ADXL355_XDATA3*2+1; // current data
     //digitalWrite(PIN_CSN, 0);
     master.transfer(spi_master_tx_buf, spi_master_rx_buf, 10);
     //digitalWrite(PIN_CSN, 1);
@@ -930,7 +930,7 @@ void spi_slave_test(void)
 void spi_direct_test(void)
 {
   // begin debug reading ID and printing
-  spi_master_tx_buf[0] = DEVID_AD*2+1; // read ID (4 bytes expected)
+  spi_master_tx_buf[0] = ADXL355_DEVID_AD*2+1; // read ID (4 bytes expected)
   //digitalWrite(PIN_CSN, 0);
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 5);
   //digitalWrite(PIN_CSN, 1);
