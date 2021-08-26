@@ -84,11 +84,18 @@ void adxl355_ctrl(uint8_t x)
 
 void adxl355_init(void)
 {
-  Serial.println("initializing ADXL");
+  Serial.print("Initializing ADXL CHIP ID:");
   adxl355_ctrl(2); // request core direct mode
   delay(2); // wait for request to be accepted
+  uint8_t chipid[4];
+  char hexchipid[8];
   for(int i = 0; i < 4; i++)
-    adxl355_read_reg(i);
+  {
+    chipid[i] = adxl355_read_reg(i);
+    sprintf(hexchipid, " %02X", chipid[i]);
+    Serial.print(hexchipid);
+  }
+  Serial.println(".");
   adxl355_write_reg(ADXL355_POWER_CTL, 0); // turn device ON
   // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
   // high speed i2c, INT1,INT2 active high
