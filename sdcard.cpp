@@ -93,7 +93,8 @@ void adxl355_ctrl(uint8_t x)
 
 void adxl355_init(void)
 {
-  uint8_t chipid[4], serialno[4];
+  uint8_t chipid[4];
+  uint32_t serialno[2];
   char sprintf_buf[80];
 
   // autodetect regio protocol.
@@ -121,12 +122,16 @@ void adxl355_init(void)
   if(adxl_devid_detected == 0x92) // ADXRS290 gyroscope has serial number
   { // read serial number
     master.setFrequency(5000000); // 5 MHz max ADXRS290
-    for(uint8_t i = 0; i < 4; i++)
-      serialno[i] = adxl355_read_reg(i|4);
+    for(uint8_t lr = 0; lr < 2; lr++)
+    {
+      adxl355_ctrl(lr|2|(adxl355_regio<<2)); // 2 core direct mode, 4 SCLK inversion
+      serialno[lr] = 0;
+      for(uint8_t i = 0; i < 4; i++)
+        serialno[lr] = (serialno[lr] << 8) | adxl355_read_reg(i|4);
+    }
   }
-  sprintf(sprintf_buf, "ADXL CHIP ID: %02X %02X %02X %02X S/N: %02X%02X%02X%02X",
-      chipid[0],   chipid[1],   chipid[2],   chipid[3],
-    serialno[3], serialno[2], serialno[1], serialno[0]
+  sprintf(sprintf_buf, "ADXL CHIP ID: %02X %02X %02X %02X S/N L: %08X R: %08X",
+      chipid[0], chipid[1], chipid[2], chipid[3], serialno[0], serialno[1]
   );
   Serial.println(sprintf_buf);
   if(adxl_devid_detected == 0xED) // ADXL355
@@ -140,9 +145,22 @@ void adxl355_init(void)
     // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
     adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
   }
-  if(adxl_devid_detected == 0x92) // ADXL355
+  if(adxl_devid_detected == 0x92) // ADXRS290 Gyro
   {
     adxl355_write_reg(ADXRS290_POWER_CTL, ADXRS290_POWER_GYRO | ADXRS290_POWER_TEMP); // turn device ON
+    #if 0
+    // print to check is Gyro working
+    for(int i = 0; i < 1000; i++)
+    {
+      sprintf(sprintf_buf, "X=%02X%02X Y=%02X%02X",
+        adxl355_read_reg(ADXRS290_GYRO_XH),
+        adxl355_read_reg(ADXRS290_GYRO_XL),
+        adxl355_read_reg(ADXRS290_GYRO_YH),
+        adxl355_read_reg(ADXRS290_GYRO_YL)
+      );
+      Serial.println(sprintf_buf);
+    }
+    #endif
   }
   adxl355_ctrl((adxl355_regio<<2)); // 2:request core indirect mode
   delay(2); // wait for direct mode to finish
