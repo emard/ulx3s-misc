@@ -115,12 +115,15 @@ void adxl355_init(void)
     chipid[i] = adxl355_read_reg(i);
   if(chipid[0] == 0xAD && chipid[1] == 0x1D) // ADXL device
     adxl_devid_detected = chipid[2];
+  if(adxl_devid_detected == 0xED) // ADXL355
+    master.setFrequency(8000000); // 8 MHz max ADXL355
   if(adxl_devid_detected == 0x92) // ADXRS290 gyroscope has serial number
   { // read serial number
+    master.setFrequency(5000000); // 5 MHz max ADXRS290
     for(uint8_t i = 0; i < 4; i++)
       serialno[i] = adxl355_read_reg(i|4);
   }
-  sprintf(sprintf_buf, "ADXL CHIP ID: %02X %02X %02X %02X SN: %02X%02X%02X%02X",
+  sprintf(sprintf_buf, "ADXL CHIP ID: %02X %02X %02X %02X S/N: %02X%02X%02X%02X",
       chipid[0],   chipid[1],   chipid[2],   chipid[3],
     serialno[3], serialno[2], serialno[1], serialno[0]
   );
@@ -213,7 +216,7 @@ void spi_init(void)
     // adxl355  direct can use SPI_MODE3 with sclk inverted
     // adxrs290 direct can use SPI_MODE3 with sclk normal
     master.setDataMode(SPI_MODE3); // for DMA, only 1 or 3 is available
-    master.setFrequency(5000000); // Hz ADXL355:8MHz ADXRS290:5MHz
+    master.setFrequency(5000000); // Hz 5 MHz initial, after autodect ADXL355: 8 MHz, ADXRS290: 5 MHz
     master.setMaxTransferSize(BUFFER_SIZE); // bytes
     master.setDMAChannel(1); // 1 or 2 only
     master.setQueueSize(1); // transaction queue size
