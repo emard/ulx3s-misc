@@ -185,9 +185,10 @@ module top_adxl355log
   wire spi_ram_miso; // muxed
   wire spi_bram_cs; // "chip" select line for address detection of bram buffer addr 0x00...
   wire spi_ctrl_cs; // control byte select addr 0xFF..
-  reg [7:0] r_ctrl = 8'h00; // control byte, r_ctrl[7:2]:reserved, r_ctrl[1]:direct_en, r_ctrl[0]:reserved
+  reg [7:0] r_ctrl = 8'h04; // control byte, r_ctrl[7:3]:reserved, r_ctrl[2]:sclk_inv, r_ctrl[1]:direct_en, r_ctrl[0]:reserved
   wire ctrl_direct = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire ctrl_sclk_inv = r_ctrl[2]; // SPI clk invert 1:invert, 0:normal
+  wire ctrl_sensor_type = r_ctrl[2]; // 1: ADXL355 accelerometer, 0:ADXRS290 gyroscope
   wire direct_en;
   wire [7:0]   calc_result[0:7]; // 8-byte (2x32-bit)
   reg  [7:0] r_calc_result[0:7]; // 8-byte (2x32-bit)
@@ -406,19 +407,32 @@ module top_adxl355log
   end
   wire sclk_en = r_sclk_en[slowdown];
   
+  reg [7:0] spi_read_cmd;
+  reg [3:0] spi_read_len;
+  always @(posedge clk)
+  begin
+    spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128;
+    // cmd ADXL355  0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
+    // cmd ADXRS290 8+128 to read xy
+    spi_read_len <= ctrl_sensor_type ? /*ADXL355*/    10 : /*ADXRS290*/ 7;
+    // len ADLX355  10 = 1+9, 1 byte transmitted and 9 bytes received
+    // len ADXRS290  7 = 1+6, 1 byte transmitted and 6 bytes received
+  end
+
   reg r_tag_en = 0;
   always @(posedge clk)
     r_tag_en <= ram_wr & spi_tag_cs;
   wire tag_en = ram_wr & spi_tag_cs & ~r_tag_en;
   wire [5:0] w_tag = ram_di[6:5] == 0 ? 6'h20 : ram_di[5:0]; // control chars<32 convert to space 32 " "
+  wire spi2ram_wr, spi2ram_wr16;
   adxl355rd
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
     .direct(ctrl_direct),
     .direct_en(direct_en),
-    .cmd(8*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
-    .len(10), // 10 = 1+9, 1 byte transmitted and 9 bytes received
+    .cmd(spi_read_cmd),
+    .len(spi_read_len), // 10 = 1+9, 1 byte transmitted and 9 bytes received
     .tag_pulse(pps_pulse),
     .tag_en(tag_en),  // write signal from SPI
     .tag(w_tag), // 6-bit char from SPI
@@ -431,9 +445,11 @@ module top_adxl355log
     //.adxl0_miso(0), // debug
     //.adxl1_miso(0), // debug
     .wrdata(spi_ram_data),
-    .wr16(spi_ram_wr), // skips every 3rd byte
-    .x(spi_ram_x)
+    .wr(spi2ram_wr), // ADXRS290 read and write every byte
+    .wr16(spi2ram_wr16), // ADXL355: 2 bytes read 2 bytes written, 3rd byte read but not written (repeat every 3 bytes)
+    .x(spi_ram_x) // signals first data byte from X-axis
   );
+  assign spi_ram_wr = ctrl_sensor_type ? /*ADXL355*/ spi2ram_wr16 : /*ADXRS290*/ spi2ram_wr;
   // store one sample in reg memory
   reg [7:0] r_accel[0:11];
   reg [3:0] r_accel_addr;
