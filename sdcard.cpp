@@ -1,6 +1,7 @@
 #include "pins.h"
 #include "sdcard.h"
 #include "adxl355.h"
+#include "adxrs290.h"
 #include "nmea.h"
 #include "kml.h"
 #include <sys/time.h>
@@ -130,14 +131,18 @@ void adxl355_init(void)
   Serial.println(sprintf_buf);
   if(adxl_devid_detected == 0xED) // ADXL355
   {
-  adxl355_write_reg(ADXL355_POWER_CTL, 0); // turn device ON
-  // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
-  // high speed i2c, INT1,INT2 active high
-  adxl355_write_reg(ADXL355_RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
-  // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
-  adxl355_write_reg(ADXL355_FILTER, FILTER_CONF);
-  // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
-  adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
+    adxl355_write_reg(ADXL355_POWER_CTL, 0); // turn device ON
+    // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
+    // high speed i2c, INT1,INT2 active high
+    adxl355_write_reg(ADXL355_RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
+    // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
+    adxl355_write_reg(ADXL355_FILTER, FILTER_CONF);
+    // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
+    adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
+  }
+  if(adxl_devid_detected == 0x92) // ADXL355
+  {
+    adxl355_write_reg(ADXRS290_POWER_CTL, ADXRS290_POWER_GYRO | ADXRS290_POWER_TEMP); // turn device ON
   }
   adxl355_ctrl((adxl355_regio<<2)); // 2:request core indirect mode
   delay(2); // wait for direct mode to finish
