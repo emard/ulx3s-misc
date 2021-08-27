@@ -1,3 +1,7 @@
+// set Board->ESP32 Arduino->ESP32 Dev Module
+// CPU Frequency: 240 MHz
+// Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
+
 #include "pins.h"
 #include "web.h"
 #include "kml.h"
@@ -5,9 +9,6 @@
 #include <WiFi.h> // to speak IP
 
 #include "BluetoothSerial.h"
-// set Board->ESP32 Arduino->ESP32 Dev Module
-// CPU Frequency: 240 MHz
-// Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
 
 // PPS and IRQ connected with wire
 #include "soc/mcpwm_reg.h"
