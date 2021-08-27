@@ -127,11 +127,11 @@ module top_adxl355log
   assign sd_wp = sd_clk | sd_cmd | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
 
-  assign wifi_en = S_prog_out[1];
+  //assign wifi_en = S_prog_out[1];
   // assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
   assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
 
-  //assign wifi_en = S_prog_out[1] & btn[0]; // holding BTN0 disables ESP32, releasing BTN0 reboots ESP32
+  assign wifi_en = S_prog_out[1] & ~btn[3]; // holding BTN3 disables ESP32, releasing BTN3 reboots ESP32
   //assign wifi_gpio0 = S_prog_out[0];
 
   wire int1 = gp17;
@@ -186,7 +186,8 @@ module top_adxl355log
   wire spi_bram_cs; // "chip" select line for address detection of bram buffer addr 0x00...
   wire spi_ctrl_cs; // control byte select addr 0xFF..
   reg [7:0] r_ctrl = 8'h00; // control byte, r_ctrl[7:2]:reserved, r_ctrl[1]:direct_en, r_ctrl[0]:reserved
-  wire direct_req = r_ctrl[1]; // mux switch 1:direct, 0:reader core
+  wire ctrl_direct = r_ctrl[1]; // mux switch 1:direct, 0:reader core
+  wire ctrl_sclk_inv = r_ctrl[2]; // SPI clk invert 1:invert, 0:normal
   wire direct_en;
   wire [7:0]   calc_result[0:7]; // 8-byte (2x32-bit)
   reg  [7:0] r_calc_result[0:7]; // 8-byte (2x32-bit)
@@ -208,20 +209,20 @@ module top_adxl355log
     assign gn17 = csn;
     assign gn16 = mosi;
     assign miso = gn15;
-    assign gn14 = ~sclk; // invert sclk to use SPI_MODE3 instead of SPI_MODE1
+    assign gn14 = (sclk ^ ctrl_sclk_inv); // invert sclk to use SPI_MODE3 instead of SPI_MODE1
   end
   else
   begin
     // ADXL355 0 connections (FPGA is master to ADXL355)
     assign gn17 = direct_en ?  csn  : rd_csn;
-    assign gn14 = direct_en ? ~sclk : rd_sclk;
+    assign gn14 = direct_en ? (sclk ^ ctrl_sclk_inv) : rd_sclk;
     assign gn16 = direct_en ?  mosi : rd_mosi;
     assign miso = direct_en ?  gn15 : spi_ram_miso; // mux miso to esp32
     assign rd0_miso = gn15; // adxl0 miso directly to reader core
 
     // ADXL355 1 connections (FPGA is master to ADXL355)
     assign gn24 = direct_en ?  csn  : rd_csn;
-    assign gn21 = direct_en ? ~sclk : rd_sclk;
+    assign gn21 = direct_en ? (sclk ^ ctrl_sclk_inv) : rd_sclk;
     assign gn23 = direct_en ?  mosi : rd_mosi;
     assign rd1_miso = gn22; // adxl1 miso directly to reader core
 
@@ -414,7 +415,7 @@ module top_adxl355log
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
-    .direct(direct_req),
+    .direct(ctrl_direct),
     .direct_en(direct_en),
     .cmd(8*2+1), // 0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     .len(10), // 10 = 1+9, 1 byte transmitted and 9 bytes received
