@@ -48,13 +48,18 @@ struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 uint8_t G_RANGE = 8; // +-2/4/8 g sensor range (at digital reading +-32000)
 uint8_t FILTER_CONF = 0; // see datasheet adxl355 p.38 0:1kHz ... 10:0.977Hz
+uint8_t adxl355_regio = 0; // REG I/O protocol 1:ADXL355 0:ADXRS290
+uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
 
 // SD status
 size_t total_bytes, used_bytes, free_bytes, free_MB;
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {
-  spi_master_tx_buf[0] = a*2; // write reg addr a
+  if(adxl355_regio)
+    spi_master_tx_buf[0] = a*2; // adxl355 write reg addr a
+  else
+    spi_master_tx_buf[0] = a; // adxrs290 write reg addr a
   spi_master_tx_buf[1] = v;
   //digitalWrite(PIN_CSN, 0);
   master.transfer(spi_master_tx_buf, 2);
@@ -63,7 +68,10 @@ void adxl355_write_reg(uint8_t a, uint8_t v)
 
 uint8_t adxl355_read_reg(uint8_t a)
 {
-  spi_master_tx_buf[0] = a*2+1; // read reg addr a
+  if(adxl355_regio)
+    spi_master_tx_buf[0] = a*2+1; // adxl355 read reg addr a
+  else
+    spi_master_tx_buf[0] = a|0x80; // adxrs290 read reg addr a
   //digitalWrite(PIN_CSN, 0);
   master.transfer(spi_master_tx_buf, spi_master_rx_buf, 2);
   //digitalWrite(PIN_CSN, 1);
@@ -84,18 +92,41 @@ void adxl355_ctrl(uint8_t x)
 
 void adxl355_init(void)
 {
-  Serial.print("Initializing ADXL CHIP ID:");
-  adxl355_ctrl(2); // request core direct mode
-  delay(2); // wait for request to be accepted
-  uint8_t chipid[4];
-  char hexchipid[8];
-  for(int i = 0; i < 4; i++)
+  uint8_t chipid[4], serialno[4];
+  char sprintf_buf[80];
+
+  // autodetect regio protocol.
+  // try 2 different regio protocols
+  // until read reg(1) = 0x1D (common for both sensor types)
+  adxl355_ctrl(2|(adxl355_regio<<2)); // direct mode request
+  delay(2); // wait for request direct mode to be accepted
+  if(adxl_devid_detected == 0)
+  for(int j = 1; j >= 0; j--)
   {
-    chipid[i] = adxl355_read_reg(i);
-    sprintf(hexchipid, " %02X", chipid[i]);
-    Serial.print(hexchipid);
+    // first try 1:ADXL355, then 0:ADXRS290
+    // otherwise ADXL355 will be spoiled
+    adxl355_regio = j;
+    adxl355_ctrl(2|(adxl355_regio<<2)); // 2 core direct mode, 4 SCLK inversion
+    if(adxl355_read_reg(1) == 0x1D)
+      break; // ends for-loop
   }
-  Serial.println(".");
+  // now read full 4 bytes of chip id
+  for(uint8_t i = 0; i < 4; i++)
+    chipid[i] = adxl355_read_reg(i);
+  if(chipid[0] == 0xAD && chipid[1] == 0x1D) // ADXL device
+    adxl_devid_detected = chipid[2];
+  if(adxl_devid_detected == 0x92) // ADXRS290 gyroscope has serial number
+  { // read serial number
+    for(uint8_t i = 0; i < 4; i++)
+      serialno[i] = adxl355_read_reg(i|4);
+  }
+  sprintf(sprintf_buf, "ADXL CHIP ID: %02X %02X %02X %02X SN: %02X%02X%02X%02X",
+      chipid[0],   chipid[1],   chipid[2],   chipid[3],
+    serialno[3], serialno[2], serialno[1], serialno[0]
+  );
+  Serial.println(sprintf_buf);
+  if(adxl_devid_detected == 0xED) // ADXL355
+  {
   adxl355_write_reg(ADXL355_POWER_CTL, 0); // turn device ON
   // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
   // high speed i2c, INT1,INT2 active high
@@ -104,7 +135,8 @@ void adxl355_init(void)
   adxl355_write_reg(ADXL355_FILTER, FILTER_CONF);
   // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
   adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
-  adxl355_ctrl(0); // request core indirect mode
+  }
+  adxl355_ctrl((adxl355_regio<<2)); // 2:request core indirect mode
   delay(2); // wait for direct mode to finish
 }
 
@@ -177,9 +209,11 @@ void spi_init(void)
     spi_master_rx_buf = master.allocDMABuffer(BUFFER_SIZE);
 
     // adxl355   needs SPI_MODE1 (all lines directly connected)
-    // spi_slave needs SPI_MODE3 (adxl355 can use SPI_MODE3 with sclk inverted)
+    // spi_slave needs SPI_MODE3
+    // adxl355  direct can use SPI_MODE3 with sclk inverted
+    // adxrs290 direct can use SPI_MODE3 with sclk normal
     master.setDataMode(SPI_MODE3); // for DMA, only 1 or 3 is available
-    master.setFrequency(8000000); // Hz
+    master.setFrequency(5000000); // Hz ADXL355:8MHz ADXRS290:5MHz
     master.setMaxTransferSize(BUFFER_SIZE); // bytes
     master.setDMAChannel(1); // 1 or 2 only
     master.setQueueSize(1); // transaction queue size
