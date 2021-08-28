@@ -185,7 +185,7 @@ module top_adxl355log
   wire spi_ram_miso; // muxed
   wire spi_bram_cs; // "chip" select line for address detection of bram buffer addr 0x00...
   wire spi_ctrl_cs; // control byte select addr 0xFF..
-  reg [7:0] r_ctrl = 8'h04; // control byte, r_ctrl[7:3]:reserved, r_ctrl[2]:sclk_inv, r_ctrl[1]:direct_en, r_ctrl[0]:reserved
+  reg [7:0] r_ctrl = 8'h04; // control byte, r_ctrl[7:3]:reserved, r_ctrl[2]:sclk_inv, r_ctrl[1]:direct_en, r_ctrl[0]:sensor lr
   wire ctrl_direct_lr = r_ctrl[0]; // mux direct 0: left, 1: right
   wire ctrl_direct = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire ctrl_sclk_inv = r_ctrl[2]; // SPI clk invert 1:invert, 0:normal
@@ -217,13 +217,13 @@ module top_adxl355log
   begin
     // ADXL355 0 connections (FPGA is master to ADXL355)
     assign gn17 = direct_en ?  csn  : rd_csn;
-    assign gn14 = direct_en ? (sclk ^ ctrl_sclk_inv) : (rd_sclk ^ ~ctrl_sclk_inv);
+    assign gn14 = direct_en ? (sclk ^ ctrl_sclk_inv) : rd_sclk;
     assign gn16 = direct_en ?  mosi : rd_mosi;
     assign rd0_miso = gn15; // adxl0 miso directly to reader core
 
     // ADXL355 1 connections (FPGA is master to ADXL355)
     assign gn24 = direct_en ?  csn  : rd_csn;
-    assign gn21 = direct_en ? (sclk ^ ctrl_sclk_inv) : (rd_sclk ^ ~ctrl_sclk_inv);
+    assign gn21 = direct_en ? (sclk ^ ctrl_sclk_inv) : rd_sclk;
     assign gn23 = direct_en ?  mosi : rd_mosi;
     assign rd1_miso = gn22; // adxl1 miso directly to reader core
 
@@ -386,7 +386,6 @@ module top_adxl355log
   //assign led = phase;
   //assign led = cnt_sync_prev[7:0]; // should show 0xE8 from 1000 = 0x3E8
 
-
   // rising edge detection of drdy (sync)
   reg [1:0] r_sync_shift;
   reg sync_pulse;
@@ -417,8 +416,8 @@ module top_adxl355log
     //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug
     // cmd ADXL355  0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     // cmd ADXRS290   128 to read id, 8+128 to read xy
-    // spi_read_len <= ctrl_sensor_type ? /*ADXL355*/    10 : /*ADXRS290*/ 7; // normal
-    spi_read_len <= 10; // debug
+    spi_read_len <= ctrl_sensor_type ? /*ADXL355*/    10 : /*ADXRS290*/ 7; // normal
+    // spi_read_len <= 10; // debug
     // len ADLX355  10 = 1+9, 1 byte transmitted and 9 bytes received
     // len ADXRS290  7 = 1+6, 1 byte transmitted and 6 bytes received
   end
@@ -433,6 +432,8 @@ module top_adxl355log
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
+    .sclk_phase(~ctrl_sensor_type),
+    .sclk_polarity(~ctrl_sensor_type),
     .direct(ctrl_direct),
     .direct_en(direct_en),
     .cmd(spi_read_cmd),
@@ -453,8 +454,8 @@ module top_adxl355log
     .wr16(spi2ram_wr16), // ADXL355: 2 bytes read 2 bytes written, 3rd byte read but not written (repeat every 3 bytes)
     .x(spi_ram_x) // signals first data byte from X-axis
   );
-  // assign spi_ram_wr = ctrl_sensor_type ? /*ADXL355*/ spi2ram_wr16 : /*ADXRS290*/ spi2ram_wr; // normal
-  assign spi_ram_wr = spi2ram_wr16; // debug
+  assign spi_ram_wr = ctrl_sensor_type ? /*ADXL355*/ spi2ram_wr16 : /*ADXRS290*/ spi2ram_wr; // normal
+  //assign spi_ram_wr = spi2ram_wr; // debug
   // store one sample in reg memory
   reg [7:0] r_accel[0:11];
   reg [3:0] r_accel_addr;
@@ -775,6 +776,8 @@ module top_adxl355log
   );
   //assign data[63:32] = ma;
   //assign data[31:0]  = mb;
+  //assign data[63:32] = {ayl, axl};
+  //assign data[31:0]  = {ayr, axr};
   //assign data[63:32] = {0, azl};
   //assign data[31:0]  = {0, azr};
   assign data[ 63:32]  = slope_l;
