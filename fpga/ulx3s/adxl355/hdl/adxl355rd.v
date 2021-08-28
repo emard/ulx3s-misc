@@ -8,7 +8,9 @@ module adxl355rd
   tag_addr_bits = 11  // 2**n number of chars in tag FIFO buffer (number of RAM address bits)
 )
 (
-  input         clk, clk_en, // clk_en should be 1-clk pulse slower than 20 MHz
+  input         clk, clk_en,   // clk_en should be 1-clk pulse slower than 20 MHz
+  input         sclk_phase,    // 0:ADXL355 1:ADXRS290
+  input         sclk_polarity, // 0:ADXL355 1:ADXRS290
   // from esp32
   input         direct, // request direct: 0:buffering, 1:direct to ADXL355
   output        direct_en, // grant direct access (signal for mux)
@@ -124,7 +126,7 @@ module adxl355rd
   begin
     r_csn     <= index == 1 ? 0 : index == {bytes_len, 4'h3} ? 1 : r_csn;
     r_sclk_en <= index == 2 ? 1 : index == {bytes_len, 4'h2} ? 0 : r_sclk_en;
-    r_sclk    <= r_sclk_en  ? index[0] : 0;
+    r_sclk    <= (r_sclk_en ? index[0] ^ sclk_phase : 0) ^ sclk_polarity;
     r_direct  <= index == {bytes_len, 4'h4} ? direct : r_direct;
   end
 
