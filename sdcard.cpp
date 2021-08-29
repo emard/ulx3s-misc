@@ -49,7 +49,7 @@ struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 uint8_t G_RANGE = 8; // +-2/4/8 g sensor range (at digital reading +-32000)
 uint8_t FILTER_CONF = 0; // see datasheet adxl355 p.38 0:1kHz ... 10:0.977Hz
-uint8_t adxl355_regio = 0; // REG I/O protocol 1:ADXL355 0:ADXRS290
+uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
 
 // SD status
@@ -100,7 +100,14 @@ void adxl355_init(void)
   // autodetect regio protocol.
   // try 2 different regio protocols
   // until read reg(1) = 0x1D (common for both sensor types)
-  adxl355_ctrl(2|(adxl355_regio<<2)); // direct mode request
+  // 2<<0 direct mode L/R switch when reading data from sensor
+  // 2<<1 direct mode request
+  // 2<<2 sensor type
+  // 2<<3 clock polarity
+  // 2<<4 clock phase
+  //                   sensor type         sclk polarity         sclk phase
+  #define CTRL_SELECT (adxl355_regio<<2)|((!adxl355_regio)<<3)|((0*adxl355_regio)<<4)
+  adxl355_ctrl(2|CTRL_SELECT);
   delay(2); // wait for request direct mode to be accepted
   if(adxl_devid_detected == 0)
   for(int j = 1; j >= 0; j--)
@@ -108,7 +115,7 @@ void adxl355_init(void)
     // first try 1:ADXL355, then 0:ADXRS290
     // otherwise ADXL355 will be spoiled
     adxl355_regio = j;
-    adxl355_ctrl(2|(adxl355_regio<<2)); // 2 core direct mode, 4 SCLK inversion
+    adxl355_ctrl(2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
     if(adxl355_read_reg(1) == 0x1D)
       break; // ends for-loop
   }
@@ -124,7 +131,7 @@ void adxl355_init(void)
     master.setFrequency(5000000); // 5 MHz max ADXRS290
     for(uint8_t lr = 0; lr < 2; lr++)
     {
-      adxl355_ctrl(lr|2|(adxl355_regio<<2)); // 2 core direct mode, 4 SCLK inversion
+      adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
       serialno[lr] = 0;
       for(uint8_t i = 0; i < 4; i++)
         serialno[lr] = (serialno[lr] << 8) | adxl355_read_reg(i|4);
@@ -162,7 +169,7 @@ void adxl355_init(void)
     }
     #endif
   }
-  adxl355_ctrl((adxl355_regio<<2)); // 2:request core indirect mode
+  adxl355_ctrl(CTRL_SELECT); // 2:request core indirect mode
   delay(2); // wait for direct mode to finish
 }
 
