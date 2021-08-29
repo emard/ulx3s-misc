@@ -119,16 +119,17 @@ module adxl355rd
   reg [2:0] r_tag_data_i = 0; // bit-index for reading latched tag data
   reg r_tag_data_en = 0; // toggled at wr16 for LSB to be tagged
   reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr = 0, r_wr16 = 0, r_x = 0;
+  //wire r_sclk;
   reg [7:0] r_mosi, r0_miso, r1_miso, r_shift, r0_wrdata, r1_wrdata;
-
   always @(posedge clk)
   if(clk_en)
   begin
     r_csn     <= index == 1 ? 0 : index == {bytes_len, 4'h3} ? 1 : r_csn;
     r_sclk_en <= index == 2 ? 1 : index == {bytes_len, 4'h2} ? 0 : r_sclk_en;
-    r_sclk    <= (r_sclk_en ? index[0] ^ sclk_phase : 0) ^ sclk_polarity;
+    r_sclk    <= ( (index[0] ^ sclk_phase) & r_sclk_en) ^ sclk_polarity; // normal ADXL355 works with this
     r_direct  <= index == {bytes_len, 4'h4} ? direct : r_direct;
   end
+  //assign r_sclk = ( (index[0] ^ sclk_phase) & r_sclk_en) ^ sclk_polarity; // debug ADXRS290 works with this
 
   wire [7:0] w0_miso = {r0_miso[6:0], adxl0_miso};
   wire [7:0] w1_miso = {r1_miso[6:0], adxl1_miso};
@@ -199,7 +200,7 @@ module adxl355rd
   assign w_sclk = r_sclk;
 
   assign wrdata = r_wr1 ? r1_wrbuf[r1_rindex] : r0_wrdata;
-  assign wr     = r_wr;
+  assign wr     = r_wr   | r_wr1;
   assign wr16   = r_wr16 | r_wr1;
   assign x      = r_x;
   
