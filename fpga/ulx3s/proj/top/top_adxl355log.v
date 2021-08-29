@@ -82,9 +82,12 @@ module top_adxl355log
   input         wifi_txd,
   inout         wifi_gpio0,
   input         wifi_gpio5,
+  inout         wifi_gpio12, wifi_gpio2,
+  input         wifi_gpio13, wifi_gpio4,
+  input         wifi_gpio15, wifi_gpio14,
   input         wifi_gpio16, wifi_gpio17,
-  inout   [3:0] sd_d, // wifi_gpio 13,12,4,2
-  input         sd_cmd, sd_clk,
+  //inout   [3:0] sd_d, // wifi_gpio 13,12,4,2
+  //input         sd_cmd, sd_clk, // wifi_gpio 15,14
   output        sd_wp, // BGA pin exists but not connected on PCB
   output        oled_csn,
   output        oled_clk,
@@ -99,7 +102,7 @@ module top_adxl355log
 
   // Programming logic
   // SERIAL  ->  ESP32
-  // DTR RTS -> EN IO0
+  // DTR RTS -> EN IO0,2
   //  1   1     1   1
   //  0   0     1   1
   //  1   0     0   1
@@ -123,8 +126,11 @@ module top_adxl355log
   end
   // wifi_gpio2 for programming must go together with wifi_gpio0
   // wifi_gpio12 (must be 0 for esp32 fuse unprogrammed)
-  assign sd_d  = R_prog_release[C_prog_release_timeout] ? 4'hz : { 3'b101, S_prog_out[0] }; // wifi_gpio 13,12,4,2
-  assign sd_wp = sd_clk | sd_cmd | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
+  assign wifi_gpio12 = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b0;
+  assign wifi_gpio2  = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0];
+  //assign sd_d  = R_prog_release[C_prog_release_timeout] ? 4'hz : { 3'b101, S_prog_out[0] }; // wifi_gpio 13,12,4,2
+  //assign sd_wp = sd_clk | sd_cmd | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
+  assign sd_wp = wifi_gpio15 | wifi_gpio14 | wifi_gpio13 | wifi_gpio12 | wifi_gpio4 | wifi_gpio2 /*| wifi_gpio0*/; // force pullup for listed inputs to make SD MMC mode work
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
 
   //assign wifi_en = S_prog_out[1];
@@ -188,8 +194,10 @@ module top_adxl355log
   reg [7:0] r_ctrl = 8'h04; // control byte, r_ctrl[7:3]:reserved, r_ctrl[2]:sclk_inv, r_ctrl[1]:direct_en, r_ctrl[0]:sensor lr
   wire ctrl_direct_lr = r_ctrl[0]; // mux direct 0: left, 1: right
   wire ctrl_direct = r_ctrl[1]; // mux switch 1:direct, 0:reader core
-  wire ctrl_sclk_inv = r_ctrl[2]; // SPI clk invert 1:invert, 0:normal
+  wire ctrl_sclk_inv = r_ctrl[2]; // SPI direct clk invert 1:invert, 0:normal
   wire ctrl_sensor_type = r_ctrl[2]; // 1: ADXL355 accelerometer, 0:ADXRS290 gyroscope
+  wire ctrl_sclk_polarity = r_ctrl[3]; // SPI autoreader clk polarity, 0: ADXL355, 1:ADXRS290
+  wire ctrl_sclk_phase = r_ctrl[4]; // SPI autoreader clk phase, 0: ADXL355, 1:ADXRS290
   wire direct_en;
   wire [7:0]   calc_result[0:7]; // 8-byte (2x32-bit)
   reg  [7:0] r_calc_result[0:7]; // 8-byte (2x32-bit)
@@ -378,7 +386,7 @@ module top_adxl355log
   //assign led[3:0] = {sclk,miso,mosi,csn};
 
   assign led[7:4] = phase[7:4];
-  assign led[3] = 0;
+  assign led[3] = wifi_en;
   assign led[2] = sync_locked;
   assign led[1] = pps_valid;
   assign led[0] = pps_btn;
@@ -397,7 +405,7 @@ module top_adxl355log
 
   // SPI reader
   // counter for very slow clock
-  localparam slowdown = 0;
+  localparam slowdown = 5;
   reg [slowdown:0] r_sclk_en;
   always @(posedge clk)
   begin
@@ -413,7 +421,7 @@ module top_adxl355log
   always @(posedge clk)
   begin
     spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128; // normal
-    //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug
+    //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug read ID
     // cmd ADXL355  0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     // cmd ADXRS290   128 to read id, 8+128 to read xy
     spi_read_len <= ctrl_sensor_type ? /*ADXL355*/    10 : /*ADXRS290*/ 7; // normal
@@ -432,8 +440,8 @@ module top_adxl355log
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
-    .sclk_phase(~ctrl_sensor_type),
-    .sclk_polarity(~ctrl_sensor_type),
+    .sclk_phase(ctrl_sclk_phase),
+    .sclk_polarity(ctrl_sclk_polarity),
     .direct(ctrl_direct),
     .direct_en(direct_en),
     .cmd(spi_read_cmd),
