@@ -86,7 +86,7 @@ module adxl355rd
   reg [3:0] bytes_len = 10; // holds the spi transfer length including command byte
 
   reg r_direct; // allow switch when idle
-  reg [7:0] index = {4'd10, 4'h4}; // running index, start as finished
+  reg [7:0] index = {4'd10, 4'h6}; // running index, start as finished
 
   // internal wiring, before multiplexer  
   wire w_mosi, w_sclk, w_csn, w_miso;
@@ -98,7 +98,7 @@ module adxl355rd
 
   always @(posedge clk)
   begin
-    if(index == {bytes_len, 4'h4}) // end of sequence
+    if(index == {bytes_len, 4'h6}) // end of sequence
     begin
       if(sync && ~r_direct)
       begin
@@ -124,10 +124,10 @@ module adxl355rd
   always @(posedge clk)
   if(clk_en)
   begin
-    r_csn     <= index == 1 ? 0 : index == {bytes_len, 4'h3} ? 1 : r_csn;
-    r_sclk_en <= index == 2 ? 1 : index == {bytes_len, 4'h2} ? 0 : r_sclk_en;
+    r_csn     <= index == 1 ? 0 : index == {bytes_len, 4'h5} ? 1 : r_csn;
+    r_sclk_en <= index == 4 ? 1 : index == {bytes_len, 4'h4} ? 0 : r_sclk_en;
     r_sclk    <= ( (index[0] ^ sclk_phase) & r_sclk_en) ^ sclk_polarity; // normal ADXL355 works with this
-    r_direct  <= index == {bytes_len, 4'h4} ? direct : r_direct;
+    r_direct  <= index == {bytes_len, 4'h6} ? direct : r_direct;
   end
   //assign r_sclk = ( (index[0] ^ sclk_phase) & r_sclk_en) ^ sclk_polarity; // debug ADXRS290 works with this
 
@@ -136,15 +136,15 @@ module adxl355rd
   always @(posedge clk)
   if(clk_en && ~index[0])
   begin
-    r_mosi    <= index[7:1] == 1 ? cmd_read : {r_mosi[6:0], 1'b0};
-    r_shift   <= index[7:1] == 1 ? 8'h01 : {r_shift[6:0], r_shift[7]};
+    r_mosi    <= index[7:1] == 2 ? cmd_read : {r_mosi[6:0], 1'b0};
+    r_shift   <= index[7:1] == 2 ? 8'h01 : {r_shift[6:0], r_shift[7]};
     r0_miso   <= w0_miso;
     r0_wrdata <= r_shift[7] ? (r_tag_data_en ? {w0_miso[7:1], tag_data[r_tag_data_i]  } : w0_miso) : r0_wrdata;
     r1_miso   <= w1_miso;
     r1_wrdata <= r_shift[7] ? (r_tag_data_en ? {w1_miso[7:1], tag_data[r_tag_data_i+3]} : w1_miso) : r1_wrdata;
-    r_wr      <= r_shift[7] && index[7:1] != 9 && r_sclk_en ? 1 : 0; // every byte
-    r_wr16    <= r_shift[7] && index[7:1] != 9 && index[7:1] != 33 && index[7:1] != 57 && index[7:1] != 81 && r_sclk_en ? 1 : 0; // 16-bit accel, skip every 3rd byte
-    r_x       <= index[7:1] == 17; // should trigger at the same time as first r_wr and r_wr16
+    r_wr      <= r_shift[7] && index[7:1] != 10 && r_sclk_en ? 1 : 0; // every byte
+    r_wr16    <= r_shift[7] && index[7:1] != 10 && index[7:1] != 34 && index[7:1] != 58 && index[7:1] != 82 && r_sclk_en ? 1 : 0; // 16-bit accel, skip every 3rd byte
+    r_x       <= index[7:1] == 18; // should trigger at the same time as first r_wr and r_wr16
   end
   else
   begin
@@ -168,11 +168,11 @@ module adxl355rd
   begin
     if(r_wr16)
       r1_wrbuf[r1_windex] <= r1_wrdata; // normal
-    r1_windex <= index[7:1] == 1 ? 0 : r_wr16 ? r1_windex + 1 : r1_windex;
+    r1_windex <= index[7:1] == 2 ? 0 : r_wr16 ? r1_windex + 1 : r1_windex;
   end
 
   // 6-byte buffer read process (to get buffer content written by top core)
-  reg [3:0] prev_index4 = 4'h4; // running LSB hex digit of index, start as finished
+  reg [3:0] prev_index4 = 4'h6; // running LSB hex digit of index, start as finished
   reg [$clog2(r1_wrbuf_len-1)-1:0] r1_rindex = r1_wrbuf_len; // this core reads, toplevel should write to BRAM buffer: 6-end
   reg r_wr1 = 0; // second adxl channel write
   always @(posedge clk)
@@ -180,7 +180,7 @@ module adxl355rd
     prev_index4 <= index[3:0];
     if(r1_rindex == r1_wrbuf_len) // stopeed
     begin
-      if(index[7:4] == bytes_len && index[3:0] == 4'h4 && prev_index4 == 4'h3)
+      if(index[7:4] == bytes_len && index[3:0] == 4'h6 && prev_index4 == 4'h5)
       begin
         // index just switched to end position, start writing adxl1
         r1_rindex <= 0;
