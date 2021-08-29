@@ -125,7 +125,7 @@ module adxl355rd
   if(clk_en)
   begin
     r_csn     <= index == 1 ? 0 : index == {bytes_len, 4'h5} ? 1 : r_csn;
-    r_sclk_en <= index == 4 ? 1 : index == {bytes_len, 4'h4} ? 0 : r_sclk_en;
+    r_sclk_en <= index == 3 ? 1 : index == {bytes_len, 4'h4} ? 0 : r_sclk_en;
     r_sclk    <= ( (index[0] ^ sclk_phase) & r_sclk_en) ^ sclk_polarity; // normal ADXL355 works with this
     r_direct  <= index == {bytes_len, 4'h6} ? direct : r_direct;
   end
