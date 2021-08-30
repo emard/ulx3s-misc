@@ -5,6 +5,7 @@
 `default_nettype none
 module adxl355rd
 #(
+  tag_enable    = 1,  // tagging 1:enable 0:disable
   tag_addr_bits = 11  // 2**n number of chars in tag FIFO buffer (number of RAM address bits)
 )
 (
@@ -153,12 +154,15 @@ module adxl355rd
     r_wr16    <= 0;
   end
 
+  generate
+  if(tag_enable)
   always @(posedge clk)
   begin
     r_tag_data_en <= index[7:1] == 0 ? 0 : r_wr16 ? ~r_tag_data_en : r_tag_data_en;
     r_tag_data_i  <= index[7:1] == 0 ? 0 : r_wr16 &  r_tag_data_en ? r_tag_data_i+1 : r_tag_data_i;
     //r_tag_latch   <= index == 0 && clk_en == 1;
   end
+  endgenerate
 
   // 6-byte buffer
   localparam r1_wrbuf_len = 6;
