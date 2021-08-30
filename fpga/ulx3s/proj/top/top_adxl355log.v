@@ -266,7 +266,8 @@ module top_adxl355log
       if(spi_ram_wr && ((r_accel_addr3 != 2) || (ctrl_skip_3rd == 0)))
       begin
         // invert bit[0] to swap lsb/msb byte for wav format for ADXL355
-        ram[{spi_ram_addr[ram_addr_bits-1:1],spi_ram_addr[0]^ctrl_swap_lh}] <= spi_ram_data; // SPI reader core provided write address
+        ram[{spi_ram_addr[ram_addr_bits-1:1],spi_ram_addr[0]^ctrl_swap_lh}] <= spi_ram_data; // normal SPI reader core provided write address
+        //ram[{spi_ram_addr[ram_addr_bits-1:1],spi_ram_addr[0]^ctrl_swap_lh}] <= r_accel_addr3; // debug store addr
         if(spi_ram_addr == ram_len-1) // auto-increment and wraparound
           spi_ram_addr <= 0;
         else
@@ -424,8 +425,8 @@ module top_adxl355log
   reg [3:0] spi_read_len;
   always @(posedge clk)
   begin
-    spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128; // normal
-    //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug read ID
+    //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128; // normal
+    spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug read ID
     // cmd ADXL355  0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     // cmd ADXRS290   128 to read id, 8+128 to read xy
     spi_read_len <= ctrl_sensor_type ? /*ADXL355*/    10 : /*ADXRS290*/ 7; // normal
@@ -471,11 +472,21 @@ module top_adxl355log
   always @(posedge clk)
   begin
     if(spi_ram_x)
-      r_accel_addr <= 0;
-    else if(spi_ram_wr)
     begin
-      r_accel[r_accel_addr] <= spi_ram_data;
-      r_accel_addr <= r_accel_addr + 1;
+      r_accel_addr <= 0;
+      r_accel_addr3 <= 0; // why enabling this messes up?
+    end
+    else
+    begin
+      if(spi_ram_wr)
+      begin
+        r_accel[r_accel_addr] <= spi_ram_data;
+        r_accel_addr <= r_accel_addr + 1;
+        if(r_accel_addr3 == 2)
+          r_accel_addr3 <= 0;
+        else
+          r_accel_addr3 <= r_accel_addr3 + 1;
+      end
     end
   end
 
