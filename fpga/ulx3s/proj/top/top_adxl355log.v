@@ -420,8 +420,8 @@ module top_adxl355log
   reg [3:0] spi_read_len;
   always @(posedge clk)
   begin
-    spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128; // normal
-    //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug read ID
+    //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128; // normal
+    spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug read ID
     // cmd ADXL355  0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     // cmd ADXRS290   128 to read id, 8+128 to read xy
     spi_read_len <= ctrl_sensor_type ? /*ADXL355*/    10 : /*ADXRS290*/ 7; // normal
@@ -457,43 +457,45 @@ module top_adxl355log
     .adxl1_miso(rd1_miso), // normal
     //.adxl0_miso(0), // debug
     //.adxl1_miso(0), // debug
-    .wrdata(spi_ram_data),
-    .wr(spi2ram_wr), // ADXRS290 read and write every byte
-    .wr16(spi2ram_wr16), // ADXL355: 2 bytes read 2 bytes written, 3rd byte read but not written (repeat every 3 bytes)
-    .x(spi_ram_x) // signals first data byte from X-axis
+    .wrdata(spi_ram_data), // received byte to be written to BRAM
+    .wr(spi_ram_wr), // signal to write received byte to BRAM
+    .x(spi_ram_x) // signal to reset BRAM addr before first received byte in a sample
   );
-  assign spi_ram_wr = ctrl_sensor_type ? /*ADXL355*/ spi2ram_wr16 : /*ADXRS290*/ spi2ram_wr; // normal
-  //assign spi_ram_wr = spi2ram_wr; // debug
   // store one sample in reg memory
-  reg [7:0] r_accel[0:11];
-  reg [3:0] r_accel_addr;
-  reg r_accel_ready;
+  reg [7:0] r_accel[0:17]; // 18 bytes
+  reg [4:0] r_accel_addr;
   always @(posedge clk)
   begin
-    if(spi_ram_wr)
+    if(spi_ram_x)
+      r_accel_addr <= 0;
+    else if(spi_ram_wr)
     begin
       r_accel[r_accel_addr] <= spi_ram_data;
-      if(r_accel_addr == 11)
-      begin
-        r_accel_addr <= 0;
-        r_accel_ready <= 1;
-      end
-      else
-      begin
-        if(spi_ram_x)
-          r_accel_addr <= 1;
-        else
-          r_accel_addr <= r_accel_addr + 1;
-        r_accel_ready <= 0;
-      end
+      r_accel_addr <= r_accel_addr + 1;
     end
   end
-  wire [15:0] axl = {r_accel[ 0], r_accel[ 1]};
-  wire [15:0] ayl = {r_accel[ 2], r_accel[ 3]};
-  wire [15:0] azl = {r_accel[ 4], r_accel[ 5]};
-  wire [15:0] axr = {r_accel[ 6], r_accel[ 7]};
-  wire [15:0] ayr = {r_accel[ 8], r_accel[ 9]};
-  wire [15:0] azr = {r_accel[10], r_accel[11]};
+
+  wire [15:0] axl, ayl, azl, axr, ayr, azr;
+  generate
+  if(1) // ADXL355
+  begin
+    assign axl = {r_accel[ 0], r_accel[ 1]};
+    assign ayl = {r_accel[ 3], r_accel[ 4]};
+    assign azl = {r_accel[ 6], r_accel[ 7]};
+    assign axr = {r_accel[ 9], r_accel[10]};
+    assign ayr = {r_accel[12], r_accel[13]};
+    assign azr = {r_accel[15], r_accel[16]};
+  end
+  else // ADXRS290
+  begin
+    assign axl = {r_accel[ 1], r_accel[ 0]};
+    assign ayl = {r_accel[ 3], r_accel[ 2]};
+    assign azl = {r_accel[ 5], r_accel[ 4]};
+    assign axr = {r_accel[ 7], r_accel[ 6]};
+    assign ayr = {r_accel[ 9], r_accel[ 8]};
+    assign azr = {r_accel[11], r_accel[10]};
+  end
+  endgenerate
 
   //assign led = {spi_ram_x, spi_ram_wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
   //assign led = r_accel_l;
@@ -784,12 +786,12 @@ module top_adxl355log
   );
   //assign data[63:32] = ma;
   //assign data[31:0]  = mb;
-  //assign data[63:32] = {ayl, axl};
-  //assign data[31:0]  = {ayr, axr};
+  assign data[63:32] = {ayl, axl};
+  assign data[31:0]  = {ayr, axr};
   //assign data[63:32] = {0, azl};
   //assign data[31:0]  = {0, azr};
-  assign data[ 63:32]  = slope_l;
-  assign data[ 31: 0]  = slope_r;
+  //assign data[ 63:32]  = slope_l;
+  //assign data[ 31: 0]  = slope_r;
   assign data[127:96]  = srvz[63:32];
   assign data[ 95:64]  = srvz[31: 0];
   //assign data[127:96]  = slope_aa;

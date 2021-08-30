@@ -5,7 +5,7 @@
 `default_nettype none
 module adxl355rd
 #(
-  tag_enable    = 1,  // tagging 1:enable 0:disable
+  tag_enable    = 0,  // tagging 1:enable 0:disable
   tag_addr_bits = 11  // 2**n number of chars in tag FIFO buffer (number of RAM address bits)
 )
 (
@@ -28,8 +28,8 @@ module adxl355rd
   input         adxl0_miso, adxl1_miso,
   // to BRAM for buffering
   output  [7:0] wrdata,
-  output        wr, wr16, // wr writes every byte, wr16 is for 16-bit accel, skips every 3rd byte
-  output        x // x is set together with wr at start of new 9-byte xyz sequence, x-axis
+  output        wr, // wr is write signal for each received byte
+  output        x // x is reset signal to set addr=0 before first byte
 );
   reg r_tag_latch = 0; // signal to latch tag data (pop from FIFO) or get pending pulse tag
 
@@ -83,8 +83,9 @@ module adxl355rd
     end
   end
 
-  reg [7:0] cmd_read  = 1; // holds the spi command byte 1:read id
+  reg [7:0] cmd_read  =  1; // holds the spi command byte 1:read id
   reg [3:0] bytes_len = 10; // holds the spi transfer length including command byte
+  reg [3:0] data_len  =  9; // holds output data bytes length (bytes_len-1)
 
   reg r_direct; // allow switch when idle
   reg [7:0] index = {4'd10, 4'h6}; // running index, start as finished
@@ -106,6 +107,7 @@ module adxl355rd
         index <= 0; // start new cycle
         cmd_read <= cmd;
         bytes_len <= len;
+        data_len <= len-1;
         r_tag_latch <= 1;
       end
     end
@@ -118,9 +120,8 @@ module adxl355rd
   end
 
   reg [2:0] r_tag_data_i = 0; // bit-index for reading latched tag data
-  reg r_tag_data_en = 0; // toggled at wr16 for LSB to be tagged
-  reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr = 0, r_wr16 = 0, r_x = 0;
-  //wire r_sclk;
+  reg r_tag_data_en = 0; // toggled at wr for LSB to be tagged
+  reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr = 0, r_x = 0;
   reg [7:0] r_mosi, r0_miso, r1_miso, r_shift, r0_wrdata, r1_wrdata;
   always @(posedge clk)
   if(clk_en)
@@ -130,7 +131,6 @@ module adxl355rd
     r_sclk    <= ( (index[0] ^ sclk_phase) & r_sclk_en) ^ sclk_polarity; // normal ADXL355 works with this
     r_direct  <= index == {bytes_len, 4'h6} ? direct : r_direct;
   end
-  //assign r_sclk = ( (index[0] ^ sclk_phase) & r_sclk_en) ^ sclk_polarity; // debug ADXRS290 works with this
 
   wire [7:0] w0_miso = {r0_miso[6:0], adxl0_miso};
   wire [7:0] w1_miso = {r1_miso[6:0], adxl1_miso};
@@ -144,32 +144,30 @@ module adxl355rd
     r1_miso   <= w1_miso;
     r1_wrdata <= r_shift[7] ? (r_tag_data_en ? {w1_miso[7:1], tag_data[r_tag_data_i+3]} : w1_miso) : r1_wrdata;
     r_wr      <= r_shift[7] && index[7:1] != 10 && r_sclk_en ? 1 : 0; // every byte
-    r_wr16    <= r_shift[7] && index[7:1] != 10 && index[7:1] != 34 && index[7:1] != 58 && index[7:1] != 82 && r_sclk_en ? 1 : 0; // 16-bit accel, skip every 3rd byte
-    r_x       <= index[7:1] == 18; // should trigger at the same time as first r_wr and r_wr16
+    r_x       <= index[7:1] == 17; // pulse before first r_wr to reset addr pointer for data storage
   end
   else
   begin
-    // only 1-clk-cycle write
+    // only 1-clk-cycle width
     r_wr      <= 0;
-    r_wr16    <= 0;
+    r_x       <= 0;
   end
 
   generate
   if(tag_enable)
   always @(posedge clk)
   begin
-    r_tag_data_en <= index[7:1] == 0 ? 0 : r_wr16 ? ~r_tag_data_en : r_tag_data_en;
-    r_tag_data_i  <= index[7:1] == 0 ? 0 : r_wr16 &  r_tag_data_en ? r_tag_data_i+1 : r_tag_data_i;
+    r_tag_data_en <= index[7:1] == 0 ? 0 : r_wr ? ~r_tag_data_en : r_tag_data_en;
+    r_tag_data_i  <= index[7:1] == 0 ? 0 : r_wr &  r_tag_data_en ? r_tag_data_i+1 : r_tag_data_i;
     //r_tag_latch   <= index == 0 && clk_en == 1;
   end
   endgenerate
 
-  //wire w_buf_wr = r_wr; // for ADXRS290
-  wire w_buf_wr = r_wr16; // for ADXL350
-  // 6-byte buffer
-  localparam r1_wrbuf_len = 6;
-  reg [7:0] r1_wrbuf[0:r1_wrbuf_len-1]; // 6-byte buffer for adxl1_miso
-  reg [$clog2(r1_wrbuf_len-1)-1:0] r1_windex = 0; // this core writes
+  wire w_buf_wr = r_wr; // for ADXRS290
+  // 9-byte buffer
+  localparam r1_wrbuf_len = 9; // must be 1 byte more, is there some bug?
+  reg [7:0] r1_wrbuf[0:r1_wrbuf_len-1]; // 9-byte buffer for adxl1_miso
+  reg [$clog2(r1_wrbuf_len)-1:0] r1_windex = 0; // this core writes
   always @(posedge clk)
   begin
     if(w_buf_wr)
@@ -177,14 +175,14 @@ module adxl355rd
     r1_windex <= index[7:1] == 2 ? 0 : w_buf_wr ? r1_windex + 1 : r1_windex;
   end
 
-  // 6-byte buffer read process (to get buffer content written by top core)
+  // 9-byte buffer read process (to get buffer content written by top core)
   reg [3:0] prev_index4 = 4'h6; // running LSB hex digit of index, start as finished
-  reg [$clog2(r1_wrbuf_len-1)-1:0] r1_rindex = r1_wrbuf_len; // this core reads, toplevel should write to BRAM buffer: 6-end
+  reg [$clog2(r1_wrbuf_len)-1:0] r1_rindex = 0; // this core reads, toplevel should write to BRAM buffer
   reg r_wr1 = 0; // second adxl channel write
   always @(posedge clk)
   begin
     prev_index4 <= index[3:0];
-    if(r1_rindex == r1_wrbuf_len) // stopeed
+    if(r1_rindex == bytes_len) // stopeed
     begin
       if(index[7:4] == bytes_len && index[3:0] == 4'h6 && prev_index4 == 4'h5)
       begin
@@ -196,7 +194,7 @@ module adxl355rd
     else
     begin
       r1_rindex <= r1_rindex + 1;
-      if(r1_rindex == r1_wrbuf_len-1)
+      if(r1_rindex == data_len)
         r_wr1 <= 0;
     end
   end
@@ -205,9 +203,8 @@ module adxl355rd
   assign w_csn  = r_csn;
   assign w_sclk = r_sclk;
 
-  assign wrdata = r_wr1 ? r1_wrbuf[r1_rindex] : r0_wrdata;
-  assign wr     = r_wr   | r_wr1;
-  assign wr16   = r_wr16 | r_wr1;
+  assign wrdata = r_wr1 ? r1_wrbuf[r1_rindex] : r0_wrdata; // normal
+  assign wr     = r_wr  | r_wr1;
   assign x      = r_x;
   
   assign direct_en = r_direct;
