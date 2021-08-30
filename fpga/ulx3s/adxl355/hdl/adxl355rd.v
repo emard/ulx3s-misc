@@ -86,6 +86,7 @@ module adxl355rd
   reg [7:0] cmd_read  =  1; // holds the spi command byte 1:read id
   reg [3:0] bytes_len = 10; // holds the spi transfer length including command byte
   reg [3:0] data_len  =  9; // holds output data bytes length (bytes_len-1)
+  reg [3:0] data_len1 =  8; // holds output data bytes length (bytes_len-2)
 
   reg r_direct; // allow switch when idle
   reg [7:0] index = {4'd10, 4'h6}; // running index, start as finished
@@ -108,6 +109,7 @@ module adxl355rd
         cmd_read <= cmd;
         bytes_len <= len;
         data_len <= len-1;
+        data_len1 <= len-2;
         r_tag_latch <= 1;
       end
     end
@@ -163,16 +165,15 @@ module adxl355rd
   end
   endgenerate
 
-  wire w_buf_wr = r_wr; // for ADXRS290
   // 9-byte buffer
   localparam r1_wrbuf_len = 9; // must be 1 byte more, is there some bug?
   reg [7:0] r1_wrbuf[0:r1_wrbuf_len-1]; // 9-byte buffer for adxl1_miso
   reg [$clog2(r1_wrbuf_len)-1:0] r1_windex = 0; // this core writes
   always @(posedge clk)
   begin
-    if(w_buf_wr)
+    if(r_wr)
       r1_wrbuf[r1_windex] <= r1_wrdata; // normal
-    r1_windex <= index[7:1] == 2 ? 0 : w_buf_wr ? r1_windex + 1 : r1_windex;
+    r1_windex <= index[7:1] == 2 ? 0 : r_wr ? r1_windex + 1 : r1_windex;
   end
 
   // 9-byte buffer read process (to get buffer content written by top core)
@@ -182,7 +183,7 @@ module adxl355rd
   always @(posedge clk)
   begin
     prev_index4 <= index[3:0];
-    if(r1_rindex == bytes_len) // stopeed
+    if(r1_rindex == data_len) // stopeed
     begin
       if(index[7:4] == bytes_len && index[3:0] == 4'h6 && prev_index4 == 4'h5)
       begin
@@ -194,7 +195,7 @@ module adxl355rd
     else
     begin
       r1_rindex <= r1_rindex + 1;
-      if(r1_rindex == data_len)
+      if(r1_rindex == data_len1)
         r_wr1 <= 0;
     end
   end
