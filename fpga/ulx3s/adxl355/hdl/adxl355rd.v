@@ -164,15 +164,17 @@ module adxl355rd
   end
   endgenerate
 
+  //wire w_buf_wr = r_wr; // for ADXRS290
+  wire w_buf_wr = r_wr16; // for ADXL350
   // 6-byte buffer
   localparam r1_wrbuf_len = 6;
   reg [7:0] r1_wrbuf[0:r1_wrbuf_len-1]; // 6-byte buffer for adxl1_miso
-  reg [2:0] r1_windex = 0; // this core writes
+  reg [$clog2(r1_wrbuf_len-1)-1:0] r1_windex = 0; // this core writes
   always @(posedge clk)
   begin
-    if(r_wr16)
+    if(w_buf_wr)
       r1_wrbuf[r1_windex] <= r1_wrdata; // normal
-    r1_windex <= index[7:1] == 2 ? 0 : r_wr16 ? r1_windex + 1 : r1_windex;
+    r1_windex <= index[7:1] == 2 ? 0 : w_buf_wr ? r1_windex + 1 : r1_windex;
   end
 
   // 6-byte buffer read process (to get buffer content written by top core)
