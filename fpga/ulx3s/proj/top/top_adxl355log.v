@@ -183,6 +183,7 @@ module top_adxl355log
   wire  [7:0] ram_di, ram_do;
 
   wire spi_ram_wr, spi_ram_x;
+  reg [1:0] r_accel_addr3 = 0; // counts 0-2 to skip every 3rd byte for ADXL355
   wire  [7:0] spi_ram_data;
   localparam ram_addr_bits = $clog2(ram_len-1);
   reg [ram_addr_bits-1:0] spi_ram_addr = 0, r_spi_ram_addr;
@@ -196,6 +197,8 @@ module top_adxl355log
   wire ctrl_direct = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire ctrl_sclk_inv = r_ctrl[2]; // SPI direct clk invert 1:invert, 0:normal
   wire ctrl_sensor_type = r_ctrl[2]; // 1: ADXL355 accelerometer, 0:ADXRS290 gyroscope
+  wire ctrl_skip_3rd = r_ctrl[2]; // skip every 3rd byte 1: ADXL355 skip every 3rd byte, 0: ADXRS290 no skip (collect every byte)
+  wire ctrl_swap_lh = r_ctrl[2]; // swap L/H byte 1:ADXL355 swap, 0:ADXRS290 don't swap
   wire ctrl_sclk_polarity = r_ctrl[3]; // SPI autoreader clk polarity, 0: ADXL355, 1:ADXRS290
   wire ctrl_sclk_phase = r_ctrl[4]; // SPI autoreader clk phase, 0: ADXL355, 1:ADXRS290
   wire direct_en;
@@ -259,10 +262,11 @@ module top_adxl355log
     //assign ram_do = 8'h5A;
     always @(posedge clk)
     begin
-      if(spi_ram_wr) // SPI reader core writes
+      // SPI autoreader to BRAM write cycle, optionally skipping every 3rd byte for sensor type ADXL355
+      if(spi_ram_wr && ((r_accel_addr3 != 2) || (ctrl_skip_3rd == 0)))
       begin
-        // invert bit[0] to swap lsb/msb byte for wav format
-        ram[spi_ram_addr^1] <= spi_ram_data; // SPI reader core provided write address
+        // invert bit[0] to swap lsb/msb byte for wav format for ADXL355
+        ram[{spi_ram_addr[ram_addr_bits-1:1],spi_ram_addr[0]^ctrl_swap_lh}] <= spi_ram_data; // SPI reader core provided write address
         if(spi_ram_addr == ram_len-1) // auto-increment and wraparound
           spi_ram_addr <= 0;
         else
@@ -420,8 +424,8 @@ module top_adxl355log
   reg [3:0] spi_read_len;
   always @(posedge clk)
   begin
-    //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128; // normal
-    spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug read ID
+    spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128; // normal
+    //spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 1 : /*ADXRS290*/ 128; // debug read ID
     // cmd ADXL355  0*2+1 to read id, 8*2+1 to read xyz, 17*2+1 to read fifo
     // cmd ADXRS290   128 to read id, 8+128 to read xy
     spi_read_len <= ctrl_sensor_type ? /*ADXL355*/    10 : /*ADXRS290*/ 7; // normal
