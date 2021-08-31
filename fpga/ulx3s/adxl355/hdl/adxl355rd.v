@@ -5,7 +5,7 @@
 `default_nettype none
 module adxl355rd
 #(
-  tag_enable    = 0,  // tagging 1:enable 0:disable
+  tag_enable    = 1,  // tagging 1:enable 0:disable
   tag_addr_bits = 11  // 2**n number of chars in tag FIFO buffer (number of RAM address bits)
 )
 (
