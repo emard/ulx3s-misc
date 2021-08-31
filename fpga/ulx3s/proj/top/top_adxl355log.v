@@ -497,7 +497,7 @@ module top_adxl355log
 
   wire [15:0] axl, ayl, azl, axr, ayr, azr;
   generate
-  if(0) // ADXL355
+  if(1) // ADXL355
   begin
     assign axl = {r_accel[ 0], r_accel[ 1]};
     assign ayl = {r_accel[ 3], r_accel[ 4]};
