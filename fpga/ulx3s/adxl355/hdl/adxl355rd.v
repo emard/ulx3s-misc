@@ -167,8 +167,9 @@ module adxl355rd
 
   // 9-byte buffer
   localparam r1_wrbuf_len = 9; // must be 1 byte more, is there some bug?
+  localparam r1_wrbuf_addr_bits = $clog2(r1_wrbuf_len);
   reg [7:0] r1_wrbuf[0:r1_wrbuf_len-1]; // 9-byte buffer for adxl1_miso
-  reg [$clog2(r1_wrbuf_len)-1:0] r1_windex = 0; // this core writes
+  reg [r1_wrbuf_addr_bits-1:0] r1_windex = 0; // this core writes data to internal buffer
   always @(posedge clk)
   begin
     if(r_wr)
@@ -178,25 +179,34 @@ module adxl355rd
 
   // 9-byte buffer read process (to get buffer content written by top core)
   reg [3:0] prev_index4 = 4'h6; // running LSB hex digit of index, start as finished
-  reg [$clog2(r1_wrbuf_len)-1:0] r1_rindex = 0; // this core reads, toplevel should write to BRAM buffer
+  reg [r1_wrbuf_addr_bits-1:0] r1_rindex = 0; // this core reads out internal buffer toplevel should write to BRAM buffer
   reg r_wr1 = 0; // second adxl channel write
   always @(posedge clk)
   begin
     prev_index4 <= index[3:0];
-    if(r1_rindex == data_len) // stopeed
+    if(r1_rindex == data_len1) // stopeed
     begin
       if(index[7:4] == bytes_len && index[3:0] == 4'h6 && prev_index4 == 4'h5)
       begin
         // index just switched to end position, start writing adxl1
-        r1_rindex <= 0;
+        r1_rindex <= 0; // start sending buffered data
         r_wr1 <= 1;
+      end
+      else
+      begin
+        r_wr1 <= 0;
+        //r1_rindex <= ~0;
       end
     end
     else
     begin
-      r1_rindex <= r1_rindex + 1;
-      if(r1_rindex == data_len1)
-        r_wr1 <= 0;
+      //if(r1_rindex == data_len1)
+      //begin
+      //  r_wr1 <= 0;
+      //  r1_rindex <= data_len; // end
+      //end
+      //else
+        r1_rindex <= r1_rindex + 1;
     end
   end
 
@@ -207,7 +217,7 @@ module adxl355rd
   assign wrdata = r_wr1 ? r1_wrbuf[r1_rindex] : r0_wrdata; // normal
   assign wr     = r_wr  | r_wr1;
   assign x      = r_x;
-  
+
   assign direct_en = r_direct;
 
 endmodule
