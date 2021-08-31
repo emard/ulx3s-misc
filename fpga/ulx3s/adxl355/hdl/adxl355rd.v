@@ -180,33 +180,29 @@ module adxl355rd
   // 9-byte buffer read process (to get buffer content written by top core)
   reg [3:0] prev_index4 = 4'h6; // running LSB hex digit of index, start as finished
   reg [r1_wrbuf_addr_bits-1:0] r1_rindex = 0; // this core reads out internal buffer toplevel should write to BRAM buffer
+  reg [r1_wrbuf_addr_bits-1:0] r1_countdown = 0; // 0 stopped, not 0 running
   reg r_wr1 = 0; // second adxl channel write
   always @(posedge clk)
   begin
     prev_index4 <= index[3:0];
-    if(r1_rindex == data_len1) // stopeed
+    if(r1_countdown == 0) // stopeed
     begin
       if(index[7:4] == bytes_len && index[3:0] == 4'h6 && prev_index4 == 4'h5)
       begin
         // index just switched to end position, start writing adxl1
         r1_rindex <= 0; // start sending buffered data
+        r1_countdown <= data_len1;
         r_wr1 <= 1;
       end
       else
       begin
         r_wr1 <= 0;
-        //r1_rindex <= ~0;
       end
     end
     else
     begin
-      //if(r1_rindex == data_len1)
-      //begin
-      //  r_wr1 <= 0;
-      //  r1_rindex <= data_len; // end
-      //end
-      //else
-        r1_rindex <= r1_rindex + 1;
+      r1_rindex <= r1_rindex + 1;
+      r1_countdown <= r1_countdown - 1;
     end
   end
 
