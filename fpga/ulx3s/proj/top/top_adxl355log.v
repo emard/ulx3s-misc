@@ -271,8 +271,8 @@ module top_adxl355log
       if(spi_ram_wr_skip)
       begin
         // invert bit[0] to swap lsb/msb byte for wav format for ADXL355
-        //ram[spi_ram_addr_swap] <= spi_ram_data; // normal SPI reader core provided write address
-        ram[spi_ram_addr_swap] <= r_accel_addr; // debug sample alignment
+        ram[spi_ram_addr_swap] <= spi_ram_data; // normal SPI reader core provided write address
+        //ram[spi_ram_addr_swap] <= r_accel_addr; // debug sample alignment
         //ram[{spi_ram_addr_swap] <= r_accel_addr3; // debug 3rd skip
         if(spi_ram_addr == ram_len-1) // auto-increment and wraparound
           spi_ram_addr <= 0;
