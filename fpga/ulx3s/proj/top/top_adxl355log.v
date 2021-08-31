@@ -260,14 +260,20 @@ module top_adxl355log
     );
     //assign ram_do = ram_addr[7:0];
     //assign ram_do = 8'h5A;
+    // SPI autoreader to BRAM write cycle, optionally skipping every 3rd byte for sensor type ADXL355
+    wire spi_ram_wr_skip = spi_ram_wr && ((r_accel_addr3 != 2) || (ctrl_skip_3rd == 0)); // normal
+    //wire spi_ram_wr_skip = spi_ram_wr; // debug, no skip
+    // SPI autoreader optional address swap L/H byte
+    wire [ram_addr_bits-1:0] spi_ram_addr_swap = {spi_ram_addr[ram_addr_bits-1:1],spi_ram_addr[0]^ctrl_swap_lh}; // normal
+    //wire [ram_addr_bits-1:0] spi_ram_addr_swap = spi_ram_addr; // debug, no swap
     always @(posedge clk)
     begin
-      // SPI autoreader to BRAM write cycle, optionally skipping every 3rd byte for sensor type ADXL355
-      if(spi_ram_wr && ((r_accel_addr3 != 2) || (ctrl_skip_3rd == 0)))
+      if(spi_ram_wr_skip)
       begin
         // invert bit[0] to swap lsb/msb byte for wav format for ADXL355
-        ram[{spi_ram_addr[ram_addr_bits-1:1],spi_ram_addr[0]^ctrl_swap_lh}] <= spi_ram_data; // normal SPI reader core provided write address
-        //ram[{spi_ram_addr[ram_addr_bits-1:1],spi_ram_addr[0]^ctrl_swap_lh}] <= r_accel_addr3; // debug store addr
+        //ram[spi_ram_addr_swap] <= spi_ram_data; // normal SPI reader core provided write address
+        ram[spi_ram_addr_swap] <= r_accel_addr; // debug sample alignment
+        //ram[{spi_ram_addr_swap] <= r_accel_addr3; // debug 3rd skip
         if(spi_ram_addr == ram_len-1) // auto-increment and wraparound
           spi_ram_addr <= 0;
         else
@@ -410,7 +416,7 @@ module top_adxl355log
 
   // SPI reader
   // counter for very slow clock
-  localparam slowdown = 5;
+  localparam slowdown = 3;
   reg [slowdown:0] r_sclk_en;
   always @(posedge clk)
   begin
@@ -466,6 +472,8 @@ module top_adxl355log
     .wr(spi_ram_wr), // signal to write received byte to BRAM
     .x(spi_ram_x) // signal to reset BRAM addr before first received byte in a sample
   );
+  //assign spi_ram_x = sync_pulse;
+
   // store one sample in reg memory
   reg [7:0] r_accel[0:17]; // 18 bytes
   reg [4:0] r_accel_addr;
@@ -474,7 +482,7 @@ module top_adxl355log
     if(spi_ram_x)
     begin
       r_accel_addr <= 0;
-      r_accel_addr3 <= 0; // why enabling this messes up?
+      r_accel_addr3 <= 0; // TODO check what is logged in file with this line enabled
     end
     else
     begin
@@ -482,17 +490,14 @@ module top_adxl355log
       begin
         r_accel[r_accel_addr] <= spi_ram_data;
         r_accel_addr <= r_accel_addr + 1;
-        if(r_accel_addr3 == 2)
-          r_accel_addr3 <= 0;
-        else
-          r_accel_addr3 <= r_accel_addr3 + 1;
+        r_accel_addr3 <= r_accel_addr3 == 2 ? 0 : r_accel_addr3 + 1;
       end
     end
   end
 
   wire [15:0] axl, ayl, azl, axr, ayr, azr;
   generate
-  if(1) // ADXL355
+  if(0) // ADXL355
   begin
     assign axl = {r_accel[ 0], r_accel[ 1]};
     assign ayl = {r_accel[ 3], r_accel[ 4]};
@@ -501,7 +506,7 @@ module top_adxl355log
     assign ayr = {r_accel[12], r_accel[13]};
     assign azr = {r_accel[15], r_accel[16]};
   end
-  else // ADXRS290
+  if(0) // ADXRS290
   begin
     assign axl = {r_accel[ 1], r_accel[ 0]};
     assign ayl = {r_accel[ 3], r_accel[ 2]};
