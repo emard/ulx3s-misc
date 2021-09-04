@@ -271,7 +271,7 @@ void setup() {
 
   // accelerometer range +-2/4/8g can be changed from cfg file
   // ADXL should be initialized after reading cfg file
-  for (int i = 0; i < 6; i++)
+  for (int i = 0; i < 1; i++)
   {
     delay(100);
     adxl355_init();
