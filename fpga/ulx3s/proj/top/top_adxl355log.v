@@ -416,7 +416,7 @@ module top_adxl355log
 
   // SPI reader
   // counter for very slow clock
-  localparam slowdown = 0;
+  localparam slowdown = 3;
   reg [slowdown:0] r_sclk_en;
   always @(posedge clk)
   begin
@@ -808,10 +808,10 @@ module top_adxl355log
   //assign data[31:0]  = mb;
   //assign data[63:32] = {ayl, axl};
   //assign data[31:0]  = {ayr, axr};
-  //assign data[63:32] = {0, azl};
-  //assign data[31:0]  = {0, azr};
-  assign data[ 63:32]  = slope_l;
-  assign data[ 31: 0]  = slope_r;
+  assign data[63:32] = {0, azl};
+  assign data[31:0]  = {0, azr};
+  //assign data[ 63:32]  = slope_l;
+  //assign data[ 31: 0]  = slope_r;
   assign data[127:96]  = srvz[63:32];
   assign data[ 95:64]  = srvz[31: 0];
   //assign data[127:96]  = slope_aa;
