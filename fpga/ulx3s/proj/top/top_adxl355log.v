@@ -192,7 +192,7 @@ module top_adxl355log
   wire spi_ram_miso; // muxed
   wire spi_bram_cs; // "chip" select line for address detection of bram buffer addr 0x00...
   wire spi_ctrl_cs; // control byte select addr 0xFF..
-  reg [7:0] r_ctrl = 8'h04; // control byte, r_ctrl[7:3]:reserved, r_ctrl[2]:sclk_inv, r_ctrl[1]:direct_en, r_ctrl[0]:sensor lr
+  reg [7:0] r_ctrl = 8'h06; // control byte, r_ctrl[7:3]:reserved, r_ctrl[2]:sclk_inv, r_ctrl[1]:direct_en, r_ctrl[0]:sensor lr
   wire ctrl_direct_lr = r_ctrl[0]; // mux direct 0: left, 1: right
   wire ctrl_direct = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire ctrl_sclk_inv = r_ctrl[2]; // SPI direct clk invert 1:invert, 0:normal
@@ -416,7 +416,7 @@ module top_adxl355log
 
   // SPI reader
   // counter for very slow clock
-  localparam slowdown = 3;
+  localparam slowdown = 0;
   reg [slowdown:0] r_sclk_en;
   always @(posedge clk)
   begin
@@ -451,8 +451,6 @@ module top_adxl355log
   adxl355rd_inst
   (
     .clk(clk), .clk_en(sclk_en),
-    .sclk_phase(ctrl_sclk_phase),
-    .sclk_polarity(ctrl_sclk_polarity),
     .direct(ctrl_direct),
     .direct_en(direct_en),
     .cmd(spi_read_cmd),
@@ -460,7 +458,9 @@ module top_adxl355log
     .tag_pulse(pps_pulse),
     .tag_en(tag_en),  // write signal from SPI
     .tag(w_tag), // 6-bit char from SPI
-    .sync(sync_pulse),
+    .sync(sync_pulse), // start reading a sample
+    .sclk_phase(ctrl_sclk_phase),
+    .sclk_polarity(ctrl_sclk_polarity),
     .adxl_csn(rd_csn),
     .adxl_sclk(rd_sclk),
     .adxl_mosi(rd_mosi),
@@ -806,12 +806,12 @@ module top_adxl355log
   );
   //assign data[63:32] = ma;
   //assign data[31:0]  = mb;
-  assign data[63:32] = {ayl, axl};
-  assign data[31:0]  = {ayr, axr};
+  //assign data[63:32] = {ayl, axl};
+  //assign data[31:0]  = {ayr, axr};
   //assign data[63:32] = {0, azl};
   //assign data[31:0]  = {0, azr};
-  //assign data[ 63:32]  = slope_l;
-  //assign data[ 31: 0]  = slope_r;
+  assign data[ 63:32]  = slope_l;
+  assign data[ 31: 0]  = slope_r;
   assign data[127:96]  = srvz[63:32];
   assign data[ 95:64]  = srvz[31: 0];
   //assign data[127:96]  = slope_aa;
