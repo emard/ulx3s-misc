@@ -38,7 +38,7 @@ generic (
   --  4000 measuring 1g at +-8g range
   scale: integer := 16; -- 16 bits scale
   int_sample_rate_hz: integer := 1000; -- Hz accel input sample rate
-  slope_reconstruction: integer := 1; -- 1: no reconstruction, use X-axis at +2g range: slope = ax * (1000000/16000) [um/m], 1: Z-axis slope reconstruction
+  slope_reconstruction: integer := 1; -- 0: no reconstruction, use X-axis at +2g range: slope = ax * (1000000/16000) [um/m], 1: Z-axis slope reconstruction
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
   -- 1.0e6 to scale resulting slope to um/s
   -- 9.81 = 1g standard gravity
