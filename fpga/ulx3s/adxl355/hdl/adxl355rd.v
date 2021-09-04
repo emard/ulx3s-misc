@@ -85,8 +85,6 @@ module adxl355rd
 
   reg [7:0] cmd_read  =  1; // holds the spi command byte 1:read id
   reg [3:0] bytes_len = 10; // holds the spi transfer length including command byte
-  reg [3:0] data_len  =  9; // holds output data bytes length (bytes_len-1)
-  reg [3:0] data_len1 =  8; // holds output data bytes length (bytes_len-2)
 
   reg r_direct; // allow switch when idle
   reg [7:0] index = {4'd10, 4'h6}; // running index, start as finished
@@ -108,8 +106,6 @@ module adxl355rd
         index <= 0; // start new cycle
         cmd_read <= cmd;
         bytes_len <= len;
-        data_len <= len-1;
-        data_len1 <= len-2;
         r_tag_latch <= 1;
       end
     end
@@ -145,7 +141,7 @@ module adxl355rd
     r0_wrdata <= r_shift[7] ? (r_tag_data_en ? {w0_miso[7:1], tag_data[r_tag_data_i]  } : w0_miso) : r0_wrdata;
     r1_miso   <= w1_miso;
     r1_wrdata <= r_shift[7] ? (r_tag_data_en ? {w1_miso[7:1], tag_data[r_tag_data_i+3]} : w1_miso) : r1_wrdata;
-    r_wr      <= r_shift[7] && index[7:1] != 10 && r_sclk_en ? 1 : 0; // every byte
+    r_wr      <= r_shift[7] && (index[7:4] > 1) && r_sclk_en ? 1 : 0; // every byte after r_x-pulse
     r_x       <= index[7:1] == 17; // pulse before first r_wr to reset addr pointer for data storage
   end
   else
@@ -180,7 +176,7 @@ module adxl355rd
   // 9-byte buffer read process (to get buffer content written by top core)
   reg [3:0] prev_index4 = 4'h6; // running LSB hex digit of index, start as finished
   reg [r1_wrbuf_addr_bits-1:0] r1_rindex = 0; // this core reads out internal buffer toplevel should write to BRAM buffer
-  reg [r1_wrbuf_addr_bits-1:0] r1_countdown = 0; // 0 stopped, not 0 running
+  reg [r1_wrbuf_addr_bits-1:0] r1_countdown = 0; // 0 stopped, not 0 running, start as finished
   reg r_wr1 = 0; // second adxl channel write
   always @(posedge clk)
   begin
@@ -191,7 +187,7 @@ module adxl355rd
       begin
         // index just switched to end position, start writing adxl1
         r1_rindex <= 0; // start sending buffered data
-        r1_countdown <= data_len1;
+        r1_countdown <= bytes_len-2;
         r_wr1 <= 1;
       end
       else
@@ -199,7 +195,7 @@ module adxl355rd
         r_wr1 <= 0;
       end
     end
-    else
+    else // r1_countdown != 0
     begin
       r1_rindex <= r1_rindex + 1;
       r1_countdown <= r1_countdown - 1;
@@ -210,7 +206,8 @@ module adxl355rd
   assign w_csn  = r_csn;
   assign w_sclk = r_sclk;
 
-  assign wrdata = r_wr1 ? r1_wrbuf[r1_rindex] : r0_wrdata; // normal
+   assign wrdata = r_wr1 ? r1_wrbuf[r1_rindex] : r0_wrdata; // normal
+  //assign wrdata = r_wr1 ? r1_rindex : index; // normal
   assign wr     = r_wr  | r_wr1;
   assign x      = r_x;
 
