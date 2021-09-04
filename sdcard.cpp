@@ -108,7 +108,7 @@ void adxl355_init(void)
   //                   sensor type         sclk polarity         sclk phase
   #define CTRL_SELECT (adxl355_regio<<2)|((!adxl355_regio)<<3)|((!adxl355_regio)<<4)
   adxl355_ctrl(2|CTRL_SELECT);
-  delay(2); // wait for request direct mode to be accepted
+  delay(3); // wait for request direct mode to be accepted
   if(adxl_devid_detected == 0)
   for(int j = 1; j >= 0; j--)
   {
@@ -170,7 +170,7 @@ void adxl355_init(void)
     #endif
   }
   adxl355_ctrl(CTRL_SELECT); // 2:request core indirect mode
-  delay(2); // wait for direct mode to finish
+  delay(3); // wait for direct mode to finish
 }
 
 uint8_t adxl355_available(void)
