@@ -204,8 +204,8 @@ void setup() {
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
 
-  delay(500); // easier ESP32 programming!
-  // This 0.5s delay is not needed for normal function but
+  delay(1000); // easier ESP32 programming!
+  // This 1s delay is not needed for normal function but
   // Without this delay, too many ESP32 programming retries are required or
   // "passthru" bitstream flashed in FPGA before programming ESP32
 
