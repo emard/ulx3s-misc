@@ -107,8 +107,10 @@ void adxl355_init(void)
   // 2<<4 clock phase
   //                   sensor type         sclk polarity         sclk phase
   #define CTRL_SELECT (adxl355_regio<<2)|((!adxl355_regio)<<3)|((!adxl355_regio)<<4)
+  //Serial.print("CTRL_SELECT=");
+  //Serial.println(CTRL_SELECT);
   adxl355_ctrl(2|CTRL_SELECT);
-  delay(3); // wait for request direct mode to be accepted
+  delay(2); // wait for request direct mode to be accepted
   if(adxl_devid_detected == 0)
   for(int j = 1; j >= 0; j--)
   {
@@ -143,14 +145,35 @@ void adxl355_init(void)
   Serial.println(sprintf_buf);
   if(adxl_devid_detected == 0xED) // ADXL355
   {
-    adxl355_write_reg(ADXL355_POWER_CTL, 0); // turn device ON
+    adxl355_write_reg(ADXL355_POWER_CTL, 0); // 0: turn device ON
+    //delay(1);
     // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
     // high speed i2c, INT1,INT2 active high
     adxl355_write_reg(ADXL355_RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
+    //delay(1);
     // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
     adxl355_write_reg(ADXL355_FILTER, FILTER_CONF);
+    //delay(1);
     // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
-    adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin
+    adxl355_write_reg(ADXL355_SYNC, /*0xC0 |*/ 2); // 0: internal, 2: takes external sync to drdy pin
+    //delay(1);
+    #if 1
+    // print to check is Accel working
+    for(int i = 0; i < 1000; i++)
+    {
+      sprintf(sprintf_buf, "ID=%02X%02X X=%02X%02X Y=%02X%02X Z=%02X%02X",
+        adxl355_read_reg(0),
+        adxl355_read_reg(ADXL355_SYNC),
+        adxl355_read_reg(ADXL355_XDATA3),
+        adxl355_read_reg(ADXL355_XDATA2),
+        adxl355_read_reg(ADXL355_YDATA3),
+        adxl355_read_reg(ADXL355_YDATA2),
+        adxl355_read_reg(ADXL355_ZDATA3),
+        adxl355_read_reg(ADXL355_ZDATA2)
+      );
+      Serial.println(sprintf_buf);
+    }
+    #endif
   }
   if(adxl_devid_detected == 0x92) // ADXRS290 Gyro
   {
@@ -170,7 +193,7 @@ void adxl355_init(void)
     #endif
   }
   adxl355_ctrl(CTRL_SELECT); // 2:request core indirect mode
-  delay(3); // wait for direct mode to finish
+  delay(2); // wait for direct mode to finish
 }
 
 uint8_t adxl355_available(void)
