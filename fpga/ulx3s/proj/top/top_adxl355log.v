@@ -420,7 +420,7 @@ module top_adxl355log
 
   // SPI reader
   // counter for very slow clock
-  localparam slowdown = 0;
+  localparam slowdown = 1;
   reg [slowdown:0] r_sclk_en;
   always @(posedge clk)
   begin
