@@ -499,27 +499,26 @@ module top_adxl355log
     end
   end
 
-  wire [15:0] axl, ayl, azl, axr, ayr, azr;
-  generate
-  if(1) // ADXL355
+  reg [15:0] axl, ayl, azl, axr, ayr, azr;
+  always @(posedge clk)
+  if(ctrl_sensor_type) // 1:ADXL355
   begin
-    assign axl = {r_accel[ 0], r_accel[ 1]};
-    assign ayl = {r_accel[ 3], r_accel[ 4]};
-    assign azl = {r_accel[ 6], r_accel[ 7]};
-    assign axr = {r_accel[ 9], r_accel[10]};
-    assign ayr = {r_accel[12], r_accel[13]};
-    assign azr = {r_accel[15], r_accel[16]};
+    axl <= {r_accel[ 0], r_accel[ 1]};
+    ayl <= {r_accel[ 3], r_accel[ 4]};
+    azl <= {r_accel[ 6], r_accel[ 7]};
+    axr <= {r_accel[ 9], r_accel[10]};
+    ayr <= {r_accel[12], r_accel[13]};
+    azr <= {r_accel[15], r_accel[16]};
   end
-  if(0) // ADXRS290
+  else // 0:ADXRS290
   begin
-    assign axl = {r_accel[ 1], r_accel[ 0]};
-    assign ayl = {r_accel[ 3], r_accel[ 2]};
-    assign azl = {r_accel[ 5], r_accel[ 4]};
-    assign axr = {r_accel[ 7], r_accel[ 6]};
-    assign ayr = {r_accel[ 9], r_accel[ 8]};
-    assign azr = {r_accel[11], r_accel[10]};
+    axl <= {r_accel[ 1], r_accel[ 0]};
+    ayl <= {r_accel[ 3], r_accel[ 2]};
+    azl <= {r_accel[ 5], r_accel[ 4]};
+    axr <= {r_accel[ 7], r_accel[ 6]};
+    ayr <= {r_accel[ 9], r_accel[ 8]};
+    azr <= {r_accel[11], r_accel[10]};
   end
-  endgenerate
 
   //assign led = {spi_ram_x, spi_ram_wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
   //assign led = r_accel_l;
@@ -810,10 +809,10 @@ module top_adxl355log
   );
   //assign data[63:32] = ma;
   //assign data[31:0]  = mb;
-  //assign data[63:32] = {ayl, axl};
-  //assign data[31:0]  = {ayr, axr};
-  assign data[63:32] = {0, azl};
-  assign data[31:0]  = {0, azr};
+  assign data[63:32] = {ayl, axl};
+  assign data[31:0]  = {ayr, axr};
+  //assign data[63:32] = {0, azl};
+  //assign data[31:0]  = {0, azr};
   //assign data[ 63:32]  = slope_l;
   //assign data[ 31: 0]  = slope_r;
   assign data[127:96]  = srvz[63:32];
