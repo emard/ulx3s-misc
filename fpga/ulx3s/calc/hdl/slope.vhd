@@ -51,7 +51,7 @@ generic (
 port (
   clk              : in  std_logic;
   reset            : in  std_logic;
-  enter            : in  std_logic; -- '1' pulse to enter acceleration and speed for every
+  enter            : in  std_logic; -- '1' pulse to enter acceleration and speed, 1kHz rate
   hold             : in  std_logic; -- hold adjustment correction
   vx               : in  std_logic_vector(15 downto 0); -- mm/s, actually um travel for each 1kHz pulse, unsigned
   cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx[mm/s] = 40181760/vx[mm/s] signed
@@ -232,7 +232,7 @@ begin
     end if;
   end process;
 
-  -- slove derivative
+  -- slope derivative
   process(clk)
   begin
     if rising_edge(clk) then
