@@ -150,7 +150,7 @@ void adxl355_init(void)
     // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
     adxl355_write_reg(ADXL355_FILTER, FILTER_CONF);
     // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
-    adxl355_write_reg(ADXL355_SYNC, /*0xC0 |*/ 2); // 0: internal, 2: takes external sync to drdy pin
+    adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin, 0xC0 undocumented, seems to prevent glitches
     #if 0
     // print to check is Accel working
     for(int i = 0; i < 1000; i++)
