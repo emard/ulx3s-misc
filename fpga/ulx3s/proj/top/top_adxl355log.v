@@ -192,7 +192,11 @@ module top_adxl355log
   wire spi_ram_miso; // muxed
   wire spi_bram_cs; // "chip" select line for address detection of bram buffer addr 0x00...
   wire spi_ctrl_cs; // control byte select addr 0xFF..
-  reg [7:0] r_ctrl = 8'h00; // control byte, r_ctrl[7:3]:reserved, r_ctrl[2]:sclk_inv, r_ctrl[1]:direct_en, r_ctrl[0]:sensor lr
+  // r_ctrl[7:3]:reserved, r_ctrl[2]:sclk_inv, r_ctrl[1]:direct_en, r_ctrl[0]:sensor lr
+  // if r_ctrl doesn't start from 0, adxl355 won't initialize
+  // accel reading of XYZ axis will have 12 MSBs mostly fixed
+  // and rest LSBs with very small fluctuations when acceleation appled
+  reg [7:0] r_ctrl = 0; // control byte must start from 0 or ADXL355 initialization won't initialize
   wire ctrl_direct_lr = r_ctrl[0]; // mux direct 0: left, 1: right
   wire ctrl_direct = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire ctrl_sclk_inv = r_ctrl[2]; // SPI direct clk invert 1:invert, 0:normal
