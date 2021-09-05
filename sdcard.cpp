@@ -172,6 +172,8 @@ void adxl355_init(void)
   if(adxl_devid_detected == 0x92) // ADXRS290 Gyro
   {
     adxl355_write_reg(ADXRS290_POWER_CTL, ADXRS290_POWER_GYRO | ADXRS290_POWER_TEMP); // turn device ON
+    // [7:4] HPF 0.011-11.30 Hz, [2:0] LPF 480-20 Hz, see datasheet
+    adxl355_write_reg(ADXRS290_FILTER, FILTER_CONF);
     #if 0
     // print to check is Gyro working
     for(int i = 0; i < 1000; i++)
