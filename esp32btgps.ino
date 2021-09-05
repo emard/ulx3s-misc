@@ -204,6 +204,11 @@ void setup() {
   //pinMode(PIN_BTN, INPUT);
   //attachInterrupt(PIN_BTN, isr_handler, FALLING);
 
+  delay(500); // easier ESP32 programming!
+  // This 0.5s delay is not needed for normal function but
+  // Without this delay, too many ESP32 programming retries are required or
+  // "passthru" bitstream flashed in FPGA before programming ESP32
+
   spi_init();
   rds_init();
   spi_rds_write();
@@ -271,7 +276,7 @@ void setup() {
 
   // accelerometer range +-2/4/8g can be changed from cfg file
   // ADXL should be initialized after reading cfg file
-  for (int i = 0; i < 6; i++)
+  for (int i = 0; i < 1; i++)
   {
     delay(100);
     adxl355_init();
