@@ -38,7 +38,18 @@ generic (
   --  4000 measuring 1g at +-8g range
   scale: integer := 16; -- 16 bits scale
   int_sample_rate_hz: integer := 1000; -- Hz accel input sample rate
-  slope_reconstruction: integer := 1; -- 0: no reconstruction, use X-axis at +2g range: slope = ax * (1000000/16000) [um/m], 1: Z-axis slope reconstruction
+  slope_reconstruction: integer := 1   -- 0: no reconstruction, use X-axis at +2g range: slope = ax * (1000000/16000) [um/m], 1: Z-axis slope reconstruction
+
+  -- ADXRS290 gyroscope ---
+  -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
+  -- 1.0e6 to scale resulting slope to um/s
+  -- 1e-3 delta t (1/1kHz sample_rate)
+  -- 2*pi/360 degrees to radians
+  -- 200 LSB/deg/s angular rate
+  -- 65536*1.0e6*1e-3 * 2*pi/360/200 = 5719.095 -- used in ESP32, spi_write_speed() constant independent of speed
+  -- cvx2 = 5719 -- use this constant value for ADXL290
+
+  -- ADXL355 accelerometer ---
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
   -- 1.0e6 to scale resulting slope to um/s
   -- 9.81 = 1g standard gravity
@@ -46,7 +57,7 @@ generic (
   -- 1e-3 delta t (1/1kHz sample_rate)
   -- 1000 for speed in mm/s
   -- 65536*1.0e6*1e-3*9.81/16000*1000 = 40181760 -- used in ESP32, spi_write_speed()
-  int_vx2_scale: integer := 40181760 -- not used here
+  -- cvx2 = 40181760/vx[mm/s]
 );
 port (
   clk              : in  std_logic;
@@ -54,7 +65,7 @@ port (
   enter            : in  std_logic; -- '1' pulse to enter acceleration and speed, 1kHz rate
   hold             : in  std_logic; -- hold adjustment correction
   vx               : in  std_logic_vector(15 downto 0); -- mm/s, actually um travel for each 1kHz pulse, unsigned
-  cvx2             : in  std_logic_vector(31 downto 0); -- proportional to int_vx2_scale/vx[mm/s] = 40181760/vx[mm/s] signed
+  cvx2             : in  std_logic_vector(31 downto 0); -- scaled constat to multply azl,azr for slope integration (accel=const/vx, gyro=const)
   axl, axr, ayl, ayr, azl, azr : in  std_logic_vector(15 downto 0); -- acceleration signed 16000 = 1g at +-2g range
   slope_l, slope_r : out std_logic_vector(31 downto 0); -- um/m slope signed
   ready            : out std_logic; -- '1' pulse when result is ready
