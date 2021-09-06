@@ -512,12 +512,12 @@ module top_adxl355log
   end
   else // 0:ADXRS290
   begin
-    axl <= {r_accel[ 1], r_accel[ 0]};
+    azl <= {r_accel[ 1], r_accel[ 0]}; // actually X but swapped with Z for calc
     ayl <= {r_accel[ 3], r_accel[ 2]};
-    azl <= {r_accel[ 5], r_accel[ 4]};
-    axr <= {r_accel[ 7], r_accel[ 6]};
+    axl <= {r_accel[ 5], r_accel[ 4]}; // actually Z but swapped with X for calc
+    azr <= {r_accel[ 7], r_accel[ 6]}; // actually X but swapped with Z for calc
     ayr <= {r_accel[ 9], r_accel[ 8]};
-    azr <= {r_accel[11], r_accel[10]};
+    axr <= {r_accel[11], r_accel[10]}; // actually Z but swapped with X for calc
   end
 
   //assign led = {spi_ram_x, spi_ram_wr, rd_miso, rd_mosi, rd_sclk, rd_csn};
@@ -809,12 +809,12 @@ module top_adxl355log
   );
   //assign data[63:32] = ma;
   //assign data[31:0]  = mb;
-  assign data[63:32] = {ayl, axl};
-  assign data[31:0]  = {ayr, axr};
+  //assign data[63:32] = {ayl, axl};
+  //assign data[31:0]  = {ayr, axr};
   //assign data[63:32] = {0, azl};
   //assign data[31:0]  = {0, azr};
-  //assign data[ 63:32]  = slope_l;
-  //assign data[ 31: 0]  = slope_r;
+  assign data[ 63:32]  = slope_l;
+  assign data[ 31: 0]  = slope_r;
   assign data[127:96]  = srvz[63:32];
   assign data[ 95:64]  = srvz[31: 0];
   //assign data[127:96]  = slope_aa;
