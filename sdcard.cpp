@@ -285,7 +285,7 @@ void rds_init(void)
 // speed in mm/s
 void spi_speed_write(int spd)
 {
-  uint32_t icvx2 = spd > 0 ? 40181760/spd : 0; // spd is in mm/s
+  uint32_t icvx2 = spd > 0 ? (adxl355_regio ? 40181760/spd : 5719) : 0; // spd is in mm/s
   uint16_t vx    = spd > 0 ? spd : 0;
   spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0x2; // addr [31:24] msb
