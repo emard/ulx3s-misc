@@ -49,6 +49,7 @@ struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 uint8_t G_RANGE = 8; // +-2/4/8 g sensor range (at digital reading +-32000)
 uint8_t FILTER_CONF = 0; // see datasheet adxl355 p.38 0:1kHz ... 10:0.977Hz
+uint32_t REPORT_mm = 100000; // mm report every travel distance
 uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
 
@@ -1077,6 +1078,7 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("red_iri" )) red_iri = strtof(varvalue.c_str(), NULL);
     else if(varname.equalsIgnoreCase("g_range" )) G_RANGE = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("filter"  )) FILTER_CONF = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("report_m")) REPORT_mm = 1000*strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_stop")) KMH_STOP = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_btn" )) KMH_BTN = strtol(varvalue.c_str(), NULL,10);
@@ -1106,6 +1108,7 @@ void read_cfg(void)
   Serial.print("RED_IRI  : "); Serial.println(chr_red_iri);
   Serial.print("G_RANGE  : "); Serial.println(G_RANGE);
   Serial.print("FILTER   : "); Serial.println(FILTER_CONF);
+  Serial.print("REPORT_M : "); Serial.println(REPORT_mm/1000);
   Serial.print("KMH_START: "); Serial.println(KMH_START);
   Serial.print("KMH_STOP : "); Serial.println(KMH_STOP);
   Serial.print("KMH_BTN  : "); Serial.println(KMH_BTN);

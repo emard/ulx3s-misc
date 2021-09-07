@@ -81,7 +81,7 @@ char line_terminator = '\n'; // '\n' for GPS, '\r' for OBD
 uint32_t line_tprev; // to determine time of latest incoming complete line
 uint32_t line_tdelta; // time between prev and now
 int travel_mm = 0; // travelled mm (v*dt)
-int travel100m, travel100m_prev = 0; // previous 100m travel
+int travel_report, travel_report_prev = 0; // previous 100m travel
 int session_log = 0; // request new timestamp filename when reconnected
 int speak_search = 1; // 0 - don't search, 1-search gps, 2-search obd
 uint32_t srvz[2];
@@ -435,9 +435,9 @@ void report_search(void)
 // with speech and RDS
 void report_iri(void)
 {
-  if (travel100m_prev != travel100m) // normal: update RDS every 100 m
+  if (travel_report_prev != travel_report) // normal: update RDS every 100 m
   {
-    travel100m_prev = travel100m;
+    travel_report_prev = travel_report;
     uint8_t iri99 = iriavg*10;
     if(iri99 > 99)
       iri99 = 99;
@@ -530,8 +530,8 @@ void travel_ct0(void)
     int travel_dt = ((int32_t) ct0) - ((int32_t) ct0_prev); // ms since last time
     if(travel_dt < 10000) // ok reports are below 10s difference
       travel_mm += speed_mms * travel_dt / 1000;
-    travel100m = travel_mm / 100000; // normal: report every 100 m
-    //travel100m = travel_mm / 1000; // debug: report every 1 m
+    travel_report = travel_mm / REPORT_mm; // normal: report every 100 m
+    //travel_report = travel_mm / 1000; // debug: report every 1 m
   }
   // set ct0_prev always (also when stopped)
   // to prevent building large delta time when fast enough
@@ -621,7 +621,7 @@ void travel_gps(void)
     int travel_dt = (864000 + daytime - daytime_prev) % 864000; // seconds*10 since last time
     if(travel_dt < 100) // ok reports are below 10s difference
       travel_mm += speed_mms * travel_dt / 10;
-    travel100m = travel_mm / 100000; // normal: report every 100 m
+    travel_report = travel_mm / REPORT_mm; // normal: report every 100 m
   }
   daytime_prev = daytime; // for travel_dt
 }
@@ -665,7 +665,7 @@ void draw_kml_line(char *line)
     nmea2kmltime(line, timestamp);
     x_kml_line->timestamp = timestamp;
     kml_line(x_kml_line);
-    if(travel100m_prev != travel100m) // every 100m draw arrow
+    if(travel_report_prev != travel_report) // every 100m draw arrow
     {
       x_kml_arrow->lat   = *lat;
       x_kml_arrow->lon   = *lon;
