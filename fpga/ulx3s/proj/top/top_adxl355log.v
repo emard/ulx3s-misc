@@ -433,6 +433,7 @@ module top_adxl355log
   
   reg [7:0] spi_read_cmd;
   reg [3:0] spi_read_len;
+  reg [17:0] spi_tag_byte_select;
   always @(posedge clk)
   begin
     spi_read_cmd <= ctrl_sensor_type ? /*ADXL355*/ 8*2+1 : /*ADXRS290*/ 8+128; // normal
@@ -443,6 +444,7 @@ module top_adxl355log
     // spi_read_len <= 10; // debug
     // len ADLX355  10 = 1+9, 1 byte transmitted and 9 bytes received
     // len ADXRS290  7 = 1+6, 1 byte transmitted and 6 bytes received
+    spi_tag_byte_select <= ctrl_sensor_type ? /*ADXL355*/ 18'b010_010_010_010_010_010 : /*ADXRS290*/ 12'b01_01_01_01_01_01;
   end
 
   reg r_tag_en = 0;
@@ -459,6 +461,7 @@ module top_adxl355log
     .direct_en(direct_en),
     .cmd(spi_read_cmd),
     .len(spi_read_len), // 10 = 1+9, 1 byte transmitted and 9 bytes received
+    .tag_byte_select(spi_tag_byte_select), // which byte to tag
     .tag_pulse(pps_pulse),
     .tag_en(tag_en),  // write signal from SPI
     .tag(w_tag), // 6-bit char from SPI

@@ -16,6 +16,7 @@ module adxl355rd
   input         direct, // request direct: 0:buffering, 1:direct to ADXL355
   output        direct_en, // grant direct access (signal for mux)
   // from tagger to internal FIFO
+  input  [17:0] tag_byte_select, // bit-mask which byte to tag, LSB first
   input         tag_pulse, // pulse 1-clk-cycle inserts char "!"=0x21 with higher priority than tag_en
   input         tag_en, // 1-clk cycle to push one 6-bit char to tag buffer
   input   [5:0] tag, // input data going to tag FIFO buffer
@@ -88,6 +89,8 @@ module adxl355rd
 
   reg r_direct; // allow switch when idle
   reg [7:0] index = {4'd10, 4'h6}; // running index, start as finished
+  reg [17:0] r_tag_byte_shift, r_tag_byte_select; // bit-pattern selects output bytes to be tagged, left-shifted at wr
+  wire r_tag_data_en = r_tag_byte_shift[0]; // signal to tag at wr now
 
   // internal wiring, before multiplexer  
   wire w_mosi, w_sclk, w_csn, w_miso;
@@ -107,6 +110,7 @@ module adxl355rd
         cmd_read <= cmd;
         bytes_len <= len;
         r_tag_latch <= 1;
+        r_tag_byte_select <= tag_byte_select;
       end
     end
     else // end not yet
@@ -118,7 +122,6 @@ module adxl355rd
   end
 
   reg [2:0] r_tag_data_i = 0; // bit-index for reading latched tag data
-  reg r_tag_data_en = 0; // toggled at wr for LSB to be tagged
   reg r_csn = 1, r_sclk_en = 0, r_sclk, r_wr = 0, r_x = 0;
   reg [7:0] r_mosi, r0_miso, r1_miso, r_shift, r0_wrdata, r1_wrdata;
   always @(posedge clk)
@@ -155,9 +158,8 @@ module adxl355rd
   if(tag_enable)
   always @(posedge clk)
   begin
-    r_tag_data_en <= index[7:1] == 0 ? 0 : r_wr ? ~r_tag_data_en : r_tag_data_en;
+    r_tag_byte_shift <= index[7:1] == 0 ? r_tag_byte_select : r_wr ? r_tag_byte_shift[$size(r_tag_byte_shift)-1:1] : r_tag_byte_shift;
     r_tag_data_i  <= index[7:1] == 0 ? 0 : r_wr &  r_tag_data_en ? r_tag_data_i+1 : r_tag_data_i;
-    //r_tag_latch   <= index == 0 && clk_en == 1;
   end
   endgenerate
 
