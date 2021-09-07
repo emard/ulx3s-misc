@@ -8,6 +8,7 @@ esp32
     [ ] LCD graphic track display
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
+    [ ] configurable report frequency (m)
     [ ] notify g-range in wav
     [ ] notify g-range in kml
     [ ] kml->kmz zip https://github.com/lbernstone/miniz-esp32
@@ -82,9 +83,7 @@ core
     [ ] time sync status
     [ ] BTN irq
     [ ] tyre ribs or motor vibration (RPM) sensing, conversion to speed
-    [ ] spi slave setting for cmd to auto-read registers 
-        adxl355  : 8*2+1
-        adxrs290 : 128+8
+    [x] spi slave setting for cmd to auto-read registers adxl355=8*2+1, adxrs290=128+8
     [x] damp oscillations at slope DC offset compensation
     [x] at stops, quick slope DC removal
     [x] improved slope DC removal
@@ -114,5 +113,5 @@ wav2kml
 
 math
 
-    [ ] verify method - make the offline analysys
+    [x] verify method - make the offline analysis
 
