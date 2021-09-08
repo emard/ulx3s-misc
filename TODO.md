@@ -83,6 +83,8 @@ core
     [ ] time sync status
     [ ] BTN irq
     [ ] tyre ribs or motor vibration (RPM) sensing, conversion to speed
+    [ ] option to reset slope at stops (configurable)
+    [ ] option for iri length, normal 100 m, sometimes 20 m
     [x] spi slave setting for cmd to auto-read registers adxl355=8*2+1, adxrs290=128+8
     [x] damp oscillations at slope DC offset compensation
     [x] at stops, quick slope DC removal
