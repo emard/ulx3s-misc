@@ -41,6 +41,7 @@ generic (
   slope_reconstruction: integer := 1   -- 0: no reconstruction, use X-axis at +2g range: slope = ax * (1000000/16000) [um/m], 1: Z-axis slope reconstruction
 
   -- ADXRS290 gyroscope ---
+  -- angle[rad] = sin(angle) = tan(angle), approx for small angle < 0.2 rad = 11 deg = 20% slope
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
   -- 1.0e6 to scale resulting slope to um/s
   -- 1e-3 delta t (1/1kHz sample_rate)
