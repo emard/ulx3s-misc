@@ -12,7 +12,7 @@ import numpy as np
 
 wavfile = argv[1]
 
-calculate  = 1 # 0:IRI from wav tags, 1:IRI calculated from wav data (doesn't work yet)
+calculate  = 0 # 0:IRI from wav tags, 1:IRI calculated from wav data (adxl355)
 g_scale    = 2 # 2/4/8 g is 32000 integer reading
 aint2float = 9.81 * g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
 
