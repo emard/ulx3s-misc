@@ -568,11 +568,12 @@ void handle_fast_enough(void)
 void get_iri(void)
 {
   spi_srvz_read(srvz);
-  // 0.5e-6 = (1e-3 * 0.05/100) iri 100 m for  5 cm step and 2g range (normal)
-  float srvz2iri = G_RANGE == 2 ? 0.5e-6 : G_RANGE == 4 ? 1.0e-6 : /* G_RANGE == 8 ? */  2.0e-6 ; // for interval = 50 mm
-  // 2.5e-6 = (1e-3 * 0.25/100) iri 100 m for 25 cm step and 2g range
-  // 2.5e-6 = (1e-3 * 0.05/20)  iri  20 m for  5 cm step and 2g range
-  //float srvz2iri = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ; // for interval = 250 mm
+  // 1e-3 common factor because iri is expressed as mm/m
+  // 0.5e-6 = (1e-3 * 0.05/100) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m := 100
+  float srvz2iri = G_RANGE == 2 ? 0.5e-6 : G_RANGE == 4 ? 1.0e-6 : /* G_RANGE == 8 ? */  2.0e-6 ; // normal
+  // 2.5e-6 = (1e-3 * 0.25/100) 2g range, coefficients_pack.vhd: interval_mm := 250; length_m := 100
+  // 2.5e-6 = (1e-3 * 0.05/20 ) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m :=  20
+  //float srvz2iri = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ;
   iri[0] = srvz[0]*srvz2iri;
   iri[1] = srvz[1]*srvz2iri;
   iriavg = sensor_check_status == 0 ? 0.0
