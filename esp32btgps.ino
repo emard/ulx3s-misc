@@ -719,7 +719,7 @@ void handle_gps_line_complete(void)
         speed_mms = (speed_ckt *  5268) >> 10;
         speed_kmh = (speed_ckt * 19419) >> 20;
       }
-      spi_speed_write(fast_enough > 0 && speed_kmh > 6 ? speed_mms : 0);
+      spi_speed_write(fast_enough > 0 ? speed_mms : 0);
       nmea_time_log();
       write_logs();
       handle_fast_enough();
