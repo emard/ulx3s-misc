@@ -12,9 +12,22 @@ import numpy as np
 
 wavfile = argv[1]
 
-calculate  = 0 # 0:IRI from wav tags, 1:IRI calculated from wav data (adxl355)
-g_scale    = 2 # 2/4/8 g is 32000 integer reading
-aint2float = 9.81 * g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
+# calculate
+# 0:IRI from wav tags,
+# 1:IRI calculated from z-accel wav data (adxl355)
+# 2:IRI calculated from x-gyro wav data (adxrs290)
+calculate  = 0
+g_scale    = 2 # accel adxl355: 2/4/8 g is 32000 integer reading
+# accel/gyro, select constant and data wav channel
+if calculate == 1:
+  aint2float = 9.81 * g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
+  wav_ch_l = 2
+  wav_ch_r = 5
+if calculate == 2:
+  aint2float = 2*pi/360/200 # gyro angular velocity integer -> rad/s conversion, sensors with 1/200 deg/s
+  wav_ch_l = 0
+  wav_ch_r = 3
+
 
 red_iri = 2.5 # colorization
 
@@ -45,8 +58,11 @@ slope_prev = np.zeros(2).astype(np.float32)
 
 ac = np.zeros(6).astype(np.int16) # current integer accelerations vector
 
-azl0 = 9.81 # average azl (to remove slope DC offset)
-azr0 = 9.81 # average azr (to remove slope DC offset)
+azl0 = 0.0
+azr0 = 0.0
+if calculate == 1:
+  azl0 = 9.81 # average azl (to remove slope DC offset)
+  azr0 = 9.81 # average azr (to remove slope DC offset)
 
 # Z state matrix left,right (used for iterative slope entry at each sampling interval)
 ZL = np.zeros(4).astype(np.float32)
@@ -119,15 +135,6 @@ def slope2model(slope_l:float, slope_r:float):
   ZR = np.matmul(ST, ZR) + PR * slope_r
   # return (ZL[0] - ZL[2], ZR[0] - ZR[2]) # shock absorber speed
 
-# slope reconstruction from equal-time sampled z-accel and vehicle x-speed
-# updates global slope[0] = left, slope[1] = right
-# needs regularly updated azl0, azr0 for slope DC remove
-def az2slope(azl:float, azr:float, vx:float):
-  global slope
-  c = a_sample_dt / vx
-  slope[0] += (azl - azl0) * c
-  slope[1] += (azr - azr0) * c
-
 def slope_dc_remove():
   global azl0, azr0, slope_prev
   if slope[0] > 0 and slope[0] > slope_prev[0]:
@@ -154,8 +161,8 @@ def reset_iri():
   slope *= 0
   slope_prev *= 0
   # reset DC compensation to current accelerometer reading
-  azl0 = ac[2]*aint2float
-  azr0 = ac[5]*aint2float
+  azl0 = ac[wav_ch_l]*aint2float
+  azr0 = ac[wav_ch_r]*aint2float
 
 # enter slope, calculate running average
 def enter_slope(slope_l:float, slope_r:float):
@@ -172,6 +179,14 @@ def enter_slope(slope_l:float, slope_r:float):
   if rvz_buf_ptr >= n_buf_points:
     rvz_buf_ptr = 0
 
+# slope reconstruction from equal-time sampled z-accel and vehicle x-speed
+# updates global slope[0] = left, slope[1] = right
+# needs regularly updated azl0, azr0 for slope DC remove
+def az2slope(azl:float, azr:float, c:float):
+  global slope
+  slope[0] += (azl - azl0) * c
+  slope[1] += (azr - azr0) * c
+
 # integrate z-acceleration in time domain 
 # updates slope in z/x space domain
 # needs x-speed as input 
@@ -180,7 +195,11 @@ def enter_slope(slope_l:float, slope_r:float):
 # returns 1 when slope is ready (each sampling_interval), otherwise 0
 def enter_accel(azl:float, azr:float, vx:float):
   global travel_sampling
-  az2slope(azl, azr, vx)
+  if calculate == 1:
+    c = a_sample_dt / vx
+  else: # calculate == 2
+    c = a_sample_dt
+  az2slope(azl, azr, c)
   travel_sampling += vx * a_sample_dt
   if travel_sampling > sampling_length:
     travel_sampling -= sampling_length
@@ -578,18 +597,17 @@ for wavfile in argv[1:]:
         ac[i] = int.from_bytes(b[i*2:i*2+2],byteorder="little",signed=True)
       if speed_kmh > 4:
         # ac[2] Z-left, ac[5] Z-right
-        #print(ac[2]*aint2float, ac[5]*aint2float, azl0, azr0)
-        #print(ac[2],ac[5],speed_kmh)
-        if enter_accel(ac[2]*aint2float, ac[5]*aint2float, speed_kmh/3.6):
+        #print(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float, azl0, azr0)
+        #print(ac[wav_ch_l],ac[wav_ch_r],speed_kmh)
+        if enter_accel(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float, speed_kmh/3.6):
           enter_slope(slope[0],slope[1])
           slope_dc_remove()
-          #print(ac[2]*aint2float, ac[5]*aint2float)
+          #print(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float)
           #print(azl0, azr0)
           #print(slope)
           # srvz is scaled 1e6
           # iri when printed should be scaled as 1e3 mm/m so
           # divide srvz by 1000
-          # FIXME currently srvz is too small, results in 0.2-0.4 instead of 2-4
           #print(srvz)
           #print(srvz / (n_buf_points * 1000))
     if a != 32:
