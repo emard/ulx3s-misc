@@ -15,19 +15,20 @@ wavfile = argv[1]
 # calculate
 # 0:IRI from wav tags,
 # 1:IRI calculated from z-accel wav data (adxl355)
-# 2:IRI calculated from x-gyro wav data (adxrs290)
+# 2:IRI calculated from x-gyro wav data (adxrs290) angular speed
 calculate  = 0
-g_scale    = 2 # accel adxl355: 2/4/8 g is 32000 integer reading
 # accel/gyro, select constant and data wav channel
 if calculate == 1:
+  g_scale    = 2 # accel adxl355: 2/4/8 g is 32000 integer reading
   aint2float = 9.81 * g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
+  # Z-channel of accelerometer
   wav_ch_l = 2
   wav_ch_r = 5
 if calculate == 2:
   aint2float = 2*pi/360/200 # gyro angular velocity integer -> rad/s conversion, sensors with 1/200 deg/s
+  # X-channel of gyroscope
   wav_ch_l = 0
   wav_ch_r = 3
-
 
 red_iri = 2.5 # colorization
 
@@ -42,6 +43,9 @@ sampling_length = 0.05
 
 # equal-time acclererometer sample time
 a_sample_dt = 1/1000 # s (1kHz accelerometer sample rate)    
+
+# slope DC remove by inc/dec of accel offset at each sampling length
+dc_remove_step = 1.0e-5
 
 # number of buffered vz speed points for IRI averaging
 n_buf_points = int(iri_length/sampling_length + 0.5)
@@ -138,13 +142,13 @@ def slope2model(slope_l:float, slope_r:float):
 def slope_dc_remove():
   global azl0, azr0, slope_prev
   if slope[0] > 0 and slope[0] > slope_prev[0]:
-    azl0 += 1.0e-4
+    azl0 += dc_remove_step
   if slope[0] < 0 and slope[0] < slope_prev[0]:
-    azl0 -= 1.0e-4
+    azl0 -= dc_remove_step
   if slope[1] > 0 and slope[1] > slope_prev[1]:
-    azr0 += 1.0e-4
+    azr0 += dc_remove_step
   if slope[1] < 0 and slope[1] < slope_prev[1]:
-    azr0 -= 1.0e-4
+    azr0 -= dc_remove_step
   slope_prev[0] = slope[0]
   slope_prev[1] = slope[1]
 
@@ -595,7 +599,7 @@ for wavfile in argv[1:]:
     if calculate:
       for i in range(0,6):
         ac[i] = int.from_bytes(b[i*2:i*2+2],byteorder="little",signed=True)
-      if speed_kmh > 4:
+      if speed_kmh > 2:
         # ac[2] Z-left, ac[5] Z-right
         #print(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float, azl0, azr0)
         #print(ac[wav_ch_l],ac[wav_ch_r],speed_kmh)
