@@ -30,7 +30,7 @@ port (
 end;
 
 architecture RTL of calc is
-  constant n_points: integer := length_m*1000/interval_mm; -- default 400 points for 250 mm interval
+  constant n_points: integer := length_m*1000/interval_mm; -- default 2000 points for 50 mm interval
   constant matrix_size: integer := 12*4; -- storage size for matrix constants and variables
   constant total_size: integer := matrix_size+2*n_points; -- total storage size required for BRAM
   constant bram_addr_bits: integer := integer(ceil(log2(real(total_size)+0.5))); -- number of BRAM address bits
@@ -72,8 +72,6 @@ architecture RTL of calc is
   alias cnt_ch     : unsigned(7 downto 7) is cnt(7 downto 7); -- 0-1 two channels
   alias cnt_above_row : unsigned(cnt_bits-1 downto cnt_element'length+cnt_row'length) is cnt(cnt_bits-1 downto cnt_element'length+cnt_row'length);
   constant cnt_pad0: unsigned(ia'length-1 downto cnt_ch'length+cnt_col'length+cnt_row'length) := (others => '0'); -- zero-pad high bits to make ia/ib address
-  --constant i_points: unsigned(8 downto 0) := to_unsigned(512-n_points, 9);
-  --signal irs_tail: unsigned(9 downto 0) := (others => '0'); -- tail index running sum 0-511
   signal matrix_write: std_logic := '0';
   signal swap_z: std_logic := '1'; -- swaps Z0 or Z1
   type z_type is array(0 to 3) of signed(31 downto 0);
