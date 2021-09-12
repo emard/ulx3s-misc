@@ -746,13 +746,17 @@ void handle_gps_line_complete(void)
       handle_fast_enough();
       if (nmea2tm(line, &tm))
       {
+        static uint8_t toggle_flag = 0; // IRI-100/20 toggle flag
         get_iri();
         char iri_tag[40];
-        sprintf(iri_tag, " L%05.2f,%05.2fR%05.2f,%05.2f*00 ",
-          iri  [0]>99.99?99.99:iri  [0],
-          iri20[0]>99.99?99.99:iri20[0],
-          iri  [1]>99.99?99.99:iri  [1],
-          iri20[1]>99.99?99.99:iri20[1]);
+        if(toggle_flag)
+          sprintf(iri_tag, " L%05.2fR%05.2f*00 ",
+            iri[0]>99.99?99.99:iri[0],
+            iri[1]>99.99?99.99:iri[1]);
+        else
+          sprintf(iri_tag, " L%05.2fS%05.2f*00 ",
+            iri20[0]>99.99?99.99:iri20[0],
+            iri20[1]>99.99?99.99:iri20[1]);
         write_nmea_crc(iri_tag+1);
         write_tag(iri_tag);
         set_date_from_tm(&tm);
@@ -762,6 +766,7 @@ void handle_gps_line_complete(void)
         strcpy(lastnmea, line); // copy line to last nmea for storage
         report_iri();
         report_status();
+        toggle_flag ^= 1; // 0/1 alternating IRI-100 and IRI-20, no bandwidth for both
       }
     }
   }
