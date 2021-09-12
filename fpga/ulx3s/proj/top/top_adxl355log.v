@@ -206,9 +206,9 @@ module top_adxl355log
   wire ctrl_sclk_polarity = r_ctrl[3]; // SPI autoreader clk polarity, 0: ADXL355, 1:ADXRS290
   wire ctrl_sclk_phase = r_ctrl[4]; // SPI autoreader clk phase, 0: ADXL355, 1:ADXRS290
   wire direct_en;
-  wire [7:0]   calc_result[0:7]; // 8-byte (2x32-bit)
-  reg  [7:0] r_calc_result[0:7]; // 8-byte (2x32-bit)
-  wire [7:0] w_calc_result[0:7]; // 8-byte (2x32-bit)
+  wire [7:0]   calc_result[0:15]; // 16-byte (4x32-bit)
+  reg  [7:0] r_calc_result[0:15]; // 16-byte (4x32-bit)
+  wire [7:0] w_calc_result[0:15]; // 16-byte (4x32-bit)
 
   wire spi_bram_cs = ram_addr[27:24] == 4'h0; // read bram
   wire spi_bptr_cs = ram_addr[27:24] == 4'h1; // read bram ptr
@@ -789,7 +789,7 @@ module top_adxl355log
     .ready(slope_ready)
   );
 
-  wire [63:0] srvz;
+  wire [63:0] srvz, srvz2;
   calc
   calc_inst
   (
@@ -804,7 +804,9 @@ module top_adxl355log
     //.vz_l(data[127:96]),
     //.vz_r(data[95:64])
     .srvz_l(srvz[63:32]),
-    .srvz_r(srvz[31: 0])
+    .srvz_r(srvz[31: 0]),
+    .srvz2_l(srvz2[63:32]),
+    .srvz2_r(srvz2[31: 0])
     //.d0(data[ 63:32]),
     //.d1(data[ 31:0 ]),
     //.d2(data[127:96]),
@@ -830,8 +832,10 @@ module top_adxl355log
     genvar i;
     for(i = 0; i < 4; i++)
     begin
-      assign calc_result[3-i] = srvz[(i+4)*8+7:(i+4)*8]; // left
-      assign calc_result[7-i] = srvz[(i+0)*8+7:(i+0)*8]; // right
+      assign calc_result[3-i] = srvz[(i+4)*8+7:(i+4)*8]; // sum for IRI-100 left
+      assign calc_result[7-i] = srvz[(i+0)*8+7:(i+0)*8]; // sum for IRI-100 right
+      assign calc_result[11-i] = srvz2[(i+4)*8+7:(i+4)*8]; // sum for IRI-20 left
+      assign calc_result[15-i] = srvz2[(i+0)*8+7:(i+0)*8]; // sum for IRI-20 right
     end
   endgenerate
 
@@ -847,12 +851,20 @@ module top_adxl355log
       r_calc_result[5] <= calc_result[5];
       r_calc_result[6] <= calc_result[6];
       r_calc_result[7] <= calc_result[7];
+      r_calc_result[ 8] <= calc_result[ 8];
+      r_calc_result[ 9] <= calc_result[ 9];
+      r_calc_result[10] <= calc_result[10];
+      r_calc_result[11] <= calc_result[11];
+      r_calc_result[12] <= calc_result[12];
+      r_calc_result[13] <= calc_result[13];
+      r_calc_result[14] <= calc_result[14];
+      r_calc_result[15] <= calc_result[15];
     end
   end
 
   generate
     genvar i;
-    for(i = 0; i < 8; i++)
+    for(i = 0; i < 16; i++)
     begin
       assign w_calc_result[i] = r_calc_result[i];
     end
