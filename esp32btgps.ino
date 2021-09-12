@@ -749,10 +749,10 @@ void handle_gps_line_complete(void)
         get_iri();
         char iri_tag[40];
         sprintf(iri_tag, " L%05.2f,%05.2fR%05.2f,%05.2f*00 ",
-          iri [0]>99.99?99.99:iri [0],
-          iri2[0]>99.99?99.99:iri2[0],
-          iri [1]>99.99?99.99:iri [1],
-          iri2[1]>99.99?99.99:iri2[1]);
+          iri  [0]>99.99?99.99:iri  [0],
+          iri20[0]>99.99?99.99:iri20[0],
+          iri  [1]>99.99?99.99:iri  [1],
+          iri20[1]>99.99?99.99:iri20[1]);
         write_nmea_crc(iri_tag+1);
         write_tag(iri_tag);
         set_date_from_tm(&tm);
