@@ -82,9 +82,10 @@ uint32_t line_tprev; // to determine time of latest incoming complete line
 uint32_t line_tdelta; // time between prev and now
 int travel_mm = 0; // travelled mm (v*dt)
 int travel_report, travel_report_prev = 0; // previous 100m travel
+int travel_report2, travel_report2_prev = 0; // previous 20m travel
 int session_log = 0; // request new timestamp filename when reconnected
 int speak_search = 1; // 0 - don't search, 1-search gps, 2-search obd
-uint32_t srvz[2];
+uint32_t srvz[4];
 int stopcount = 0;
 
 // form nmea and travel in GPS mode
@@ -247,23 +248,6 @@ void setup() {
 
   kml_init(); // sets globals using strlen/strstr
 
-  #if 0 // old code
-  int obd = ((spi_btn_read()) & 2); // hold BTN1 and plug power to run OBD2 demo
-  if(obd)
-  {
-    loop_pointer = &loop_obd;
-    mount();
-    read_cfg();
-    SerialBT.begin("ESP32", true);
-    SerialBT.setPin(OBD_PIN.c_str());
-    speakaction[0] = "/profilog/speak/searchobd.wav"; // TODO say OBD
-    speakaction[1] = NULL;
-    speakfiles = speakaction;
-    Serial.println("OBD demo");
-    return;
-  }
-  #endif
-
   pinMode(PIN_IRQ, INPUT);
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
 
@@ -273,6 +257,7 @@ void setup() {
   read_cfg();
   read_last_nmea();
   umount();
+  init_srvz_iri();
 
   // accelerometer range +-2/4/8g can be changed from cfg file
   // ADXL should be initialized after reading cfg file
@@ -435,10 +420,28 @@ void report_search(void)
 // with speech and RDS
 void report_iri(void)
 {
+  uint8_t flag_report = 0;
   if (travel_report_prev != travel_report) // normal: update RDS every 100 m
   {
     travel_report_prev = travel_report;
-    uint8_t iri99 = iriavg*10;
+    if(speed_kmh >= 30)
+      flag_report = 1;
+  }
+  if (travel_report2_prev != travel_report2) // normal: update RDS every 20 m
+  {
+    travel_report2_prev = travel_report2;
+    if(speed_kmh < 30)
+      flag_report = 2;
+  }
+  if (flag_report)
+  {
+    // for speed above 30 km/h, report IRI-100
+    // for speed below 30 km/h, report IRI-20
+    uint8_t iri99 = 0;
+    if(flag_report == 1) // IRI-100 normal
+      iri99 = iriavg*10;
+    else // flag_report == 2 // IRI-20 speed < 30 km/h
+      iri99 = iri20avg*10;
     if(iri99 > 99)
       iri99 = 99;
     iri2digit[0]='0'+iri99/10;
@@ -523,6 +526,7 @@ void handle_session_log(void)
 
 // calculate travel from
 // speed and internal timer
+// used for OBD
 void travel_ct0(void)
 {
   if(fast_enough)
@@ -531,6 +535,7 @@ void travel_ct0(void)
     if(travel_dt < 10000) // ok reports are below 10s difference
       travel_mm += speed_mms * travel_dt / 1000;
     travel_report = travel_mm / REPORT_mm; // normal: report every 100 m
+    travel_report2 = travel_mm / REPORT2_mm; // normal: report every 20 m
     //travel_report = travel_mm / 1000; // debug: report every 1 m
   }
   // set ct0_prev always (also when stopped)
@@ -565,21 +570,34 @@ void handle_fast_enough(void)
   }
 }
 
+// call this after read_cfg, needs G_RANGE
+void init_srvz_iri(void)
+{
+  // 1e-3 common factor because iri is expressed as mm/m
+  // 0.5e-6 = (1e-3 * 0.05/100) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m := 100
+  srvz_iri100 = G_RANGE == 2 ? 0.5e-6 : G_RANGE == 4 ? 1.0e-6 : /* G_RANGE == 8 ? */  2.0e-6 ; // normal IRI-100
+  srvz2_iri20 = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ; // normal IRI-20
+  // 2.5e-6 = (1e-3 * 0.25/100) 2g range, coefficients_pack.vhd: interval_mm := 250; length_m := 100
+  // 2.5e-6 = (1e-3 * 0.05/20 ) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m :=  20
+  //srvz_iri100 = G_RANGE == 2 ?  2.5e-6 : G_RANGE == 4 ?  5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ;
+  //srvz2_iri20 = G_RANGE == 2 ? 12.5e-6 : G_RANGE == 4 ? 25.0e-6 : /* G_RANGE == 8 ? */ 50.0e-6 ;
+}
+
 void get_iri(void)
 {
   spi_srvz_read(srvz);
-  // 1e-3 common factor because iri is expressed as mm/m
-  // 0.5e-6 = (1e-3 * 0.05/100) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m := 100
-  float srvz2iri = G_RANGE == 2 ? 0.5e-6 : G_RANGE == 4 ? 1.0e-6 : /* G_RANGE == 8 ? */  2.0e-6 ; // normal
-  // 2.5e-6 = (1e-3 * 0.25/100) 2g range, coefficients_pack.vhd: interval_mm := 250; length_m := 100
-  // 2.5e-6 = (1e-3 * 0.05/20 ) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m :=  20
-  //float srvz2iri = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ;
-  iri[0] = srvz[0]*srvz2iri;
-  iri[1] = srvz[1]*srvz2iri;
+  iri[0] = srvz[0]*srvz_iri100;
+  iri[1] = srvz[1]*srvz_iri100;
   iriavg = sensor_check_status == 0 ? 0.0
          : sensor_check_status == 1 ? iri[0]
          : sensor_check_status == 2 ? iri[1]
          : (iri[0]+iri[1])/2;  // 3, average of both sensors
+  iri20[0] = srvz[2]*srvz2_iri20;
+  iri20[1] = srvz[3]*srvz2_iri20;
+  iri20avg = sensor_check_status == 0 ? 0.0
+         : sensor_check_status == 1 ? iri20[0]
+         : sensor_check_status == 2 ? iri20[1]
+         : (iri20[0]+iri20[1])/2;  // 3, average of both sensors
 }
 
 void handle_reconnect(void)
@@ -616,6 +634,8 @@ void handle_reconnect(void)
   speak_search = 1; // request speech report on searching for GPS/OBD
 }
 
+// report based on GPS daytime
+// used for GPS
 void travel_gps(void)
 {
   if(fast_enough)
@@ -624,6 +644,7 @@ void travel_gps(void)
     if(travel_dt < 100) // ok reports are below 10s difference
       travel_mm += speed_mms * travel_dt / 10;
     travel_report = travel_mm / REPORT_mm; // normal: report every 100 m
+    travel_report2 = travel_mm / REPORT2_mm; // normal: report every 20 m
   }
   daytime_prev = daytime; // for travel_dt
 }

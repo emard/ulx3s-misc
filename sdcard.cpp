@@ -42,14 +42,14 @@ int fast_enough = 0; // for speed logging hysteresis
 uint8_t KMH_START = 12, KMH_STOP = 6; // km/h start/stop speed hystereis
 uint8_t KMH_BTN = 0; // debug btn2 for fake km/h
 int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
-float iri[2], iriavg;
+float srvz_iri100, iri[2], iriavg, srvz2_iri20, iri20[2], iri20avg;
 char iri2digit[4] = "0.0";
 struct int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 uint8_t G_RANGE = 8; // +-2/4/8 g sensor range (at digital reading +-32000)
 uint8_t FILTER_CONF = 0; // see datasheet adxl355 p.38 0:1kHz ... 10:0.977Hz
-uint32_t REPORT_mm = 100000; // mm report every travel distance
+uint32_t REPORT_mm = 100000, REPORT2_mm = 20000; // mm report every travel distance 100 m, 20 m
 uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
 
@@ -302,7 +302,9 @@ void spi_speed_write(int spd)
   master.transfer(spi_master_tx_buf, 5+4+2); // write speed binary
 }
 
-// returns [um/m] sum abs(vz) over 100m/0.25m = 400 points integer
+// returns 
+// [um/m] sum abs(vz) over 100m/0.05m = 2000 points integer sum
+// [um/m] sum abs(vz) over  20m/0.05m =  400 points integer sum
 void spi_srvz_read(uint32_t *srvz)
 {
   spi_master_tx_buf[0] = 1; // 1: read ram
@@ -311,9 +313,11 @@ void spi_srvz_read(uint32_t *srvz)
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   spi_master_tx_buf[5] = 0; // dummy
-  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 6+2*4); // read srvz binary
+  master.transfer(spi_master_tx_buf, spi_master_rx_buf, 6+4*4); // read srvz binary
   srvz[0] = (spi_master_rx_buf[ 6]<<24)|(spi_master_rx_buf[ 7]<<16)|(spi_master_rx_buf[ 8]<<8)|(spi_master_rx_buf[ 9]);
   srvz[1] = (spi_master_rx_buf[10]<<24)|(spi_master_rx_buf[11]<<16)|(spi_master_rx_buf[12]<<8)|(spi_master_rx_buf[13]);
+  srvz[2] = (spi_master_rx_buf[14]<<24)|(spi_master_rx_buf[15]<<16)|(spi_master_rx_buf[16]<<8)|(spi_master_rx_buf[17]);
+  srvz[3] = (spi_master_rx_buf[18]<<24)|(spi_master_rx_buf[19]<<16)|(spi_master_rx_buf[20]<<8)|(spi_master_rx_buf[21]);
 }
 
 uint8_t spi_btn_read(void)
@@ -402,8 +406,8 @@ void rds_message(struct tm *tm)
       else
         sprintf(disp_short, "GO    0X"); // normal
         //sprintf(disp_short, "%3s   0X", iri2digit); // debug
-      sprintf(disp_long, "L=%.2f R=%.2f %dMB free %02d:%02d %d km/h RUN=%d",
-        iri[0], iri[1],
+      sprintf(disp_long, "L=%.2f,%.2f R=%.2f,%.2f %dMB free %02d:%02d %d km/h RUN=%d",
+        iri[0], iri20[0], iri[1], iri20[1],
         free_MB,
         tm->tm_hour, tm->tm_min,
         speed_kmh,
@@ -1079,6 +1083,7 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("g_range" )) G_RANGE = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("filter"  )) FILTER_CONF = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("report_m")) REPORT_mm = 1000*strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("report2_m")) REPORT2_mm = 1000*strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_stop")) KMH_STOP = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_btn" )) KMH_BTN = strtol(varvalue.c_str(), NULL,10);
@@ -1109,6 +1114,7 @@ void read_cfg(void)
   Serial.print("G_RANGE  : "); Serial.println(G_RANGE);
   Serial.print("FILTER   : "); Serial.println(FILTER_CONF);
   Serial.print("REPORT_M : "); Serial.println(REPORT_mm/1000);
+  Serial.print("REPORT2_M: "); Serial.println(REPORT2_mm/1000);
   Serial.print("KMH_START: "); Serial.println(KMH_START);
   Serial.print("KMH_STOP : "); Serial.println(KMH_STOP);
   Serial.print("KMH_BTN  : "); Serial.println(KMH_BTN);

@@ -16,7 +16,7 @@ extern int speed_mms; // mm/s speed
 extern int speed_kmh; // km/h speed
 extern int fast_enough; // logging flag when fast enough
 extern int mode_obd_gps;
-extern float iri[2],iriavg;
+extern float srvz_iri100, iri[2], iriavg, srvz2_iri20, iri20[2], iri20avg;
 extern char iri2digit[4];
 extern char lastnmea[256];
 extern struct int_latlon last_latlon;
@@ -32,7 +32,7 @@ extern uint8_t log_wav_kml; // 1-wav 2-kml 3-both
 extern uint8_t KMH_START, KMH_STOP;
 extern uint8_t KMH_BTN;
 extern uint8_t G_RANGE; // +-2/4/8 g sensor range for reading +-32000
-extern uint32_t REPORT_mm; // mm report each travel distance
+extern uint32_t REPORT_mm, REPORT2_mm; // mm report each travel distance
 
 void mount(void);
 void umount(void);
