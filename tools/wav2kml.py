@@ -15,8 +15,6 @@ from colorsys import hsv_to_rgb
 from math import sqrt,sin,cos,asin,pi,ceil,atan2
 import numpy as np
 
-wavfile = argv[1]
-
 # calculate
 # 0:IRI from wav tags,
 # 1:IRI calculated from z-accel wav data (adxl355)
