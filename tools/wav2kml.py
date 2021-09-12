@@ -23,17 +23,18 @@ calculate  = 0
 # accel/gyro, select constant and data wav channel
 if calculate == 1: # accel adxl355
   g_scale    = 2 # 2/4/8 g is 32000 integer reading
-  aint2float = 9.81 * g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
+  aint2float = 9.81 * g_scale / 32000 # int -> a [m/s^2]
   # Z-channel of accelerometer
   wav_ch_l = 2
   wav_ch_r = 5
 if calculate == 2: # gyro adxrs290
-  aint2float = 2*pi/360/200 # gyro angular velocity integer -> rad/s conversion, 1 bit = 1/200 deg/s
+  # scale fixed: 1 bit = 1/200 deg/s
+  aint2float = 2*pi/360/200 # gyro angular velocity int -> w [rad/s]
   # X-channel of gyroscope
   wav_ch_l = 0
   wav_ch_r = 3
 
-red_iri = 2.5 # colorization
+red_iri = 2.5 # colorization default 2.5
 
 # PPS tag appears as "!" in the data stream, keep it 0 disabled
 show_pps = 0
@@ -44,7 +45,7 @@ iri_length = 100
 # equal-distance slope sampling length (m)
 sampling_length = 0.05
 
-# equal-time acclererometer sample time
+# equal-time accelerometer sample time
 a_sample_dt = 1/1000 # s (1kHz accelerometer sample rate)    
 
 # slope DC remove by inc/dec of accel offset at each sampling length
@@ -172,6 +173,7 @@ def reset_iri():
   azr0 = ac[wav_ch_r]*aint2float
 
 # enter slope, calculate running average
+# slope = dz/dx (tangent)
 def enter_slope(slope_l:float, slope_r:float):
   global rvz, rvz_buf, rvz_buf_ptr, srvz
   slope2model(slope_l, slope_r) # updates ZL, ZR
@@ -200,13 +202,13 @@ def az2slope(azl:float, azr:float, c:float):
 # (vx = vehicle speed at the time when azl,azr accel are measured)
 # for small vx model is inaccurate. at vx=0 division by zero
 # returns 1 when slope is ready (each sampling_interval), otherwise 0
+# for gyro, angular speed is az, don't divide by vx
 def enter_accel(azl:float, azr:float, vx:float):
   global travel_sampling
   if calculate == 1:
-    c = a_sample_dt / vx
+    az2slope(azl, azr, a_sample_dt / vx)
   else: # calculate == 2
-    c = a_sample_dt
-  az2slope(azl, azr, c)
+    az2slope(azl, azr, a_sample_dt)
   travel_sampling += vx * a_sample_dt
   if travel_sampling > sampling_length:
     travel_sampling -= sampling_length
@@ -598,28 +600,21 @@ for wavfile in argv[1:]:
   travel_next = 0.0 # m
   travel_sampling = 0.0 # m for sampling_interval triggering
   # set nmea line empty before reading
+  should_reset_iri = 1
   nmea=bytearray(0)
   while f.readinto(mvb):
     seek += 12 # bytes per sample
     a=(b[0]&1) | ((b[2]&1)<<1) | ((b[4]&1)<<2) | ((b[6]&1)<<3) | ((b[8]&1)<<4) | ((b[10]&1)<<5)
     if calculate:
-      for i in range(0,6):
-        ac[i] = int.from_bytes(b[i*2:i*2+2],byteorder="little",signed=True)
-      if speed_kmh > 2: # TODO unhardcode
-        # ac[2] Z-left, ac[5] Z-right
-        #print(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float, azl0, azr0)
-        #print(ac[wav_ch_l],ac[wav_ch_r],speed_kmh)
+      if should_reset_iri:
+        reset_iri()
+        should_reset_iri = 0 # consumed
+      for j in range(0,6):
+        ac[j] = int.from_bytes(b[j*2:j*2+2],byteorder="little",signed=True)
+      if speed_kmh > 1: # TODO unhardcode
         if enter_accel(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float, speed_kmh/3.6):
           enter_slope(slope[0],slope[1])
           slope_dc_remove()
-          #print(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float)
-          #print(azl0, azr0)
-          #print(slope)
-          # srvz is scaled 1e6
-          # iri when printed should be scaled as 1e3 mm/m so
-          # divide srvz by 1000
-          #print(srvz)
-          #print(srvz / (n_buf_points * 1000))
     if a != 32:
       c = a
       # convert control chars<32 to uppercase letters >=64
@@ -639,8 +634,11 @@ for wavfile in argv[1:]:
         if nmea.find(b'#') >= 0: # discontinuety, reset travel
           travel = 0.0
           travel_next = 0.0
+          travel_sampling = 0.0
+          speed_kt = 0.0
+          speed_kmh = 0.0
           if calculate:
-            reset_iri()
+            should_reset_iri = 1
         elif nmea[0:6]==b"$GPRMC" and (len(nmea)==79 or len(nmea)==68) and nmea[-3]==42: # 68 is lost signal, tunnel mode
           # nmea[-3]="*" checks for asterisk on the right place. Not full crc check
           if len(nmea)==79: # normal mode with signal
@@ -666,8 +664,8 @@ for wavfile in argv[1:]:
           if lonlat_prev:
             dist_m = distance(lonlat_prev[1], lonlat_prev[0], lonlat[1], lonlat[0])
             travel += dist_m
-            if dist_m < discontinuety_m: # don't draw too long lines, colorize iri20
-              # if there's no IRI20 available, take IRI100 for color and name
+            if dist_m < discontinuety_m: # don't draw too long lines
+              # if no IRI20 available, take IRI100 for color and name
               iri_avg_main = iri_avg
               if iri20_avg > 0:
                 iri_avg_main = iri20_avg
@@ -676,10 +674,20 @@ for wavfile in argv[1:]:
               lsty0 = styles.Style(styles = [ls0])
               p1 = kml.Placemark(ns, 'id',
                 name=("%.2f" % iri_avg_main),
-                description=("L100=%.2f mm/m\nR100=%.2f mm/m\nL20=%.2f, R20=%.2f\nLc=%.2f, Rc=%.2f\nv=%.1f km/h\n%s" %
+                description=(
+                  ("L100=%.2f mm/m\n"
+                   "R100=%.2f mm/m\n"
+                   "L20=%.2f, R20=%.2f\n"
+                   "Lc=%.2f, Rc=%.2f\n"
+                   "azl0=%.3e, azr0=%.3e\n"
+                   "slope_l=%.3e, slope_r=%.3e\n"
+                   "v=%.1f km/h\n%s"
+                  ) %
                   (iri_left, iri_right,
                    iri20_left, iri20_right,
                    srvz[0] / (n_buf_points*1000), srvz[1] / (n_buf_points*1000),
+                   azl0, azr0,
+                   slope[0], slope[1],
                    speed_kmh, datetime.decode("utf-8"))),
                 styles=[lsty0])
               #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
