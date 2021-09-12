@@ -667,12 +667,16 @@ for wavfile in argv[1:]:
             dist_m = distance(lonlat_prev[1], lonlat_prev[0], lonlat[1], lonlat[0])
             travel += dist_m
             if dist_m < discontinuety_m: # don't draw too long lines, colorize iri20
+              # if there's no IRI20 available, take IRI100 for color and name
+              iri_avg_main = iri_avg
+              if iri20_avg > 0:
+                iri_avg_main = iri20_avg
               ls0 = styles.LineStyle(ns,
-                color=("%08X" % color32(iri20_avg/red_iri)), width=6)
+                color=("%08X" % color32(iri_avg_main/red_iri)), width=6)
               lsty0 = styles.Style(styles = [ls0])
               p1 = kml.Placemark(ns, 'id',
-                name=("%.2f" % iri_avg),
-                description=("L=%.2f mm/m\nR=%.2f mm/m\nL20=%.2f, R20=%.2f\nLc=%.2f, Rc=%.2f\nv=%.1f km/h\n%s" % 
+                name=("%.2f" % iri_avg_main),
+                description=("L100=%.2f mm/m\nR100=%.2f mm/m\nL20=%.2f, R20=%.2f\nLc=%.2f, Rc=%.2f\nv=%.1f km/h\n%s" %
                   (iri_left, iri_right,
                    iri20_left, iri20_right,
                    srvz[0] / (n_buf_points*1000), srvz[1] / (n_buf_points*1000),
