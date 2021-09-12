@@ -33,6 +33,8 @@ extern uint8_t KMH_START, KMH_STOP;
 extern uint8_t KMH_BTN;
 extern uint8_t G_RANGE; // +-2/4/8 g sensor range for reading +-32000
 extern uint32_t REPORT_mm, REPORT2_mm; // mm report each travel distance
+extern uint8_t adxl355_regio;
+extern uint8_t adxl_devid_detected;
 
 void mount(void);
 void umount(void);

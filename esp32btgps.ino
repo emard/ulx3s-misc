@@ -257,7 +257,6 @@ void setup() {
   read_cfg();
   read_last_nmea();
   umount();
-  init_srvz_iri();
 
   // accelerometer range +-2/4/8g can be changed from cfg file
   // ADXL should be initialized after reading cfg file
@@ -266,6 +265,8 @@ void setup() {
     delay(100);
     adxl355_init();
   }
+
+  init_srvz_iri(); // depends on sensor type detected
 
   SerialBT.begin("ESP32", true);
   SerialBT.setPin(GPS_PIN.c_str());
@@ -570,17 +571,27 @@ void handle_fast_enough(void)
   }
 }
 
-// call this after read_cfg, needs G_RANGE
+// call this after read_cfg and chip detection
+// ADXL355 needs G_RANGE
 void init_srvz_iri(void)
 {
-  // 1e-3 common factor because iri is expressed as mm/m
-  // 0.5e-6 = (1e-3 * 0.05/100) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m := 100
-  srvz_iri100 = G_RANGE == 2 ? 0.5e-6 : G_RANGE == 4 ? 1.0e-6 : /* G_RANGE == 8 ? */  2.0e-6 ; // normal IRI-100
-  srvz2_iri20 = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ; // normal IRI-20
-  // 2.5e-6 = (1e-3 * 0.25/100) 2g range, coefficients_pack.vhd: interval_mm := 250; length_m := 100
-  // 2.5e-6 = (1e-3 * 0.05/20 ) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m :=  20
-  //srvz_iri100 = G_RANGE == 2 ?  2.5e-6 : G_RANGE == 4 ?  5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ;
-  //srvz2_iri20 = G_RANGE == 2 ? 12.5e-6 : G_RANGE == 4 ? 25.0e-6 : /* G_RANGE == 8 ? */ 50.0e-6 ;
+  // default ADXRS290, ignore G_RANGE, use as if G_RANGE=2
+  srvz_iri100 = 0.5e-6;
+  srvz2_iri20 = 2.5e-6;
+  if(adxl_devid_detected == 0xED) // ADXL350
+  {
+    // 1e-3 common factor because iri is expressed as mm/m
+    // 0.5e-6 = (1e-3 * 0.05/100) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m := 100
+    srvz_iri100 = G_RANGE == 2 ? 0.5e-6 : G_RANGE == 4 ? 1.0e-6 : /* G_RANGE == 8 ? */  2.0e-6 ; // normal IRI-100
+    srvz2_iri20 = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ; // normal IRI-20
+    // 2.5e-6 = (1e-3 * 0.25/100) 2g range, coefficients_pack.vhd: interval_mm := 250; length_m := 100
+    // 2.5e-6 = (1e-3 * 0.05/20 ) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m :=  20
+    //srvz_iri100 = G_RANGE == 2 ?  2.5e-6 : G_RANGE == 4 ?  5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ;
+    //srvz2_iri20 = G_RANGE == 2 ? 12.5e-6 : G_RANGE == 4 ? 25.0e-6 : /* G_RANGE == 8 ? */ 50.0e-6 ;
+    Serial.println("ADXL355");
+  }
+  else
+    Serial.println("ADXRS290");
 }
 
 void get_iri(void)

@@ -48,7 +48,8 @@ struct int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 uint8_t G_RANGE = 8; // +-2/4/8 g sensor range (at digital reading +-32000)
-uint8_t FILTER_CONF = 0; // see datasheet adxl355 p.38 0:1kHz ... 10:0.977Hz
+uint8_t FILTER_ADXL355_CONF = 0; // see datasheet adxl355 p.38 0:1kHz ... 10:0.977Hz
+uint8_t FILTER_ADXRS290_CONF = 0; // see datasheet adxrs290 p.11 0:480Hz ... 7:20Hz
 uint32_t REPORT_mm = 100000, REPORT2_mm = 20000; // mm report every travel distance 100 m, 20 m
 uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
@@ -149,7 +150,7 @@ void adxl355_init(void)
     // high speed i2c, INT1,INT2 active high
     adxl355_write_reg(ADXL355_RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
     // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
-    adxl355_write_reg(ADXL355_FILTER, FILTER_CONF);
+    adxl355_write_reg(ADXL355_FILTER, FILTER_ADXL355_CONF);
     // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
     adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin, 0xC0 undocumented, seems to prevent glitches
     #if 0
@@ -174,7 +175,7 @@ void adxl355_init(void)
   {
     adxl355_write_reg(ADXRS290_POWER_CTL, ADXRS290_POWER_GYRO | ADXRS290_POWER_TEMP); // turn device ON
     // [7:4] HPF 0.011-11.30 Hz, [2:0] LPF 480-20 Hz, see datasheet
-    adxl355_write_reg(ADXRS290_FILTER, FILTER_CONF);
+    adxl355_write_reg(ADXRS290_FILTER, FILTER_ADXRS290_CONF);
     #if 0
     // print to check is Gyro working
     for(int i = 0; i < 1000; i++)
@@ -1081,7 +1082,8 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("log_mode")) log_wav_kml = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("red_iri" )) red_iri = strtof(varvalue.c_str(), NULL);
     else if(varname.equalsIgnoreCase("g_range" )) G_RANGE = strtol(varvalue.c_str(), NULL,10);
-    else if(varname.equalsIgnoreCase("filter"  )) FILTER_CONF = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("filter_adxl355" )) FILTER_ADXL355_CONF  = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("filter_adxrs290")) FILTER_ADXRS290_CONF = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("report_m")) REPORT_mm = 1000*strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("report2_m")) REPORT2_mm = 1000*strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
@@ -1112,7 +1114,8 @@ void read_cfg(void)
   char chr_red_iri[20]; sprintf(chr_red_iri, "%.1f", red_iri);
   Serial.print("RED_IRI  : "); Serial.println(chr_red_iri);
   Serial.print("G_RANGE  : "); Serial.println(G_RANGE);
-  Serial.print("FILTER   : "); Serial.println(FILTER_CONF);
+  Serial.print("FILTER_ADXL355 : "); Serial.println(FILTER_ADXL355_CONF);
+  Serial.print("FILTER_ADXRS290: "); Serial.println(FILTER_ADXRS290_CONF);
   Serial.print("REPORT_M : "); Serial.println(REPORT_mm/1000);
   Serial.print("REPORT2_M: "); Serial.println(REPORT2_mm/1000);
   Serial.print("KMH_START: "); Serial.println(KMH_START);
@@ -1194,7 +1197,7 @@ void finalize_data(struct tm *tm){
     if(logs_are_open)
       return;
     const char *dirname = "/profilog/data";
-    Serial.printf("Finalizng directory: %s\n", dirname);
+    Serial.printf("Finalizing directory: %s\n", dirname);
 
     File root = SD_MMC.open(dirname);
     if(!root){
