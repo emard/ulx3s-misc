@@ -688,25 +688,18 @@ for wavfile in argv[1:]:
             lonlat_diff = ( lonlat[0] - lonlat_prev[0], lonlat[1] - lonlat_prev[1] )
           lonlat_prev = lonlat
         elif nmea[0:1]==b"L" and lonlat!=None:
-          c1pos=nmea.find(b",")
           rpos=nmea.find(b"R")
-          c2pos=nmea.find(b",", rpos)
+          spos=nmea.find(b"S")
           epos=nmea.find(b'*')
           if epos < 0:
             epos=nmea.find(b' ')
           try:
-            if(c1pos > 0):
-              iri_left=float(nmea[1:c1pos])
-              iri20_left=float(nmea[c1pos+1:rpos])
-            else:
+            if(rpos > 0):
               iri_left=float(nmea[1:rpos])
-              iri20_left=0.0
-            if(c2pos > 0):
-              iri_right=float(nmea[rpos+1:c2pos])
-              iri20_right=float(nmea[c2pos+1:epos])
-            else:
               iri_right=float(nmea[rpos+1:epos])
-              iri20_right=0.0
+            if(spos > 0):
+              iri20_left=float(nmea[1:spos])
+              iri20_right=float(nmea[spos+1:epos])
           except:
             pass
           iri_avg=(iri_left+iri_right)/2
