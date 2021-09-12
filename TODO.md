@@ -104,6 +104,7 @@ wav2kml
     [ ] motor vibration (RPM) sensing, conversion to speed
     [ ] calibrate accelerometer heading with GPS
     [ ] use accelerometer to determine heading in tunnel mode
+    [ ] check/fix gyro calc, iri100 difference soft/hard calc
     [x] at stop cut the track and restart new
     [x] multiple input files
     [x] placemark every 100 m
