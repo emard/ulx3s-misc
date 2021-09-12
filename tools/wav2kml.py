@@ -18,14 +18,14 @@ wavfile = argv[1]
 # 2:IRI calculated from x-gyro wav data (adxrs290) angular speed
 calculate  = 0
 # accel/gyro, select constant and data wav channel
-if calculate == 1:
-  g_scale    = 2 # accel adxl355: 2/4/8 g is 32000 integer reading
+if calculate == 1: # accel adxl355
+  g_scale    = 2 # 2/4/8 g is 32000 integer reading
   aint2float = 9.81 * g_scale / 32000 # int -> g conversion factor from accelerometer integer to acceleration float
   # Z-channel of accelerometer
   wav_ch_l = 2
   wav_ch_r = 5
-if calculate == 2:
-  aint2float = 2*pi/360/200 # gyro angular velocity integer -> rad/s conversion, sensors with 1/200 deg/s
+if calculate == 2: # gyro adxrs290
+  aint2float = 2*pi/360/200 # gyro angular velocity integer -> rad/s conversion, 1 bit = 1/200 deg/s
   # X-channel of gyroscope
   wav_ch_l = 0
   wav_ch_r = 3
