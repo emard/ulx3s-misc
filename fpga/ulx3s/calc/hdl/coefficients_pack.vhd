@@ -80,7 +80,8 @@ others => 0.0
 );
 
 constant  interval_mm : integer :=  50; -- mm sampling interval (edit also esp32btgps.ino G_RANGE)
-constant  length_m    : integer := 100; --  m length
+constant  length_m    : integer := 100; --  m length for iri100
+constant  length2_m   : integer range 1 to length_m := 20; --  m length for iri20
 
 -- choose one 50-250 mm depending on interval_mm
 constant coefficients_active_matrix: coefficients_type :=

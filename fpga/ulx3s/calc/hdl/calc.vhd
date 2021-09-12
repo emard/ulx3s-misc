@@ -22,7 +22,8 @@ port (
   enter: in std_logic; -- '1' to enter slope for every sampling interval x = 250 mm
   slope_l, slope_r: in  std_logic_vector(31 downto 0); -- slope um/m
      vz_l,    vz_r: out std_logic_vector(31 downto 0); -- z-velocity um/s
-   srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- um/m rectified sum of z/x-velocities at (n_points*length_m)
+   srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- um/m IRI-100 rectified sum of z/x-velocities at (n_points*length_m)
+  srvz2_l, srvz2_r: out std_logic_vector(31 downto 0); -- um/m IRI-20  rectified sum of z/x-velocities at (n_points2*length_m)
    -- iri[mm/m] = srvz/(1000*n_points) = srvz / 400e3
   ready: out std_logic; -- '1' when result is ready
   d0, d1, d2, d3: out std_logic_vector(31 downto 0)
@@ -30,7 +31,8 @@ port (
 end;
 
 architecture RTL of calc is
-  constant n_points: integer := length_m*1000/interval_mm; -- default 2000 points for 50 mm interval
+  constant n_points: integer := length_m*1000/interval_mm; -- IRI-100 default 2000 points for 50 mm interval
+  constant n_points2: integer := length2_m*1000/interval_mm; -- IRI-20 default 400 points for 50 mm interval
   constant matrix_size: integer := 12*4; -- storage size for matrix constants and variables
   constant total_size: integer := matrix_size+2*n_points; -- total storage size required for BRAM
   constant bram_addr_bits: integer := integer(ceil(log2(real(total_size)+0.5))); -- number of BRAM address bits
@@ -61,8 +63,9 @@ architecture RTL of calc is
   -- running sum
   constant irs_min : unsigned(ib'length-2 downto 0) := to_unsigned(matrix_size/2, ib'length-1); -- first index set to skip matrix (/2 because ib=irs_head*2)
   constant irs_max : unsigned(ib'length-2 downto 0) := irs_min+n_points-1; -- last index: after this, wraparound to irs_min
-  signal   irs_tail: unsigned(ib'length-2 downto 0) := irs_min; -- tail index for running sum, initialized to min
+  signal   irs_tail: unsigned(ib'length-2 downto 0) := irs_min+n_points2; -- tail index for running sum, initialized to min+n_points2 to be ahead of tail2
   --alias  irs_head  : unsigned(ib'length-2 downto 0) is irs_tail; -- same as tail
+  signal   irs_tail2: unsigned(ib'length-2 downto 0) := irs_min; -- tail index for running sum, initialized to min
   -- state counter
   constant cnt_bits: integer := 9; -- 0-256, stop at 511 (some skipped) calc state counter
   signal cnt: unsigned(cnt_bits-1 downto 0) := (others => '1'); -- stopped state, don't start calc before enter
@@ -77,7 +80,7 @@ architecture RTL of calc is
   type z_type is array(0 to 3) of signed(31 downto 0);
   signal z: z_type;
   type vz_type is array(0 to 1) of signed(31 downto 0);
-  signal vz, rvz, srvz: vz_type := (others => (others => '0'));
+  signal vz, rvz, srvz, srvz2: vz_type := (others => (others => '0'));
 begin
   
   -- data fetch, this should create BRAM
@@ -163,44 +166,69 @@ begin
           -- matrix done
           -- run few cycles more for BRAM running average
           if cnt(cnt_bits-2) = '0' then
-            case cnt(3 downto 0) is
-              when x"0" =>
+            case cnt(4 downto 0) is
+              -- TODO IRI-20 uses 16 states, it
+              -- can be optimized compacting states
+              -- same c=abs(vz(n)) can be uses first for IRI-20, then for IRI-100
+              -- -------------------- IRI-20 LEFT
+              when '0'&x"0" =>
+                ib <= irs_tail2 & '0';
+                c <= abs(vz(0));
+              when '0'&x"2" =>
+                -- running sum, subtract tail
+                srvz2(0) <= srvz2(0)+c-rb; -- normal
+              -- -------------------- IRI-20 RIGHT
+              when '0'&x"6" =>
+                ib <= irs_tail2 & '1';
+                c <= abs(vz(1));
+              when '0'&x"8" =>
+                -- running sum, subtract tail
+                srvz2(1) <= srvz2(1)+c-rb; -- normal
+              -- -------------------- IRI-100 LEFT
+              when '1'&x"0" =>
                 ib <= irs_tail & '0';
                 rvz(0) <= abs(vz(0));
                 c <= abs(vz(0)); -- data to store
-              when x"2" =>
+              when '1'&x"2" =>
                 -- running sum, subtract tail
                 srvz(0) <= srvz(0)+c-rb; -- normal
-              --when x"3" =>
+              --when '1'&x"3" =>
               --  ib <= irs_head & '0'; -- address to write (NOTE obsolete because head=tail)
-              when x"4" =>
+              when '1'&x"4" =>
                 matrix_write <= '1';
-              when x"5" =>
+              when '1'&x"5" =>
                 matrix_write <= '0';
-              -- -------------------
-              when x"6" =>
+              -- -------------------- IRI-100 RIGHT
+              when '1'&x"6" =>
                 ib <= irs_tail & '1';
                 rvz(1) <= abs(vz(1));
                 c <= abs(vz(1)); -- data to store
-              when x"8" =>
+              when '1'&x"8" =>
                 -- running sum, subtract tail
                 srvz(1) <= srvz(1)+c-rb; -- normal
-              --when x"9" =>
+              --when '1'&x"9" =>
               --  ib <= irs_head & '1'; -- address to write (NOTE obsolete because head=tail)
-              when x"A" =>
+              when '1'&x"A" =>
                 matrix_write <= '1';
-              when x"B" =>
+              when '1'&x"B" =>
                 matrix_write <= '0';
-              when x"F" =>
+              when '1'&x"F" =>
+                -- IRI-100 advance irs_tail which is equal the head
                 if irs_tail = irs_max then -- NOTE if head outside of min/max, it will overwrite matrix!
                   irs_tail <= irs_min; -- wraparound
                 else
                   irs_tail <= irs_tail + 1; -- advance for the next time
                 end if;
+                -- IRI-20 advance irs_tail2
+                if irs_tail2 = irs_max then
+                  irs_tail2 <= irs_min; -- wraparound
+                else
+                  irs_tail2 <= irs_tail2 + 1; -- advance for the next time
+                end if;
                 cnt(cnt_bits-2) <= '1'; -- end
               when others =>
             end case;
-            cnt(3 downto 0) <= cnt(3 downto 0) + 1;
+            cnt(4 downto 0) <= cnt(4 downto 0) + 1;
           end if;
         end if;
       end if;
@@ -212,6 +240,8 @@ begin
   vz_r <= std_logic_vector(vz(1));
   srvz_l <= std_logic_vector(srvz(0));
   srvz_r <= std_logic_vector(srvz(1));
+  srvz2_l <= std_logic_vector(srvz2(0));
+  srvz2_r <= std_logic_vector(srvz2(1));
   ready <= '1' when cnt(cnt_bits-1 downto cnt_bits-2) = "11" else '0';
 
   --d0 <= std_logic_vector(int32_coefficients_matrix(to_integer(unsigned(d1))));
