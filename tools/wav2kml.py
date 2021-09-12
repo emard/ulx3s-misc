@@ -580,6 +580,8 @@ for wavfile in argv[1:]:
   iri_left    = 0.0
   iri_right   = 0.0
   iri_avg     = 0.0
+  iri20_left  = 0.0
+  iri20_right = 0.0
   lonlat      = None
   lonlat_prev = None
   lonlat_diff = None
@@ -666,8 +668,9 @@ for wavfile in argv[1:]:
               lsty0 = styles.Style(styles = [ls0])
               p1 = kml.Placemark(ns, 'id',
                 name=("%.2f" % iri_avg),
-                description=("L=%.2f mm/m\nR=%.2f mm/m\nL2=%.2f, R2=%.2f\nv=%.1f km/h\n%s" % 
+                description=("L=%.2f mm/m\nR=%.2f mm/m\nL20=%.2f, R20=%.2f\nLc=%.2f, Rc=%.2f\nv=%.1f km/h\n%s" % 
                   (iri_left, iri_right,
+                   iri20_left, iri20_right,
                    srvz[0] / (n_buf_points*1000), srvz[1] / (n_buf_points*1000),
                    speed_kmh, datetime.decode("utf-8"))),
                 styles=[lsty0])
@@ -685,13 +688,25 @@ for wavfile in argv[1:]:
             lonlat_diff = ( lonlat[0] - lonlat_prev[0], lonlat[1] - lonlat_prev[1] )
           lonlat_prev = lonlat
         elif nmea[0:1]==b"L" and lonlat!=None:
+          c1pos=nmea.find(b",")
           rpos=nmea.find(b"R")
+          c2pos=nmea.find(b",", rpos)
           epos=nmea.find(b'*')
           if epos < 0:
             epos=nmea.find(b' ')
           try:
-            iri_left=float(nmea[1:rpos])
-            iri_right=float(nmea[rpos+1:epos])
+            if(c1pos > 0):
+              iri_left=float(nmea[1:c1pos])
+              iri20_left=float(nmea[c1pos+1:rpos])
+            else:
+              iri_left=float(nmea[1:rpos])
+              iri20_left=0.0
+            if(c2pos > 0):
+              iri_right=float(nmea[rpos+1:c2pos])
+              iri20_right=float(nmea[c2pos+1:epos])
+            else:
+              iri_right=float(nmea[rpos+1:epos])
+              iri20_right=0.0
           except:
             pass
           iri_avg=(iri_left+iri_right)/2
