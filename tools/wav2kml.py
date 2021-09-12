@@ -582,6 +582,7 @@ for wavfile in argv[1:]:
   iri_avg     = 0.0
   iri20_left  = 0.0
   iri20_right = 0.0
+  iri20_avg   = 0.0
   lonlat      = None
   lonlat_prev = None
   lonlat_diff = None
@@ -662,9 +663,9 @@ for wavfile in argv[1:]:
           if lonlat_prev:
             dist_m = distance(lonlat_prev[1], lonlat_prev[0], lonlat[1], lonlat[0])
             travel += dist_m
-            if dist_m < discontinuety_m: # don't draw too long lines
+            if dist_m < discontinuety_m: # don't draw too long lines, colorize iri20
               ls0 = styles.LineStyle(ns,
-                color=("%08X" % color32(iri_avg/red_iri)), width=6)
+                color=("%08X" % color32(iri20_avg/red_iri)), width=6)
               lsty0 = styles.Style(styles = [ls0])
               p1 = kml.Placemark(ns, 'id',
                 name=("%.2f" % iri_avg),
@@ -697,12 +698,13 @@ for wavfile in argv[1:]:
             if(rpos > 0):
               iri_left=float(nmea[1:rpos])
               iri_right=float(nmea[rpos+1:epos])
+              iri_avg=(iri_left+iri_right)/2
             if(spos > 0):
               iri20_left=float(nmea[1:spos])
               iri20_right=float(nmea[spos+1:epos])
+              iri20_avg=(iri20_left+iri20_right)/2
           except:
             pass
-          iri_avg=(iri_left+iri_right)/2
           # disabled placemarks arrows here
           # placed later from statistics
           #if travel > travel_next:
