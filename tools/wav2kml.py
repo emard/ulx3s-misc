@@ -3,6 +3,11 @@
 # apt install python3-fastkml python3-shapely python3-lxml
 # ./wav2kml.py 20210701.wav > 20210701.kml
 
+# TODO gyro calc results differ for iri100, match for iri20
+# experimenting with dc_remove_step 1e-4 .. 1e-6 and speed_kmh > 0..2
+# values calculated in this code don't match well with hardware calculated for iri100
+# TODO accel calc need addtional checking
+
 from fastkml import kml, styles
 from shapely.geometry import Point, LineString, Polygon
 from sys import argv
@@ -32,7 +37,7 @@ if calculate == 2: # gyro adxrs290
 
 red_iri = 2.5 # colorization
 
-# PPS tag appears as "!" in the data stream
+# PPS tag appears as "!" in the data stream, keep it 0 disabled
 show_pps = 0
 
 # IRI averaging length (m)
@@ -602,7 +607,7 @@ for wavfile in argv[1:]:
     if calculate:
       for i in range(0,6):
         ac[i] = int.from_bytes(b[i*2:i*2+2],byteorder="little",signed=True)
-      if speed_kmh > 2:
+      if speed_kmh > 2: # TODO unhardcode
         # ac[2] Z-left, ac[5] Z-right
         #print(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float, azl0, azr0)
         #print(ac[wav_ch_l],ac[wav_ch_r],speed_kmh)
