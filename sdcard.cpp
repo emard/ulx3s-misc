@@ -139,7 +139,7 @@ void adxl355_init(void)
         serialno[lr] = (serialno[lr] << 8) | adxl355_read_reg(i|4);
     }
   }
-  sprintf(sprintf_buf, "ADXL CHIP ID: %02X %02X %02X %02X S/N L: %08X R: %08X",
+  sprintf(sprintf_buf, "ADX CHIP ID: %02X %02X %02X %02X S/N L: %08X R: %08X",
       chipid[0], chipid[1], chipid[2], chipid[3], serialno[0], serialno[1]
   );
   Serial.println(sprintf_buf);
