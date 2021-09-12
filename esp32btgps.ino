@@ -692,9 +692,9 @@ void draw_kml_line(char *line)
     *lon = ilatlon.lon_deg + abs(ilatlon.lon_umin)*1.66666666e-8;
     if(ilatlon.lon_umin < 0)
       *lon = -*lon;
-    x_kml_line->value = iriavg;
-    x_kml_line->left  = iri[0];
-    x_kml_line->right = iri[1];
+    x_kml_line->value = iri20avg;
+    x_kml_line->left  = iri20[0];
+    x_kml_line->right = iri20[1];
     x_kml_line->speed_kmh = speed_mms*3.6e-3;
     nmea2kmltime(line, timestamp);
     x_kml_line->timestamp = timestamp;
