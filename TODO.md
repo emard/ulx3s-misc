@@ -24,6 +24,7 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging and close all files
+    [ ] print ADX chip not detected, now unconnected ADXRS290 is "detected"
     [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color
     [ ] wep upload success readyState == 4, status == 200
