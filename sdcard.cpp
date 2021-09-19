@@ -55,7 +55,8 @@ uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
 
 // SD status
-size_t total_bytes, used_bytes, free_bytes, free_MB;
+uint64_t total_bytes, used_bytes, free_bytes;
+uint32_t free_MB;
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
 {

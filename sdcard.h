@@ -27,7 +27,7 @@ extern uint8_t GPS_MAC[6], OBD_MAC[6];
 extern String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_PASS[], DNS_HOST;
 extern uint8_t datetime_is_set;
 extern struct tm tm, tm_session; // tm_session gives new filename when reconnected
-extern size_t free_bytes;
+extern uint64_t free_bytes;
 extern uint8_t log_wav_kml; // 1-wav 2-kml 3-both
 extern uint8_t KMH_START, KMH_STOP;
 extern uint8_t KMH_BTN;

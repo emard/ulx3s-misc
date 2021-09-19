@@ -24,7 +24,7 @@ esp32
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] >9.9 speak "out of scale"
     [ ] btn to stop logging and close all files
-    [ ] 60GB free, but shown 3529MB, maybe should use uint64_t
+    [x] 60GB free, but shown 3529MB, use uint64_t and float
     [ ] print ADX chip not detected, now unconnected ADXRS290 is "detected"
     [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color

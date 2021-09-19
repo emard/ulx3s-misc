@@ -225,7 +225,7 @@ void printDirectory() {
   SD_status();
   String output;
   output  = "{\"free_bytes\":";
-  output += free_bytes;
+  output += (float)free_bytes; // FIXME free_bytes are uint64_t
   output += ",\"dir\":[";
   server.sendContent(output);
 
