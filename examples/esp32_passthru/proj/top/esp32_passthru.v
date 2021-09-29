@@ -23,16 +23,19 @@ module esp32_passthru
   input        ftdi_nrts,
   input        wifi_txd,
   output       wifi_rxd,
+  input        wifi_gpio15, wifi_gpio14,
+  inout        wifi_gpio13, wifi_gpio12,
+               wifi_gpio4 , wifi_gpio2 , wifi_gpio0 ,
   output       wifi_en,
-  output       wifi_gpio0,
-  //input        wifi_gpio5, // to enable pull down for programming
-  inout  [3:0] sd_d, // wifi_gpio 13,12,4,2
-  input        sd_cmd, sd_clk,
+  //inout        wifi_gpio5 // v3.0.x, not available on v3.1.x
   output       sd_wp // BGA pin exists but not connected on PCB
 );
   // TX/RX passthru
   assign ftdi_rxd = wifi_txd;
   assign wifi_rxd = ftdi_txd;
+  
+  // debug serial loopback (if ESP32 won't program, disable above and check this)
+  //assign ftdi_rxd = ftdi_txd;
 
   // Programming logic
   // SERIAL  ->  ESP32
@@ -55,10 +58,6 @@ module esp32_passthru
       R_powerup_en_time <= R_powerup_en_time + 1; // increment until MSB=0
   end
   endgenerate
-  //assign wifi_en = S_prog_out[1];
-  assign wifi_en = S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
-  assign wifi_gpio0 = S_prog_out[0];
-  //assign wifi_gpio0 = S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
 
   // detecting start of programming ESP32 and reset timeout
   reg [C_prog_release_timeout:0] R_prog_release = -1;
@@ -72,16 +71,33 @@ module esp32_passthru
         R_prog_release <= R_prog_release + 1; // increment until MSB=0
   end
   // wifi_gpio2 for programming must go together with wifi_gpio0
-  // wifi_gpio12 (must be 0 for esp32-wrover fuse unprogrammed, maybe 1 for esp32-wroom)
-  assign sd_d  = R_prog_release[C_prog_release_timeout] ? 4'hz : { 3'b101, S_prog_out[0] }; // wifi_gpio 13,12,4,2
-  assign sd_wp = sd_clk | sd_cmd | /*wifi_gpio5*/ | sd_d; // force pullup for 4'hz above for listed inputs to make SD MMC mode work
+  // wifi_gpio12 (must be 0 for esp32-wroom fuse unprogrammed. esp32-wrover-e works for 0 and 1)
+
+  //assign wifi_en = S_prog_out[1];
+  // assign wifi_en      = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
+  assign wifi_en      = S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
+  assign wifi_gpio13  = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b1;
+  assign wifi_gpio12  = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b0;
+  //assign wifi_gpio12  = btn[2]; // experiment with ESP32 VRef 3.3V/1.8V
+  //assign wifi_gpio5   = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b0; // available on v3.0.x only
+  assign wifi_gpio4   = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b1;
+  assign wifi_gpio2   = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0];
+  assign wifi_gpio0   = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0];
+  //assign wifi_gpio0 = S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
+
+  assign sd_wp = wifi_gpio0  /* | wifi_gpio5 */ // bootstrapping pins pullups
+               | wifi_gpio15 | wifi_gpio14 | wifi_gpio13 | wifi_gpio12 | wifi_gpio4 | wifi_gpio2; // bootstrapping and force pullup sd_cmd, sd_clk, sd_d[3:0] to make SD MMC mode work
   // sd_wp is not connected on PCB, just to prevent optimizer from removing pullups
 
-  assign led[7] = wifi_en;
-  assign led[6] = S_prog_out[1]; // green LED ON = ESP32 enabled
-  assign led[5] = ~R_prog_release[C_prog_release_timeout]; // orange LED ON = ESP32 programming
-  assign led[4] = 0;
-  assign led[3:0] = sd_d;
+  assign led[7] = wifi_en;      // blue
+  //assign led[6] = ~R_prog_release[C_prog_release_timeout]; // green LED ON = ESP32 programming
+  assign led[6] = wifi_gpio15;  // green
+  assign led[5] = wifi_gpio14;  // orange
+  assign led[4] = wifi_gpio13;  // red
+  assign led[3] = wifi_gpio12;  // blue   only this LED should be OFF by default
+  assign led[2] = wifi_gpio4;   // green
+  assign led[1] = wifi_gpio2;   // orange
+  assign led[0] = wifi_gpio0;   // red
 
 endmodule
 `default_nettype wire
