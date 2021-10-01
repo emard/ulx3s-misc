@@ -1,5 +1,5 @@
 # ******* project, board and chip name *******
-PROJECT = dvi
+PROJECT = gray_counter
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
