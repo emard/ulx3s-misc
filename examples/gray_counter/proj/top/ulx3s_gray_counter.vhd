@@ -41,10 +41,10 @@ entity ulx3s_gray_counter is
   oled_csn, oled_clk, oled_mosi, oled_dc, oled_resn: out std_logic;
 
   -- GPIO (some are shared with wifi and adc)
-  gp, gn: inout std_logic_vector(27 downto 0) := (others => 'Z');
-  
+  gp, gn: inout std_logic_vector(27 downto 0) := (others => 'Z')
+
   -- SHUTDOWN: logic '1' here will shutdown power on PCB >= v1.7.5
-  shutdown: out std_logic := '0'
+  --shutdown: out std_logic := '0'
   );
 end;
 
