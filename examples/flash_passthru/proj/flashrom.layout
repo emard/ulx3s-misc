@@ -1,0 +1,2 @@
+00000000:001FFFFF bootloader_bitstream
+00200000:003FFFFF user_bitstream

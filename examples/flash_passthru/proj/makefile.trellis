@@ -47,4 +47,13 @@ flash_dfu:
 	dfu-util -a 0 -R -D ulx3s_$(FPGA_SIZE)f_flash_passthru.bit
 
 test:
-	/usr/sbin/flashrom -p ft2232_spi:type=2232H,port=A,divisor=2
+	/tmp/flashrom/flashrom -p ft2232_spi:type=2232H,port=A,divisor=40 # --wp-status
+
+write: ulx3s_$(FPGA_SIZE)f_flash_passthru.bit flashrom.layout
+	dd if=/dev/zero of=/tmp/flash.rom bs=1M count=4
+	dd if=ulx3s_$(FPGA_SIZE)f_flash_passthru.bit of=/tmp/flash.rom bs=1M seek=2 conv=notrunc
+	/tmp/flashrom/flashrom -p ft2232_spi:type=2232H,port=A,divisor=2 \
+	  --layout flashrom.layout \
+	  --image  user_bitstream  \
+	  -w /tmp/flash.rom
+	rm -f /tmp/flash.rom
