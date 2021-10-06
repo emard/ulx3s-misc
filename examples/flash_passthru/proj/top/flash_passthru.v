@@ -19,8 +19,11 @@ module flash_passthru
   input        clk_25mhz,
   input  [6:0] btn,
   output [7:0] led,
-  input        gp0, gp1, gp3,
-  output       gp2,
+  // SPI external      SPI   JTAG FT2232
+  input        gp0, // CLK   TCK  DBUS0
+  input        gp1, // MOSI  TDI  DBUS1
+  output       gp2, // MISO  TDO  DBUS2
+  input        gp3, // CSn   TMS  DBUS3
   // SPI Flash
   //output       flash_clk,
   output       flash_mosi,
