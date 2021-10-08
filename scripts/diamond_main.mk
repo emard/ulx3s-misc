@@ -102,6 +102,7 @@ OPENFPGALOADER_OPTIONS ?= --board ulx3s
 FLEAFPGA_JTAG ?= FleaFPGA-JTAG 
 OPENOCD ?= openocd
 OPENOCD_INTERFACE ?= $(SCRIPTS)/ft231x.ocd
+DFU_UTIL ?= dfu-util
 TINYFPGASP ?= tinyfpgasp
 
 # helper scripts directory
@@ -237,6 +238,11 @@ flash: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
 # program FLASH uver US1 with FleaFPGA-JTAG (permanent)
 flash_flea: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme
 	$(FLEAFPGA_JTAG) $<
+
+# program FLASH over US2 port with DFU bootloader (permanently)
+flash_dfu: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
+	$(DFU_UTIL) -a 0 -D $<
+	$(DFU_UTIL) -a 0 -e
 
 # program FLASH over US2 port with tinyfpgasp bootloader (permanently)
 flash_tiny: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
