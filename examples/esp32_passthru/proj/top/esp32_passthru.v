@@ -28,7 +28,7 @@ module esp32_passthru
   input        wifi_gpio15, wifi_gpio14,
   inout        wifi_gpio13, wifi_gpio12,
                wifi_gpio4 , wifi_gpio2 , wifi_gpio0 ,
-  output       wifi_en,
+  inout        wifi_en,
   //inout        wifi_gpio5 // v3.0.x, not available on v3.1.x
   output       sd_wp // BGA pin exists but not connected on PCB
 );
@@ -77,10 +77,10 @@ module esp32_passthru
 
   //assign wifi_en = S_prog_out[1];
   // assign wifi_en      = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
-  assign wifi_en      = S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[1]; // holding BTN1 disables ESP32, releasing BTN1 reboots ESP32
+  assign wifi_en      = S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[2] ? 1'bz : 1'b0; // holding BTN2 disables ESP32, releasing BTN2 reboots ESP32
   assign wifi_gpio13  = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b1;
   assign wifi_gpio12  = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b0;
-  //assign wifi_gpio12  = btn[2]; // experiment with ESP32 VRef 3.3V/1.8V
+  //assign wifi_gpio12  = btn[3]; // experiment with ESP32 VRef 3.3V/1.8V
   //assign wifi_gpio5   = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b0; // available on v3.0.x only
   assign wifi_gpio4   = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b1;
   assign wifi_gpio2   = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0];
