@@ -7,7 +7,7 @@ FPGA_PACKAGE = CABGA381
 # 2.4 4.8 9.7 19.4 38.8 62.0
 FLASH_READ_MHZ = 62.0
 # fast-read dual-spi qspi
-FLASH_READ_MODE = fast-read
+FLASH_READ_MODE = qspi
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -25,11 +25,13 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 CONSTRAINTS = ../../../constraints/ulx3s_v20.lpf
 #CONSTRAINTS = ../../../constraints/ulx3s_v314.lpf
 #CONSTRAINTS = ../../../constraints/ulx3s_v316.lpf
-TOP_MODULE = esp32_passthru
+TOP_MODULE = top_esp32_passthru
 TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
   $(TOP_MODULE_FILE) \
+  hdl/esp32_passthru.v \
+  ../../rtc/micropython-mcp7940n/proj/hdl/i2c_bridge.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
