@@ -58,6 +58,13 @@ module top_esp32_passthru
   inout  wire gpdi_scl,    // i2c scl RTC and GPDI
   `endif
 
+  // SPI Flash
+  //inout  wire flash_mosi,
+  //inout  wire flash_miso,
+  inout  wire flash_wpn,
+  inout  wire flash_holdn,
+  //inout  wire flash_csn,
+
   // Boot
   inout  wire user_programn
 );
@@ -102,5 +109,12 @@ module top_esp32_passthru
     .user_programn(user_programn),
     .nc(sd_wp) // BGA pin exists but not connected on PCB
   );
+
+  // This helps for JTAG-FLASH.
+  // Some boards with IS25LP128 FLASH need this.
+  // Without this, flash chip returns only FF.
+  // Prevents crosstalk to wpn and holdn:
+  assign flash_wpn   = 1;
+  assign flash_holdn = 1;
 
 endmodule
