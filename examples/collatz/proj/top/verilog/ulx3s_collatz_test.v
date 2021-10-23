@@ -4,8 +4,8 @@
 `default_nettype none
 module ulx3s_collatz_test
 #(
-parameter collatz_bits  = 96,
-parameter standoff_bits = 16,
+parameter collatz_bits  = 128,
+parameter msb0_bits     = 40,       // MSB zero bits
 parameter C_display     = "ST7789", // "SSD1331", "ST7789"
 parameter C_disp_bits   = 256
 )
@@ -110,9 +110,8 @@ output wire shutdown
   wire [collatz_bits-1:0] val_start, val_actual;
   collatz_conjecture
   #(
-    .standoff(standoff_bits), // standoff MSB bits 0, rest bits 1
-    .bits(collatz_bits),      // integer arithmetic bits
-    .endbits(68)              // already explored
+    .msb0_bits(msb0_bits),  // standoff MSB bits 0, rest bits 1
+    .bits(collatz_bits)     // integer arithmetic bits
   )
   collatz_conjecture_inst
   (

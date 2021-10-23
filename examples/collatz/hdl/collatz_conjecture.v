@@ -3,8 +3,8 @@
 `default_nettype none
 module collatz_conjecture
 #(
-parameter standoff = 16, // standoff from max value (MSB zero bits)
-parameter endbits  =  1, // bits already explored, we know it goes to 1
+parameter msb0_bits = 16, // msb0_bits from max value (MSB zero bits)
+//parameter endbits  =  1, // bits already explored, we know it goes to 1
 parameter bits     = 32  // arithmetic regs size
 )
 (
@@ -12,8 +12,8 @@ input  wire            clk, clken,
 output wire [bits-1:0] start, actual
 );
   
-  localparam [standoff-1:0]      zero0 = 0;
-  localparam [bits-1-standoff:0] zero1 = 0;
+  localparam [msb0_bits-1:0]      zero0 = 0;
+  localparam [bits-1-msb0_bits:0] zero1 = 0;
   wire [bits-1:0] w_counter;
   reg  [bits-1:0] r_start  = 2;
   reg  [bits-1:0] r_actual = 1;
@@ -36,7 +36,7 @@ output wire [bits-1:0] start, actual
   // counter increments on the "w_finish" signal edge
   gray_counter
   #(
-    .bits(bits)
+    .bits(bits-msb0_bits)
   )
   gray_inst
   (
@@ -46,20 +46,20 @@ output wire [bits-1:0] start, actual
     .gray_count(w_counter)
   );
 
-  // starts with first "standoff" bits 0, other 1
+  // starts with first "msb0_bits" bits 0, other 1
   /*
   always @(posedge clk)
     if(inc_counter)
-      r_start <= {w_counter[bits-1:bits-standoff], ~w_counter[bits-standoff-1:0]};
+      r_start <= {w_counter[bits-1:bits-msb0_bits], ~w_counter[bits-msb0_bits-1:0]};
   */
 
   // reverse order of the counter bits
   generate
     genvar i;
-    for(i = 0; i < bits; i++)
+    for(i = 0; i < bits-msb0_bits; i++)
       always @(posedge clk)
         if(inc_counter)
-          r_start[i] <= ~w_counter[bits-1-i];
+          r_start[i] <= ~w_counter[bits-msb0_bits-1-i];
   endgenerate
 
   assign start  = r_start;
