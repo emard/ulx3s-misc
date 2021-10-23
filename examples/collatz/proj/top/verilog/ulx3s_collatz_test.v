@@ -107,18 +107,17 @@ output wire shutdown
   always @(posedge clk)
     clken <= btn_rising[1] | (sw[1]^btn_debounce[2]);
 
-  wire val_valid;
   wire [collatz_bits-1:0] val_start, val_actual;
   collatz_conjecture
   #(
     .standoff(standoff_bits), // standoff MSB bits 0, rest bits 1
-    .bits(collatz_bits)       // integer arithmetic bits
+    .bits(collatz_bits),      // integer arithmetic bits
+    .endbits(68)              // already explored
   )
   collatz_conjecture_inst
   (
     .clk(clk),
     .clken(clken),
-    .valid(val_valid),
     .start(val_start),
     .actual(val_actual)
   );
@@ -126,9 +125,10 @@ output wire shutdown
   
   always @(posedge clk)
   begin
-    if(val_valid && vga_vsync)
+    if(vga_vsync)
     begin
       R_disp[collatz_bits-1:0] <= val_start;
+      //R_disp[collatz_bits-1:0] <= w_start;
       R_disp[collatz_bits-1+128:128] <= val_actual;
     end
   end
