@@ -4,7 +4,7 @@
 `default_nettype none
 module ulx3s_collatz_test
 #(
-parameter collatz_bits  = 112,
+parameter collatz_bits  = 96,
 parameter standoff_bits = 16,
 parameter C_display     = "ST7789", // "SSD1331", "ST7789"
 parameter C_disp_bits   = 256
@@ -143,7 +143,7 @@ output wire shutdown
   #(
     .c_data_len(C_disp_bits),
     .c_font_file("hex_font.mem"),
-    .c_row_bits(4),
+    .c_row_bits(5),
     .c_grid_6x8(1),
     //.c_x_bits(7),
     //.c_y_bits(6),
@@ -172,7 +172,7 @@ output wire shutdown
   lcd_video_inst
   (
     .clk(clk_25MHz),
-    .reset(~btn[0]),
+    .reset(btn_debounce[3]),
     .x(disp_x),
     .y(disp_y),
     .color(disp_color),
@@ -192,7 +192,7 @@ output wire shutdown
   #(
     .c_data_len(C_disp_bits),
     .c_font_file("hex_font.mem"),
-    .c_row_bits(4),
+    .c_row_bits(5),
     .c_grid_6x8(1),
     //.c_x_bits(8),
     //.c_y_bits(8),
@@ -215,7 +215,7 @@ output wire shutdown
   )
   lcd_video_inst
   (
-    .reset(~btn[0]),
+    .reset(btn_debounce[3]),
     .clk_pixel(clk_125MHz),
     .clk_spi(clk_125MHz),
     .x(disp_x),
@@ -227,7 +227,7 @@ output wire shutdown
     .spi_dc(oled_dc),
     .spi_resn(oled_resn)
   );
-  assign oled_csn = spi_csn | ~btn[1];
+  assign oled_csn = spi_csn | ~btn_debounce[5];
   end
   endgenerate
 
