@@ -28,6 +28,7 @@ inout wire wifi_gpio0,
 //inout wire wifi_gpio16,
 output wire [7:0] led,
 input  wire [6:0] btn,
+input  wire [3:0] sw,
 //input wire [1:4] sw,
 output wire oled_csn,
 output wire oled_clk,
@@ -92,7 +93,7 @@ output wire shutdown
   wire [6:0] btn_rising, btn_debounce;
   btn_debounce
   #(
-    .bits(20)
+    .bits(22)
   )
   btn_debounce_inst
   (
@@ -101,8 +102,11 @@ output wire shutdown
     .rising(btn_rising),
     .debounce(btn_debounce)
   );
-  assign led = btn_debounce;
-  
+
+  reg clken;
+  always @(posedge clk)
+    clken <= btn_rising[1] | (sw[1]^btn_debounce[2]);
+
   wire val_valid;
   wire [collatz_bits-1:0] val_start, val_actual;
   collatz_conjecture
@@ -113,11 +117,12 @@ output wire shutdown
   collatz_conjecture_inst
   (
     .clk(clk),
-    .clken(btn_rising[1] | ~btn_debounce[2]),
+    .clken(clken),
     .valid(val_valid),
     .start(val_start),
     .actual(val_actual)
   );
+  assign led = val_start[23:16];
   
   always @(posedge clk)
   begin
