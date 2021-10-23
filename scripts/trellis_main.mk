@@ -188,9 +188,13 @@ program_ofl: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
 program_flea: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme
 	$(FLEAFPGA_JTAG) $<
 
-# program FLASH over US1 port with ujprog bootloader (permanently)
+# program FLASH over US1 port with ujprog (permanently)
 flash: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
 	$(UJPROG) -j flash $<
+
+# program FLASH over US1 port with openFPGALoader (permanently)
+flash_ofl: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
+	$(OPENFPGALOADER) $(OPENFPGALOADER_OPTIONS) -f $<
 
 # program FLASH over US2 port with DFU bootloader (permanently)
 flash_dfu: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
