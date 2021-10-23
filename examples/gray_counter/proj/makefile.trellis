@@ -20,15 +20,15 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 CONSTRAINTS = ../../../constraints/ulx3s_v20.lpf
 TOP_MODULE = ulx3s_gray_counter
-TOP_MODULE_FILE = top/$(TOP_MODULE).vhd
+TOP_MODULE_FILE = top/vhd/$(TOP_MODULE).vhd
 
 VERILOG_FILES = \
-top/empty.v \
+top/v/empty.v \
 
 # *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
 VHDL_FILES = \
 $(TOP_MODULE_FILE) \
-../hdl/gray_counter.vhd \
+../hdl/vhd/gray_counter.vhd \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2

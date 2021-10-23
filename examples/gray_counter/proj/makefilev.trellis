@@ -3,11 +3,11 @@ PROJECT = gray_counter
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
-FPGA_PACKAGE = 6bg381c
+FPGA_PACKAGE = CABGA381
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
-OPENOCD=openocd_ft232r
+#OPENOCD=openocd_ft232r
 # default onboard usb-jtag
 OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ulx3s-jtag-passthru
@@ -20,18 +20,20 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ******* design files *******
 CONSTRAINTS = ../../../constraints/ulx3s_v20.lpf
 TOP_MODULE = ulx3s_gray_counter
-TOP_MODULE_FILE = top/vhd/$(TOP_MODULE).vhd
-
-VHDL_FILES = \
-$(TOP_MODULE_FILE) \
-../hdl/vhd/gray_counter.vhd \
+TOP_MODULE_FILE = top/v/$(TOP_MODULE).v
 
 VERILOG_FILES = \
+$(TOP_MODULE_FILE) \
+../hdl/v/gray_counter.v \
+
+# *.vhd those files will be converted to *.v files with vhdl2vl (warning overwriting/deleting)
+#VHDL_FILES = \
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
+NEXTPNR_OPTIONS = --timing-allow-fail
 
 SCRIPTS = ../../../scripts
-include $(SCRIPTS)/trellis_path.mk
 include $(SCRIPTS)/diamond_path.mk
-include $(SCRIPTS)/diamond_main.mk
+include $(SCRIPTS)/trellis_path.mk
+include $(SCRIPTS)/trellis_main.mk
