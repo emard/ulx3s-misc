@@ -4,8 +4,8 @@
 `default_nettype none
 module ulx3s_collatz_test
 #(
-parameter collatz_bits  = 128,
-parameter msb0_bits     = 40,       // MSB zero bits
+parameter collatz_bits  = 160,
+parameter msb0_bits     =  64,      // MSB zero bits
 parameter C_display     = "ST7789", // "SSD1331", "ST7789"
 parameter C_disp_bits   = 256
 )
@@ -126,9 +126,8 @@ output wire shutdown
   begin
     if(vga_vsync)
     begin
-      R_disp[collatz_bits-1:0] <= val_start;
-      //R_disp[collatz_bits-1:0] <= w_start;
-      R_disp[collatz_bits-1+128:128] <= val_actual;
+      R_disp[127:  0] <= val_start [127:0];
+      R_disp[255:128] <= val_actual[127:0];
     end
   end
 
