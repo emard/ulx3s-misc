@@ -22,10 +22,10 @@ applies bit shift and addition to simplify
 
     3*N+1 = (2*N+1)+N
 
-If we explore numbers in incremental order,
-it is sufficient to stop when N becomes less
-than staring value N, because values less
-than N have already been explored before.
+If numbers are explored in incremental order,
+it is sufficient to stop when value becomes
+smaller than starting value, because smaller
+values have already been explored.
 
 HEX display (LCD/OLED and DVI) shows currently tested number.
 
