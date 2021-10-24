@@ -22,6 +22,11 @@ applies bit shift and addition to simplify
 
     3*N+1 = (2*N+1)+N
 
+If we explore numbers in incremental order,
+it is sufficient to stop when N becomes less
+than staring value N, because values less
+than N have already been explored before.
+
 HEX display (LCD/OLED and DVI) shows currently tested number.
 
     DIP SW2 = OFF and BTN1 to single-step.
