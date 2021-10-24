@@ -5,7 +5,7 @@
 module ulx3s_collatz_test
 #(
 parameter collatz_bits  = 160,
-parameter msb0_bits     =  64,      // MSB zero bits
+parameter msb0_bits     =  80,      // MSB zero bits
 parameter C_display     = "ST7789", // "SSD1331", "ST7789"
 parameter C_disp_bits   = 256
 )

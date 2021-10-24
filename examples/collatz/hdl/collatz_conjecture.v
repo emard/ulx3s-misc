@@ -16,6 +16,7 @@ output wire [bits-1:0] start, actual
   localparam [bits-1-msb0_bits:0] zero1 = 0;
   wire [bits-1:0] w_counter;
   reg  [bits-1:0] r_start  = 2;
+  reg  [bits-1:0] r_next   = 2;
   reg  [bits-1:0] r_actual = 1;
   // x*3+1 = (x*2+1)+x = ((x<<1)|1) + x
   wire [bits-1:0] w_actual_3np1 = {r_actual[bits-2:0],1'b1} + r_actual;
@@ -31,7 +32,10 @@ output wire [bits-1:0] start, actual
 
   always @(posedge clk)
     if(clken)
-      r_actual <= r_finish ? r_start : r_actual[0] ? w_actual_3np1[bits-1:1] : r_actual[bits-1:1];
+    begin
+      r_actual <= r_finish ? r_next : r_actual[0] ? w_actual_3np1[bits-1:1] : r_actual[bits-1:1];
+      r_start  <= r_finish ? r_next : r_start; // for display
+    end
   
   // counter increments on the "w_finish" signal edge
   gray_counter
@@ -46,20 +50,15 @@ output wire [bits-1:0] start, actual
     .gray_count(w_counter)
   );
 
-  // starts with first "msb0_bits" bits 0, other 1
-  /*
-  always @(posedge clk)
-    if(inc_counter)
-      r_start <= {w_counter[bits-1:bits-msb0_bits], ~w_counter[bits-msb0_bits-1:0]};
-  */
-
   // reverse order of the counter bits
+  // to explore high numbers ending with hex ,,,FFF
+  // iterations are larger than starting number
   generate
     genvar i;
     for(i = 0; i < bits-msb0_bits; i++)
       always @(posedge clk)
         if(inc_counter)
-          r_start[i] <= ~w_counter[bits-msb0_bits-1-i];
+          r_next[i] <= ~w_counter[bits-msb0_bits-1-i];
   endgenerate
 
   assign start  = r_start;
