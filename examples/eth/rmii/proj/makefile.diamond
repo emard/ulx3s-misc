@@ -34,7 +34,7 @@ VERILOG_FILES = \
   ../../../ecp5pll/hdl/sv/ecp5pll.sv \
   ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
   ../../../hex/decoder/hex_decoder_v.v \
-  ../../../rtc/i2c_master/proj/hdl/btn_debounce.v \
+  ../../../btn_debounce/hdl/btn_debounce.v \
 
 VHDL_FILES =  \
   ../../../dvi/hdl/vga.vhd \
