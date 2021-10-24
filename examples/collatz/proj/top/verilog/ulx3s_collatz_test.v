@@ -120,7 +120,9 @@ output wire shutdown
     .start(val_start),
     .actual(val_actual)
   );
-  assign led = val_start[23:16];
+  // if number is found, blink will stop
+  assign led[0] = val_start[explore_bits-19]; // blink expected
+  assign led[7:1] = 0;
   
   always @(posedge clk)
   begin
