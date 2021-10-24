@@ -27,7 +27,7 @@ VERILOG_FILES = \
   ../../../ecp5pll/hdl/sv/ecp5pll.sv \
   hdl/i2c_master.v \
   hdl/mcp7940n.v \
-  hdl/btn_debounce.v \
+  ../../../btn_debounce/hdl/btn_debounce.v \
   ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
   ../../../hex/decoder/hex_decoder_v.v \
 
