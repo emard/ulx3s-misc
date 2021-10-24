@@ -105,7 +105,7 @@ output wire shutdown
 
   reg clken;
   always @(posedge clk)
-    clken <= btn_rising[1] | (sw[1]^btn_debounce[2]);
+    clken <= btn_rising[1] | sw[1];
 
   wire [collatz_bits-1:0] val_start, val_actual;
   collatz_conjecture
