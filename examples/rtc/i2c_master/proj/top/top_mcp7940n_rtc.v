@@ -190,7 +190,7 @@ module top_mcp7940n_rtc
   wire w_oled_csn;
   lcd_video
   #(
-    .c_clk_mhz(25),
+    .c_clk_spi_mhz(25),
     .c_init_file("st7789_linit_xflip.mem"),
     .c_init_size(35),
     .c_clk_phase(0),
@@ -198,7 +198,10 @@ module top_mcp7940n_rtc
   )
   lcd_video_inst
   (
-    .clk(clk),
+    .clk_pixel(clk),
+    .clk_pixel_ena(1'b1),
+    .clk_spi(clk),
+    .clk_spi_ena(1'b1),
     .reset(~btn[0]),
     .x(x),
     .y(y),
@@ -258,8 +261,8 @@ module top_mcp7940n_rtc
   assign vga_b = {dvi_color[4:0],dvi_color[0],dvi_color[0],dvi_color[0]};
   vga2dvid
   #(
-    .C_ddr(1'b1),
-    .C_shift_clock_synchronizer(1'b0)
+    .c_ddr(1'b1),
+    .c_shift_clock_synchronizer(1'b0)
   )
   vga2dvid_instance
   (
