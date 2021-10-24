@@ -20,7 +20,7 @@ become 1. Noone knows why nor has a proof for this.
 This core implemepts abstract machine that
 applies bit shift and addition to simplify
 
-    3*N+1 = N+(2*N+1)
+    3*N+1 = (2*N+1)+N
 
 HEX display (LCD/OLED and DVI) shows currently tested number.
 
