@@ -17,9 +17,9 @@ As of 2020, it has been calculated by computers that
 all numbers below 2^68 in finite number of iterations
 become 1. Noone knows why nor has a proof for this.
 
-This core implemepts abstract machine that
-computes in base two. It applies bit shift and
-addition to simplify
+This core creates
+[abstract machine that computes in base two](https://en.wikipedia.org/wiki/Collatz_conjecture#As_an_abstract_machine_that_computes_in_base_two).
+It applies bit shift and addition to simplify
 
     3*N+1 = (2*N+1)+N
 
