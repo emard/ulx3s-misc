@@ -18,9 +18,14 @@ all numbers below 2^68 in finite number of iterations
 become 1. Noone knows why nor has a proof for this.
 
 This core implemepts abstract machine that
-applies bit shift and addition to simplify
+computes in base two. It applies bit shift and
+addition to simplify
 
     3*N+1 = (2*N+1)+N
+
+    1. Append 1 to the (right) end of the number in binary (giving 2n + 1);
+    2. Add this to the original number by binary addition (giving 2n + 1 + n = 3n + 1);
+    3. Remove all trailing 0s (that is, repeatedly divide by 2 until the result is odd).
 
 If numbers are explored in incremental order,
 it is sufficient to stop when value becomes
