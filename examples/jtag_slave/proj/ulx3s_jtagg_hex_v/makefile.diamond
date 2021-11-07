@@ -28,11 +28,15 @@ TOP_MODULE_FILE = ../../../jtag_slave/hdl/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
 $(TOP_MODULE_FILE) \
+../../../ecp5pll/hdl/sv/ecp5pll.sv \
 ../../../oled/hdl/ssd1331_video_verilog/spi/spi_slave.v \
 ../../../hex/decoder/hex_decoder_v.v \
 ../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
 
-VHDL_FILES = 
+VHDL_FILES = \
+../../../dvi/hdl/vga.vhd \
+../../../dvi/hdl/vga2dvid.vhd \
+../../../dvi/hdl/tmds_encoder.vhd \
 
 SCRIPTS = ../../../../scripts/
 include $(SCRIPTS)/trellis_path.mk
