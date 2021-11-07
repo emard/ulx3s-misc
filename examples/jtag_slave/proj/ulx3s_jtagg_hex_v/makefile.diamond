@@ -1,5 +1,5 @@
 # ******* project, board and chip name *******
-PROJECT = init
+PROJECT = jtagg_spi_hex
 BOARD = ulx3s
 # 12 25 45 85
 FPGA_SIZE = 12
@@ -11,7 +11,7 @@ FLASH_CHIP = is25lp128f
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
-OPENOCD=openocd_ft232r
+OPENOCD=openocd
 # default onboard usb-jtag
 OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 # ulx3s-jtag-passthru
@@ -22,16 +22,15 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../../../constraints/ulx3s_v20_segpdi.lpf
+CONSTRAINTS = ../../../../constraints/ulx3s_v20.lpf
 TOP_MODULE = top_jtagg_slave
 TOP_MODULE_FILE = ../../../jtag_slave/hdl/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
-  $(TOP_MODULE_FILE) \
-  ../../../jtag_slave/hdl/jtag_slave_clk.v \
-  ../../../oled/hdl/ssd1331_video_verilog/spi/spi_slave.v \
-  ../../../oled/hdl/ssd1331_video_verilog/oled_video.v \
-  ../../../oled/hdl/ssd1331_video_verilog/hex_decoder.v
+$(TOP_MODULE_FILE) \
+../../../oled/hdl/ssd1331_video_verilog/spi/spi_slave.v \
+../../../hex/decoder/hex_decoder_v.v \
+../../../spi_display/hdl/spi_display_verilog/lcd_video.v \
 
 VHDL_FILES = 
 
