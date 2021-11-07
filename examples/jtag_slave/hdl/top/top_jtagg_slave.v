@@ -158,11 +158,9 @@ module top_jtagg_slave
   hex_decoder_v
   #(
     .c_data_len(C_display_bits),
-    .c_row_bits(5), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256
+    .c_row_bits(4), // 2**n digits per row (4*2**n bits/row) 3->32, 4->64, 5->128, 6->256
     .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
     .c_font_file("hex_font.mem"),
-    .c_x_bits(8),
-    .c_y_bits(5),
     .c_color_bits(16)
   )
   hex_decoder_dvi_instance
@@ -170,7 +168,7 @@ module top_jtagg_slave
     .clk(clk),
     .data(S_display),
     .x(beam_rx[9:2]),
-    .y(beam_y[6:2]),
+    .y(beam_y[9:2]),
     .color(color_vga)
   );
 

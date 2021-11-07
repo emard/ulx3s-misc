@@ -7,32 +7,34 @@ JTAG slave interface into bypass state.
 
 cleanup:
 
-    make -f makefile.trellis clean
+    make clean
 
 compile:
 
-    make -f makefile.trellis
+    make
 
 program (upload to SRAM, temporary):
 
-    make -f makefile.trellis program
+    make prog
 
 or
 
-    make -f makefile.trellis program_ocd
+    make prog_ocd
+    make prog_ofl
 
 usage:
 
     make scan
 
-On OLED rows have this meaning
+On LCD rows have this meaning
 
     bin TDI
     hex TMS
     hex TDI
-    hex TDO
+    hex TDO (not used currently)
 
-TDI row should display 0x600DBABE
+TDI row should display 0x600DBABE and few other bytes from openocd
+JTAG, probably 0x019008
 
 # Links
 
