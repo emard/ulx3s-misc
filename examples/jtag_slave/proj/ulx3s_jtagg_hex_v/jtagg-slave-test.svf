@@ -17,7 +17,7 @@ SDR 32 TDI (600DBABE);
 ! finish with extra dummy bit because shifting is delayed 1 bit
 SDR  1 TDI (0);
 
-! after this OLED should display:
+! after this HEX should display:
 ! 0011000000000110
 ! 0000000000000000
 ! 600DBABE12345678
