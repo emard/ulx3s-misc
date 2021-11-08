@@ -43,8 +43,8 @@ module top_jtagg_slave
   (
     .JTDI(jtdi),       // output data
     .JTCK(jtck),       // output clock
-    .JRTI2(jrti1),     // 1 if reg is selected and state is r/t idle
-    .JRTI1(jrti2),
+    .JRTI1(jrti1),     // 1 if reg is selected and state is r/t idle
+    .JRTI2(jrti2),
     .JSHIFT(jshift),   // 1 if data is shifted in
     .JUPDATE(jupdate), // 1 for 1 tck on finish shifting
     .JRSTN(jrstn),
@@ -55,6 +55,7 @@ module top_jtagg_slave
   localparam C_capture_bits = 64;
   wire [C_capture_bits-1:0] S_tms, S_tdi, S_tdo; // this is SPI MOSI shift register
 
+  wire csn1 = ~(jshift & jce1); // SIR  8 TDI (32);
   spi_slave
   #(
     .C_sclk_capable_pin(1'b0),
@@ -63,7 +64,7 @@ module top_jtagg_slave
   spi_slave_tdi_inst
   (
     .clk(clk),
-    .csn(1'b0),
+    .csn(csn1),
     .sclk(~jtck), // jtck must be inverted to work properly
     .mosi(jtdi),
     .data(S_tdi)

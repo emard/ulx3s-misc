@@ -33,8 +33,7 @@ On LCD rows have this meaning
     hex TDI
     hex TDO (not used currently)
 
-TDI row should display 0x600DBABE and few other bytes from openocd
-JTAG, probably 0x019008
+TDI row should display 0x600DBABE12345678
 
 # Links
 
