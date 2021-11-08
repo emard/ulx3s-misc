@@ -22,7 +22,7 @@ mount_pad_hole=1.8;
 
 // PCB mount rails
 sensor_pcb  = [20.4,20.4,1.6]; // xyz pcb size ADXL355
-sensor_rail_clr = [0.3,0.3,0.0];
+sensor_rail_clr = [0.4,0,0.2];
 sensor_rail_dim = [6,20]; // sensor rail d,h
 
 // cover mount pads
@@ -128,7 +128,7 @@ module kutija(strana=1,d=12)
         {
           //color([0.8,0.2,0.2]) // red
           for(i=[-1,1])
-          translate([-i*sensor_pcb[0]/2-sensor_rail_clr[0]/2,0,-depth/2+sensor_pcb[1]/2])
+          translate([-i*(sensor_pcb[0]-sensor_rail_clr[0])/2,0,-depth/2+sensor_pcb[1]/2])
           {
             difference()
             {
@@ -141,7 +141,7 @@ module kutija(strana=1,d=12)
                 translate([-i*(width-thick-sensor_pcb[0])/4,0,0])
                 cube([(width-thick-sensor_pcb[0])/2,thick,sensor_rail_dim[1]],center=true);
               }
-              translate([i*sensor_pcb[0]/2,0,0])
+              translate([i*(sensor_pcb[0]-sensor_rail_clr[0])/2,0,0])
                 rotate([90,0,0])
                   cube(sensor_pcb+sensor_rail_clr, center=true);
             }
