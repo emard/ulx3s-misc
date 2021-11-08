@@ -55,7 +55,12 @@ module top_jtagg_slave
   localparam C_capture_bits = 64;
   wire [C_capture_bits-1:0] S_tms, S_tdi, S_tdo; // this is SPI MOSI shift register
 
-  wire csn1 = ~(jshift & jce1); // SIR  8 TDI (32);
+  // this reg logic fixes off-by-1 bit delay
+  reg csn;
+  always @(posedge clk)
+    if(~jtck)
+      csn <= ~(jshift & jce1); // SIR  8 TDI (32);
+
   spi_slave
   #(
     .C_sclk_capable_pin(1'b0),
@@ -64,8 +69,8 @@ module top_jtagg_slave
   spi_slave_tdi_inst
   (
     .clk(clk),
-    .csn(csn1),
-    .sclk(~jtck), // jtck must be inverted to work properly
+    .csn(csn),
+    .sclk(jtck),
     .mosi(jtdi),
     .data(S_tdi)
   );

@@ -33,7 +33,7 @@ On LCD rows have this meaning
     hex TDI
     hex TDO (not used currently)
 
-TDI row should display 0x600DBABE12345678
+TDI row should display 0x600DBABE87654321
 
 # Links
 
