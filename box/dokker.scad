@@ -443,7 +443,7 @@ module kutijica(kutija=1, poklopac=1, magnet=0, slider=0, chep=1, strana=1)
 // chep: 1:generiraj 0:ne
 difference()
 {
-kutijica(kutija=1,poklopac=0,magnet=0,chep=0,slider=0,strana=1);
+kutijica(kutija=1,poklopac=1,magnet=0,chep=1,slider=1,strana=1);
 translate([0,0,-depth/2+sensor_pcb[1]/2])
   rotate([-90,0,0])
     %sensor_adxl355();
