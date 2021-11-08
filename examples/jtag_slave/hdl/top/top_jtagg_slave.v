@@ -48,8 +48,8 @@ module top_jtagg_slave
     .JSHIFT(jshift),   // 1 if data is shifted in
     .JUPDATE(jupdate), // 1 for 1 tck on finish shifting
     .JRSTN(jrstn),
-    .JCE2(jce2),       // 1 if data shifted into this reg
-    .JCE1(jce1)
+    .JCE1(jce1),       // 1 if data shifted into reg selected by SIR 8 TDI (32)
+    .JCE2(jce2)        // 1 if data shifted into reg selected by SIR 8 TDI (38)
   );
 
   localparam C_capture_bits = 64;
