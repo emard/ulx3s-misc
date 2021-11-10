@@ -2,7 +2,7 @@ include <sensor_adxl355.scad>
 
 // main outer dimensions
 // clearance: 0.5: normal, 1.0: outside epoxy coating
-clearance=1.5;
+clearance=1.0;
 width=47.1-clearance;
 height=55.0-clearance;
 depth=39;
@@ -37,7 +37,7 @@ cover_side_clearance=0.5; // from sides
 cover_depth_clearance=0.4; // from top
 cover_thick=4;
 
-cable_width=12.7; // na poklopcu, širina kabla
+cable_width=10*1.27; // na poklopcu, širina kabla
 cable_pass=9; // na poklopcu
 cable_thick=1;
 
