@@ -35,6 +35,7 @@ output wire oled_clk,
 output wire oled_mosi,
 output wire oled_dc,
 output wire oled_resn,
+output wire oled_bl,
 
 input  wire ftdi_txd,
 output wire ftdi_rxd,
@@ -232,7 +233,9 @@ output wire shutdown
     .spi_dc(oled_dc),
     .spi_resn(oled_resn)
   );
-  assign oled_csn = spi_csn | ~btn_debounce[5];
+  assign oled_csn = btn_debounce[6]; // 7-pin ST7789 1.3"
+  //assign oled_csn = spi_csn; // 8-pin ST7789 1.54"
+  //assign oled_bl = btn_debounce[6]; // 8-pin ST7789 1.54"
   end
   endgenerate
 
