@@ -109,6 +109,7 @@ output wire shutdown
     clken <= btn_rising[1] | btn_debounce[2] | sw[1];
 
   wire [collatz_bits-1:0] val_start, val_actual;
+  wire active;
   collatz_conjecture
   #(
     .explore_bits(explore_bits),  // standoff MSB bits 0, rest bits 1
@@ -118,12 +119,15 @@ output wire shutdown
   (
     .clk(clk),
     .clken(clken),
+    .skip(btn_rising[5]),
+    .active(active),
     .start(val_start),
     .actual(val_actual)
   );
-  // if number is found, blink will stop
-  assign led[0] = val_start[explore_bits-19]; // blink expected
-  assign led[7:1] = 0;
+  assign led[0] = active; // RED LED ON when searching
+  assign led[1] = 0;
+  assign led[2] = ~active; // GREEN LED ON when number is found
+  assign led[7:3] = 0;
   
   always @(posedge clk)
   begin
@@ -233,9 +237,9 @@ output wire shutdown
     .spi_dc(oled_dc),
     .spi_resn(oled_resn)
   );
-  assign oled_csn = btn_debounce[6]; // 7-pin ST7789 1.3"
-  //assign oled_csn = spi_csn; // 8-pin ST7789 1.54"
-  //assign oled_bl = btn_debounce[6]; // 8-pin ST7789 1.54"
+  //assign oled_csn = btn_debounce[6]; // 7-pin ST7789 1.3"
+  assign oled_csn = spi_csn; // 8-pin ST7789 1.54"
+  assign oled_bl = btn_debounce[6]; // 8-pin ST7789 1.54"
   end
   endgenerate
 

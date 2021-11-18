@@ -5,6 +5,7 @@ $(TOP_MODULE_FILE) \
 ../../gray_counter/hdl/v/gray_counter.v \
 ../../spi_display/hdl/spi_display_verilog/lcd_video.v \
 ../../btn_debounce/hdl/btn_debounce.v \
+../hdl/random_counter.v \
 ../hdl/collatz_conjecture.v \
 
 # convertible with vhd2vl

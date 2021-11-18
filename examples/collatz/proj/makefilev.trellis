@@ -17,7 +17,8 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../../constraints/ulx3s_v20.lpf
+#CONSTRAINTS = ../../../constraints/ulx3s_v20.lpf
+CONSTRAINTS = ../../../constraints/ulx3s_v316.lpf
 TOP_MODULE = ulx3s_collatz_test
 TOP_MODULE_FILE = top/verilog/$(TOP_MODULE).v
 
