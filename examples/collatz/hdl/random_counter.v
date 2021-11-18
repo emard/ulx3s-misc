@@ -1,23 +1,30 @@
 `default_nettype none
 module random_counter
 #(
-  parameter accu_bits = 48, // internal accumulator is pseudo random number, prime number added
-  parameter accu_rot  = 24, // how many bits to rotate-right before add
-  parameter [47:0] prime_add = 48'd6692367337, // prime number add to accu
+  parameter n_ring_osc = 7, // number of ring oscillators
   parameter bits = 128
 )
 (
   input  wire            clk,
-  input  wire            reset, // not used
   input  wire            enable,
   output wire [bits-1:0] random
 );
 
-  reg [accu_bits-1:0] r_accu = ~prime_add; // the random accumulatoor
+  // odd number of inverters (NOT gates) in the ring make the ring oscillator
+  // it can be a single inverter connected to itself
+  wire [n_ring_osc-1:0] w_ring;
+  localparam [15:0] INVERTER = 16'h0001; // LUT4 init as inverter Z = NOT A
+  generate
+    genvar i;
+    for(i = 0; i < n_ring_osc; i++)
+      LUT4 #(.INIT(INVERTER)) inverter_inst (.Z(w_ring[i]), .A(w_ring[i]), .B(0), .C(0), .D(0));
+  endgenerate
+
+  reg [n_ring_osc-1:0] r_accu; // hold the random number
   always @(posedge clk)
   begin
     if(enable)
-      r_accu <= {r_accu[accu_rot-1:0], r_accu[accu_bits-1:accu_rot]} + prime_add; // rotate and add the prime number
+      r_accu <= w_ring;
   end
   
   reg r_random[0:bits-1]; // RAM 1-bit wide
@@ -33,7 +40,7 @@ module random_counter
   wire [bits-1:0] w_random;
   generate
     genvar i;
-    for(i = 0; i < bits; i = i+1)
+    for(i = 0; i < bits; i++)
       assign w_random[i] = r_random[i];
   endgenerate
 

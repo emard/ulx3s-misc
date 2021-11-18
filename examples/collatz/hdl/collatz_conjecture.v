@@ -81,7 +81,6 @@ output wire [bits-1:0] start, actual
   random_inst
   (
     .clk(clk),
-    .reset(1'b0),
     .enable(inc_counter),
     .random(w_counter)
   );

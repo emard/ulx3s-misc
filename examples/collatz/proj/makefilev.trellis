@@ -25,7 +25,7 @@ TOP_MODULE_FILE = top/verilog/$(TOP_MODULE).v
 include filesv.mk
 
 YOSYS_OPTIONS = -abc9
-NEXTPNR_OPTIONS = --timing-allow-fail
+NEXTPNR_OPTIONS = --timing-allow-fail --ignore-loops
 
 SCRIPTS = ../../../scripts
 include $(SCRIPTS)/diamond_path.mk
