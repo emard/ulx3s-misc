@@ -109,7 +109,7 @@ output wire shutdown
     clken <= btn_rising[1] | btn_debounce[2] | sw[1];
 
   wire [collatz_bits-1:0] val_start, val_actual;
-  wire active;
+  wire found;
   collatz_conjecture
   #(
     .explore_bits(explore_bits),  // standoff MSB bits 0, rest bits 1
@@ -120,13 +120,13 @@ output wire shutdown
     .clk(clk),
     .clken(clken),
     .skip(btn_rising[5]),
-    .active(active),
+    .found(found),
     .start(val_start),
     .actual(val_actual)
   );
-  assign led[0] = active; // RED LED ON when searching
+  assign led[0] = ~found; // RED LED ON when searching
   assign led[1] = 0;
-  assign led[2] = ~active; // GREEN LED ON when number is found
+  assign led[2] = found; // GREEN LED ON when number is found
   assign led[7:3] = 0;
   
   always @(posedge clk)

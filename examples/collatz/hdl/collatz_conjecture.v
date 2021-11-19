@@ -4,12 +4,12 @@
 module collatz_conjecture
 #(
 parameter explore_bits = 20, // nonzero counter bits (cca 2/3 bits) 
-parameter endbits      = 68, // bits already explored
+parameter endbits      =  1, // bits already explored
 parameter bits         = 32  // arithmetic regs width
 )
 (
 input  wire            clk, clken, skip,
-output wire            active,
+output wire            found,
 output wire [bits-1:0] start, actual
 );
   
@@ -89,7 +89,7 @@ output wire [bits-1:0] start, actual
     if(inc_counter)
       r_next <= w_counter;
 
-  assign active = skip_value;
+  assign found = skip_value;
   //assign start  = r_next; // debug
   assign start  = r_start;
   assign actual = r_actual;
