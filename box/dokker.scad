@@ -444,8 +444,9 @@ pos_connector = [1.27,3.5,10];
 module connector_holder()
 {
   dim_conn_inner = [23,6.5,10];
-  dim_conn_outer = dim_conn_inner+[2,2,-0.01];
+  dim_conn_outer = dim_conn_inner+[4,4,-0.01];
   translate(pos_connector)
+  {
     difference()
     {
       box(dim_conn_outer);
@@ -455,9 +456,26 @@ module connector_holder()
       translate([0,dim_conn_inner[1]/2,3])
         box([5,4,10]);
     };
+    // fit for pcb holder rails
+    //translate([0,dim_conn_outer[1]/2-1,-7])
+      difference()
+      {
+        union()
+        {
+          translate([0,dim_conn_outer[1]/2-1,-7])
+            box([dim_conn_outer[0],2,5]);
+          translate([0,-dim_conn_outer[1]/2-2,-7])
+            box([dim_conn_outer[0],2,5]);
+        }
+        // cut for rails
+        for(i=[-1,1])
+          translate([-1.3+i*10,0,-7])
+            box([2.5,40,10]);
+      }
+  }
 }
 
-if(0)
+if(1)
 translate([0,0,-4.5])
 connector_holder();
 
