@@ -1,4 +1,5 @@
 include <sensor_adxl355.scad>
+include <connector14p.scad>
 
 // main outer dimensions
 // clearance: 0.5: normal, 1.0: outside epoxy coating
@@ -37,7 +38,7 @@ cover_side_clearance=0.5; // from sides
 cover_depth_clearance=0.4; // from top
 cover_thick=4;
 
-cable_width=10*1.27; // na poklopcu, širina kabla
+cable_width=12*1.27; // na poklopcu, širina kabla
 cable_pass=9; // na poklopcu
 cable_thick=1;
 
@@ -435,7 +436,8 @@ module kutijica(kutija=1, poklopac=1, magnet=0, slider=0, chep=1, strana=1)
   }
 }
 
-
+%translate([1.27,3.5,10])
+  connector14p();
 
 // kutija 1:generirat 0:ne
 // poklopac 1:generirat 0:ne
@@ -443,7 +445,8 @@ module kutijica(kutija=1, poklopac=1, magnet=0, slider=0, chep=1, strana=1)
 // chep: 1:generiraj 0:ne
 difference()
 {
-kutijica(kutija=1,poklopac=1,magnet=0,chep=1,slider=1,strana=1);
+if(1)
+kutijica(kutija=1,poklopac=0,magnet=0,chep=0,slider=0,strana=1);
 translate([0,0,-depth/2+sensor_pcb[1]/2])
   rotate([-90,0,0])
     %sensor_adxl355();
