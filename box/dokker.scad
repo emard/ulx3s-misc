@@ -478,10 +478,16 @@ module connector_holder()
         // cut for rails
         // vertical rails cut
         for(i=[-1,1])
-          translate([-1.3+i*10,0,-9])
+        {
+          translate([-1.3+i*10,0,-10])
             box([2.5,40,10]);
+        }
+        if(1)
+          translate([-11.3,-3.5,-10])
+            rotate([0,0,45])
+              box([5,5,10]);
         // horizontal rail cut
-        translate([0,-3.5,-9])
+        translate([0,-3.5,-10])
           box([40,2.5,10]);
       }
   }
