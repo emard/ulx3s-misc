@@ -1,3 +1,4 @@
+include <center.scad>
 include <sensor_adxl355.scad>
 include <connector14p.scad>
 
@@ -436,8 +437,29 @@ module kutijica(kutija=1, poklopac=1, magnet=0, slider=0, chep=1, strana=1)
   }
 }
 
-%translate([1.27,3.5,10])
+pos_connector = [1.27,3.5,10];
+%translate(pos_connector)
   connector14p();
+
+module connector_holder()
+{
+  dim_conn_inner = [23,6.5,10];
+  dim_conn_outer = dim_conn_inner+[2,2,-0.01];
+  translate(pos_connector)
+    difference()
+    {
+      box(dim_conn_outer);
+      // inside cut
+      box(dim_conn_inner);
+      // notch cut
+      translate([0,dim_conn_inner[1]/2,3])
+        box([5,4,10]);
+    };
+}
+
+if(0)
+translate([0,0,-4.5])
+connector_holder();
 
 // kutija 1:generirat 0:ne
 // poklopac 1:generirat 0:ne
