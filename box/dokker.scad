@@ -462,10 +462,15 @@ module connector_holder()
       {
         union()
         {
+          // top
           translate([0,dim_conn_outer[1]/2-1,-7])
             box([dim_conn_outer[0],2,5]);
+          // bottom
           translate([0,-dim_conn_outer[1]/2-2,-7])
             box([dim_conn_outer[0],2,5]);
+         for(i=[-1,1])
+           translate([i*12.5,-1.5,-7])
+             box([2,13,5]);
         }
         // cut for rails
         for(i=[-1,1])
