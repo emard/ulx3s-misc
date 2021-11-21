@@ -468,14 +468,21 @@ module connector_holder()
           // bottom
           translate([0,-dim_conn_outer[1]/2-2,-7])
             box([dim_conn_outer[0],2,5]);
-         for(i=[-1,1])
-           translate([i*12.5,-1.5,-7])
-             box([2,13,5]);
+          // left-right
+          for(i=[-1,1])
+            translate([i*12.5,-1.5,-7])
+              box([2,13,5]);
+          translate([0,-6,-2])
+            box([27,4,6]);
         }
         // cut for rails
+        // vertical rails cut
         for(i=[-1,1])
-          translate([-1.3+i*10,0,-7])
+          translate([-1.3+i*10,0,-9])
             box([2.5,40,10]);
+        // horizontal rail cut
+        translate([0,-3.5,-9])
+          box([40,2.5,10]);
       }
   }
 }
