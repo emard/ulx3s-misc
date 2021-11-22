@@ -7,7 +7,7 @@ include <connector14p.scad>
 clearance=1.0;
 width=47.1-clearance;
 height=55.0-clearance;
-depth=39;
+depth=40;
 curvature_r=15;
 thick=2; // wall thickness
 over=3; // dihtung
@@ -437,13 +437,13 @@ module kutijica(kutija=1, poklopac=1, magnet=0, slider=0, chep=1, strana=1)
   }
 }
 
-pos_connector = [1.27,3.5,10];
+pos_connector = [1.27,3.5,8];
 %translate(pos_connector)
   connector14p();
 
 module connector_holder()
 {
-  dim_conn_inner = [23,6.5,10];
+  dim_conn_inner = [23,6.5,7];
   dim_conn_outer = dim_conn_inner+[4,4,-0.01];
   translate(pos_connector)
   {
@@ -453,7 +453,7 @@ module connector_holder()
       // inside cut
       box(dim_conn_inner);
       // notch cut
-      translate([0,dim_conn_inner[1]/2,3])
+      translate([0,dim_conn_inner[1]/2,1])
         box([5,4,10]);
     };
     // fitting for pcb holder rails
@@ -502,6 +502,7 @@ module connector_holder()
   }
 }
 
+// 14-pin connector holder
 if(1)
 translate([0,0,-4.5])
 connector_holder();
@@ -513,7 +514,7 @@ connector_holder();
 difference()
 {
 if(1)
-kutijica(kutija=1,poklopac=0,magnet=0,chep=0,slider=0,strana=1);
+kutijica(kutija=1,poklopac=1,magnet=0,chep=1,slider=1,strana=1);
 translate([0,0,-depth/2+sensor_pcb[1]/2])
   rotate([-90,0,0])
     %sensor_adxl355();

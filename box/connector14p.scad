@@ -22,7 +22,7 @@ module connector14p()
   translate([0,dim_conn_base[1]/2+dim_conn_notch[1]/2,-dim_conn_base[2]/2+dim_conn_notch[2]/2])
     box(dim_conn_notch);
   // cable holder
-  translate([0,0,7])
+  translate([0,0,6.6])
   {
     translate([0,0,1.5])
       box([18,3,4]);

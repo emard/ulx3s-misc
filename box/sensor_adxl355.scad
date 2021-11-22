@@ -4,7 +4,7 @@ module sensor_adxl355()
   pins_plastic = [15.2,2,5.3]; // plastic pins holder
   raster = 2.54; // standard raster, don't touch this
   pins_h = 1.6/2+2.7; // pins center height above pcb plane center
-  pins_l = 8.5; // pins active length total
+  pins_l = 8; // pins active length total
   pins_depth = 0; // pins depth inside of sensor (pins plastic bar front pos)
   pins_t = 0.5; // pin thickness of square side
   // PCB
