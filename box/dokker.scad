@@ -456,28 +456,28 @@ module connector_holder()
       translate([0,dim_conn_inner[1]/2,3])
         box([5,4,10]);
     };
-    // fit for pcb holder rails
-    //translate([0,dim_conn_outer[1]/2-1,-7])
-      difference()
-      {
+    // fitting for pcb holder rails
+    fitting_depth=8;
+    difference()
+    {
         union()
         {
           // top
-          translate([0,dim_conn_outer[1]/2-1,-7])
-            box([dim_conn_outer[0],2,5]);
+          translate([0,dim_conn_outer[1]/2-1,-3.5-fitting_depth/2])
+            box([dim_conn_outer[0],2,fitting_depth]);
           // bottom
-          translate([0,-dim_conn_outer[1]/2-2,-7])
-            box([dim_conn_outer[0],2,5]);
+          translate([0,-dim_conn_outer[1]/2-2,-3.5-fitting_depth/2])
+            box([dim_conn_outer[0],2,fitting_depth]);
           // left-right
           for(i=[-1,1])
-            translate([i*12.5,-1.5,-7])
-              box([2,13,5]);
+            translate([i*12.5,-1.5,-3.5-fitting_depth/2])
+              box([2,13,fitting_depth]);
           // under bottom
           translate([0,-6,-2])
           difference()
           {
             box([27,4,6]);
-            // print firendly 45 deg cut
+            // print friendly 45 deg cut
             translate([0,-2,5])
               rotate([45,0,0])
                 box([27+0.01,7,7]);
