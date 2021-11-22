@@ -472,8 +472,16 @@ module connector_holder()
           for(i=[-1,1])
             translate([i*12.5,-1.5,-7])
               box([2,13,5]);
+          // under bottom
           translate([0,-6,-2])
+          difference()
+          {
             box([27,4,6]);
+            // print firendly 45 deg cut
+            translate([0,-2,5])
+              rotate([45,0,0])
+                box([27+0.01,7,7]);
+          }
         }
         // cut for rails
         // vertical rails cut
@@ -482,6 +490,7 @@ module connector_holder()
           translate([-1.3+i*10,0,-10])
             box([2.5,40,10]);
         }
+        // cut to fit rail joint reinforement
         if(1)
           translate([-11.3,-3.5,-10])
             rotate([0,0,45])
