@@ -2,7 +2,6 @@
 
 esp32
 
-    [ ] if left sensor is missing, right is reported missing too
     [ ] tunnel mode kml generate follow the same direction
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
@@ -27,6 +26,7 @@ esp32
     [ ] btn to stop logging and close all files
     [x] 60GB free, but shown 3529MB, use uint64_t and float
     [ ] print ADX chip not detected, now unconnected ADXRS290 is "detected"
+    [ ] sometimes false report no L/R sensor
     [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color
     [ ] wep upload success readyState == 4, status == 200
@@ -77,6 +77,7 @@ esp32
     [x] config log mode wav/kml
     [x] kml date in the document description
     [x] sensor range +-2-4-8 g configurable
+    [x] if left sensor is missing, right can be detected
 
 core
 
