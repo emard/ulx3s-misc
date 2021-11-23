@@ -22,9 +22,17 @@ looking to the holes (mirror of pins).
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
 | 3.3V  | 3.3V  |  GND  |  GND  | SCLK  | DRDY  | MISO  | INT2  | MOSI  |  NC   |  CS   | INT1  |
 
-DB9 cable crimping: some wires from 12-pin cable splitted out
-and not going to DB9 connector, resulting in 9-pin cable:
+Cable reduction: from 12-pin cable, 3 wires are splitted out
+leaving 9 pins to fit DB9 connector:
 
 |   1   |   2   |   3   |   4   |   5   |   6   |   7   |   8   |   9   |  10   |  11   |  12   |
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
 |       | 3.3V  |  GND  |       | SCLK  | DRDY  | MISO  | INT2  | MOSI  |       |  CS   | INT1  |
+
+DB9 pinout:
+
+|   1   |   6   |   2   |   7   |   3   |   8   |   4   |   9   |   5   |
+|       |   6   |       |   7   |       |   8   |       |   9   |       |
+| ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| 3.3V  |       | SCLK  |       | MISO  |       | MOSI  |       | INT1  |
+|       |  GND  |       | DRDY  |       | INT2  |       |  CS   |       |
