@@ -453,7 +453,7 @@ module connector_holder()
       // inside cut
       box(dim_conn_inner);
       // notch cut
-      translate([0,dim_conn_inner[1]/2,1])
+      translate([0,-dim_conn_inner[1]/2,1])
         box([5,4,10]);
     };
     // fitting for pcb holder rails
@@ -481,6 +481,9 @@ module connector_holder()
             translate([0,-2,5])
               rotate([45,0,0])
                 box([27+0.01,7,7]);
+            // notch cut (again)
+            translate([0,1,0])
+              box([5,2.4,6]);
           }
         }
         // cut for rails
@@ -513,7 +516,7 @@ connector_holder();
 // chep: 1:generiraj 0:ne
 difference()
 {
-if(1)
+if(0)
 kutijica(kutija=1,poklopac=1,magnet=0,chep=1,slider=1,strana=1);
 translate([0,0,-depth/2+sensor_pcb[1]/2])
   rotate([-90,0,0])
