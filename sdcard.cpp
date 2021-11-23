@@ -118,10 +118,14 @@ void adxl355_init(void)
     // first try 1:ADXL355, then 0:ADXRS290
     // otherwise ADXL355 will be spoiled
     adxl355_regio = j;
-    adxl355_ctrl(2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
-    if(adxl355_read_reg(1) == 0x1D)
-      break; // ends for-loop
+    for(uint8_t lr = 0; lr < 2; lr++)
+    {
+      adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
+      if(adxl355_read_reg(1) == 0x1D)
+        goto read_chip_id; // ends for-loop
+    }
   }
+  read_chip_id:;
   // now read full 4 bytes of chip id
   for(uint8_t i = 0; i < 4; i++)
     chipid[i] = adxl355_read_reg(i);
