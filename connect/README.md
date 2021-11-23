@@ -32,7 +32,6 @@ leaving 9 pins to fit DB9 connector:
 DB9 pinout:
 
 |   1   |   6   |   2   |   7   |   3   |   8   |   4   |   9   |   5   |
-|       |   6   |       |   7   |       |   8   |       |   9   |       |
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
 | 3.3V  |       | SCLK  |       | MISO  |       | MOSI  |       | INT1  |
 |       |  GND  |       | DRDY  |       | INT2  |       |  CS   |       |
