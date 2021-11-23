@@ -2,6 +2,7 @@
 
 esp32
 
+    [ ] if left sensor is missing, right is reported missing too
     [ ] tunnel mode kml generate follow the same direction
     [ ] LCD display with freq and status
     [ ] LCD display IP address and hostname
