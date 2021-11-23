@@ -13,8 +13,8 @@ looking to the holes (mirror of pins).
 
 |    1    |    2    |    3    |    4    |    5    |    6    |    7    |
 | ------- | ------- | ------- | ------- | ------- | ------- | ------- |
-| 01:NC   | 03:3.3V | 05:GND  | 07:SCLK | 09:MISO | 11:MOSI | 13:CS   |
-| 02:NC   | 04:3.3V | 06:GND  | 08:DRDY | 10:INT2 | 12:NC   | 14:INT1 |
+| 01:     | 03:3.3V | 05:GND  | 07:SCLK | 09:MISO | 11:MOSI | 13:CS   |
+| 02:     | 04:3.3V | 06:GND  | 08:DRDY | 10:INT2 | 12:NC   | 14:INT1 |
 
 12-pin cable going out of 14-pin connector:
 
@@ -27,4 +27,4 @@ and not going to DB9 connector, resulting in 9-pin cable:
 
 |   1   |   2   |   3   |   4   |   5   |   6   |   7   |   8   |   9   |  10   |  11   |  12   |
 | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
-|   X   | 3.3V  |  GND  |   X   | SCLK  | DRDY  | MISO  | INT2  | MOSI  |   X   |  CS   | INT1  |
+|       | 3.3V  |  GND  |       | SCLK  | DRDY  | MISO  | INT2  | MOSI  |       |  CS   | INT1  |
