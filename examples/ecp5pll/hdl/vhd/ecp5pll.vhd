@@ -8,7 +8,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 entity ecp5pll is
   generic
@@ -363,7 +363,7 @@ begin
     severity failure;
 
   G_dynamic: if dynamic_en /= 0 generate
-  PHASESEL_HW <= phasesel-1;
+  PHASESEL_HW <= std_logic_vector(unsigned(phasesel)-1);
   end generate;
   PLL_inst: EHXPLLL
   generic map
