@@ -3,7 +3,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 entity top_ecp5pll is
   generic
@@ -18,7 +18,7 @@ entity top_ecp5pll is
 end;
 
 architecture mix of top_ecp5pll is
-    type T_blink is array (0 to 3) of std_logic_vector(bits-1 downto 0);
+    type T_blink is array (0 to 3) of unsigned(bits-1 downto 0);
     signal R_blink: T_blink;
     signal clocks: std_logic_vector(3 downto 0);
 begin
@@ -44,7 +44,7 @@ begin
         if rising_edge(clocks(i)) then
           R_blink(i) <= R_blink(i)+1;
         end if;
-        led(2*i+1 downto 2*i) <= R_blink(i)(bits-1 downto bits-2);
+        led(2*i+1 downto 2*i) <= std_logic_vector(R_blink(i)(bits-1 downto bits-2));
       end process;
     end generate;
 
