@@ -14,6 +14,8 @@ module esp32_passthru
   //   issues uftpd: ESP32 will reset after upload
   //   so flash from uftpd will not return properly
   parameter C_powerup_en_time = 0,
+  // glitch preventer, preventes unwanted wifi_en glitch because of BTN2 used
+  parameter C_wifi_en_time = 9,
   // timeout to release SD lines after programing ESP32
   parameter C_prog_release_timeout = 26 // default n=26, 2^n / 25MHz = 2.6s
 )
@@ -66,6 +68,16 @@ module esp32_passthru
   end
   endgenerate
 
+  reg [C_wifi_en_time:0] R_wifi_en_time = 1;
+  generate
+  if(C_wifi_en_time)
+  always @(posedge clk_25mhz)
+  begin
+    if(R_wifi_en_time[C_wifi_en_time] == 1'b0)
+      R_wifi_en_time <= R_wifi_en_time + 1; // increment until MSB=0
+  end
+  endgenerate
+
   // detecting start of programming ESP32 and reset timeout
   reg [C_prog_release_timeout:0] R_prog_release = -1;
   always @(posedge clk_25mhz)
@@ -80,8 +92,7 @@ module esp32_passthru
   // wifi_gpio2 for programming must go together with wifi_gpio0
   // wifi_gpio12 (must be 0 for esp32-wroom fuse unprogrammed. esp32-wrover-e works for 0 and 1)
 
-  //assign wifi_en = S_prog_out[1];
-  assign wifi_en      = S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~btn[2] ? 1'bz : 1'b0; // holding BTN2 disables ESP32, releasing BTN2 reboots ESP32
+  assign wifi_en      = S_prog_out[1] & R_powerup_en_time[C_powerup_en_time] & ~(btn[2] & R_wifi_en_time[C_wifi_en_time]) ? 1'bz : 1'b0;
   assign wifi_gpio13  = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b1;
   assign wifi_gpio12  = R_prog_release[C_prog_release_timeout] ? 1'bz : 1'b0;
   //assign wifi_gpio12  = btn[3]; // experiment with ESP32 VRef 3.3V/1.8V
