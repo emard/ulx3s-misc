@@ -1,3 +1,4 @@
+#!/usr/bin/env /mt/scratch/tmp/openfpga/oss-cad-suite/py3bin/python3
 import argparse
 
 from nmigen import *
