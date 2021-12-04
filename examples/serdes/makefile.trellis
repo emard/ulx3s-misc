@@ -1,10 +1,10 @@
 # ******* project, board and chip name *******
 PROJECT = serdes
 BOARD = ulx3s
-# 12 25 45 85
-FPGA_SIZE = 12
+# um-25 um-45 um-85 um5g-85
+FPGA_SIZE = um-25
 # "um-" prefix for serdes:
-FPGA_PREFIX = um-
+# FPGA_PREFIX = um-
 
 # ******* if programming with OpenOCD *******
 # using local latest openocd until in linux distribution
@@ -19,7 +19,7 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 #OPENOCD_INTERFACE=$(SCRIPTS)/ft2232.ocd
 
 # ******* design files *******
-CONSTRAINTS = ../../constraints/ulx3s_v31.lpf
+CONSTRAINTS = ../../constraints/ulx3s_v316.lpf
 TOP_MODULE = top_serdes
 TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
