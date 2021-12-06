@@ -46,7 +46,7 @@ connector_shell_clearance_slider_x=1.0;
 
 cover_thick=2; // cover thickness
 cover_clearance=0.7;
-cover_cable_width=15;
+cover_cable_width=16;
 cover_cable_z=15;
 
 cover_inside_cut=[connector_shell_x,carrier_cube[1],carrier_cube[2]]+[0,0,connector_bottom_z+connector_shell_thick+9]+[1,1,1]*cover_clearance;
