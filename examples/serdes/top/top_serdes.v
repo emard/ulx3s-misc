@@ -274,10 +274,10 @@ module top_serdes
     .CH0_LDR_CORE2TX_SEL(tx_ldr_en), // Low speed serial data TX: 1: Enabled, 0: Disabled (normal operation)
 
     // common channel settings
-    .CH1_UC_MODE(1'b1), // 1: selects user configured mode, 0: selects other mode PCIe, RapidIO, 10GbE, 1GBE
+    .CH1_UC_MODE(1'b0), // 1: selects user configured mode, 0: selects other mode PCIe, RapidIO, 10GbE, 1GBE
     .CH1_PCIE_MODE(1'b0), // 1: PCI express mode of operation, 0: Selects other mode (RapidIO, 10GbE, 1GBE)
     .CH1_RIO_MODE(1'b0), // 1: RapidIO mode, 0: Selects other mode (10GbE, 1GBE)
-    .CH1_WA_MODE(1'b1), // 1: bitslip word alignment mode, 0: barrel shift word alignment mode
+    .CH1_WA_MODE(1'b0), // 1: bitslip word alignment mode, 0: barrel shift word alignment mode
     .CH1_PRBS_SELECTION(1'b0), // ?
     .CH1_PRBS_LOCK(1'b0), // ?
     .CH1_PRBS_ENABLE(1'b0), // ?
@@ -293,10 +293,10 @@ module top_serdes
     .CH1_UDF_COMMA_MASK(10'h3ff), // user defined comma mask
     .CH1_UDF_COMMA_A(10'h283), // user defined comma character 'a'
     .CH1_UDF_COMMA_B(10'h17C), // user defined comma character 'b'
-    .CH1_RX_GEAR_MODE(1'b0), // 2:1 gearing for receive path on selected channels: 1: enable, 0: disable (no gearing)
+    .CH1_RX_GEAR_MODE(1'b1), // 2:1 gearing for receive path on selected channels: 1: enable, 0: disable (no gearing)
     .CH1_PCS_DET_TIME_SEL(2'b00), // PCS connection detection time: 11: 16us, 10: 4us, 01: 2us, 00: 8us
     .CH1_RX_SB_BYPASS(1'b0), // invert RX data after SerDes bridge: 1: invert, 0: normal (note: loopback data is inverted)
-    .CH1_WA_BYPASS(1'b0), // word alignment: 1: bypass, 0: normal operation
+    .CH1_WA_BYPASS(1'b1), // word alignment: 1: bypass, 0: normal operation
     .CH1_DEC_BYPASS(1'b1), // 8b10 decoder: 1: bypass, 0: normal operation
     .CH1_CTC_BYPASS(1'b1), // clock toleration compensation: 1: bypass, 0: normal operation
     .CH1_RX_GEAR_BYPASS(1'b0), // PCS Rx gear box: 1: bypass, 0: normal operation
