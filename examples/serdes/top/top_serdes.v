@@ -445,12 +445,12 @@ module top_serdes
     .CH0_FFC_LDR_CORE2TX_EN(tx_ldr_en),
     .CH0_LDR_CORE2TX(tx_ldr),
 
-    .CH1_FFC_FB_LOOPBACK(1'b0),
+    .CH1_FFC_FB_LOOPBACK(1'b1),
     // RX
     .CH1_HDINP(), .CH1_HDINN(),
     .CH1_RX_REFCLK(clk),
     .CH1_FF_RXI_CLK(rx1_pclk),
-    .CH1_FF_EBRD_CLK(rx1_pclk),
+    //.CH1_FF_EBRD_CLK(rx1_pclk),
     //.CH1_FF_RX_PCLK(rx1_pclk),
     //.CH1_FF_RX_F_CLK(rx1_pclk), // full clock
     .CH1_FF_RX_H_CLK(rx1_pclk), // half clock
@@ -501,7 +501,9 @@ module top_serdes
   always @(posedge rx0_pclk) if(r_rx0_ldr == 2'b10) rx0_ldr_cnt <= rx0_ldr_cnt+1;
   always @(posedge rx1_pclk) if(r_rx1_ldr == 2'b10) rx1_ldr_cnt <= rx1_ldr_cnt+1;
 
-  assign disp0 = {rx0_los_lol, rx0_cdr_lol, tx0_hb[27], rx0_ldr_cnt[19]};
-  assign disp1 = {rx1_los_lol, rx1_cdr_lol, tx1_hb[27], rx1_ldr_cnt[19]};
+  //assign disp0 = {rx0_los_lol, rx0_cdr_lol, tx0_hb[27], rx0_ldr_cnt[19]};
+  //assign disp1 = {rx1_los_lol, rx1_cdr_lol, tx1_hb[27], rx1_ldr_cnt[19]};
+  assign disp0 = {rx0_los_lol, rx0_cdr_lol, tx0_hb[27], rx0_hb[27]};
+  assign disp1 = {rx1_los_lol, rx1_cdr_lol, tx1_hb[27], rx1_hb[27]};
 
 endmodule
