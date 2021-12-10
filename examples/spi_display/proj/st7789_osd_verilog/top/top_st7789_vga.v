@@ -80,7 +80,7 @@ module top_st7789_vga
   spi_osd_v
   #(
     .c_sclk_capable_pin(1'b0),
-    .c_start_x     ( 1), .c_start_y( 0), // xy centering
+    .c_start_x     ( 0), .c_start_y( 0), // xy centering
     .c_char_bits_x ( 5), .c_chars_y(15), // xy size, slightly less than full screen
     .c_bits_x      (12), .c_bits_y ( 8), // xy counters bits
     .c_inverse     ( 1),

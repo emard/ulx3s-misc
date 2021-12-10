@@ -35,7 +35,7 @@ VHDL_FILES = \
 ../../../dvi/hdl/vga.vhd \
 
 #osd.mem: osd.txt
-#	hexdump -n 1536 -v -e '1/1 "%02x " "\n"' $< > $@
+#	hexdump -n 480 -v -e '32/1 "%02x " "\n"' $< > $@
 
 YOSYS_OPTIONS = -abc9
 NEXTPNR_OPTIONS = --timing-allow-fail
