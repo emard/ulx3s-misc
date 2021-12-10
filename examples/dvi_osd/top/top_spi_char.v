@@ -253,7 +253,7 @@ module top_spi_char
   );
 
   // VGA to digital video converter
-  wire [1:0] tmds[3:0];
+  wire [1:0] tmds_c, tmds_r, tmds_g, tmds_b;
   vga2dvid
   #(
     .c_ddr(c_ddr),
@@ -269,10 +269,10 @@ module top_spi_char
     .in_hsync(osd_vga_hsync),
     .in_vsync(osd_vga_vsync),
     .in_blank(osd_vga_blank),
-    .out_clock(tmds[3]),
-    .out_red(tmds[2]),
-    .out_green(tmds[1]),
-    .out_blue(tmds[0])
+    .out_clock(tmds_c),
+    .out_red(tmds_r),
+    .out_green(tmds_g),
+    .out_blue(tmds_b)
   );
 
   generate
@@ -281,17 +281,17 @@ module top_spi_char
       // vendor specific DDR modules
       // convert SDR 2-bit input to DDR clocked 1-bit output (single-ended)
       // onboard GPDI
-      ODDRX1F ddr0_clock (.D0(tmds[3][0]), .D1(tmds[3][1]), .Q(gpdi_dp[3]), .SCLK(clk_shift), .RST(0));
-      ODDRX1F ddr0_red   (.D0(tmds[2][0]), .D1(tmds[2][1]), .Q(gpdi_dp[2]), .SCLK(clk_shift), .RST(0));
-      ODDRX1F ddr0_green (.D0(tmds[1][0]), .D1(tmds[1][1]), .Q(gpdi_dp[1]), .SCLK(clk_shift), .RST(0));
-      ODDRX1F ddr0_blue  (.D0(tmds[0][0]), .D1(tmds[0][1]), .Q(gpdi_dp[0]), .SCLK(clk_shift), .RST(0));
+      ODDRX1F ddr0_clock (.D0(tmds_c[0]), .D1(tmds_c[1]), .Q(gpdi_dp[3]), .SCLK(clk_shift), .RST(0));
+      ODDRX1F ddr0_red   (.D0(tmds_r[0]), .D1(tmds_r[1]), .Q(gpdi_dp[2]), .SCLK(clk_shift), .RST(0));
+      ODDRX1F ddr0_green (.D0(tmds_g[0]), .D1(tmds_g[1]), .Q(gpdi_dp[1]), .SCLK(clk_shift), .RST(0));
+      ODDRX1F ddr0_blue  (.D0(tmds_b[0]), .D1(tmds_b[1]), .Q(gpdi_dp[0]), .SCLK(clk_shift), .RST(0));
     end
     else
     begin
-      assign gpdi_dp[3] = tmds[3][0];
-      assign gpdi_dp[2] = tmds[2][0];
-      assign gpdi_dp[1] = tmds[1][0];
-      assign gpdi_dp[0] = tmds[0][0];
+      assign gpdi_dp[3] = tmds_c[0];
+      assign gpdi_dp[2] = tmds_r[0];
+      assign gpdi_dp[1] = tmds_g[0];
+      assign gpdi_dp[0] = tmds_b[0];
     end
   endgenerate
 
