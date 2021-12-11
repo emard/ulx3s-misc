@@ -210,10 +210,10 @@ module top_adxl355log
   reg  [7:0] r_calc_result[0:15]; // 16-byte (4x32-bit)
   wire [7:0] w_calc_result[0:15]; // 16-byte (4x32-bit)
 
-  wire spi_bram_cs = ram_addr[27:24] == 4'h0; // read bram
-  wire spi_bptr_cs = ram_addr[27:24] == 4'h1; // read bram ptr
+  wire spi_bram_cs = ram_addr[27:24] == 4'h0; // read from 0x00xxxxxx read sensor 6-ch 16-bit WAV 1000 Hz data BRAM
+  wire spi_bptr_cs = ram_addr[27:24] == 4'h1; // read from 0x01xxxxxx read sensor 6-ch 16-bit WAV 1000 Hz data BRAM pointer
   wire spi_calc_cs = ram_addr[27:24] == 4'h2; // read/write to 0x02xxxxxx writes 32-bit speed mm/s and const/speed
-  wire spi_wav_cs  = ram_addr[27:24] == 4'h5; // write to 0x05xxxxxx writes unsigned 8-bit 11025 Hz WAV PCM
+  wire spi_wav_cs  = ram_addr[27:24] == 4'h5; // write to 0x05xxxxxx writes unsigned 1-ch 8-bit 11025 Hz WAV PCM
   wire spi_tag_cs  = ram_addr[27:24] == 4'h6; // write to 0x06xxxxxx writes 6-bit tags
   wire spi_btn_cs  = ram_addr[27:24] == 4'hB; // read from 0x0Bxxxxxx reads BTN state
   wire spi_rds_cs  = ram_addr[27:24] == 4'hD; // write to 0x0Dxxxxxx writes 273 bytes of RDS encoded data for text display
