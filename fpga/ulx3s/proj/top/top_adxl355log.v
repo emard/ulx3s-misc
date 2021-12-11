@@ -46,11 +46,11 @@ module top_adxl355log
   wav_addr_bits= 12,         // 2**n, default 2**12 = 4096 bytes = 4 KB audio PCM FIFO buffer
   C_prog_release_timeout = 26, // esp32 programming default n=26, 2^n / 25MHz = 2.6s
   spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1 or SPI_MODE3)
-  clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
+  clk_out0_hz  =  40*1000000,// Hz,  40 MHz, PLL generated internal clock
   clk_out1_hz  = 240*1000000,// Hz, 240 MHz, PLL generated clock for FM transmitter
   clk_out2_hz  = 120*1000000,// Hz, 120 MHz, PLL generated clock for SPI LCD
-  lcd_hex      = 1,          // enable HEX display (either HEX or TEXT, not both)
-  lcd_txt      = 0,          // enable TEXT display
+  lcd_hex      = 0,          // enable HEX display (either HEX or TEXT, not both)
+  lcd_txt      = 1,          // enable TEXT display
   pps_n        = 10,         // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
