@@ -412,12 +412,12 @@ void rds_message(struct tm *tm)
       else
         sprintf(disp_short, "GO    0X"); // normal
         //sprintf(disp_short, "%3s   0X", iri2digit); // debug
-      sprintf(disp_long, "L=%.2f,%.2f R=%.2f,%.2f %dMB free %02d:%02d %d km/h RUN=%d",
+      sprintf(disp_long, "L=%.2f,%.2f R=%.2f,%.2f %dMB free %02d:%02d %d km/h %s",
         iri[0], iri20[0], iri[1], iri20[1],
         free_MB,
         tm->tm_hour, tm->tm_min,
         speed_kmh,
-        fast_enough);
+        fast_enough ? "RUN" : "STOP");
     }
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
@@ -488,9 +488,9 @@ void rds_report_ip(struct tm *tm)
       // print to LCD display
       spi_master_tx_buf[1] = 0xC; // addr [31:24] msb to LCD
       spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0 Y=0
-      memcpy(spi_master_tx_buf+5, disp_short, 8); // copy 8-byte short RDS message
-      memset(spi_master_tx_buf+5+8, 32, 24+64); // clear until end of first line
-      memcpy(spi_master_tx_buf+5+32, disp_long, strlen(disp_long)); // copy 64-byte long RDS message
+      memset(spi_master_tx_buf+5, 32, 32+64); // clear first 3 lines
+      memcpy(spi_master_tx_buf+5, disp_short, strlen(disp_short)); // copy short RDS message
+      memcpy(spi_master_tx_buf+5+32, disp_long, strlen(disp_long)); // copy long RDS message
       master.transfer(spi_master_tx_buf, 5+32+64); // write RDS to LCD
     }
 }
