@@ -48,7 +48,9 @@ module top_adxl355log
   spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1 or SPI_MODE3)
   clk_out0_hz  = 40*1000000, // Hz, 40 MHz, PLL generated internal clock
   clk_out1_hz  = 240*1000000,// Hz, 240 MHz, PLL generated clock for FM transmitter
-  //clk_out2_hz  = 120*1000000,// Hz, 120 MHz, PLL generated clock for SPI LCD
+  clk_out2_hz  = 120*1000000,// Hz, 120 MHz, PLL generated clock for SPI LCD
+  lcd_hex      = 1,          // enable HEX display (either HEX or TEXT, not both)
+  lcd_txt      = 0,          // enable TEXT display
   pps_n        = 10,         // N, 1 Hz, number of PPS pulses per interval
   pps_s        = 1,          // s, 1 s, PPS interval
   clk_sync_hz  = 1000,       // Hz, 1 kHz SYNC pulse, sample rate
@@ -152,7 +154,8 @@ module top_adxl355log
   #(
       .in_hz(25*1000000),
     .out0_hz(clk_out0_hz),
-    .out1_hz(clk_out1_hz)
+    .out1_hz(clk_out1_hz),
+    .out2_hz(clk_out2_hz)
   )
   ecp5pll_inst
   (
@@ -161,6 +164,8 @@ module top_adxl355log
   );
   wire clk = clocks[0]; // 40 MHz system clock
   wire clk_fmdds = clocks[1]; // 240 MHz FM clock
+  wire clk_lcd = clocks[2]; // 120 MHz LCD clock
+  wire clk_pixel = clk;
 
   wire [6:0] btn_rising, btn_debounce;
   btn_debounce
@@ -694,7 +699,10 @@ module top_adxl355log
 
   wire [7:0] disp_x, disp_y;
   wire [15:0] disp_color;
+
   wire [127:0] data;
+  generate
+  if(lcd_hex)
   hex_decoder_v
   #(
     .c_data_len(128),
@@ -708,13 +716,87 @@ module top_adxl355log
     .y(disp_y[7:1]),
     .color(disp_color)
   );
+  endgenerate
+
+  // OSD overlay
+  wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
+  wire osd_vga_hsync, osd_vga_vsync, osd_vga_blank;
+  wire vga_hsync;
+  wire vga_vsync;
+  wire vga_blank;
+  wire [7:0] vga_r, vga_g, vga_b;
+  wire [15:0] vga_rgb = {vga_r[7:3],vga_g[7:2],vga_b[7:3]};
+  generate
+  if(lcd_txt)
+  begin
+  vga
+  #(
+    .c_resolution_x(240),
+    .c_hsync_front_porch(1800),
+    .c_hsync_pulse(1),
+    .c_hsync_back_porch(1800),
+    .c_resolution_y(240),
+    .c_vsync_front_porch(1),
+    .c_vsync_pulse(1),
+    .c_vsync_back_porch(1),
+    .c_bits_x(12),
+    .c_bits_y(8)
+  )
+  vga_instance
+  (
+    .clk_pixel(clk_pixel),
+    .clk_pixel_ena(1'b1),
+    .test_picture(1'b1),
+    .vga_r(vga_r),
+    .vga_g(vga_g),
+    .vga_b(vga_b),
+    .vga_hsync(vga_hsync),
+    .vga_vsync(vga_vsync),
+    .vga_blank(vga_blank)
+  );
+  
+  spi_osd_v
+  #(
+    .c_sclk_capable_pin(1'b0),
+    .c_start_x     ( 0), .c_start_y( 0), // xy centering
+    .c_char_bits_x ( 5), .c_chars_y(15), // xy size, slightly less than full screen
+    .c_bits_x      (12), .c_bits_y ( 8), // xy counters bits
+    .c_inverse     ( 1),
+    .c_transparency( 0),
+    .c_init_on     ( 1),
+    .c_char_file   ("osd.mem"),
+    .c_font_file   ("font_bizcat8x16.mem")
+  )
+  spi_osd_v_instance
+  (
+    .clk_pixel(clk_pixel),
+    .clk_pixel_ena(1),
+    .i_r(0),
+    .i_g(0),
+    .i_b(0),
+    .i_hsync(vga_hsync),
+    .i_vsync(vga_vsync),
+    .i_blank(vga_blank),
+    .i_csn(csn),
+    .i_sclk(sclk),
+    .i_mosi(mosi),
+    .o_r(osd_vga_r),
+    .o_g(osd_vga_g),
+    .o_b(osd_vga_b),
+    .o_hsync(osd_vga_hsync),
+    .o_vsync(osd_vga_vsync),
+    .o_blank(osd_vga_blank)
+  );
+  assign disp_color = {osd_vga_r,osd_vga_g};
+  end
+  endgenerate
 
   lcd_video
   #(
-    .c_clk_spi_mhz(clk_out0_hz/1000000),
-    .c_vga_sync(0),
+    .c_clk_spi_mhz(clk_out2_hz/1000000),
+    .c_vga_sync(lcd_txt),
     .c_reset_us(1000),
-    .c_init_file("st7789_linit_xflip.mem"),
+    .c_init_file(lcd_txt ? "st7789_linit.mem" : "st7789_linit_xflip.mem"), // flip for HEX display
     //.c_init_size(75), // long init
     //.c_init_size(35), // standard init (not long)
     .c_clk_phase(0),
@@ -726,13 +808,13 @@ module top_adxl355log
   lcd_video_instance
   (
     .reset(0),
-    .clk_pixel(clk), // 25 MHz
+    .clk_pixel(clk_pixel), // 40 MHz
     .clk_pixel_ena(1),
-    .clk_spi(clk), // 100 MHz
+    .clk_spi(clk_lcd), // 120 MHz
     .clk_spi_ena(1),
-    //.blank(vga_blank_test),
-    //.hsync(vga_hsync_test),
-    //.vsync(vga_vsync_test),
+    .blank(osd_vga_blank),
+    .hsync(osd_vga_hsync),
+    .vsync(osd_vga_vsync),
     .x(disp_x),
     .y(disp_y),
     .color(disp_color),

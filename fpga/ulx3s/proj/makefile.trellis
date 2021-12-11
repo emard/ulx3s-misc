@@ -28,6 +28,9 @@ $(TOP_MODULE_FILE) \
 ../spi_slave/hdl/spirw_slave_v.v \
 ../adxl355/hdl/adxl355rd.v \
 ../adxl355/hdl/adxl355_sync.v \
+../bram/hdl/bram_true2p_2clk.v \
+../osd/hdl/spi_osd_v.v \
+../osd/hdl/osd.v \
 ../hex/decoder/hex_decoder_v.v \
 ../spi_display/hdl/spi_display_verilog/lcd_video.v \
 ../btn_debounce/hdl/btn_debounce.v \
@@ -50,6 +53,13 @@ TOP_VHDL_MODULE3 = slope
 VHDL_FILES3 = \
 ../calc/hdl/coefficients_pack.vhd \
 ../calc/hdl/slope.vhd \
+
+TOP_VHDL_MODULE4 = vga
+VHDL_FILES4 = \
+../vga/hdl/vga.vhd \
+
+#osd.mem: osd.txt
+#       hexdump -n 480 -v -e '32/1 "%02x " "\n"' $< > $@
 
 # synthesis options
 #YOSYS_OPTIONS = -noccu2
