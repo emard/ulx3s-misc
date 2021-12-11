@@ -221,7 +221,9 @@ module top_adxl355log
   wire spi_wav_cs  = ram_addr[27:24] == 4'h5; // write to 0x05xxxxxx writes unsigned 1-ch 8-bit 11025 Hz WAV PCM
   wire spi_tag_cs  = ram_addr[27:24] == 4'h6; // write to 0x06xxxxxx writes 6-bit tags
   wire spi_btn_cs  = ram_addr[27:24] == 4'hB; // read from 0x0Bxxxxxx reads BTN state
+                                              // write to 0x0Cxxxxxx writes 480 bytes of LCD TEXT data see spi_osd_v.v
   wire spi_rds_cs  = ram_addr[27:24] == 4'hD; // write to 0x0Dxxxxxx writes 273 bytes of RDS encoded data for text display
+                                              // write to 0x0Exxxxxx enables LCD text see spi_osd_v.v
   wire spi_ctrl_cs = ram_addr[27:24] == 4'hF;
 
   generate

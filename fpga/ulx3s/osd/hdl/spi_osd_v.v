@@ -3,8 +3,8 @@
 
 module spi_osd_v
 #(
-  parameter  [7:0] c_addr_enable  =  8'hFE, // high addr byte of enable byte
-  parameter  [7:0] c_addr_display =  8'hFD, // high addr byte of display data, +0x10000 for inverted
+  parameter  [7:0] c_addr_enable  =  8'h0E, // high addr byte of enable byte
+  parameter  [7:0] c_addr_display =  8'h0C, // high addr byte of display data, +0x10000 for inverted
   parameter        c_start_x      = 64,  // x1 pixel window h-position
   parameter        c_start_y      = 48,  // x1 pixel window v-position
   parameter        c_char_bits_x  =  6,  // chars H-size 2**n (x8 pixels)
