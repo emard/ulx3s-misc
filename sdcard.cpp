@@ -436,11 +436,25 @@ void rds_message(struct tm *tm)
   Serial.println(disp_short);
   Serial.println(disp_long);
   spi_master_tx_buf[0] = 0; // 1: write ram
-  spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
+  spi_master_tx_buf[1] = 0xD; // addr [31:24] msb to RDS
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
+  // print to LCD display
+  spi_master_tx_buf[1] = 0xC; // addr [31:24] msb to LCD
+  spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0 Y=0
+  memcpy(spi_master_tx_buf+5, disp_short, 8); // copy 8-byte short RDS message
+  memset(spi_master_tx_buf+5+8, 32, 24+64); // clear to end of first line and next 2 lines
+  int len_disp_long = strlen(disp_long);
+  if(len_disp_long <= 30) // only one line
+    memcpy(spi_master_tx_buf+5+32, disp_long, len_disp_long); // copy 64-byte long RDS message
+  else // 2 lines
+  { // each line has 32 bytes in memory, 30 bytes visible
+    memcpy(spi_master_tx_buf+5+32, disp_long, 30);
+    memcpy(spi_master_tx_buf+5+64, disp_long+30, len_disp_long-30);
+  }
+  master.transfer(spi_master_tx_buf, 5+32+64); // write RDS to LCD
 }
 
 void rds_report_ip(struct tm *tm)
@@ -471,6 +485,13 @@ void rds_report_ip(struct tm *tm)
       spi_master_tx_buf[3] = 0; // addr [15: 8]
       spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
       master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
+      // print to LCD display
+      spi_master_tx_buf[1] = 0xC; // addr [31:24] msb to LCD
+      spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0 Y=0
+      memcpy(spi_master_tx_buf+5, disp_short, 8); // copy 8-byte short RDS message
+      memset(spi_master_tx_buf+5+8, 32, 24+64); // clear until end of first line
+      memcpy(spi_master_tx_buf+5+32, disp_long, strlen(disp_long)); // copy 64-byte long RDS message
+      master.transfer(spi_master_tx_buf, 5+32+64); // write RDS to LCD
     }
 }
 
