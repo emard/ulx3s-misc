@@ -28,12 +28,17 @@ TOP_MODULE = top_st7789_vga
 TOP_MODULE_FILE = top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
-  $(TOP_MODULE_FILE) \
-  ../../../ecp5pll/hdl/sv/ecp5pll.sv \
-  ../../hdl/spi_display_verilog/lcd_video.v
+$(TOP_MODULE_FILE) \
+../../../ecp5pll/hdl/sv/ecp5pll.sv \
+../../../spi_slave/hdl/spirw_slave_v.v \
+../../../bram/hdl/bram_true2p_2clk.v \
+../../../dvi_osd/hdl/spi_osd_v.v \
+../../../dvi_osd/hdl/spi_ram_btn_v.v \
+../../../dvi_osd/hdl/osd.v \
+../../hdl/spi_display_verilog/lcd_video.v
 
 VHDL_FILES = \
-  ../../../dvi/hdl/vga.vhd \
+../../../dvi/hdl/vga.vhd \
 
 SCRIPTS = ../../../../scripts
 include $(SCRIPTS)/trellis_path.mk

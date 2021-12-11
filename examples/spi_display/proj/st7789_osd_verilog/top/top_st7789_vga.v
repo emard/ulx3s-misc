@@ -1,18 +1,17 @@
 `default_nettype none
 module top_st7789_vga
 (
-    input  wire clk_25mhz,
-    input  wire [6:0] btn,
-    output wire [7:0] led,
-    output wire oled_csn,
-    output wire oled_clk,
-    output wire oled_mosi,
-    output wire oled_dc,
-    output wire oled_resn
+  input  wire clk_25mhz,
+  input  wire [6:0] btn,
+  output wire [7:0] led,
+  input  wire wifi_gpio5,
+  input  wire gp11, gn11,
+  output wire oled_csn,
+  output wire oled_clk,
+  output wire oled_mosi,
+  output wire oled_dc,
+  output wire oled_resn
 );
-  assign wifi_en = 1;
-  assign wifi_gpio0 = btn[0];
-
   localparam c_clk_pixel_mhz = 25;
   localparam c_clk_spi_mhz = 4*c_clk_pixel_mhz; // *4 or more
 
@@ -73,6 +72,8 @@ module top_st7789_vga
   assign led[2] =  vga_vsync;
   assign led[3] = ~oled_resn;
   assign led[7:4] = 0;
+  
+  wire spi_csn = ~wifi_gpio5, spi_sck = gn11, spi_mosi = gp11;
 
   // OSD overlay
   wire [7:0] osd_vga_r, osd_vga_g, osd_vga_b;
@@ -135,6 +136,7 @@ module top_st7789_vga
     .hsync(osd_vga_hsync),
     .vsync(osd_vga_vsync),
     .color({osd_vga_r,osd_vga_g}),
+    //.color(vga_rgb), // debug
     .spi_resn(oled_resn),
     .spi_clk(oled_clk),
     //.spi_csn(oled_csn), // 8-pin ST7789
