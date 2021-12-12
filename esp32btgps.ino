@@ -213,7 +213,6 @@ void setup() {
   spi_init();
   rds_init();
   spi_rds_write();
-  set_fm_freq();
 
   int web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
   if(web)
@@ -222,6 +221,8 @@ void setup() {
     mount();
     read_cfg();
     finalize_data(&tm);
+    read_fmfreq();
+    set_fm_freq();
     read_last_nmea();
     web_setup();
     speakaction[0] = "/profilog/speak/webserver.wav"; // TODO say web server maybe IP too
@@ -256,6 +257,8 @@ void setup() {
 
   mount();
   read_cfg();
+  read_fmfreq();
+  set_fm_freq();
   read_last_nmea();
   umount();
 
@@ -759,7 +762,9 @@ void draw_kml_line(char *line)
 void btn_handler(void)
 {
   static uint32_t next_ms;
-  const uint32_t hold_ms = 400, repeat_ms = 200;
+  static uint32_t next_write_ms;
+  static uint8_t write_required;
+  const uint32_t hold_ms = 400, repeat_ms = 200, write_ms = 1000;
   btn = spi_btn_read();
   uint8_t ev_btn_press = 0;
   if(btn != btn_prev)
@@ -769,13 +774,21 @@ void btn_handler(void)
     next_ms = t_ms+hold_ms;
   }
   uint8_t ev_btn_repeat = 0;
+  if( btn != 1 ) // if any button is pressed
   if( (int32_t)t_ms - (int32_t)next_ms > 0 )
   {
     ev_btn_repeat = 1;
     next_ms = t_ms+repeat_ms;
   }
+
+  if( write_required )
+  if( (int32_t)t_ms - (int32_t)next_write_ms > 0 )
+  {
+    write_fmfreq();
+    write_required = 0;
+  }
   
-  if( (ev_btn_press | ev_btn_repeat))
+  if( (ev_btn_press | ev_btn_repeat) )
   {
     if(btn & 8) // up: increase freq
     {
@@ -790,6 +803,8 @@ void btn_handler(void)
         }
         else
           fm_freq[fm_freq_cursor-1] = 108000000;
+        write_required = 1;
+        next_write_ms = t_ms + write_ms;
       }
     }
     if(btn & 16) // down: decrease freq
@@ -805,6 +820,8 @@ void btn_handler(void)
         }
         else
           fm_freq[fm_freq_cursor-1] = 87500000;
+        write_required = 1;
+        next_write_ms = t_ms + write_ms;
       }
     }
     if(btn & 32) // left: cursor to 1st freq

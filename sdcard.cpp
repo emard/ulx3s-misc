@@ -30,6 +30,7 @@ String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_PASS[AP_MAX], DNS_HOST;
 File file_kml, file_accel, file_pcm, file_cfg;
 char filename_data[256] = "/profilog/data/accel.wav";
 char *filename_lastnmea = "/profilog/var/lastnmea.txt";
+char *filename_fmfreq   = "/profilog/var/fmfreq.txt";
 char lastnmea[256]; // here is read content from filename_lastnmea
 int card_is_mounted = 0;
 int logs_are_open = 0;
@@ -824,6 +825,8 @@ void read_last_nmea(void)
 {
   File file_lastnmea = SD_MMC.open(filename_lastnmea, FILE_READ);
   //file_lastnmea.readBytes(lastnmea, strlen(lastnmea));
+  if(!file_lastnmea)
+    return;
   String last_nmea_line = file_lastnmea.readStringUntil('\n');
   strcpy(lastnmea, last_nmea_line.c_str());
   Serial.print("read last nmea: ");
@@ -846,6 +849,33 @@ void read_last_nmea(void)
   Serial.println(latlon_spr);
   #endif
   // lastnmea[0] = 0; // prevent immediate next write, not needed as parsing does similar
+}
+
+void write_fmfreq(void)
+{
+  char fmfreq[32];
+  File file_fmfreq = SD_MMC.open(filename_fmfreq, FILE_WRITE);
+  sprintf(fmfreq, "%09d %09d\n", fm_freq[0], fm_freq[1]);
+  file_fmfreq.write((uint8_t *)fmfreq, 20);
+  file_fmfreq.close();
+  Serial.print("write fmfreq: ");
+  Serial.print(fmfreq);
+}
+
+void read_fmfreq(void)
+{
+  File file_fmfreq = SD_MMC.open(filename_fmfreq, FILE_READ);
+  if(!file_fmfreq)
+    return;
+  String fmfreq_line = file_fmfreq.readStringUntil('\n');
+  file_fmfreq.close();
+  fm_freq[0] = strtol(fmfreq_line.substring( 0, 9).c_str(), NULL, 10);
+  fm_freq[1] = strtol(fmfreq_line.substring(10,19).c_str(), NULL, 10);
+  Serial.print("read fmfreq: ");
+  Serial.print(fm_freq[0]);
+  Serial.print(" ");
+  Serial.print(fm_freq[1]);
+  Serial.println(" Hz");
 }
 
 void write_tag(char *a)
