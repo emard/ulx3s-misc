@@ -1338,17 +1338,23 @@ void finalize_data(struct tm *tm){
             Serial.print(file.name());
             Serial.print("  SIZE: ");
             Serial.println(file.size());
-            if(strstr(file.name(),".kml"))
+            char *is_kml = strstr(file.name(),".kml");
+            if(is_kml)
               if(strcmp(file.name(), filename_data) != 0) // different name
                 finalize_kml(file);
             // print on LCD
-            char *nameloc = strstr(file.name(),todaystr);
-            if(strstr(file.name(),".wav") && nameloc)
+            char *is_wav = strstr(file.name(),".wav");
+            char *is_today = strstr(file.name(),todaystr);
+            if(is_today)
             {
               int wrap_lcd_n = lcd_n % max_lcd_n; // wraparound last N lines
-              strcpy((char *)spi_master_tx_buf+5+(wrap_lcd_n<<5), nameloc);
-              memset((char *)spi_master_tx_buf+5+(wrap_lcd_n<<5)+17, 32, 13); // clear to end of line
-              sprintf((char *)spi_master_tx_buf+5+(wrap_lcd_n<<5)+17, " %5d min", file.size()/720000);
+              char *txbufptr = (char *)spi_master_tx_buf+5+(wrap_lcd_n<<5);
+              memset(txbufptr, 32, 32); // clear line
+              strcpy(txbufptr, is_today);
+              if(is_wav)
+                sprintf(txbufptr+17, " %6d min", file.size()/720000);
+              if(is_kml)
+                sprintf(txbufptr+17, " %6d MB", file.size()/(1024*1024));
               lcd_n++;
             }
         }
