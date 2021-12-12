@@ -8,7 +8,7 @@ esp32
     [ ] LCD graphic track display
     [x] LCD cursor FM frequency setting with BTN
     [x] BTN freq autorepeat jump 1 MHz
-    [ ] save FM freq setting to SD card
+    [x] save FM freq setting to SD card
     [x] search for GPS/OBD if nonzero config exists
     [ ] don't report "GO" if no sensors
     [ ] RTC support (for OBD without GPS)
