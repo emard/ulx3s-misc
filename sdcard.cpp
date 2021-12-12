@@ -443,18 +443,18 @@ void rds_message(struct tm *tm)
   master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
   // print to LCD display
   spi_master_tx_buf[1] = 0xC; // addr [31:24] msb to LCD
-  spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0 Y=0
+  spi_master_tx_buf[4] = 23; // addr [ 7: 0] lsb HOME X=22 Y=0
+  memset(spi_master_tx_buf+5, 32, 10+64); // clear to end of first line and next 2 lines
   memcpy(spi_master_tx_buf+5, disp_short, 8); // copy 8-byte short RDS message
-  memset(spi_master_tx_buf+5+8, 32, 24+64); // clear to end of first line and next 2 lines
   int len_disp_long = strlen(disp_long);
   if(len_disp_long <= 30) // only one line
-    memcpy(spi_master_tx_buf+5+32, disp_long, len_disp_long); // copy 64-byte long RDS message
+    memcpy(spi_master_tx_buf+5+10, disp_long, len_disp_long); // copy 64-byte long RDS message
   else // 2 lines
   { // each line has 32 bytes in memory, 30 bytes visible
-    memcpy(spi_master_tx_buf+5+32, disp_long, 30);
-    memcpy(spi_master_tx_buf+5+64, disp_long+30, len_disp_long-30);
+    memcpy(spi_master_tx_buf+5+10, disp_long, 30);
+    memcpy(spi_master_tx_buf+5+10+32, disp_long+30, len_disp_long-30);
   }
-  master.transfer(spi_master_tx_buf, 5+32+64); // write RDS to LCD
+  master.transfer(spi_master_tx_buf, 5+10+64); // write RDS to LCD
 }
 
 void rds_report_ip(struct tm *tm)
@@ -487,11 +487,11 @@ void rds_report_ip(struct tm *tm)
       master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
       // print to LCD display
       spi_master_tx_buf[1] = 0xC; // addr [31:24] msb to LCD
-      spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0 Y=0
-      memset(spi_master_tx_buf+5, 32, 32+64); // clear first 3 lines
+      spi_master_tx_buf[4] = 23; // addr [ 7: 0] lsb HOME X=22 Y=0
+      memset(spi_master_tx_buf+5, 32, 10+64); // clear last 8 char of 1st and next 2 lines
       memcpy(spi_master_tx_buf+5, disp_short, strlen(disp_short)); // copy short RDS message
-      memcpy(spi_master_tx_buf+5+32, disp_long, strlen(disp_long)); // copy long RDS message
-      master.transfer(spi_master_tx_buf, 5+32+64); // write RDS to LCD
+      memcpy(spi_master_tx_buf+5+8, disp_long, strlen(disp_long)); // copy long RDS message
+      master.transfer(spi_master_tx_buf, 5+10+64); // write RDS to LCD
     }
 }
 
