@@ -220,6 +220,7 @@ module top_adxl355log
   wire spi_calc_cs = ram_addr[27:24] == 4'h2; // read/write to 0x02xxxxxx writes 32-bit speed mm/s and const/speed
   wire spi_wav_cs  = ram_addr[27:24] == 4'h5; // write to 0x05xxxxxx writes unsigned 1-ch 8-bit 11025 Hz WAV PCM
   wire spi_tag_cs  = ram_addr[27:24] == 4'h6; // write to 0x06xxxxxx writes 6-bit tags
+  wire spi_freq_cs = ram_addr[27:24] == 4'h7; // write to 0x07xxxxxx writes 2x32-bit FM freq[0] and freq[1]
   wire spi_btn_cs  = ram_addr[27:24] == 4'hB; // read from 0x0Bxxxxxx reads BTN state
                                               // write to 0x0Cxxxxxx writes 480 bytes of LCD TEXT data see spi_osd_v.v
   wire spi_rds_cs  = ram_addr[27:24] == 4'hD; // write to 0x0Dxxxxxx writes 273 bytes of RDS encoded data for text display
@@ -616,6 +617,15 @@ module top_adxl355log
     if(ram_wr & spi_rds_cs)
       rds_ram[ram_addr[8:0]] <= ram_di;
   end
+
+  reg [7:0] r_fm_freq[0:7];
+  always @(posedge clk)
+  begin
+    if(ram_wr & spi_freq_cs)
+      r_fm_freq[ram_addr[2:0]] <= ram_di;
+  end
+  wire [31:0] fm_freq1 = {r_fm_freq[3],r_fm_freq[2],r_fm_freq[1],r_fm_freq[0]};
+  wire [31:0] fm_freq2 = {r_fm_freq[7],r_fm_freq[6],r_fm_freq[5],r_fm_freq[4]};
   // FM core reads from RDS RAM
   wire antena;
   wire [8:0] rds_addr;
@@ -631,8 +641,8 @@ module top_adxl355log
     //.pcm_in_right(btn[2] ? beep[15:1] : wav_data_signed), // debug
     .pcm_in_left( wav_data_signed), // normal
     .pcm_in_right(wav_data_signed), // normal
-    .cw_freq1(107900000),
-    .cw_freq2(87600000),
+    .cw_freq1(fm_freq1),
+    .cw_freq2(fm_freq2),
     .rds_addr(rds_addr),
     .rds_data(rds_data),
     .fm_antenna1(antena), // 107.9 MHz
