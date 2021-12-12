@@ -2,7 +2,7 @@
 # ******* project, board and chip name *******
 PROJECT = memtest
 BOARD = ulx3s
-# 12 25 45 85
+# 12 25 45 85 um-85
 FPGA_SIZE = 12
 
 # ******* if programming with OpenOCD *******
@@ -20,7 +20,9 @@ OPENOCD_INTERFACE=$(SCRIPTS)/ft231x.ocd
 
 # ******* design files *******
 CONSTRAINTS = ../../../../../constraints/ulx3s_v20.lpf
+#CONSTRAINTS = ../../../../../constraints/ulx4m_v002.lpf
 TOP_MODULE = top_memtest
+#TOP_MODULE = top_ulx4m_memtest
 TOP_MODULE_FILE = ../../hdl/top/$(TOP_MODULE).v
 
 VERILOG_FILES = \
