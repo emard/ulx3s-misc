@@ -493,8 +493,16 @@ void report_status(void)
         }
         else
         {
-          speakaction[0] = "/profilog/speak/ready.wav";
-          speakaction[1] = sensor_status_file[sensor_check_status];
+          if(sensor_check_status)
+          { // at least one sensor
+            speakaction[0] = "/profilog/speak/ready.wav";
+            speakaction[1] = sensor_status_file[sensor_check_status];
+          }
+          else
+          { // no sensors
+            speakaction[0] = sensor_status_file[sensor_check_status];
+            speakaction[1] = NULL;
+          }
         }
       }
       speakfiles = speakaction;

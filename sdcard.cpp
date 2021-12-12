@@ -514,8 +514,8 @@ void set_fm_freq(void)
     spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
     spi_master_tx_buf[2] = fm_freq_cursor & (1<<i) ? 1 : 0; // addr [23:16] (0:normal, 1:invert)
     spi_master_tx_buf[3] = 0; // addr [15: 8]
-    spi_master_tx_buf[4] = 1+i*7; // addr [ 7: 0] lsb HOME X=0,8 Y=0
-    sprintf((char *)spi_master_tx_buf+5, "%6.2f", fm_freq[i]/1.0e6);
+    spi_master_tx_buf[4] = 1+(i?7:0); // addr [ 7: 0] lsb HOME X=0,6 Y=0
+    sprintf((char *)spi_master_tx_buf+5, "%3d.%02d", fm_freq[i]/1000000, (fm_freq[i]%1000000)/10000);
     master.transfer(spi_master_tx_buf, 5+6); // write to LCD
   }
   // next RDS message will have new AF
