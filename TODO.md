@@ -7,7 +7,7 @@ esp32
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
     [x] LCD cursor FM frequency setting with BTN
-    [ ] BTN freq autorepeat jump 1 MHz
+    [x] BTN freq autorepeat jump 1 MHz
     [ ] save FM frequency to SD card
     [x] search for GPS/OBD if nonzero config exists
     [ ] don't report "GO" if no sensors
