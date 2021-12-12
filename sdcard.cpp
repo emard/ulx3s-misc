@@ -491,7 +491,7 @@ void rds_report_ip(struct tm *tm)
       spi_master_tx_buf[4] = 23; // addr [ 7: 0] lsb X=22 Y=0
       memset(spi_master_tx_buf+5, 32, 10+64); // clear last 8 char of 1st and next 2 lines
       memcpy(spi_master_tx_buf+5, disp_short, strlen(disp_short)); // copy short RDS message
-      memcpy(spi_master_tx_buf+5+8, disp_long, strlen(disp_long)); // copy long RDS message
+      memcpy(spi_master_tx_buf+5+10, disp_long, strlen(disp_long)); // copy long RDS message
       master.transfer(spi_master_tx_buf, 5+10+64); // write RDS to LCD
     }
 }
