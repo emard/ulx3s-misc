@@ -6,7 +6,8 @@ esp32
     [ ] LCD display with freq and status
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
-    [ ] search for GPS/OBD if config MAC is nonzero
+    [x] search for GPS/OBD if nonzero config exists
+    [ ] don't report "GO" if no sensors
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
     [ ] configurable report frequency (m)
