@@ -46,6 +46,7 @@ uint8_t spi_btn_read(void);
 void spi_rds_write(void);
 void rds_message(struct tm *tm);
 void rds_report_ip(struct tm *tm);
+void lcd_show_fm_freq(void);
 void adxl355_init(void);
 uint8_t adxl355_available(void);
 void ls(void);

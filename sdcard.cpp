@@ -53,6 +53,7 @@ uint8_t FILTER_ADXRS290_CONF = 0; // see datasheet adxrs290 p.11 0:480Hz ... 7:2
 uint32_t REPORT_mm = 100000, REPORT2_mm = 20000; // mm report every travel distance 100 m, 20 m
 uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
+uint32_t fm_freq[2] = {107900000, 87600000};
 
 // SD status
 uint64_t total_bytes, used_bytes, free_bytes;
@@ -487,12 +488,23 @@ void rds_report_ip(struct tm *tm)
       master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
       // print to LCD display
       spi_master_tx_buf[1] = 0xC; // addr [31:24] msb to LCD
-      spi_master_tx_buf[4] = 23; // addr [ 7: 0] lsb HOME X=22 Y=0
+      spi_master_tx_buf[4] = 23; // addr [ 7: 0] lsb X=22 Y=0
       memset(spi_master_tx_buf+5, 32, 10+64); // clear last 8 char of 1st and next 2 lines
       memcpy(spi_master_tx_buf+5, disp_short, strlen(disp_short)); // copy short RDS message
       memcpy(spi_master_tx_buf+5+8, disp_long, strlen(disp_long)); // copy long RDS message
       master.transfer(spi_master_tx_buf, 5+10+64); // write RDS to LCD
     }
+}
+
+void lcd_show_fm_freq(void)
+{
+      spi_master_tx_buf[0] = 0; // 1: write ram
+      spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
+      spi_master_tx_buf[2] = 0; // addr [23:16] (0:normal, 1:invert)
+      spi_master_tx_buf[3] = 0; // addr [15: 8]
+      spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0 Y=0
+      sprintf((char *)spi_master_tx_buf+5, "%5.1f %5.1f MHz       ", fm_freq[0]/1.0e6, fm_freq[1]/1.0e6);
+      master.transfer(spi_master_tx_buf, 5+22); // write to LCD
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
