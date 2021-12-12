@@ -12,8 +12,8 @@ module top_st7789_vga
   output wire oled_dc,
   output wire oled_resn
 );
-  localparam c_clk_pixel_mhz = 25;
-  localparam c_clk_spi_mhz = 4*c_clk_pixel_mhz; // *4 or more
+  localparam c_clk_pixel_mhz = 40;
+  localparam c_clk_spi_mhz = 120; // sometimes nees *4 or more
 
   // clock generator
   wire clk_locked;
@@ -31,11 +31,14 @@ module top_st7789_vga
     .locked(clk_locked)
   );
   wire clk_lcd = clocks[0];
+  //wire clk_pixel = clk_lcd;
   wire clk_pixel = clocks[1];
 
   wire S_reset = ~btn[0] | btn[1];
 
   // test picture video generator for debug purposes
+  reg r_pixel_ena = 1;
+  // always @(posedge clk_pixel) r_pixel_ena <= ~r_pixel_ena;
   wire vga_hsync;
   wire vga_vsync;
   wire vga_blank;
@@ -56,7 +59,7 @@ module top_st7789_vga
   vga_instance
   (
     .clk_pixel(clk_pixel),
-    .clk_pixel_ena(1'b1),
+    .clk_pixel_ena(r_pixel_ena),
     .test_picture(1'b1),
     .vga_r(vga_r),
     .vga_g(vga_g),
@@ -93,7 +96,7 @@ module top_st7789_vga
   spi_osd_v_instance
   (
     .clk_pixel(clk_pixel),
-    .clk_pixel_ena(1'b1),
+    .clk_pixel_ena(r_pixel_ena),
     .i_r(0),
     .i_g(0),
     .i_b(0),
@@ -111,6 +114,8 @@ module top_st7789_vga
     .o_blank(osd_vga_blank)
   );
 
+  reg r_lcd_ena = 1;
+  always @(posedge clk_lcd) r_lcd_ena <= ~r_lcd_ena;
   lcd_video
   #(
     .c_clk_spi_mhz(c_clk_spi_mhz),
@@ -129,9 +134,9 @@ module top_st7789_vga
   (
     .reset(S_reset),
     .clk_pixel(clk_pixel), // 25 MHz
-    .clk_pixel_ena(1),
+    .clk_pixel_ena(r_pixel_ena),
     .clk_spi(clk_lcd), // 100 MHz
-    .clk_spi_ena(1),
+    .clk_spi_ena(r_lcd_ena),
     .blank(osd_vga_blank),
     .hsync(osd_vga_hsync),
     .vsync(osd_vga_vsync),
