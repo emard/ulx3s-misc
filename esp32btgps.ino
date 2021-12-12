@@ -754,23 +754,31 @@ void btn_handler(void)
   if(btn != btn_prev)
   {
     btn_prev = btn;
-    if(btn & 8) // up
+    if(btn & 8) // up: increase freq
     {
       if(fm_freq_cursor == 1 || fm_freq_cursor == 2)
+      {
         if(fm_freq[fm_freq_cursor-1] < 108000000)
           fm_freq[fm_freq_cursor-1] += 50000;
+        else
+          fm_freq[fm_freq_cursor-1] = 108000000;
+      }
     }
-    if(btn & 16) // down
+    if(btn & 16) // down: decrease freq
     {
       if(fm_freq_cursor == 1 || fm_freq_cursor == 2)
+      {
         if(fm_freq[fm_freq_cursor-1] > 87500000)
           fm_freq[fm_freq_cursor-1] -= 50000;
+        else
+          fm_freq[fm_freq_cursor-1] = 87500000;
+      }
     }
-    if(btn & 32) // left
+    if(btn & 32) // left: cursor to 1st freq
     {
       fm_freq_cursor = 1;
     }
-    if(btn & 64) // right
+    if(btn & 64) // right: cursor to 2nd freq
     {
       fm_freq_cursor = 2;
     }
