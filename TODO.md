@@ -6,6 +6,9 @@ esp32
     [ ] LCD display with freq and status
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
+    [x] LCD cursor FM frequency setting with BTN
+    [ ] BTN freq autorepeat jump 1 MHz
+    [ ] save FM frequency to SD card
     [x] search for GPS/OBD if nonzero config exists
     [ ] don't report "GO" if no sensors
     [ ] RTC support (for OBD without GPS)
@@ -99,7 +102,9 @@ core
     [x] output register for trellis clean FM signal
     [x] improve audio quality with DACPWM
     [x] latch calc_result from changing while reading
-    [x] dual frequency output 87.6 and 107.9
+    [x] dual FM frequency output 87.6 and 107.9
+    [x] FM frequency set
+    [ ] readmemh initial FM frequency
     [x] SPI slave for speed and iri
     [x] random inbalance in L/R calc results (slope ready not used)
 
