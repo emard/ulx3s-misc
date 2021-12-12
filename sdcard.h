@@ -16,6 +16,7 @@ extern int speed_mms; // mm/s speed
 extern int speed_kmh; // km/h speed
 extern int fast_enough; // logging flag when fast enough
 extern int mode_obd_gps;
+extern uint8_t gps_obd_configured;
 extern float srvz_iri100, iri[2], iriavg, srvz2_iri20, iri20[2], iri20avg;
 extern char iri2digit[4];
 extern char lastnmea[256];

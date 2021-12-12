@@ -43,6 +43,7 @@ int fast_enough = 0; // for speed logging hysteresis
 uint8_t KMH_START = 12, KMH_STOP = 6; // km/h start/stop speed hystereis
 uint8_t KMH_BTN = 0; // debug btn2 for fake km/h
 int mode_obd_gps = 0; // alternates 0:OBD and 1:GPS
+uint8_t gps_obd_configured = 0; // existence of (1<<0):OBD config, (1<<1):GPS config
 float srvz_iri100, iri[2], iriavg, srvz2_iri20, iri20[2], iri20avg;
 char iri2digit[4] = "0.0";
 struct int_latlon last_latlon; // degrees and microminutes
@@ -1143,6 +1144,23 @@ void parse_mac(uint8_t *mac, String a)
     mac[i] = strtol(a.substring(i*3,i*3+2).c_str(), NULL, 16);
 }
 
+void check_gps_obd_config()
+{
+  // check existence of OBD config
+  gps_obd_configured = OBD_NAME.length() > 0 ? 1 : 0;
+  if(gps_obd_configured == 0)
+    for(uint8_t i = 0; i < 6; i++)
+      if(OBD_MAC[i])
+        gps_obd_configured = 1;
+
+  // check existence of GPS config
+  gps_obd_configured |= GPS_NAME.length() > 0 ? 2 : 0;
+  if((gps_obd_configured & 2) == 0)
+    for(uint8_t i = 0; i < 6; i++)
+      if(GPS_MAC[i])
+        gps_obd_configured |= 2;
+}
+
 void read_cfg(void)
 {
   char *filename_cfg = "/profilog/config/profilog.cfg";
@@ -1219,6 +1237,7 @@ void read_cfg(void)
   Serial.print("*** close ");
   Serial.println(filename_cfg);
   file_cfg.close();
+  check_gps_obd_config();
 }
 
 void open_logs(struct tm *tm)

@@ -406,10 +406,11 @@ void report_search(void)
     // feed speech data.
     if(line_tdelta > 7000 && speak_search > 0)
     {
-      if(mode_obd_gps)
-        speakaction[0] = "/profilog/speak/searchobd.wav";
-      else
+      int mode_xor = gps_obd_configured == 3 ? 1 : 0; // if both then alternate speech in advance
+      if(mode_obd_gps ^ mode_xor)
         speakaction[0] = "/profilog/speak/searchgps.wav";
+      else
+        speakaction[0] = "/profilog/speak/searchobd.wav";
       speakaction[1] = sensor_status_file[sensor_check_status]; // normal
       #if 0 // debug false report all combinations no sensors
       static uint8_t x = 0;
@@ -633,27 +634,13 @@ void handle_reconnect(void)
   finalize_data(&tm); // finalize all except current session (if one file per day)
   umount();
 
-  // check existence of GPS config
-  uint8_t gps_exists = GPS_NAME.length() > 0;
-  if(gps_exists == 0)
-    for(uint8_t i = 0; i < 6; i++)
-      if(GPS_MAC[i])
-        gps_exists = 1;
-
-  // check existence of OBD config
-  uint8_t obd_exists = OBD_NAME.length() > 0;
-  if(obd_exists == 0)
-    for(uint8_t i = 0; i < 6; i++)
-      if(OBD_MAC[i])
-        obd_exists = 1;
-
-  if(gps_exists && obd_exists)
+  if(gps_obd_configured == 3)
     mode_obd_gps ^= 1; // toggle mode 0:OBD 1:GPS
   else
   {
-    if(obd_exists)
+    if((gps_obd_configured & 1))
       mode_obd_gps = 0;
-    if(gps_exists)
+    if((gps_obd_configured & 2))
       mode_obd_gps = 1;
   }
   String   bt_name     = mode_obd_gps ? GPS_NAME : OBD_NAME;
