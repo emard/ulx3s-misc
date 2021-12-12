@@ -500,7 +500,10 @@ void report_status(void)
         {
           if(sensor_check_status)
           { // at least one sensor
-            speakaction[0] = "/profilog/speak/ready.wav";
+            if(free_MB >= 8)
+              speakaction[0] = "/profilog/speak/ready.wav";
+            else
+              speakaction[0] = "/profilog/speak/nfree.wav";
             speakaction[1] = sensor_status_file[sensor_check_status];
           }
           else

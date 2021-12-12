@@ -424,6 +424,8 @@ void rds_message(struct tm *tm)
         speed_kmh,
         fast_enough ? "RUN" : "STOP");
     }
+    if(free_MB < 8 || sensor_check_status == 0)
+      memcpy(disp_short, "STOP", 4);
     rds.ct(year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
   }
   else // NULL pointer
