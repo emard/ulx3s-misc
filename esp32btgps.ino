@@ -750,16 +750,36 @@ void draw_kml_line(char *line)
 
 void btn_handler(void)
 {
+  static uint32_t next_ms;
+  const uint32_t hold_ms = 400, repeat_ms = 200;
   btn = spi_btn_read();
+  uint8_t ev_btn_press = 0;
   if(btn != btn_prev)
   {
     btn_prev = btn;
+    ev_btn_press = 1;
+    next_ms = t_ms+hold_ms;
+  }
+  uint8_t ev_btn_repeat = 0;
+  if( (int32_t)t_ms - (int32_t)next_ms > 0 )
+  {
+    ev_btn_repeat = 1;
+    next_ms = t_ms+repeat_ms;
+  }
+  
+  if( (ev_btn_press | ev_btn_repeat))
+  {
     if(btn & 8) // up: increase freq
     {
       if(fm_freq_cursor == 1 || fm_freq_cursor == 2)
       {
         if(fm_freq[fm_freq_cursor-1] < 108000000)
-          fm_freq[fm_freq_cursor-1] += 50000;
+        {
+          if((ev_btn_repeat))
+            fm_freq[fm_freq_cursor-1] = (fm_freq[fm_freq_cursor-1]/1000000 + 1) * 1000000;
+          else
+            fm_freq[fm_freq_cursor-1] += 50000;
+        }
         else
           fm_freq[fm_freq_cursor-1] = 108000000;
       }
@@ -769,7 +789,12 @@ void btn_handler(void)
       if(fm_freq_cursor == 1 || fm_freq_cursor == 2)
       {
         if(fm_freq[fm_freq_cursor-1] > 87500000)
-          fm_freq[fm_freq_cursor-1] -= 50000;
+        {
+          if(ev_btn_repeat)
+            fm_freq[fm_freq_cursor-1] = ((fm_freq[fm_freq_cursor-1]+999999)/1000000 - 1) * 1000000;
+          else
+            fm_freq[fm_freq_cursor-1] -= 50000;
+        }
         else
           fm_freq[fm_freq_cursor-1] = 87500000;
       }
