@@ -344,7 +344,7 @@ uint8_t spi_btn_read(void)
 
 void spi_rds_write(void)
 {
-  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -439,7 +439,7 @@ void rds_message(struct tm *tm)
   rds.rt(disp_long);
   Serial.println(disp_short);
   Serial.println(disp_long);
-  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0xD; // addr [31:24] msb to RDS
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -483,7 +483,7 @@ void rds_report_ip(struct tm *tm)
       rds.ct(tm->tm_year + 1900, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, 0);
       Serial.println(disp_short);
       Serial.println(disp_long);
-      spi_master_tx_buf[0] = 0; // 1: write ram
+      spi_master_tx_buf[0] = 0; // 0: write ram
       spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
       spi_master_tx_buf[2] = 0; // addr [23:16]
       spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -501,7 +501,7 @@ void rds_report_ip(struct tm *tm)
 
 void set_fm_freq(void)
 {
-  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0x7; // addr [31:24] msb FM freq addr
   spi_master_tx_buf[2] = 0; // addr [23:16] (0:normal, 1:invert)
   spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -511,7 +511,7 @@ void set_fm_freq(void)
   // show freq on LCD
   for(uint8_t i = 0; i < 2; i++)
   {
-    spi_master_tx_buf[0] = 0; // 1: write ram
+    spi_master_tx_buf[0] = 0; // 0: write ram
     spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
     spi_master_tx_buf[2] = fm_freq_cursor & (1<<i) ? 1 : 0; // addr [23:16] (0:normal, 1:invert)
     spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -522,6 +522,17 @@ void set_fm_freq(void)
   // next RDS message will have new AF
   rds.af[0] = fm_freq[0]/100000;
   rds.af[1] = fm_freq[1]/100000;
+}
+
+void clr_lcd(void)
+{
+  spi_master_tx_buf[0] = 0; // 0: write ram
+  spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
+  spi_master_tx_buf[2] = 0; // addr [23:16] (0:normal, 1:invert)
+  spi_master_tx_buf[3] = 0; // addr [15: 8]
+  spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0,6 Y=0
+  memset(spi_master_tx_buf+5, 32, 480);
+  master.transfer(spi_master_tx_buf, 5+480); // write to LCD
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -881,7 +892,7 @@ void read_fmfreq(void)
 void write_tag(char *a)
 {
   int i;
-  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 6; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -907,7 +918,7 @@ int play_pcm(int n)
     n = 0;
   if(n)
   {
-    spi_master_tx_buf[0] = 0; // 1: write ram
+    spi_master_tx_buf[0] = 0; // 0: write ram
     spi_master_tx_buf[1] = 5; // addr [31:24] msb
     spi_master_tx_buf[2] = 0; // addr [23:16]
     spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -962,7 +973,7 @@ int open_pcm(char *wav)
 void beep_pcm(int n)
 {
   int i;
-  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 5; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -976,7 +987,7 @@ void beep_pcm(int n)
 void write_rds(uint8_t *a, int n)
 {
   int i;
-  spi_master_tx_buf[0] = 0; // 1: write ram
+  spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0xD; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
@@ -1292,6 +1303,11 @@ void finalize_data(struct tm *tm){
         Serial.println("Not a directory");
         return;
     }
+    char todaystr[10];
+    sprintf(todaystr, "%04d%02d%02d", 1900+tm->tm_year, 1+tm->tm_mon, tm->tm_mday);
+    Serial.println(todaystr); // debug
+    int lcd_n=0; // counts printed LCD lines
+    const int max_lcd_n=12;
     generate_filename_kml(tm);
     File file = root.openNextFile();
     while(file){
@@ -1303,10 +1319,31 @@ void finalize_data(struct tm *tm){
             Serial.print(file.name());
             Serial.print("  SIZE: ");
             Serial.println(file.size());
-            if(strstr(file.name(),".kml") > 0)
+            if(strstr(file.name(),".kml"))
               if(strcmp(file.name(), filename_data) != 0) // different name
                 finalize_kml(file);
+            // print on LCD
+            char *nameloc = strstr(file.name(),todaystr);
+            if(strstr(file.name(),".wav") && nameloc)
+            {
+              int wrap_lcd_n = lcd_n % max_lcd_n; // wraparound last N lines
+              strcpy((char *)spi_master_tx_buf+5+(wrap_lcd_n<<5), nameloc);
+              memset((char *)spi_master_tx_buf+5+(wrap_lcd_n<<5)+17, 32, 13); // clear to end of line
+              sprintf((char *)spi_master_tx_buf+5+(wrap_lcd_n<<5)+17, " %5d min", file.size()/720000);
+              lcd_n++;
+            }
         }
         file = root.openNextFile();
+    }
+    // write to LCD
+    if(lcd_n)
+    {
+      int limit_lcd_n = lcd_n > max_lcd_n ? max_lcd_n : lcd_n;
+      spi_master_tx_buf[0] = 0; // 0: write ram
+      spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
+      spi_master_tx_buf[2] = 0; // addr [23:16] (0:normal, 1:invert)
+      spi_master_tx_buf[3] = 0; // addr [15: 8]
+      spi_master_tx_buf[4] = 1+(3<<5); // addr [ 7: 0] lsb HOME X=0 Y=3
+      master.transfer(spi_master_tx_buf, 5+(limit_lcd_n<<5)); // write to LCD
     }
 }

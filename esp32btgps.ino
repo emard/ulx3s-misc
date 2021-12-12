@@ -213,6 +213,7 @@ void setup() {
   spi_init();
   rds_init();
   spi_rds_write();
+  clr_lcd();
 
   int web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
   if(web)
