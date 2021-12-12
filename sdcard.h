@@ -36,6 +36,7 @@ extern uint32_t REPORT_mm, REPORT2_mm; // mm report each travel distance
 extern uint8_t adxl355_regio;
 extern uint8_t adxl_devid_detected;
 extern uint32_t fm_freq[2];
+extern uint8_t fm_freq_cursor;
 extern uint8_t btn, btn_prev;
 
 void mount(void);

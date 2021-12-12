@@ -61,6 +61,8 @@ class RDS {
     void pi(uint16_t pi_code);
     void ta(uint8_t ta);
     void stereo(uint8_t stereo);
+    uint8_t afs = 2; // number of different AF (alternative frequencies)
+    uint16_t af[6] = {1079, 876, 0, 0, 0, 0}; // x0.1 MHz, 0=empty, sent as pairs
 
     inline void Hz(uint32_t f)
     {
@@ -116,8 +118,6 @@ class RDS {
     uint8_t signal_mono = 1; // 1=mono,  0=stereo
     uint8_t signal_pty  = 8; // program type (0=undefined, 3=information, 8=science, see RDS wiki)
     uint8_t signal_static_pty = 1; // 1=static, 0=dynamic
-    uint8_t afs = 3; // number of different AF (alternative frequencies)
-    uint16_t af[6] = {1079, 876, 1068, 0, 0, 0}; // x0.1 MHz, 0=empty, sent as pairs
     char string_ps[RDS_PS_LENGTH]; // short 8-char text shown as station name
     char string_rt[RDS_RT_LENGTH]; // long 64-char text
 

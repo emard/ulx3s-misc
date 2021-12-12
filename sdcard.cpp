@@ -54,6 +54,7 @@ uint32_t REPORT_mm = 100000, REPORT2_mm = 20000; // mm report every travel dista
 uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
 uint32_t fm_freq[2] = {107900000, 87600000};
+uint8_t fm_freq_cursor = 0; // cursor highlighting fm freq bitmask 0,1,2
 uint8_t btn, btn_prev;
 
 // SD status
@@ -499,14 +500,27 @@ void rds_report_ip(struct tm *tm)
 
 void set_fm_freq(void)
 {
-  // show freq on LCD
   spi_master_tx_buf[0] = 0; // 1: write ram
-  spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
+  spi_master_tx_buf[1] = 0x7; // addr [31:24] msb FM freq addr
   spi_master_tx_buf[2] = 0; // addr [23:16] (0:normal, 1:invert)
   spi_master_tx_buf[3] = 0; // addr [15: 8]
-  spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0 Y=0
-  sprintf((char *)spi_master_tx_buf+5, "%5.1f %5.1f MHz       ", fm_freq[0]/1.0e6, fm_freq[1]/1.0e6);
-  master.transfer(spi_master_tx_buf, 5+22); // write to LCD
+  spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
+  memcpy(spi_master_tx_buf+5, fm_freq, 8);
+  master.transfer(spi_master_tx_buf, 5+8); // write to FM freq
+  // show freq on LCD
+  for(uint8_t i = 0; i < 2; i++)
+  {
+    spi_master_tx_buf[0] = 0; // 1: write ram
+    spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
+    spi_master_tx_buf[2] = fm_freq_cursor & (1<<i) ? 1 : 0; // addr [23:16] (0:normal, 1:invert)
+    spi_master_tx_buf[3] = 0; // addr [15: 8]
+    spi_master_tx_buf[4] = 1+i*7; // addr [ 7: 0] lsb HOME X=0,8 Y=0
+    sprintf((char *)spi_master_tx_buf+5, "%6.2f", fm_freq[i]/1.0e6);
+    master.transfer(spi_master_tx_buf, 5+6); // write to LCD
+  }
+  // next RDS message will have new AF
+  rds.af[0] = fm_freq[0]/100000;
+  rds.af[1] = fm_freq[1]/100000;
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){

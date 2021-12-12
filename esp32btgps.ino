@@ -756,13 +756,25 @@ void btn_handler(void)
     btn_prev = btn;
     if(btn & 8) // up
     {
-      fm_freq[0] += 100000;
+      if(fm_freq_cursor == 1 || fm_freq_cursor == 2)
+        if(fm_freq[fm_freq_cursor-1] < 108000000)
+          fm_freq[fm_freq_cursor-1] += 50000;
     }
     if(btn & 16) // down
     {
-      fm_freq[0] -= 100000;
+      if(fm_freq_cursor == 1 || fm_freq_cursor == 2)
+        if(fm_freq[fm_freq_cursor-1] > 87500000)
+          fm_freq[fm_freq_cursor-1] -= 50000;
     }
-    if((btn & (8|16))) // 8 or 16
+    if(btn & 32) // left
+    {
+      fm_freq_cursor = 1;
+    }
+    if(btn & 64) // right
+    {
+      fm_freq_cursor = 2;
+    }
+    if((btn & (8|16|32|64)))
       set_fm_freq();
   }
 }
