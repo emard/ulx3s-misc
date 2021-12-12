@@ -35,6 +35,8 @@ extern uint8_t G_RANGE; // +-2/4/8 g sensor range for reading +-32000
 extern uint32_t REPORT_mm, REPORT2_mm; // mm report each travel distance
 extern uint8_t adxl355_regio;
 extern uint8_t adxl_devid_detected;
+extern uint32_t fm_freq[2];
+extern uint8_t btn, btn_prev;
 
 void mount(void);
 void umount(void);
@@ -46,7 +48,7 @@ uint8_t spi_btn_read(void);
 void spi_rds_write(void);
 void rds_message(struct tm *tm);
 void rds_report_ip(struct tm *tm);
-void lcd_show_fm_freq(void);
+void set_fm_freq(void);
 void adxl355_init(void);
 uint8_t adxl355_available(void);
 void ls(void);

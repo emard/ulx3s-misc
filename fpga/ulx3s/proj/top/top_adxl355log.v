@@ -139,7 +139,7 @@ module top_adxl355log
   // assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0] & btn[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
   assign wifi_gpio0 = R_prog_release[C_prog_release_timeout] ? 1'bz : S_prog_out[0]; // holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
 
-  assign wifi_en = S_prog_out[1] & ~btn[3]; // holding BTN3 disables ESP32, releasing BTN3 reboots ESP32
+  assign wifi_en = S_prog_out[1] & ~(&btn[6:3]); // press BTN3,4,5,6 to reboot ESP32
   //assign wifi_gpio0 = S_prog_out[0];
 
   wire int1 = gp17;

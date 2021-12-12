@@ -213,7 +213,7 @@ void setup() {
   spi_init();
   rds_init();
   spi_rds_write();
-  lcd_show_fm_freq();
+  set_fm_freq();
 
   int web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
   if(web)
@@ -748,6 +748,25 @@ void draw_kml_line(char *line)
   }
 }
 
+void btn_handler(void)
+{
+  btn = spi_btn_read();
+  if(btn != btn_prev)
+  {
+    btn_prev = btn;
+    if(btn & 8) // up
+    {
+      fm_freq[0] += 100000;
+    }
+    if(btn & 16) // down
+    {
+      fm_freq[0] -= 100000;
+    }
+    if((btn & (8|16))) // 8 or 16
+      set_fm_freq();
+  }
+}
+
 void handle_gps_line_complete(void)
 {
   line[line_i-1] = 0; // replace \n termination with 0
@@ -765,7 +784,7 @@ void handle_gps_line_complete(void)
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
       if(KMH_BTN) // debug
       {
-        int btn = spi_btn_read();    // debug
+        // int btn = spi_btn_read();    // debug
         if((btn & 4)) speed_ckt = KMH_BTN*54; // debug BTN2 4320 ckt = 80 km/h = 22 m/s
         if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
       }
@@ -817,7 +836,7 @@ void handle_obd_line_complete(void)
   if(line[1] == 'E') // match 'E' in "SEARCHING"
   {
     strcpy(line, "00 00 00"); // debug last hex represents 0 km/h
-    int btn = spi_btn_read(); // debug
+    // int btn = spi_btn_read(); // debug
     if((btn & 4)) sprintf(line, "00 00 %02X", KMH_BTN); // debug BTN2 default 80 km/h
   }
   if(line_i > 0 && line[line_i-1] == prompt_obd)
@@ -963,6 +982,7 @@ void loop_run(void)
   else
     write_logs();
   report_search();
+  btn_handler();
   speech(); // runs speech PCM
 }
 
@@ -1009,6 +1029,7 @@ void loop_web(void)
     pinMode(PIN_LED, INPUT);
     digitalWrite(PIN_LED, LED_OFF);
   }
+  btn_handler();
   speech();
 }
 
