@@ -1354,9 +1354,9 @@ void finalize_data(struct tm *tm){
               memset(txbufptr, 32, 32); // clear line
               strcpy(txbufptr, is_today);
               if(is_wav)
-                sprintf(txbufptr+17, " %6d min", file.size()/720000);
+                sprintf(txbufptr+17, " %4d min", file.size()/720000);
               if(is_kml)
-                sprintf(txbufptr+17, " %6d MB", file.size()/(1024*1024));
+                sprintf(txbufptr+17, " %4d MB", file.size()/(1024*1024));
               lcd_n++;
             }
         }
