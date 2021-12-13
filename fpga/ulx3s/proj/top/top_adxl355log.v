@@ -61,7 +61,6 @@ module top_adxl355log
   input   [6:0] btn,
   output  [7:0] led,
   output  [3:0] audio_l, audio_r,
-  output        gp0,gp1,  // secondary antenna +
   output        gp13, // ESP32   MISO
   output        gp14, // ADXL355 DRDY
   input         gp15, // ADXL355 INT2
@@ -73,6 +72,7 @@ module top_adxl355log
   input         gp24, // ADXL355 INT1
   input         gn22, // ADXL355 MISO
   output        gn21,gn23,gn24, // ADXL355 SCLK,MOSI,CSn
+  output        gp19,gp20, // external antenna 1,2
   input         gn11, // ESP32 wifi_gpio26 PPS to FPGA
   output        gp11, // ESP32 wifi_gpio26 PPS feedback
   input         ftdi_nrts,
@@ -627,7 +627,7 @@ module top_adxl355log
   wire [31:0] fm_freq1 = {r_fm_freq[3],r_fm_freq[2],r_fm_freq[1],r_fm_freq[0]};
   wire [31:0] fm_freq2 = {r_fm_freq[7],r_fm_freq[6],r_fm_freq[5],r_fm_freq[4]};
   // FM core reads from RDS RAM
-  wire antena;
+  wire antena1, antena2;
   wire [8:0] rds_addr;
   reg  [7:0] rds_data;
   always @(posedge clk)
@@ -645,11 +645,12 @@ module top_adxl355log
     .cw_freq2(fm_freq2),
     .rds_addr(rds_addr),
     .rds_data(rds_data),
-    .fm_antenna1(antena), // 107.9 MHz
-    .fm_antenna2(gp1)     //  87.6 MHz
+    .fm_antenna1(antena1), // 107.9 MHz
+    .fm_antenna2(antena2)  //  87.6 MHz
   );
-  assign ant_433mhz = antena; // internal antenna 107.9 MHz
-  assign gp0 = antena;        // external antenna 107.9 MHz
+  assign ant_433mhz = antena1; // internal antenna
+  assign gp19       = antena1; // external antenna
+  assign gp20       = antena2; // external antenna
 
   wire [1:0] dac;
   dacpwm

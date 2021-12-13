@@ -67,3 +67,10 @@ DB9 female pinout (ULX3S, looking at the holes):
 | ----- | ----- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | 3.3V  |       | GN21 |      | GN22 |      | GN23 |      | GP24 |
 |       |  GND  |      | GP21 |      | GP22 |      | GN24 |      |
+
+External antennas to 40-pin flat cable:
+
+|  16  |  18  |
+| ---- | ---- |
+| GP19 | GP20 |
+| ANT1 | ANT2 |
