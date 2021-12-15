@@ -3,14 +3,14 @@
 esp32
 
     [ ] tunnel mode kml generate follow the same direction
-    [ ] LCD display with freq and status
+    [x] LCD display with freq and status
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
     [x] LCD cursor FM frequency setting with BTN
     [x] BTN freq autorepeat jump 1 MHz
     [x] save FM freq setting to SD card
     [x] search for GPS/OBD if nonzero config exists
-    [ ] don't report "GO" if no sensors
+    [x] don't report "GO" if no sensors
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
     [ ] configurable report frequency (m)
@@ -31,6 +31,7 @@ esp32
     [ ] btn to stop logging and close all files
     [x] 60GB free, but shown 3529MB, use uint64_t and float
     [ ] print ADX chip not detected, now unconnected ADXRS290 is "detected"
+    [ ] not detecting left ADX$S290
     [ ] sometimes false report no L/R sensor
     [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color
