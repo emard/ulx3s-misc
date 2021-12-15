@@ -64,6 +64,7 @@ void write_last_nmea(void);
 void read_last_nmea(void);
 void write_fmfreq(void);
 void clr_lcd(void);
+void lcd_print(uint8_t x, uint8_t y, uint8_t invert, char *a);
 void read_fmfreq(void);
 void set_date_from_tm(struct tm *tm);
 void write_tag(char *a);

@@ -533,9 +533,22 @@ void clr_lcd(void)
   spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
   spi_master_tx_buf[2] = 0; // addr [23:16] (0:normal, 1:invert)
   spi_master_tx_buf[3] = 0; // addr [15: 8]
-  spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0,6 Y=0
+  spi_master_tx_buf[4] = 1; // addr [ 7: 0] lsb HOME X=0 Y=0
   memset(spi_master_tx_buf+5, 32, 480);
   master.transfer(spi_master_tx_buf, 5+480); // write to LCD
+}
+
+// print to LCD screen
+void lcd_print(uint8_t x, uint8_t y, uint8_t invert, char *a)
+{
+  spi_master_tx_buf[0] = 0; // 0: write ram
+  spi_master_tx_buf[1] = 0xC; // addr [31:24] msb LCD addr
+  spi_master_tx_buf[2] = invert; // addr [23:16] (0:normal, 1:invert)
+  spi_master_tx_buf[3] = (y>>3); // addr [15: 8]
+  spi_master_tx_buf[4] = 1+x+((y&7)<<5); // addr [ 7: 0] lsb
+  int l = strlen(a);
+  memcpy(spi_master_tx_buf+5, a, l);
+  master.transfer(spi_master_tx_buf, 5+l); // write to LCD
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -868,7 +881,11 @@ void read_last_nmea(void)
 void write_fmfreq(void)
 {
   char fmfreq[32];
+  if(card_is_mounted == 0)
+    return;
   File file_fmfreq = SD_MMC.open(filename_fmfreq, FILE_WRITE);
+  if(!file_fmfreq)
+    return;
   sprintf(fmfreq, "%09d %09d\n", fm_freq[0], fm_freq[1]);
   file_fmfreq.write((uint8_t *)fmfreq, 20);
   file_fmfreq.close();
@@ -878,6 +895,8 @@ void write_fmfreq(void)
 
 void read_fmfreq(void)
 {
+  if(card_is_mounted == 0)
+    return;
   File file_fmfreq = SD_MMC.open(filename_fmfreq, FILE_READ);
   if(!file_fmfreq)
     return;

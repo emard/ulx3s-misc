@@ -214,6 +214,7 @@ void setup() {
   rds_init();
   spi_rds_write();
   clr_lcd();
+  lcd_print(14,0,0,"MHz");
 
   int web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
   if(web)
@@ -225,6 +226,7 @@ void setup() {
     read_fmfreq();
     set_fm_freq();
     read_last_nmea();
+    lcd_print(22,0,0,"WiFi");
     web_setup();
     speakaction[0] = "/profilog/speak/webserver.wav"; // TODO say web server maybe IP too
     speakaction[1] = NULL;
@@ -772,11 +774,13 @@ void btn_handler(void)
     next_ms = t_ms+repeat_ms;
   }
 
-  if( write_required )
+  if( write_required && card_is_mounted )
   if( (int32_t)t_ms - (int32_t)next_write_ms > 0 )
   {
     write_fmfreq();
     write_required = 0;
+    fm_freq_cursor = 0;
+    set_fm_freq(); // update LCD display with cursor removed
   }
   
   if( (ev_btn_press | ev_btn_repeat) )
@@ -817,11 +821,17 @@ void btn_handler(void)
     }
     if(btn & 32) // left: cursor to 1st freq
     {
-      fm_freq_cursor = 1;
+      if(fm_freq_cursor == 1)
+        fm_freq_cursor = 0;
+      else
+        fm_freq_cursor = 1;
     }
     if(btn & 64) // right: cursor to 2nd freq
     {
-      fm_freq_cursor = 2;
+      if(fm_freq_cursor == 2)
+        fm_freq_cursor = 0;
+      else
+        fm_freq_cursor = 2;
     }
     if((btn & (8|16|32|64)))
       set_fm_freq();
