@@ -755,9 +755,9 @@ void draw_kml_line(char *line)
 void btn_handler(void)
 {
   static uint32_t next_ms;
-  static uint32_t next_write_ms;
+  static uint32_t next_cursor_ms;
   static uint8_t write_required;
-  const uint32_t hold_ms = 400, repeat_ms = 200, write_ms = 1000;
+  const uint32_t hold_ms = 400, repeat_ms = 200, cursor_ms = 5000;
   btn = spi_btn_read();
   uint8_t ev_btn_press = 0;
   if(btn != btn_prev)
@@ -774,13 +774,24 @@ void btn_handler(void)
     next_ms = t_ms+repeat_ms;
   }
 
-  if( write_required && card_is_mounted )
-  if( (int32_t)t_ms - (int32_t)next_write_ms > 0 )
+  if(fm_freq_cursor) // if cursor in ON
+  if( (int32_t)t_ms - (int32_t)next_cursor_ms > 0 )
   {
-    write_fmfreq();
-    write_required = 0;
-    fm_freq_cursor = 0;
-    set_fm_freq(); // update LCD display with cursor removed
+    if(write_required)
+    {
+      if(card_is_mounted)
+      { // write then turn off cursor
+        write_fmfreq();
+        write_required = 0;
+        fm_freq_cursor = 0;
+        set_fm_freq(); // update LCD display with cursor removed
+      }
+    }
+    else // write not required, turn off cursor
+    {
+      fm_freq_cursor = 0;
+      set_fm_freq(); // update LCD display with cursor removed
+    }
   }
   
   if( (ev_btn_press | ev_btn_repeat) )
@@ -799,7 +810,7 @@ void btn_handler(void)
         else
           fm_freq[fm_freq_cursor-1] = 108000000;
         write_required = 1;
-        next_write_ms = t_ms + write_ms;
+        next_cursor_ms = t_ms + cursor_ms;
       }
     }
     if(btn & 16) // down: decrease freq
@@ -816,7 +827,7 @@ void btn_handler(void)
         else
           fm_freq[fm_freq_cursor-1] = 87500000;
         write_required = 1;
-        next_write_ms = t_ms + write_ms;
+        next_cursor_ms = t_ms + cursor_ms;
       }
     }
     if(btn & 32) // left: cursor to 1st freq
@@ -824,14 +835,20 @@ void btn_handler(void)
       if(fm_freq_cursor == 1)
         fm_freq_cursor = 0;
       else
+      {
         fm_freq_cursor = 1;
+        next_cursor_ms = t_ms + cursor_ms;
+      }
     }
     if(btn & 64) // right: cursor to 2nd freq
     {
       if(fm_freq_cursor == 2)
         fm_freq_cursor = 0;
       else
+      {
         fm_freq_cursor = 2;
+        next_cursor_ms = t_ms + cursor_ms;
+      }
     }
     if((btn & (8|16|32|64)))
       set_fm_freq();
