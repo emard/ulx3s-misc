@@ -222,10 +222,10 @@ void setup() {
     loop_pointer = &loop_web;
     mount();
     read_cfg();
-    finalize_data(&tm);
     read_fmfreq();
     set_fm_freq();
     read_last_nmea();
+    finalize_data(&tm);
     lcd_print(22,0,0,"WiFi");
     web_setup();
     speakaction[0] = "/profilog/speak/webserver.wav"; // TODO say web server maybe IP too
