@@ -163,6 +163,13 @@ void adxl355_init(void)
     adxl355_write_reg(ADXL355_FILTER, FILTER_ADXL355_CONF);
     // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
     adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin, 0xC0 undocumented, seems to prevent glitches
+    // repeatedly read raw temperature registers until 2 same readings
+    uint16_t T[2] = {11,15}; // any 2 different numbers that won't accidentally appear at reading
+    for(int i = 0; i < 1000 && T[0] != T[1]; i++)
+      T[i&1] = ((adxl355_read_reg(ADXL355_TEMP2) & 0xF)<<8) | adxl355_read_reg(ADXL355_TEMP1);
+    int16_t T256 = 25*256 + (T[0]-ADXL355_TEMP_AT_25C)*ADXL355_TEMP_SCALE_X256C; // convert to scaled temperature x10 deg C
+    sprintf(sprintf_buf, "T=%4.1f'C (raw %d)", T256/256.0, T[0]);
+    Serial.println(sprintf_buf);
     #if 0
     // print to check is Accel working
     for(int i = 0; i < 1000; i++)

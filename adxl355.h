@@ -40,4 +40,9 @@
 #define ADXL355_SELF_TEST        0x2E
 #define ADXL355_RESET            0x2F
 
+// intercept at 25 deg C
+#define ADXL355_TEMP_AT_25C      1885
+// scale factor x256 Celsius
+#define ADXL355_TEMP_SCALE_X256C    (-256000/9050)
+
 #endif /* ADXL355_H_ */
