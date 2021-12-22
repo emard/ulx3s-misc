@@ -491,7 +491,7 @@ module connector_holder()
         for(i=[-1,1])
         {
           translate([-1.3+i*10,0,-10])
-            box([2.5,40,10]);
+            box([2.4,40,10]);
         }
         // cut to fit rail joint reinforement
         if(1)
@@ -500,14 +500,14 @@ module connector_holder()
               box([5,5,10]);
         // horizontal rail cut
         translate([0,-3.5,-10])
-          box([40,2.5,10]);
+          box([40,2.4,10]);
       }
   }
 }
 
 // 14-pin connector holder
 if(1)
-translate([0,0,-4.5])
+translate([0,0,-2.5])
 connector_holder();
 
 // kutija 1:generirat 0:ne
@@ -517,11 +517,18 @@ connector_holder();
 difference()
 {
 if(1)
-kutijica(kutija=1,poklopac=1,magnet=0,chep=1,slider=1,strana=1);
+kutijica(
+  kutija   = 1,
+  poklopac = 1,
+  magnet   = 0,
+  chep     = 1,
+  slider   = 1,
+  strana   = 1
+);
 translate([0,0,-depth/2+sensor_pcb[1]/2])
   rotate([-90,0,0])
     %sensor_adxl355();
 if(0)
-translate([50,0,0])
+translate([0,0,-55])
     cube([100,100,100],center=true);
 }
