@@ -431,12 +431,13 @@ void rds_message(struct tm *tm)
       else
         sprintf(disp_short, "GO    0X"); // normal
         //sprintf(disp_short, "%3s   0X", iri2digit); // debug
-      sprintf(disp_long, "L=%.2f,%.2f R=%.2f,%.2f %dMB free %02d:%02d %d km/h %s",
-        iri[0], iri20[0], iri[1], iri20[1],
+      snprintf(disp_long, sizeof(disp_long), "L=%.2f,%.2f,%.1fC R=%.2f,%.2f,%.1fC %dMB %02d:%02d %d km/h %c",
+        iri[0], iri20[0], temp[0], iri[1], iri20[1], temp[1],
         free_MB,
         tm->tm_hour, tm->tm_min,
         speed_kmh,
-        fast_enough ? "RUN" : "STOP");
+        fast_enough ? 'R' : 'S');
+      disp_long[sizeof(disp_long)-1] = '\0';
     }
     if(free_MB < 8 || sensor_check_status == 0)
       memcpy(disp_short, "STOP", 4);
