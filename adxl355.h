@@ -40,7 +40,7 @@
 #define ADXL355_SELF_TEST        0x2E
 #define ADXL355_RESET            0x2F
 
-// intercept at 25 deg C
+// integer intercept at 25 deg C
 #define ADXL355_TEMP_AT_25C      1885
 // scale factor Celsius per LSB
 #define ADXL355_TEMP_SCALE       (-1/9.05)
