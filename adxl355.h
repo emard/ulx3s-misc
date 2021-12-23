@@ -42,7 +42,7 @@
 
 // intercept at 25 deg C
 #define ADXL355_TEMP_AT_25C      1885
-// scale factor x256 Celsius
-#define ADXL355_TEMP_SCALE_X256C    (-256000/9050)
+// scale factor Celsius per LSB
+#define ADXL355_TEMP_SCALE       (-1/9.05)
 
 #endif /* ADXL355_H_ */
