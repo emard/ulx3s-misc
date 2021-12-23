@@ -11,6 +11,8 @@ esp32
     [x] save FM freq setting to SD card
     [x] search for GPS/OBD if nonzero config exists
     [x] don't report "GO" if no sensors
+    [ ] when stopped, enter direct mode, read temperatures
+    [ ] config file temperature calibration
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
     [ ] configurable report frequency (m)
