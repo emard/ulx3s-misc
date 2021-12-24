@@ -103,6 +103,28 @@ void adxl355_ctrl(uint8_t x)
 //                   sensor type         sclk polarity         sclk phase
 #define CTRL_SELECT (adxl355_regio<<2)|((!adxl355_regio)<<3)|((!adxl355_regio)<<4)
 
+// turn sensor power on, set range, filtering, sync mode
+void init_sensors(void)
+{
+  if(adxl_devid_detected == 0xED) // ADXL355
+  {
+    adxl355_write_reg(ADXL355_POWER_CTL, 0); // 0: turn device ON
+    // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
+    // high speed i2c, INT1,INT2 active high
+    adxl355_write_reg(ADXL355_RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
+    // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
+    adxl355_write_reg(ADXL355_FILTER, FILTER_ADXL355_CONF);
+    // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
+    adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin, 0xC0 undocumented, seems to prevent glitches
+  }
+  if(adxl_devid_detected == 0x92) // ADXRS290 Gyro
+  {
+    adxl355_write_reg(ADXRS290_POWER_CTL, ADXRS290_POWER_GYRO | ADXRS290_POWER_TEMP); // turn device ON
+    // [7:4] HPF 0.011-11.30 Hz, [2:0] LPF 480-20 Hz, see datasheet
+    adxl355_write_reg(ADXRS290_FILTER, FILTER_ADXRS290_CONF);
+  }
+}
+
 // from core indirect (automatic sensor reading)
 // temporary switch to core direct (SPI to sensors)
 // read temperatures
@@ -123,13 +145,51 @@ void read_temperature(void)
   }
 }
 
-void read_temperature_during_core_indirect(void)
+void init_sensors_read_temperature_interrupting_core_indirect(void)
 {
   adxl355_ctrl(2|CTRL_SELECT);
   delay(2); // wait for request direct mode to be accepted
+  init_sensors();
   read_temperature();
   adxl355_ctrl(CTRL_SELECT); // 2:request core indirect mode
   delay(2); // wait for direct mode to finish
+}
+
+void debug_sensors_print(void)
+{
+  char sprintf_buf[80];
+  if(adxl_devid_detected == 0xED) // ADXL355
+  {
+    // print to check is Accel working
+    for(int i = 0; i < 1000; i++)
+    {
+      sprintf(sprintf_buf, "ID=%02X%02X X=%02X%02X Y=%02X%02X Z=%02X%02X",
+        adxl355_read_reg(0),
+        adxl355_read_reg(1),
+        adxl355_read_reg(ADXL355_XDATA3),
+        adxl355_read_reg(ADXL355_XDATA2),
+        adxl355_read_reg(ADXL355_YDATA3),
+        adxl355_read_reg(ADXL355_YDATA2),
+        adxl355_read_reg(ADXL355_ZDATA3),
+        adxl355_read_reg(ADXL355_ZDATA2)
+      );
+      Serial.println(sprintf_buf);
+    }
+  }
+  if(adxl_devid_detected == 0x92) // ADXRS290 Gyro
+  {
+    // print to check is Gyro working
+    for(int i = 0; i < 1000; i++)
+    {
+      sprintf(sprintf_buf, "X=%02X%02X Y=%02X%02X",
+        adxl355_read_reg(ADXRS290_GYRO_XH),
+        adxl355_read_reg(ADXRS290_GYRO_XL),
+        adxl355_read_reg(ADXRS290_GYRO_YH),
+        adxl355_read_reg(ADXRS290_GYRO_YL)
+      );
+      Serial.println(sprintf_buf);
+    }
+  }
 }
 
 void adxl355_init(void)
@@ -186,56 +246,11 @@ void adxl355_init(void)
       chipid[0], chipid[1], chipid[2], chipid[3], serialno[0], serialno[1]
   );
   Serial.println(sprintf_buf);
-  if(adxl_devid_detected == 0xED) // ADXL355
-  {
-    adxl355_write_reg(ADXL355_POWER_CTL, 0); // 0: turn device ON
-    // i=1-3 range 1:+-2g, 2:+-4g, 3:+-8g
-    // high speed i2c, INT1,INT2 active high
-    adxl355_write_reg(ADXL355_RANGE, G_RANGE == 2 ? 1 : G_RANGE == 4 ? 2 : /* G_RANGE == 8 ? */ 3 );
-    // LPF FILTER i=0-10, 1kHz/2^i, 0:1kHz ... 10:0.977Hz
-    adxl355_write_reg(ADXL355_FILTER, FILTER_ADXL355_CONF);
-    // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
-    adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin, 0xC0 undocumented, seems to prevent glitches
-    read_temperature();
-    sprintf(sprintf_buf, "TL=%4.1f'C TR=%4.1f'C", temp[0], temp[1]);
-    Serial.println(sprintf_buf);
-    #if 0
-    // print to check is Accel working
-    for(int i = 0; i < 1000; i++)
-    {
-      sprintf(sprintf_buf, "ID=%02X%02X X=%02X%02X Y=%02X%02X Z=%02X%02X",
-        adxl355_read_reg(0),
-        adxl355_read_reg(1),
-        adxl355_read_reg(ADXL355_XDATA3),
-        adxl355_read_reg(ADXL355_XDATA2),
-        adxl355_read_reg(ADXL355_YDATA3),
-        adxl355_read_reg(ADXL355_YDATA2),
-        adxl355_read_reg(ADXL355_ZDATA3),
-        adxl355_read_reg(ADXL355_ZDATA2)
-      );
-      Serial.println(sprintf_buf);
-    }
-    #endif
-  }
-  if(adxl_devid_detected == 0x92) // ADXRS290 Gyro
-  {
-    adxl355_write_reg(ADXRS290_POWER_CTL, ADXRS290_POWER_GYRO | ADXRS290_POWER_TEMP); // turn device ON
-    // [7:4] HPF 0.011-11.30 Hz, [2:0] LPF 480-20 Hz, see datasheet
-    adxl355_write_reg(ADXRS290_FILTER, FILTER_ADXRS290_CONF);
-    #if 0
-    // print to check is Gyro working
-    for(int i = 0; i < 1000; i++)
-    {
-      sprintf(sprintf_buf, "X=%02X%02X Y=%02X%02X",
-        adxl355_read_reg(ADXRS290_GYRO_XH),
-        adxl355_read_reg(ADXRS290_GYRO_XL),
-        adxl355_read_reg(ADXRS290_GYRO_YH),
-        adxl355_read_reg(ADXRS290_GYRO_YL)
-      );
-      Serial.println(sprintf_buf);
-    }
-    #endif
-  }
+  init_sensors();
+  debug_sensors_print();
+  read_temperature();
+  sprintf(sprintf_buf, "TL=%4.1f'C TR=%4.1f'C", temp[0], temp[1]);
+  Serial.println(sprintf_buf);
   adxl355_ctrl(CTRL_SELECT); // 2:request core indirect mode
   delay(2); // wait for direct mode to finish
 }
