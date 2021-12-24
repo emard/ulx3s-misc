@@ -18,6 +18,7 @@ extern int fast_enough; // logging flag when fast enough
 extern int mode_obd_gps;
 extern uint8_t gps_obd_configured;
 extern float srvz_iri100, iri[2], iriavg, srvz2_iri20, iri20[2], iri20avg;
+extern float temp[2]; // sensor temperature
 extern char iri2digit[4];
 extern char lastnmea[256];
 extern struct int_latlon last_latlon;
@@ -58,7 +59,7 @@ void ls(void);
 void SD_status();
 void open_logs(struct tm *tm);
 void write_logs(void);
-void write_stop_delimiter(void);
+void write_string_to_wav(int16_t xl, int16_t yl, int16_t zl, int16_t xr, int16_t yr, int16_t zr, char *a);
 void flush_logs(void);
 void write_last_nmea(void);
 void read_last_nmea(void);

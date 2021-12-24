@@ -579,7 +579,10 @@ void handle_fast_enough(void)
   { // tunnel mode: ignore negative speed (no signal) when fast enough
     if (fast_enough)
     {
-      write_stop_delimiter();
+      char stop_delimiter[20];
+      sprintf(stop_delimiter, " # TL%.1fTR%.1f*00 ", temp[0], temp[1]);
+      write_nmea_crc(stop_delimiter+3);
+      write_string_to_wav(0,0,0, 0,0,0, stop_delimiter);
       close_logs(); // save data in case of power lost
       write_last_nmea();
       stopcount++;

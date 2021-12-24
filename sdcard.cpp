@@ -821,20 +821,37 @@ void write_log_wav(void)
   }
 }
 
-void write_stop_delimiter_wav()
+// write constant xyz value with the string mixed in
+// string len: max 20 chars
+void write_string_to_wav(int16_t xl, int16_t yl, int16_t zl, int16_t xr, int16_t yr, int16_t zr, char *a)
 {
-  const uint8_t stop_delimiter[12] = // should result in char '#' (ascii 35)
+  uint8_t wsw[255], c;
+  int j;
+
+  if(logs_are_open == 0)
+    return;
+  if((log_wav_kml&1) == 0)
+    return;
+
+  for(j = 0; *a != 0; a++, j+=12)
   {
-    1, 0, //  1
-    1, 0, //  2
-    0, 0, //  4
-    0, 0, //  8
-    0, 0, // 16
-    1, 0, // 32
-  };
-  if(logs_are_open)
-    file_accel.write(stop_delimiter, sizeof(stop_delimiter));
+    c = *a;
+    wsw[j     ] = (xl     ) | (c & 1); c >>= 1;
+    wsw[j +  1] = (xl >> 8);
+    wsw[j +  2] = (yl     ) | (c & 1); c >>= 1;
+    wsw[j +  3] = (yl >> 8);
+    wsw[j +  4] = (zl     ) | (c & 1); c >>= 1;
+    wsw[j +  5] = (zl >> 8);
+    wsw[j +  6] = (xr     ) | (c & 1); c >>= 1;
+    wsw[j +  7] = (xr >> 8);
+    wsw[j +  8] = (yr     ) | (c & 1); c >>= 1;
+    wsw[j +  9] = (yr >> 8);
+    wsw[j + 10] = (zr     ) | (c & 1);
+    wsw[j + 11] = (zr >> 8);
+  }
+  file_accel.write(wsw, j);
 }
+
 
 void write_last_nmea(void)
 {
@@ -1331,14 +1348,6 @@ void write_logs()
     write_log_wav();
   //if(log_wav_kml&2)
   //  write_log_kml(0); // write logs, no force
-}
-
-void write_stop_delimiter()
-{
-  if(logs_are_open == 0)
-    return;
-  if(log_wav_kml&1)
-    write_stop_delimiter_wav();
 }
 
 void flush_logs()
