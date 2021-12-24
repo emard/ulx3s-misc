@@ -22,6 +22,7 @@ ESP32DMASPI::Master master;
 uint8_t* spi_master_tx_buf;
 uint8_t* spi_master_rx_buf;
 static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
+uint8_t  last_sensor_reading[12];
 
 // config file parsing
 uint8_t GPS_MAC[6], OBD_MAC[6];
@@ -719,34 +720,40 @@ void write_wav_header(void)
 int sensor_check(void)
 {
   int retval = 0; // start with both sensors fail
-  int checkat[4] = { // make it 12-even
+  const int checkat[4] = { // make it 12-even
     SPI_READER_BUF_SIZE*1/8 - SPI_READER_BUF_SIZE*1/8%12,
     SPI_READER_BUF_SIZE*2/8 - SPI_READER_BUF_SIZE*2/8%12,
     SPI_READER_BUF_SIZE*3/8 - SPI_READER_BUF_SIZE*3/8%12,
     SPI_READER_BUF_SIZE*4/8 - SPI_READER_BUF_SIZE*4/8%12 - 12,
   }; // list of indexes to check (0 not included)
   int lr[2] = {6, 12}; // l, r index of sensors in rx buf to check
-  int16_t v0, v; // sensor signed value
-  int i, j;
+  uint8_t v0[6], v[6]; // sensor readings
+
+  int i, j, k;
 
   for(i = 0; i < 2; i++) // lr index
   {
-    v0 = (spi_master_rx_buf[lr[i]+1] << 8)
-       | (spi_master_rx_buf[lr[i]  ]  | 1); // remove LSB
-    //Serial.print(v0);
+    memcpy(v0, spi_master_rx_buf + lr[i], 6);
+    // remove LSB
+    for(k = 0; k < 6; k += 2)
+      v0[k] |= 1;
     for(j = 0; j < 4; j++) // checkat index
     {
-      v = (spi_master_rx_buf[lr[i]+checkat[j]+1] << 8)
-        | (spi_master_rx_buf[lr[i]+checkat[j]  ]  | 1); // remove LSB
-      //Serial.print("=");
-      //Serial.print(v);
-      if(v != v0)
+      memcpy(v, spi_master_rx_buf + lr[i] + checkat[j], 6);
+      // remove LSB
+      for(k = 0; k < 6; k += 2)
+        v[k] |= 1;
+      if(memcmp(v, v0, 6) != 0)
         retval |= 1<<i;
     }
-    //Serial.print(", ");
   }
-  //Serial.println("");
   return retval;
+}
+
+void store_last_sensor_reading(void)
+{
+  const int offset = SPI_READER_BUF_SIZE*4/8 - SPI_READER_BUF_SIZE*4/8%12 - 12;
+  memcpy(last_sensor_reading, spi_master_rx_buf + offset, sizeof(last_sensor_reading));
 }
 
 void generate_filename_wav(struct tm *tm)
@@ -817,13 +824,15 @@ void write_log_wav(void)
     }
     prev_half = half;
     sensor_check_status = sensor_check();
+    store_last_sensor_reading();
     //Serial.println(sensor_check_status);
   }
 }
 
-// write constant xyz value with the string mixed in
+// write constant xyz value from last reading
+// with the string mixed in
 // string len: max 20 chars
-void write_string_to_wav(int16_t xl, int16_t yl, int16_t zl, int16_t xr, int16_t yr, int16_t zr, char *a)
+void write_string_to_wav(char *a)
 {
   uint8_t wsw[255], c;
   int j;
@@ -836,22 +845,21 @@ void write_string_to_wav(int16_t xl, int16_t yl, int16_t zl, int16_t xr, int16_t
   for(j = 0; *a != 0; a++, j+=12)
   {
     c = *a;
-    wsw[j     ] = (xl     ) | (c & 1); c >>= 1;
-    wsw[j +  1] = (xl >> 8);
-    wsw[j +  2] = (yl     ) | (c & 1); c >>= 1;
-    wsw[j +  3] = (yl >> 8);
-    wsw[j +  4] = (zl     ) | (c & 1); c >>= 1;
-    wsw[j +  5] = (zl >> 8);
-    wsw[j +  6] = (xr     ) | (c & 1); c >>= 1;
-    wsw[j +  7] = (xr >> 8);
-    wsw[j +  8] = (yr     ) | (c & 1); c >>= 1;
-    wsw[j +  9] = (yr >> 8);
-    wsw[j + 10] = (zr     ) | (c & 1);
-    wsw[j + 11] = (zr >> 8);
+    wsw[j     ] = (last_sensor_reading[ 0] & 0xFE) | (c & 1); c >>= 1;
+    wsw[j +  1] =  last_sensor_reading[ 1];
+    wsw[j +  2] = (last_sensor_reading[ 2] & 0xFE) | (c & 1); c >>= 1;
+    wsw[j +  3] =  last_sensor_reading[ 3];
+    wsw[j +  4] = (last_sensor_reading[ 4] & 0xFE) | (c & 1); c >>= 1;
+    wsw[j +  5] =  last_sensor_reading[ 5];
+    wsw[j +  6] = (last_sensor_reading[ 6] & 0xFE) | (c & 1); c >>= 1;
+    wsw[j +  7] =  last_sensor_reading[ 7];
+    wsw[j +  8] = (last_sensor_reading[ 8] & 0xFE) | (c & 1); c >>= 1;
+    wsw[j +  9] =  last_sensor_reading[ 9];
+    wsw[j + 10] = (last_sensor_reading[10] & 0xFE) | (c & 1);
+    wsw[j + 11] =  last_sensor_reading[11];
   }
   file_accel.write(wsw, j);
 }
-
 
 void write_last_nmea(void)
 {

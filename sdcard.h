@@ -21,6 +21,7 @@ extern float srvz_iri100, iri[2], iriavg, srvz2_iri20, iri20[2], iri20avg;
 extern float temp[2]; // sensor temperature
 extern char iri2digit[4];
 extern char lastnmea[256];
+extern uint8_t last_sensor_reading[12];
 extern struct int_latlon last_latlon;
 extern RDS rds;
 // config file parsing
@@ -59,7 +60,7 @@ void ls(void);
 void SD_status();
 void open_logs(struct tm *tm);
 void write_logs(void);
-void write_string_to_wav(int16_t xl, int16_t yl, int16_t zl, int16_t xr, int16_t yr, int16_t zr, char *a);
+void write_string_to_wav(char *a);
 void flush_logs(void);
 void write_last_nmea(void);
 void read_last_nmea(void);
@@ -80,5 +81,6 @@ void spi_slave_test(void);
 void spi_direct_test(void);
 void read_cfg(void);
 void init_sensors_read_temperature_interrupting_core_indirect(void);
+void store_last_sensor_reading(void);
 
 #endif
