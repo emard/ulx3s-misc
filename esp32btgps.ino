@@ -482,6 +482,7 @@ void report_status(void)
     // TODO this file save parts should go to
     // separate function
     flush_logs(); // save data just in case
+    read_temperature_during_core_indirect();
     if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
     {
       rds_message(&tm);

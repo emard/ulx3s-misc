@@ -78,5 +78,6 @@ void close_logs(void);
 void spi_slave_test(void);
 void spi_direct_test(void);
 void read_cfg(void);
+void read_temperature_during_core_indirect(void);
 
 #endif

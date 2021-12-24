@@ -100,6 +100,38 @@ void adxl355_ctrl(uint8_t x)
   master.transfer(spi_master_tx_buf, 6);
 }
 
+//                   sensor type         sclk polarity         sclk phase
+#define CTRL_SELECT (adxl355_regio<<2)|((!adxl355_regio)<<3)|((!adxl355_regio)<<4)
+
+// from core indirect (automatic sensor reading)
+// temporary switch to core direct (SPI to sensors)
+// read temperatures
+// switch back to core indirect (automatic sensor reading)
+void read_temperature(void)
+{
+  if(adxl_devid_detected == 0xED) // ADXL355
+  {
+    for(uint8_t lr = 0; lr < 2; lr++)
+    {
+      adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
+      // repeatedly read raw temperature registers until 2 same readings
+      uint16_t T[2] = {-1,-2}; // any 2 different numbers that won't accidentally appear at reading
+      for(int i = 0; i < 1000 && T[0] != T[1]; i++)
+        T[i&1] = ((adxl355_read_reg(ADXL355_TEMP2) & 0xF)<<8) | adxl355_read_reg(ADXL355_TEMP1);
+      temp[lr] = 25.0 + (T[0]-ADXL355_TEMP_AT_25C)*ADXL355_TEMP_SCALE; // convert to deg C
+    }
+  }
+}
+
+void read_temperature_during_core_indirect(void)
+{
+  adxl355_ctrl(2|CTRL_SELECT);
+  delay(2); // wait for request direct mode to be accepted
+  read_temperature();
+  adxl355_ctrl(CTRL_SELECT); // 2:request core indirect mode
+  delay(2); // wait for direct mode to finish
+}
+
 void adxl355_init(void)
 {
   uint8_t chipid[4];
@@ -114,8 +146,6 @@ void adxl355_init(void)
   // 2<<2 sensor type
   // 2<<3 clock polarity
   // 2<<4 clock phase
-  //                   sensor type         sclk polarity         sclk phase
-  #define CTRL_SELECT (adxl355_regio<<2)|((!adxl355_regio)<<3)|((!adxl355_regio)<<4)
   adxl355_ctrl(2|CTRL_SELECT);
   delay(2); // wait for request direct mode to be accepted
   if(adxl_devid_detected == 0)
@@ -166,15 +196,7 @@ void adxl355_init(void)
     adxl355_write_reg(ADXL355_FILTER, FILTER_ADXL355_CONF);
     // sync: 0:internal, 2:external sync with interpolation, 5:external clk/sync < 1066 Hz no interpolation, 6:external clk/sync with interpolation
     adxl355_write_reg(ADXL355_SYNC, 0xC0 | 2); // 0: internal, 2: takes external sync to drdy pin, 0xC0 undocumented, seems to prevent glitches
-    for(uint8_t lr = 0; lr < 2; lr++)
-    {
-      adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
-      // repeatedly read raw temperature registers until 2 same readings
-      uint16_t T[2] = {-1,-2}; // any 2 different numbers that won't accidentally appear at reading
-      for(int i = 0; i < 1000 && T[0] != T[1]; i++)
-        T[i&1] = ((adxl355_read_reg(ADXL355_TEMP2) & 0xF)<<8) | adxl355_read_reg(ADXL355_TEMP1);
-      temp[lr] = 25.0 + (T[0]-ADXL355_TEMP_AT_25C)*ADXL355_TEMP_SCALE; // convert to deg C
-    }
+    read_temperature();
     sprintf(sprintf_buf, "TL=%4.1f'C TR=%4.1f'C", temp[0], temp[1]);
     Serial.println(sprintf_buf);
     #if 0
@@ -217,6 +239,7 @@ void adxl355_init(void)
   adxl355_ctrl(CTRL_SELECT); // 2:request core indirect mode
   delay(2); // wait for direct mode to finish
 }
+
 
 uint8_t adxl355_available(void)
 {
