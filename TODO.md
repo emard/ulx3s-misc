@@ -11,10 +11,10 @@ esp32
     [x] save FM freq setting to SD card
     [x] search for GPS/OBD if nonzero config exists
     [x] don't report "GO" if no sensors
-    [ ] when stopped, each minute enter direct mode, read temperatures
-    [ ] when stopped, each minute initialize sensors
+    [x] when stopped, each minute enter direct mode, read temperatures
+    [x] when stopped, each minute initialize sensors
     [ ] config file temperature calibration
-    [ ] write temperature to log at each start
+    [x] write temperature to log at each start
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
     [ ] configurable report frequency (m)
@@ -35,8 +35,8 @@ esp32
     [ ] btn to stop logging and close all files
     [x] 60GB free, but shown 3529MB, use uint64_t and float
     [ ] print ADX chip not detected, now unconnected ADXRS290 is "detected"
-    [ ] not detecting left ADX$S290
-    [ ] sometimes false report no L/R sensor
+    [x] detecting left ADXRS290
+    [x] sometimes false report no L/R sensor
     [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color
     [ ] wep upload success readyState == 4, status == 200
