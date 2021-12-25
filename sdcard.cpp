@@ -144,6 +144,18 @@ void read_temperature(void)
       temp[lr] = 25.0 + (T[0]-ADXL355_TEMP_AT_25C)*ADXL355_TEMP_SCALE; // convert to deg C
     }
   }
+  if(adxl_devid_detected == 0x92) // ADXRS290 Gyro
+  {
+    for(uint8_t lr = 0; lr < 2; lr++)
+    {
+      adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
+      // repeatedly read raw temperature registers until 2 same readings
+      uint16_t T[2] = {-1,-2}; // any 2 different numbers that won't accidentally appear at reading
+      for(int i = 0; i < 1000 && T[0] != T[1]; i++)
+        T[i&1] = ((adxl355_read_reg(ADXRS290_TEMP_H) & 0xF)<<8) | adxl355_read_reg(ADXRS290_TEMP_L);
+      temp[lr] = 0.0 + T[0]*ADXRS290_TEMP_SCALE; // convert to deg C
+    }
+  }
 }
 
 void warm_init_sensors(void)

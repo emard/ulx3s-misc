@@ -35,7 +35,7 @@
 // 12 2-complement's bits
 #define ADXRS290_TEMP_L            0x0C  //  7..0 bits
 #define ADXRS290_TEMP_H            0x0D  // 11..8 bits
-#define ADXRS290_TEMP_SCALE_FACT     10  // 10 LSB / deg C. 0 means 0 deg C.
+#define ADXRS290_TEMP_SCALE         0.1  // deg C / LSB, 0 means 0 deg C.
 
 #define ADXRS290_POWER_CTL         0x10
 // Thermometer bit : 1 enable, 0 disable
