@@ -201,7 +201,9 @@ module top_adxl355log
   // if r_ctrl doesn't start from 0, adxl355 won't initialize
   // accel reading of XYZ axis will have 12 MSBs mostly fixed
   // and rest LSBs with very small fluctuations when acceleation appled
-  reg [7:0] r_ctrl = 2; // control byte must start from 2 (direct mode) or ADXRS290 won't initialize
+  // reg [7:0] r_ctrl = 0; // holding BTN0 for web server doesn't work
+  // reg [7:0] r_ctrl = 2; // ADXRS290 initializes but doesn't work correctly (R sensor offset too low)
+  reg [7:0] r_ctrl = 8'b00011000; // initialization works for both ADXL355 and ADXRS290
   wire ctrl_direct_lr = r_ctrl[0]; // mux direct 0: left, 1: right
   wire ctrl_direct = r_ctrl[1]; // mux switch 1:direct, 0:reader core
   wire ctrl_sclk_inv = r_ctrl[2]; // SPI direct clk invert 1:invert, 0:normal
