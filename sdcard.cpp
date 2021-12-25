@@ -210,16 +210,19 @@ void cold_init_sensors(void)
   adxl355_ctrl(2|CTRL_SELECT);
   delay(2); // wait for request direct mode to be accepted
   if(adxl_devid_detected == 0)
-  for(int j = 1; j >= 0; j--)
   {
-    // first try 1:ADXL355, then 0:ADXRS290
-    // otherwise ADXL355 will be spoiled
-    adxl355_regio = j;
-    for(uint8_t lr = 0; lr < 2; lr++)
+    master.setFrequency(5000000); // 5 MHz max ADXRS290
+    for(int8_t j = 1; j >= 0; j--)
     {
-      adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
-      if(adxl355_read_reg(1) == 0x1D)
-        goto read_chip_id; // ends for-loop
+      // first try 1:ADXL355, then 0:ADXRS290
+      // otherwise ADXL355 will be spoiled
+      adxl355_regio = j;
+      for(int8_t lr = 0; lr < 2; lr++)
+      {
+        adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
+        if(adxl355_read_reg(1) == 0x1D)
+          goto read_chip_id; // ends for-loop
+      }
     }
   }
   read_chip_id:;
@@ -228,17 +231,16 @@ void cold_init_sensors(void)
     chipid[i] = adxl355_read_reg(i);
   if(chipid[0] == 0xAD && chipid[1] == 0x1D) // ADXL device
     adxl_devid_detected = chipid[2];
-  if(adxl_devid_detected == 0xED) // ADXL355
-    master.setFrequency(8000000); // 8 MHz max ADXL355
   serialno[0] = 0;
   serialno[1] = 0;
+  if(adxl_devid_detected == 0xED) // ADXL355
+    master.setFrequency(8000000); // 8 MHz max ADXL355, no serial number
   if(adxl_devid_detected == 0x92) // ADXRS290 gyroscope has serial number
   { // read serial number
-    master.setFrequency(5000000); // 5 MHz max ADXRS290
+    master.setFrequency(5000000); // 5 MHz max ADXRS290, read serial number
     for(uint8_t lr = 0; lr < 2; lr++)
     {
       adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
-      serialno[lr] = 0;
       for(uint8_t i = 0; i < 4; i++)
         serialno[lr] = (serialno[lr] << 8) | adxl355_read_reg(i|4);
     }
