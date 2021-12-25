@@ -267,12 +267,8 @@ void setup() {
 
   // accelerometer range +-2/4/8g can be changed from cfg file
   // ADXL should be initialized after reading cfg file
-  for (int i = 0; i < 1; i++)
-  {
-    delay(100);
-    cold_init_sensors();
-  }
-
+  delay(100);
+  cold_init_sensors();
   init_srvz_iri(); // depends on sensor type detected
 
   SerialBT.begin("ESP32", true);
@@ -485,7 +481,10 @@ void report_status(void)
     if(sensor_check_status)
       warm_init_sensors();
     else
+    {
       cold_init_sensors();
+      init_srvz_iri();
+    }
     if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
     {
       rds_message(&tm);
@@ -645,6 +644,14 @@ void handle_reconnect(void)
   //ls();
   finalize_data(&tm); // finalize all except current session (if one file per day)
   umount();
+
+  if(sensor_check_status)
+    warm_init_sensors();
+  else
+  {
+    cold_init_sensors();
+    init_srvz_iri();
+  }
 
   if(gps_obd_configured == 3)
     mode_obd_gps ^= 1; // toggle mode 0:OBD 1:GPS
