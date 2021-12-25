@@ -146,7 +146,7 @@ void read_temperature(void)
   }
 }
 
-void init_sensors_read_temperature_interrupting_core_indirect(void)
+void warm_init_sensors(void)
 {
   adxl355_ctrl(2|CTRL_SELECT);
   delay(2); // wait for request direct mode to be accepted
@@ -193,7 +193,7 @@ void debug_sensors_print(void)
   }
 }
 
-void adxl355_init(void)
+void cold_init_sensors(void)
 {
   uint8_t chipid[4];
   uint32_t serialno[2];
@@ -248,7 +248,7 @@ void adxl355_init(void)
   );
   Serial.println(sprintf_buf);
   init_sensors();
-  debug_sensors_print();
+  //debug_sensors_print();
   read_temperature();
   sprintf(sprintf_buf, "TL=%4.1f'C TR=%4.1f'C", temp[0], temp[1]);
   Serial.println(sprintf_buf);

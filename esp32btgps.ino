@@ -270,7 +270,7 @@ void setup() {
   for (int i = 0; i < 1; i++)
   {
     delay(100);
-    adxl355_init();
+    cold_init_sensors();
   }
 
   init_srvz_iri(); // depends on sensor type detected
@@ -482,7 +482,10 @@ void report_status(void)
     // TODO this file save parts should go to
     // separate function
     flush_logs(); // save data just in case
-    init_sensors_read_temperature_interrupting_core_indirect();
+    if(sensor_check_status)
+      warm_init_sensors();
+    else
+      cold_init_sensors();
     if (speakfile == NULL && *speakfiles == NULL && pcm_is_open == 0)
     {
       rds_message(&tm);

@@ -54,7 +54,8 @@ void spi_rds_write(void);
 void rds_message(struct tm *tm);
 void rds_report_ip(struct tm *tm);
 void set_fm_freq(void);
-void adxl355_init(void);
+void cold_init_sensors(void);
+void warm_init_sensors(void);
 uint8_t adxl355_available(void);
 void ls(void);
 void SD_status();
@@ -80,7 +81,6 @@ void close_logs(void);
 void spi_slave_test(void);
 void spi_direct_test(void);
 void read_cfg(void);
-void init_sensors_read_temperature_interrupting_core_indirect(void);
 void store_last_sensor_reading(void);
 
 #endif
