@@ -54,6 +54,10 @@ uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
 uint8_t G_RANGE = 8; // +-2/4/8 g sensor range (at digital reading +-32000)
 uint8_t FILTER_ADXL355_CONF = 0; // see datasheet adxl355 p.38 0:1kHz ... 10:0.977Hz
 uint8_t FILTER_ADXRS290_CONF = 0; // see datasheet adxrs290 p.11 0:480Hz ... 7:20Hz
+float   T_OFFSET_ADXL355_CONF[2]  = {0.0, 0.0}; // L,R
+float   T_SLOPE_ADXL355_CONF[2]   = {1.0, 1.0}; // L,R
+float   T_OFFSET_ADXRS290_CONF[2] = {0.0, 0.0}; // L,R
+float   T_SLOPE_ADXRS290_CONF[2]  = {1.0, 1.0}; // L,R
 uint32_t REPORT_mm = 100000, REPORT2_mm = 20000; // mm report every travel distance 100 m, 20 m
 uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
@@ -141,7 +145,7 @@ void read_temperature(void)
       uint16_t T[2] = {-1,-2}; // any 2 different numbers that won't accidentally appear at reading
       for(int i = 0; i < 1000 && T[0] != T[1]; i++)
         T[i&1] = ((adxl355_read_reg(ADXL355_TEMP2) & 0xF)<<8) | adxl355_read_reg(ADXL355_TEMP1);
-      temp[lr] = 25.0 + (T[0]-ADXL355_TEMP_AT_25C)*ADXL355_TEMP_SCALE; // convert to deg C
+      temp[lr] = T_OFFSET_ADXL355_CONF[lr] + 25.0 + (T[0]-ADXL355_TEMP_AT_25C)*ADXL355_TEMP_SCALE*T_SLOPE_ADXL355_CONF[lr]; // convert to deg C
     }
   }
   if(adxl_devid_detected == 0x92) // ADXRS290 Gyro
@@ -153,7 +157,7 @@ void read_temperature(void)
       uint16_t T[2] = {-1,-2}; // any 2 different numbers that won't accidentally appear at reading
       for(int i = 0; i < 1000 && T[0] != T[1]; i++)
         T[i&1] = ((adxl355_read_reg(ADXRS290_TEMP_H) & 0xF)<<8) | adxl355_read_reg(ADXRS290_TEMP_L);
-      temp[lr] = 0.0 + T[0]*ADXRS290_TEMP_SCALE; // convert to deg C
+      temp[lr] = T_OFFSET_ADXRS290_CONF[lr] + T[0]*ADXRS290_TEMP_SCALE*T_SLOPE_ADXRS290_CONF[lr]; // convert to deg C
     }
   }
 }
@@ -1310,6 +1314,14 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("g_range" )) G_RANGE = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("filter_adxl355" )) FILTER_ADXL355_CONF  = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("filter_adxrs290")) FILTER_ADXRS290_CONF = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("tl_offset_adxl355" )) T_OFFSET_ADXL355_CONF[0]  = strtof(varvalue.c_str(), NULL);
+    else if(varname.equalsIgnoreCase("tl_slope_adxl355" )) T_SLOPE_ADXL355_CONF[0]  = strtof(varvalue.c_str(), NULL);
+    else if(varname.equalsIgnoreCase("tr_offset_adxl355" )) T_OFFSET_ADXL355_CONF[1]  = strtof(varvalue.c_str(), NULL);
+    else if(varname.equalsIgnoreCase("tr_slope_adxl355" )) T_SLOPE_ADXL355_CONF[1]  = strtof(varvalue.c_str(), NULL);
+    else if(varname.equalsIgnoreCase("tl_offset_adxrs290")) T_OFFSET_ADXRS290_CONF[0] = strtof(varvalue.c_str(), NULL);
+    else if(varname.equalsIgnoreCase("tl_slope_adxrs290")) T_SLOPE_ADXRS290_CONF[0] = strtof(varvalue.c_str(), NULL);
+    else if(varname.equalsIgnoreCase("tr_offset_adxrs290")) T_OFFSET_ADXRS290_CONF[1] = strtof(varvalue.c_str(), NULL);
+    else if(varname.equalsIgnoreCase("tr_slope_adxrs290")) T_SLOPE_ADXRS290_CONF[1] = strtof(varvalue.c_str(), NULL);
     else if(varname.equalsIgnoreCase("report_m")) REPORT_mm = 1000*strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("report2_m")) REPORT2_mm = 1000*strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
@@ -1340,8 +1352,20 @@ void read_cfg(void)
   char chr_red_iri[20]; sprintf(chr_red_iri, "%.1f", red_iri);
   Serial.print("RED_IRI  : "); Serial.println(chr_red_iri);
   Serial.print("G_RANGE  : "); Serial.println(G_RANGE);
-  Serial.print("FILTER_ADXL355 : "); Serial.println(FILTER_ADXL355_CONF);
-  Serial.print("FILTER_ADXRS290: "); Serial.println(FILTER_ADXRS290_CONF);
+  Serial.print("FILTER_ADXL355     : "); Serial.println(FILTER_ADXL355_CONF);
+  Serial.print("FILTER_ADXRS290    : "); Serial.println(FILTER_ADXRS290_CONF);
+  for(int i = 0; i < 2; i++)
+  {
+    char lr = i ? 'R' : 'L';
+    sprintf(macstr, "T%c_OFFSET_ADXL355  : %.1f", lr, T_OFFSET_ADXL355_CONF[i]);
+    Serial.println(macstr);
+    sprintf(macstr, "T%c_SLOPE_ADXL355   : %.1f", lr, T_SLOPE_ADXL355_CONF[i]);
+    Serial.println(macstr);
+    sprintf(macstr, "T%c_OFFSET_ADXRS290 : %.1f", lr, T_OFFSET_ADXRS290_CONF[i]);
+    Serial.println(macstr);
+    sprintf(macstr, "T%c_SLOPE_ADXRS290  : %.1f", lr, T_SLOPE_ADXRS290_CONF[i]);
+    Serial.println(macstr);
+  }
   Serial.print("REPORT_M : "); Serial.println(REPORT_mm/1000);
   Serial.print("REPORT2_M: "); Serial.println(REPORT2_mm/1000);
   Serial.print("KMH_START: "); Serial.println(KMH_START);

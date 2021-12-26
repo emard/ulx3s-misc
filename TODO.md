@@ -13,8 +13,9 @@ esp32
     [x] don't report "GO" if no sensors
     [x] when stopped, each minute enter direct mode, read temperatures
     [x] when stopped, each minute initialize sensors
-    [ ] config file temperature calibration
+    [x] config file temperature calibration
     [x] write temperature to log at each start
+    [ ] read temperature ADXRS290 from recorded Z instead of core direct
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
     [ ] configurable report frequency (m)
