@@ -368,7 +368,7 @@ void rds_init(void)
 // speed in mm/s
 void spi_speed_write(int spd)
 {
-  uint32_t icvx2 = spd > 0 ? (adxl355_regio ? 40181760/spd : 5719) : 0; // spd is in mm/s
+  uint32_t icvx  = spd > 0 ? (adxl355_regio ? 40181760/spd : 5719) : 0; // spd is in mm/s
   uint16_t vx    = spd > 0 ? spd : 0;
   spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 0x2; // addr [31:24] msb
@@ -377,10 +377,10 @@ void spi_speed_write(int spd)
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   spi_master_tx_buf[5] = vx>>8;
   spi_master_tx_buf[6] = vx;
-  spi_master_tx_buf[7] = icvx2>>24;
-  spi_master_tx_buf[8] = icvx2>>16;
-  spi_master_tx_buf[9] = icvx2>>8;
-  spi_master_tx_buf[10]= icvx2;
+  spi_master_tx_buf[7] = icvx>>24;
+  spi_master_tx_buf[8] = icvx>>16;
+  spi_master_tx_buf[9] = icvx>>8;
+  spi_master_tx_buf[10]= icvx;
   master.transfer(spi_master_tx_buf, 5+4+2); // write speed binary
 }
 

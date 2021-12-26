@@ -9,7 +9,7 @@
 -- current slope is calculated as the sum:
 -- slope += az*dt/vx
 
--- external CPU provides vx and cvx2 = dt/vx scaled
+-- external CPU provides vx and cvx = dt/vx scaled
 -- to a factor for fixed-point arithmetic
 
 -- Slope should not build up much DC to avoid
@@ -48,7 +48,7 @@ generic (
   -- 2*pi/360 degrees to radians
   -- 200 LSB/deg/s angular rate
   -- 65536*1.0e6*1e-3 * 2*pi/360/200 = 5719.095 -- used in ESP32, spi_write_speed() constant independent of speed
-  -- cvx2 = 5719 -- use this constant value for ADXL290
+  -- cvx = 5719 -- use this constant value for ADXL290
 
   -- ADXL355 accelerometer ---
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
@@ -58,7 +58,7 @@ generic (
   -- 1e-3 delta t (1/1kHz sample_rate)
   -- 1000 for speed in mm/s
   -- 65536*1.0e6*1e-3*9.81/16000*1000 = 40181760 -- used in ESP32, spi_write_speed()
-  -- cvx2 = 40181760/vx[mm/s]
+  -- cvx = 40181760/vx[mm/s]
 );
 port (
   clk              : in  std_logic;
@@ -66,7 +66,7 @@ port (
   enter            : in  std_logic; -- '1' pulse to enter acceleration and speed, 1kHz rate
   hold             : in  std_logic; -- hold adjustment correction
   vx               : in  std_logic_vector(15 downto 0); -- mm/s, actually um travel for each 1kHz pulse, unsigned
-  cvx2             : in  std_logic_vector(31 downto 0); -- scaled constat to multply azl,azr for slope integration (accel=const/vx, gyro=const)
+  cvx              : in  std_logic_vector(31 downto 0); -- scaled constat to multply azl,azr for slope integration (accel=const/vx, gyro=const)
   axl, axr, ayl, ayr, azl, azr : in  std_logic_vector(15 downto 0); -- acceleration signed 16000 = 1g at +-2g range
   slope_l, slope_r : out std_logic_vector(31 downto 0); -- um/m slope signed
   ready            : out std_logic; -- '1' pulse when result is ready
@@ -100,10 +100,10 @@ architecture RTL of slope is
   signal control_now: std_logic := '0'; -- control enable
   signal next_interval : std_logic; -- every 25cm x-interval
   constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
-  signal icvx2: signed(31 downto 0); -- constant/vx
-  signal avz2l, avz2r: signed(icvx2'length+iazl'length-1 downto 0); -- multiplier result 48-bit
-  --constant negative_not_too_large: signed(avz2l'length-1 downto scale+10) := (others => '1');
-  --constant positive_not_too_large: signed(avz2l'length-1 downto scale+10) := (others => '0');
+  signal icvx: signed(31 downto 0); -- constant/vx
+  signal avzl, avzr: signed(icvx'length+iazl'length-1 downto 0); -- multiplier result 48-bit
+  --constant negative_not_too_large: signed(avzl'length-1 downto scale+10) := (others => '1');
+  --constant positive_not_too_large: signed(avzl'length-1 downto scale+10) := (others => '0');
 begin
   ivx <= unsigned(vx); -- same value, vhdl type conversion
 
@@ -209,12 +209,12 @@ begin
     end if;
   end process;
 
-  icvx2  <= signed(cvx2);
+  icvx <= signed(cvx);
 
   -- x_inc should be less than interval_x
   ix_next  <= ix + ivx;
-  sl_next  <= (others => '0') when reset = '1' else sl + avz2l(31+scale downto 0);
-  sr_next  <= (others => '0') when reset = '1' else sr + avz2r(31+scale downto 0);
+  sl_next  <= (others => '0') when reset = '1' else sl + avzl(31+scale downto 0);
+  sr_next  <= (others => '0') when reset = '1' else sr + avzr(31+scale downto 0);
 
   process(clk)
   begin
@@ -239,8 +239,8 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      avz2l <= iazl * icvx2;
-      avz2r <= iazr * icvx2;
+      avzl <= iazl * icvx;
+      avzr <= iazr * icvx;
     end if;
   end process;
 

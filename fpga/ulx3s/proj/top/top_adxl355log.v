@@ -674,7 +674,7 @@ module top_adxl355log
 
   reg [ 7:0] vx_ram[0:7]; // 8-byte: 2-byte=16-bit speed [um/s], 4-byte=32-bit const/speed^2, 2-byte unused
   reg [15:0] vx   = 0;
-  reg [31:0] cvx2 = 0;
+  reg [31:0] cvx  = 0;
   reg slope_reset = 0;
   always @(posedge clk)
   begin
@@ -684,7 +684,7 @@ module top_adxl355log
       if(ram_addr[2:0] == 5)
       begin
         vx   <= {vx_ram[0],vx_ram[1]}; // mm/s vx speed
-        cvx2 <= {vx_ram[2],vx_ram[3],vx_ram[4],ram_di}; // c/vx speed
+        cvx  <= {vx_ram[2],vx_ram[3],vx_ram[4],ram_di}; // c/vx speed
       end
     end
     slope_reset <= vx == 0; // speed 0
@@ -868,9 +868,9 @@ module top_adxl355log
     //.hold(1'b1), // don't remove slope DC (DC offset control possible malfunction, synth problems)
     //.hold(btn_debounce[1]), // debug
     //.vx(22000), // vx in mm/s, 22000 um = 22 mm per 1kHz sample
-    //.cvx2(40181760/22000), // int_vx2_scale/vx, vx in mm/s, 1826 for 22000 mm/s
+    //.cvx(40181760/22000), // int_vx_scale/vx, vx in mm/s, 1826 for 22000 mm/s
     .vx(vx), // vx in mm/s
-    .cvx2(cvx2), // int_vx2_scale/vx, vx in mm/s
+    .cvx(cvx), // int_vx_scale/vx, vx in mm/s
     //.azl(ma), // btn
     //.azr(mb), // btn
     .axl(axl), // X from left  sensor
@@ -922,7 +922,7 @@ module top_adxl355log
   //assign data[127:96]  = slope_aa;
   //assign data[ 95:64]  = slope_ag;
   //assign data[ 63:32]  = vx;
-  //assign data[ 31: 0]  = cvx2;
+  //assign data[ 31: 0]  = cvx;
 
   // latch calc result when reading 1st byte
   generate
