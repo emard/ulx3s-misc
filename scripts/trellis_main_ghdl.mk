@@ -127,7 +127,7 @@ VHDL_TO_VERILOG_FILES = $(VHD2VL_FILES:.vhd=.v)
 #	-p "read -vlog2k $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES)"
 
 $(PROJECT).json: $(VERILOG_FILES) $(VHDL_TO_VERILOG_FILES) $(VHDL_FILES)
-	$(YOSYS) \
+	$(YOSYS) -m ghdl \
 	-p "ghdl --ieee=synopsys --std=08 -fexplicit -frelaxed-rules $(VHDL_FILES) -e $(TOP_VHDL_MODULE)" \
 	-p "read_verilog -sv $(VERILOG_FILES)" \
 	-p "hierarchy -top ${TOP_MODULE}" \
