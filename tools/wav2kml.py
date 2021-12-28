@@ -544,7 +544,7 @@ lonlat_1st  = None
 
 k = kml.KML()
 ns = '{http://www.opengis.net/kml/2.2}'
-d = kml.Document(ns, id='docid', name='DATETIME', description='profilog from wav2kml generator')
+d = kml.Document(ns, id='docid', name='PROFILOG', description='profilog from wav2kml generator')
 #f = kml.Folder(ns, 'fid', 'f name', 'f description')
 k.append(d)
 #d.append(f)
