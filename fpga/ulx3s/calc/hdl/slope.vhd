@@ -43,12 +43,16 @@ generic (
   -- ADXRS290 gyroscope ---
   -- angle[rad] = sin(angle) = tan(angle), approx for small angle < 0.2 rad = 11 deg = 20% slope
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
-  -- 1.0e6 to scale resulting slope to um/s
+  -- 1.0e6 to scale resulting slope to urad (or approx tan(angle)[um/m])
   -- 1e-3 delta t (1/1kHz sample_rate)
   -- 2*pi/360 degrees to radians
   -- 200 LSB/deg/s angular rate
   -- 65536*1.0e6*1e-3 * 2*pi/360/200 = 5719.095 -- used in ESP32, spi_write_speed() constant independent of speed
   -- cvx = 5719 -- use this constant value for ADXL290
+  -- check: compile toplevel with lcd_hex=1, lcd_txt=0,
+  -- slowly turn sensor 0 to 90 deg around its Y axis
+  -- LCD HEX in the first row should display accumulated X-slope [urad]:
+  -- 90/360 * 2 * pi * 1e6 = 0x17F7EC = approx 0x180000 urad
 
   -- ADXL355 accelerometer ---
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
@@ -92,13 +96,13 @@ architecture RTL of slope is
   signal sgzl, sgzr : signed(15+avg_n'length downto 0); -- sum to average g used to remove slope DC offset
   constant sg0: signed := to_signed(0,sgzl'length); -- 0 for reset sum
   signal agzl, agzr : signed(15 downto 0) := to_signed(g_initial,16); -- average g used to remove slope DC offset
-  constant cntadj_bits: integer := 4; -- every 2**n next_interval control slope DC offset
+  constant cntadj_bits: integer := 7; -- every 2**(n-1)+1 * (5 cm = next_interval) control slope DC offset
   -- cndatj_bits too small: compensation fast but increase iri too much
   -- cntadj_bits too large: comensation too slow, less iri increase
   -- check iri when sensor is idle and at lowest practical speeds 10 or 20 km/h
   signal cntadj: unsigned(cntadj_bits-1 downto 0); -- counter
   signal control_now: std_logic := '0'; -- control enable
-  signal next_interval : std_logic; -- every 25cm x-interval
+  signal next_interval : std_logic; -- every 5cm x-interval
   constant interval_x : unsigned(31 downto 0) := to_unsigned(1000*interval_mm,32); -- interval um
   signal icvx: signed(31 downto 0); -- constant/vx
   signal avzl, avzr: signed(icvx'length+iazl'length-1 downto 0); -- multiplier result 48-bit
@@ -136,12 +140,13 @@ begin
   begin
     if rising_edge(clk) then
       if next_interval = '1' and hold = '0' then
-        if cntadj = to_unsigned(0,cntadj'length) then
+        if cntadj(cntadj_bits-1) = '1' then
           control_now <= '1';
+          cntadj <= (others => '0');
         else
           control_now <= '0';
+          cntadj <= cntadj + 1;
         end if;
-        cntadj <= cntadj + 1;
       else
         control_now <= '0';
       end if;
