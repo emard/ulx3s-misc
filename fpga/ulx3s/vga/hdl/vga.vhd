@@ -21,16 +21,31 @@ use ieee.numeric_std.all;
 
 entity vga is
   generic(
-    c_resolution_x      : integer := 640;
-    c_hsync_front_porch : integer :=  16;
-    c_hsync_pulse       : integer :=  96;
-    c_hsync_back_porch  : integer :=  44; -- 48
-    c_resolution_y      : integer := 480;
-    c_vsync_front_porch : integer :=  10;
-    c_vsync_pulse       : integer :=   2;
-    c_vsync_back_porch  : integer :=  31; -- 33
-    c_bits_x            : integer :=  10; -- should fit c_resolution_x + c_hsync_front_porch + c_hsync_pulse + c_hsync_back_porch
-    c_bits_y            : integer :=  10; -- should fit c_resolution_y + c_vsync_front_porch + c_vsync_pulse + c_vsync_back_porch
+    -- for 640x480 DVI
+    --c_resolution_x      : integer := 640;
+    --c_hsync_front_porch : integer :=  16;
+    --c_hsync_pulse       : integer :=  96;
+    --c_hsync_back_porch  : integer :=  44; -- 48
+    --c_resolution_y      : integer := 480;
+    --c_vsync_front_porch : integer :=  10;
+    --c_vsync_pulse       : integer :=   2;
+    --c_vsync_back_porch  : integer :=  31; -- 33
+    --c_bits_x            : integer :=  10; -- should fit c_resolution_x + c_hsync_front_porch + c_hsync_pulse + c_hsync_back_porch
+    --c_bits_y            : integer :=  10; -- should fit c_resolution_y + c_vsync_front_porch + c_vsync_pulse + c_vsync_back_porch
+    --c_dbl_x             : integer :=   0; -- 0-normal X, 1-double X
+    --c_dbl_y             : integer :=   0  -- 0-normal X, 1-double X
+
+    -- for 240x240 SPI LCD
+    c_resolution_x      : integer := 240;
+    c_hsync_front_porch : integer :=1800;
+    c_hsync_pulse       : integer :=   1;
+    c_hsync_back_porch  : integer :=1800;
+    c_resolution_y      : integer := 240;
+    c_vsync_front_porch : integer :=   1;
+    c_vsync_pulse       : integer :=   1;
+    c_vsync_back_porch  : integer :=   1;
+    c_bits_x            : integer :=  12; -- should fit c_resolution_x + c_hsync_front_porch + c_hsync_pulse + c_hsync_back_porch
+    c_bits_y            : integer :=   8; -- should fit c_resolution_y + c_vsync_front_porch + c_vsync_pulse + c_vsync_back_porch
     c_dbl_x             : integer :=   0; -- 0-normal X, 1-double X
     c_dbl_y             : integer :=   0  -- 0-normal X, 1-double X
   );

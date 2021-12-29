@@ -745,18 +745,20 @@ module top_adxl355log
   if(lcd_txt)
   begin
   vga
-  #(
-    .c_resolution_x(240),
-    .c_hsync_front_porch(1800),
-    .c_hsync_pulse(1),
-    .c_hsync_back_porch(1800),
-    .c_resolution_y(240),
-    .c_vsync_front_porch(1),
-    .c_vsync_pulse(1),
-    .c_vsync_back_porch(1),
-    .c_bits_x(12),
-    .c_bits_y(8)
-  )
+  // trellis doesn't pass parameters to vhdl submodule
+  // parameters instead of here, are passed in vhdl generic parameters
+  //#(
+  //  .c_resolution_x(240),
+  //  .c_hsync_front_porch(1800),
+  //  .c_hsync_pulse(1),
+  //  .c_hsync_back_porch(1800),
+  //  .c_resolution_y(240),
+  //  .c_vsync_front_porch(1),
+  //  .c_vsync_pulse(1),
+  //  .c_vsync_back_porch(1),
+  //  .c_bits_x(12),
+  //  .c_bits_y(8)
+  //)
   vga_instance
   (
     .clk_pixel(clk_pixel),
