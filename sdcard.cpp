@@ -504,7 +504,7 @@ void rds_message(struct tm *tm)
   {
     // null pointer, dummy time
     sprintf(disp_short, "OFF    X");
-    sprintf(disp_long,  "SEARCHING FOR %s", name_obd_gps[mode_obd_gps]);
+    sprintf(disp_long,  "SEARCHING FOR %s SENSOR %s", name_obd_gps[mode_obd_gps], sensor_check_status ? (adxl355_regio ? "ACEL ADXL355" : "GYRO ADXRS290") : "NONE");
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
   disp_short[5] = free_MB_2n;
