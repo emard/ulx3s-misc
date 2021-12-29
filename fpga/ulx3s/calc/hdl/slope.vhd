@@ -50,9 +50,15 @@ generic (
   -- 65536*1.0e6*1e-3 * 2*pi/360/200 = 5719.095 -- used in ESP32, spi_write_speed() constant independent of speed
   -- cvx = 5719 -- use this constant value for ADXL290
   -- check: compile toplevel with lcd_hex=1, lcd_txt=0,
-  -- slowly turn sensor 0 to 90 deg around its Y axis
+  -- slowly turn sensor 0 to 90 deg around its X axis
+  -- rotate perpendicular to PMOD pins, place sensor flat on table
+  -- and lift up its edge which is on the opposite side of the pins
   -- LCD HEX in the first row should display accumulated X-slope [urad]:
   -- 90/360 * 2 * pi * 1e6 = 0x17F7EC = approx 0x180000 urad
+  -- but this approximation is not useful for sensor on vehicle
+  -- at turns, vehicle will roll and sensors will accumulate yaw when it shouldn't
+  -- see https://liqul.github.io/blog/assets/rotation.pdf
+  -- Understanding Euler angles, chapter 3: estimating angles with rate gyros
 
   -- ADXL355 accelerometer ---
   -- 65536 = 2**scale to provide enough resolution for high speeds > 20 m/s
