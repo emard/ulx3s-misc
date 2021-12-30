@@ -86,7 +86,7 @@ for wavfile in argv[1:]:
     psi   += T * (     q * sin(phi) / cos(theta) + r * cos(phi) / cos(theta) )
     # print angles scaled to deg
     if n % 100 == 0:
-      print("      𝜙      𝜃      𝛹      p      q      r  %5d" % n)
+      print("  𝜙 [°]  𝜃 [°]  𝛹 [°]     p      q      r  %5d" % n)
       #      123456712345671234567123456712345671234567
     n += 1
     print("%+7.1f%+7.1f%+7.1f%+7d%+7d%+7d" % 
