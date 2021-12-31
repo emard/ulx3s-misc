@@ -3,8 +3,8 @@
 # ./gyro-euler-wav.py file.wav
 
 # coordinates relative to sensor
-# sensor0 (left)  in XY plane (pins pointing to sensor's Y direction)
-# sensor1 (right) in XZ plane (rotated 90 deg around pins direction)
+# sensor0 (left)  in XY plane (pins pointing to sensor's Y direction, pcb horizontal parts up)
+# sensor1 (right) in XZ plane (rotated 90 deg clockwise around pins axis, pcb vertical, parts to the right)
 
 # Euler coordinates
 # euler X = sensor0 Y
@@ -40,7 +40,7 @@
 
 
 from sys import argv
-from math import sqrt,sin,cos,tan,asin,pi,ceil,atan2
+from math import sin,cos,tan,pi
 import numpy as np
 
 # buffer to read wav
@@ -56,15 +56,66 @@ T = 1.0E-3
 # int to rad/s gyro scale
 gs = (pi/180)/200
 
+# calculate factors to let fixed point math work with sufficient precision
+# and result to binary angular scale
+# 2**iscale is equivalent of 2*pi rad or 360 deg
+# scale 2**41 fits 16-bit signed sine table 0 .. +30542 .. -30542
+# scale 2**35 fits 10-bit signed sine table 0 .. +477   ..   -477 (optimal for 9-bit BRAM)
+# scale 2**32 fits  7-bit signed sine table 0 ..  +60   ..    -60 (still ok precision)
+iscale = 35
+valisc = 1<<iscale
+andisc = (1<<iscale)-1
+# p scale factor with T, makes (p) 2**iscale binary angle
+ugp = int((1<<iscale) * T / 360 / 200 + 0.5) # 477
+# tsin scale factor with T, makes (q, r) 2**iscale binary angle
+ugs = int((1<<iscale) * T / 360 / 200 + 0.5) # 477
+# ttan, tsec scale factor without T
+itscale = 10
+ugt = 1<<itscale
+
 # initial euler angles
 phi   = 0.0
 theta = 0.0
 psi   = 0.0
 
+# initial euler angles (fixed point integer 2**iscale factor)
+sphi   = 0
+stheta = 0
+spsi   = 0
+
+# 1: float, 0:integer
+mode_float = 0
+
+# integer mode: 0: approx tan(x)=x, 1: use tan table
+mode_tan_table = 1
+
+# range 0-pi/2 = 0-2047 trig tables
+# int address trig scale
+iascale = 13
+ntp = int(1<<iascale)
+andntp = ntp-1
+tsin = np.zeros(ntp).astype(np.int16)
+ttan = np.zeros(ntp).astype(np.int16)
+tsec = np.zeros(ntp).astype(np.int16) # sec(x) = 1/cos(x)
+for i in range(ntp):
+  a = i*(2*pi)/ntp
+  tsin[i] = ugs*sin(a)
+  # avoid int overflow at +-pi/2, i == ntp//4 or i == ntp*3//4
+  if (i - ntp//4) & (ntp//2-1):
+    try:
+      ttan[i] = ugt*tan(a)
+    except:
+      print("ttan[%d] overflow", i)
+    try:
+      tsec[i] = ugt/cos(a)
+    except:
+      print("tsec[%d] overflow", i)
+print(tsin[ntp//4//3-1],ttan[ntp//4//3-1],tsec[ntp//4//3-1])
+
 # integer offsets used in closed loop for phi = theta = 0 convergence
 iop = 0
 ioq = 0
-ior = -28
+ior = 0
 
 # closed loop control counter
 clc_count = 0
@@ -74,6 +125,11 @@ clc_every = 129
 prev_phi   = 0.0
 prev_theta = 0.0
 prev_psi   = 0.0
+
+# angles from previous control cycle, integer mode
+prev_sphi   = 0
+prev_stheta = 0
+prev_spsi   = 0
 
 for wavfile in argv[1:]:
   f = open(wavfile, "rb")
@@ -94,6 +150,48 @@ for wavfile in argv[1:]:
     phi   += T * ( p + q * sin(phi) * tan(theta) + r * cos(phi) * tan(theta) )
     theta += T * (     q * cos(phi)              - r * sin(phi)              )
     psi   += T * (     q * sin(phi) / cos(theta) + r * cos(phi) / cos(theta) )
+
+    # binary scaled integer angles 2*pi rad = 360 deg = 1<<iscale
+    # addresses for trig tables:
+    asphi    = (sphi   >> (iscale-iascale)) & andntp
+    acphi    = (asphi  +  ntp//4          ) & andntp # phi + 90 deg for cos
+    atheta   = (stheta >> (iscale-iascale)) & andntp
+
+    # discrete-time integral to euler angles
+    #sphi    += ip * ugp + ( iq * tsin[asphi] + ir * tsin[acphi] ) * ttan[atheta] // ugt
+    #stheta  +=              iq * tsin[acphi] - ir * tsin[asphi]
+    #spsi    +=            ( iq * tsin[asphi] + ir * tsin[acphi] ) * tsec[atheta] // ugt
+
+    isinphi  = tsin[asphi]
+    icosphi  = tsin[acphi]
+
+    iqpr     = iq * isinphi + ir * icosphi
+    iqnr     = iq * icosphi - ir * isinphi
+
+    if mode_tan_table:
+      # using tan,sec tables
+      # good for theta < 75 deg
+      sphi    += ip * ugp + iqpr * ttan[atheta] // ugt
+      stheta  +=            iqnr
+      spsi    +=            iqpr * tsec[atheta] // ugt
+    else:
+      # simplification without tan,sec tables
+      # good for theta < 15 deg
+      # approx tan(theta)=theta, sec(theta)=1, cos(phi)=1
+      # satheta is atheta with correct sign
+      if stheta < valisc//2:
+        itheta =  stheta>>(iscale-itscale)
+      else:
+        itheta = (stheta>>(iscale-itscale))-ugt
+      sphi    += ip * ugp + iqpr * itheta // ugt
+      stheta  +=            iqnr
+      spsi    +=            iqpr
+
+    # wraparound 360 deg using binary "and"
+    sphi    &= andisc
+    stheta  &= andisc
+    spsi    &= andisc
+
     # print angles scaled to deg
     if n % 100 == 0:
       print("  𝜙 [°]  𝜃 [°]  𝛹 [°]     p      q      r  %5d" % n)
@@ -101,27 +199,55 @@ for wavfile in argv[1:]:
     n += 1
     print("%+7.1f%+7.1f%+7.1f%+7d%+7d%+7d" % 
          ( phi*180/pi, theta*180/pi, psi*180/pi, ip, iq, ir) )
+    print("%7d%7d%7d %10X %10X %10X" % 
+         ( (sphi>>(iscale-10))*360>>10, (stheta>>(iscale-10))*360>>10, (spsi>>(iscale-10))*360>>10, sphi, stheta, spsi) )
     # remove drift:
     # closed loop control for phi = theta = psi = 0
-    if clc_count >= clc_every:
-      # if angle is positive and increasing, decrease offset
-      if phi   > 0 and phi   - prev_phi   > 0:
-        iop -= 1
-      if theta > 0 and theta - prev_theta > 0:
-        ioq -= 1
-      if psi   > 0 and psi   - prev_psi   > 0:
-        ior -= 1
-      # if angle is negative and decreasing, increase offset
-      if phi   < 0 and phi   - prev_phi   < 0:
-        iop += 1
-      if theta < 0 and theta - prev_theta < 0:
-        ioq += 1
-      if psi   < 0 and psi   - prev_psi   < 0:
-        ior += 1
-      # store current values as previous for next control cycle
-      prev_phi   = phi
-      prev_theta = theta
-      prev_psi   = psi
-      clc_count  = 0
+    if mode_float:
+      # adjust based on floating point angles
+      if clc_count >= clc_every:
+        # if angle is positive and increasing, decrease offset
+        if phi   > 0 and phi   - prev_phi   > 0:
+          iop -= 1
+        if theta > 0 and theta - prev_theta > 0:
+          ioq -= 1
+        if psi   > 0 and psi   - prev_psi   > 0:
+          ior -= 1
+        # if angle is negative and decreasing, increase offset
+        if phi   < 0 and phi   - prev_phi   < 0:
+          iop += 1
+        if theta < 0 and theta - prev_theta < 0:
+          ioq += 1
+        if psi   < 0 and psi   - prev_psi   < 0:
+          ior += 1
+        # store current values as previous for next control cycle
+        prev_phi   = phi
+        prev_theta = theta
+        prev_psi   = psi
+        clc_count  = 0
+      else:
+        clc_count += 1
     else:
-      clc_count += 1
+      # adjust based on integer angles (unsigned int)
+      if clc_count >= clc_every:
+        # if angle is positive and increasing, decrease offset
+        if sphi   < valisc//2 and ((sphi   - prev_sphi  ) & andisc) < valisc//2:
+          iop -= 1
+        if stheta < valisc//2 and ((stheta - prev_stheta) & andisc) < valisc//2:
+          ioq -= 1
+        if spsi   < valisc//2 and ((spsi   - prev_spsi  ) & andisc) < valisc//2:
+          ior -= 1
+        # if angle is negative and decreasing, increase offset
+        if sphi   > valisc//2 and ((sphi   - prev_sphi  ) & andisc) > valisc//2:
+          iop += 1
+        if stheta > valisc//2 and ((stheta - prev_stheta) & andisc) > valisc//2:
+          ioq += 1
+        if spsi   > valisc//2 and ((spsi   - prev_spsi  ) & andisc) > valisc//2:
+          ior += 1
+        # store current values as previous for next control cycle
+        prev_sphi   = sphi
+        prev_stheta = stheta
+        prev_spsi   = spsi
+        clc_count  = 0
+      else:
+        clc_count += 1
