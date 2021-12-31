@@ -61,9 +61,19 @@ phi   = 0.0
 theta = 0.0
 psi   = 0.0
 
-ap = 0
-aq = 0
-ar = 0
+# integer offsets used in closed loop for phi = theta = 0 convergence
+iop = 0
+ioq = 0
+ior = -28
+
+# closed loop control counter
+clc_count = 0
+# frequency of control actions
+clc_every = 129
+# angles from previous control cycle
+prev_phi   = 0.0
+prev_theta = 0.0
+prev_psi   = 0.0
 
 for wavfile in argv[1:]:
   f = open(wavfile, "rb")
@@ -73,9 +83,9 @@ for wavfile in argv[1:]:
     for j in range(0,6):
       ac[j] = int.from_bytes(b[j*2:j*2+2],byteorder="little",signed=True)
     # integer (ip, iq, ir) values remove LSB and fix static offsets
-    ip = (ac[1]&-2) - 24 # sensor0 Y = euler X - direction parallel to pins
-    iq = (ac[0]&-2) + 32 # sensor0 X = euler Y - direction 90 deg to pins, still in the horizontal plane
-    ir = (ac[3]&-2) - 28 # sensor1 X = euler Z - (Y of sensor rotated 90 deg around pins axis, vertical plane)
+    ip = (ac[1]&-2) + iop # sensor0 Y = euler X - direction parallel to pins
+    iq = (ac[0]&-2) + ioq # sensor0 X = euler Y - direction 90 deg to pins, still in the horizontal plane
+    ir = (ac[3]&-2) + ior # sensor1 X = euler Z - (Y of sensor rotated 90 deg around pins axis, vertical plane)
     # orient and scale integers to (p, q, r) rad/s angular rates around axis
     p =  gs * ip
     q =  gs * iq
@@ -91,8 +101,27 @@ for wavfile in argv[1:]:
     n += 1
     print("%+7.1f%+7.1f%+7.1f%+7d%+7d%+7d" % 
          ( phi*180/pi, theta*180/pi, psi*180/pi, ip, iq, ir) )
-    # debug
-    #ap += ip
-    #aq += iq
-    #ar += ir
-    #print("%+7d%+7d%+7d" % (ap, aq, ar))
+    # remove drift:
+    # closed loop control for phi = theta = psi = 0
+    if clc_count >= clc_every:
+      # if angle is positive and increasing, decrease offset
+      if phi   > 0 and phi   - prev_phi   > 0:
+        iop -= 1
+      if theta > 0 and theta - prev_theta > 0:
+        ioq -= 1
+      if psi   > 0 and psi   - prev_psi   > 0:
+        ior -= 1
+      # if angle is negative and decreasing, increase offset
+      if phi   < 0 and phi   - prev_phi   < 0:
+        iop += 1
+      if theta < 0 and theta - prev_theta < 0:
+        ioq += 1
+      if psi   < 0 and psi   - prev_psi   < 0:
+        ior += 1
+      # store current values as previous for next control cycle
+      prev_phi   = phi
+      prev_theta = theta
+      prev_psi   = psi
+      clc_count  = 0
+    else:
+      clc_count += 1
