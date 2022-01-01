@@ -27,7 +27,7 @@ if calculate == 1: # accel adxl355
   wav_ch_l = 2
   wav_ch_r = 5
   # slope DC remove by inc/dec of accel offset at each sampling length
-  dc_remove_step = 1.0e-4
+  dc_remove_step = 1.0e-5
 if calculate == 2: # gyro adxrs290
   # scale fixed: 1 bit = 1/200 deg/s
   aint2float = 2*pi/360/200 # gyro angular velocity int -> w [rad/s]
@@ -83,9 +83,14 @@ ac = np.zeros(6).astype(np.int16) # current integer accelerations vector
 # accelerometer DC remove
 azl0 = 0.0
 azr0 = 0.0
+dc_azl = 0
+dc_azr = 0
 if calculate == 1:
   azl0 = 9.81 # average azl (to remove slope DC offset)
   azr0 = 9.81 # average azr (to remove slope DC offset)
+  dc_azl = int(9.81/aint2float)
+  dc_azr = int(9.81/aint2float)
+slope_dc_remove_count = 0
 
 # gyro DC remove
 dc_p = 0.0
@@ -164,15 +169,24 @@ def slope2model(slope_l:float, slope_r:float):
   # return (ZL[0] - ZL[2], ZR[0] - ZR[2]) # shock absorber speed
 
 def slope_dc_remove():
-  global azl0, azr0, slope_prev
+  global azl0, azr0, slope_prev, slope_dc_remove_count
+  global dc_azl, dc_azr
+  #slope_dc_remove_count += 1
+  #if slope_dc_remove_count < 129:
+  #  return
+  #slope_dc_remove_count = 0
   if slope[0] > 0 and slope[0] > slope_prev[0]:
     azl0 += dc_remove_step
+    dc_azl += 1
   if slope[0] < 0 and slope[0] < slope_prev[0]:
     azl0 -= dc_remove_step
+    dc_azl -= 1
   if slope[1] > 0 and slope[1] > slope_prev[1]:
     azr0 += dc_remove_step
+    dc_azr += 1
   if slope[1] < 0 and slope[1] < slope_prev[1]:
     azr0 -= dc_remove_step
+    dc_azr -= 1
   slope_prev[0] = slope[0]
   slope_prev[1] = slope[1]
 
@@ -210,10 +224,12 @@ def reset_iri():
   rvz_buf_ptr = 0
   slope *= 0
   slope_prev *= 0
-  #if calculate == 1:
-  #  # reset DC compensation to current accelerometer reading
-  #  azl0 = ac[wav_ch_l]*aint2float
-  #  azr0 = ac[wav_ch_r]*aint2float
+  if calculate == 1:
+    # reset DC compensation to current accelerometer reading
+    azl0 = ac[wav_ch_l]*aint2float
+    azr0 = ac[wav_ch_r]*aint2float
+    dc_azl = ac[wav_ch_l]
+    dc_azr = ac[wav_ch_r]
   if calculate == 2:
     # reset gyro angles
     phi = theta = psi = prev_phi = prev_theta = prev_psi = 0.0
@@ -237,7 +253,6 @@ def enter_slope(slope_l:float, slope_r:float):
 
 # slope reconstruction from equal-time sampled z-accel and vehicle x-speed
 # updates global slope[0] = left, slope[1] = right
-# needs regularly updated azl0, azr0 for slope DC remove
 def az2slope(azl:float, azr:float, c:float):
   global slope
   slope[0] += azl * c
@@ -636,6 +651,23 @@ arrow_icon_href="http://maps.google.com/mapfiles/kml/shapes/arrow.png"
 b=bytearray(12)
 mvb=memoryview(b)
 
+# matrix is already calculated for sampling_length = 0.05 m
+# for different sampling_lenghth, calculate new matrix:
+if sampling_length != 0.05:
+  st_pr(DX=sampling_length)
+#print(ST)
+#print(PR)
+#print(n_buf_points)
+#reset_iri()
+#enter_slope(2.0e-3,2.0e-3)
+#print(rvz_buf, srvz)
+#enter_slope(0.0e-3,0.0e-3)
+#print(rvz_buf, srvz)
+#az2slope(1+0.01,1-0.01,22.2222)
+#print(slope)
+#az2slope(1-0.01,1+0.01,22.2222)
+#print(slope)
+
 for wavfile in argv[1:]:
   f = open(wavfile, "rb")
   seek = 44+0*12
@@ -678,6 +710,9 @@ for wavfile in argv[1:]:
           if enter_accel(ac[wav_ch_l]*aint2float - azl0,
                          ac[wav_ch_r]*aint2float - azr0,
                          speed_kmh/3.6):
+          #if enter_accel((ac[wav_ch_l] - dc_azl)*aint2float,
+          #               (ac[wav_ch_r] - dc_azr)*aint2float,
+          #               speed_kmh/3.6):
             enter_slope(slope[0],slope[1])
             slope_dc_remove()
         if calculate == 2: # gyroscope
@@ -921,16 +956,3 @@ if True:
   else:
     print(k.to_string(prettyprint=True))
 
-#st_pr(DX=sampling_length)
-#print(ST)
-#print(PR)
-#print(n_buf_points)
-#reset_iri()
-#enter_slope(2.0e-3,2.0e-3)
-#print(rvz_buf, srvz)
-#enter_slope(0.0e-3,0.0e-3)
-#print(rvz_buf, srvz)
-#az2slope(1+0.01,1-0.01,22.2222)
-#print(slope)
-#az2slope(1-0.01,1+0.01,22.2222)
-#print(slope)
