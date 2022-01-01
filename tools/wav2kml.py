@@ -3,36 +3,42 @@
 # apt install python3-fastkml python3-shapely python3-lxml
 # ./wav2kml.py 20210701.wav > 20210701.kml
 
-# TODO gyro calc results differ for iri100, match for iri20
-# experimenting with dc_remove_step 1e-4 .. 1e-6 and speed_kmh > 0..2
 # values calculated in this code don't match well with hardware calculated for iri100
 # TODO accel calc need addtional checking
+# TODO gyro measurement with z-axis gyro
 
 from fastkml import kml, styles
 from shapely.geometry import Point, LineString, Polygon
 from sys import argv
 from colorsys import hsv_to_rgb
-from math import sqrt,sin,cos,asin,pi,ceil,atan2
+from math import pi,ceil,sqrt,sin,cos,tan,asin,atan2
 import numpy as np
 
 # calculate
 # 0:IRI from wav tags,
 # 1:IRI calculated from z-accel wav data (adxl355)
-# 2:IRI calculated from x-gyro wav data (adxrs290) angular speed
+# 2:IRI calculated from xyz-gyro wav data (adxrs290) angular velocity
 calculate  = 0
 # accel/gyro, select constant and data wav channel
 if calculate == 1: # accel adxl355
-  g_scale    = 2 # 2/4/8 g is 32000 integer reading
+  g_scale    = 4 # 2/4/8 g is 32000 integer reading
   aint2float = 9.81 * g_scale / 32000 # int -> a [m/s^2]
   # Z-channel of accelerometer
   wav_ch_l = 2
   wav_ch_r = 5
+  # slope DC remove by inc/dec of accel offset at each sampling length
+  dc_remove_step = 1.0e-4
 if calculate == 2: # gyro adxrs290
   # scale fixed: 1 bit = 1/200 deg/s
   aint2float = 2*pi/360/200 # gyro angular velocity int -> w [rad/s]
-  # X-channel of gyroscope
-  wav_ch_l = 0
-  wav_ch_r = 3
+  # (p,q,r) angular rates around (x,y,z)
+  # gyro channel mapping
+  wav_ch_p = 1 # angular rate around X (direction of travel) 1st sensor
+  #wav_ch_p = 4 # angular rate around X (direction of travel) 2nd sensor
+  wav_ch_q = 0 # angular rate around Y (90 deg to the right of travel) 1st sensor
+  wav_ch_r = 3 # angular rate around Z (down) 2nd sensor
+  # slope DC remove by inc/dec of angular velocity offset at each sampling length
+  dc_remove_step = 1.0e-4
 
 red_iri = 2.5 # colorization default 2.5
 
@@ -48,9 +54,6 @@ sampling_length = 0.05
 # equal-time accelerometer sample time
 a_sample_dt = 1/1000 # s (1kHz accelerometer sample rate)    
 
-# slope DC remove by inc/dec of accel offset at each sampling length
-dc_remove_step = 1.0e-5
-
 # number of buffered vz speed points for IRI averaging
 n_buf_points = int(iri_length/sampling_length + 0.5)
 rvz = np.zeros(2).astype(np.uint32)# vz speed contains values scaled as unsigned integer (um/s)
@@ -63,14 +66,31 @@ srvz = np.zeros(2).astype(np.uint32)
 slope = np.zeros(2).astype(np.float32)
 # for slope DC remove
 slope_prev = np.zeros(2).astype(np.float32)
+# (phi, theta, psi) Euler angles, rotations around (x,y,z)
+# slope = tan(theta)
+# slope = theta approx for theta < 15 deg with 2.4% error
+phi        = 0.0
+theta      = 0.0
+psi        = 0.0
+# previous Euler angles for DC removal
+prev_phi   = 0.0
+prev_theta = 0.0
+prev_psi   = 0.0
 
+# raw values reading (accelerometer or gyro)
 ac = np.zeros(6).astype(np.int16) # current integer accelerations vector
 
+# accelerometer DC remove
 azl0 = 0.0
 azr0 = 0.0
 if calculate == 1:
   azl0 = 9.81 # average azl (to remove slope DC offset)
   azr0 = 9.81 # average azr (to remove slope DC offset)
+
+# gyro DC remove
+dc_p = 0.0
+dc_q = 0.0
+dc_r = 0.0
 
 # Z state matrix left,right (used for iterative slope entry at each sampling interval)
 ZL = np.zeros(4).astype(np.float32)
@@ -156,10 +176,32 @@ def slope_dc_remove():
   slope_prev[0] = slope[0]
   slope_prev[1] = slope[1]
 
+def gyro_dc_remove():
+  global dc_p, dc_q, dc_r, prev_phi, prev_theta, prev_psi
+  # if angle is positive and increasing, decrease offset
+  if phi   > 0 and phi   - prev_phi   > 0:
+    dc_p -= dc_remove_step
+  if theta > 0 and theta - prev_theta > 0:
+    dc_q -= dc_remove_step
+  if psi   > 0 and psi   - prev_psi   > 0:
+    dc_r -= dc_remove_step
+  # if angle is negative and decreasing, increase offset
+  if phi   < 0 and phi   - prev_phi   < 0:
+    dc_p += dc_remove_step
+  if theta < 0 and theta - prev_theta < 0:
+    dc_q += dc_remove_step
+  if psi   < 0 and psi   - prev_psi   < 0:
+    dc_r += dc_remove_step
+  # store current values as previous for next control cycle
+  prev_phi   = phi
+  prev_theta = theta
+  prev_psi   = psi
+
 # initialization before first data entry
 # usually called at stops because slope is difficult to keep after the stop
 def reset_iri():
   global ZL, ZR, rvz_buf, rvz_buf_ptr, srvz, slope, slope_prev, azl0, azr0
+  global phi, theta, psi, prev_phi, prev_theta, prev_psi, dc_p, dc_q, dc_r
   # multiply all matrix elements with 0 resets them to 0
   ZL *= 0
   ZR *= 0
@@ -168,9 +210,14 @@ def reset_iri():
   rvz_buf_ptr = 0
   slope *= 0
   slope_prev *= 0
-  # reset DC compensation to current accelerometer reading
-  azl0 = ac[wav_ch_l]*aint2float
-  azr0 = ac[wav_ch_r]*aint2float
+  if calculate == 1:
+    # reset DC compensation to current accelerometer reading
+    azl0 = ac[wav_ch_l]*aint2float
+    azr0 = ac[wav_ch_r]*aint2float
+  if calculate == 2:
+    # reset gyro angles
+    phi = theta = psi = prev_phi = prev_theta = prev_psi = 0.0
+    dc_p = dc_q = dc_r = 0.0
 
 # enter slope, calculate running average
 # slope = dz/dx (tangent)
@@ -209,6 +256,26 @@ def enter_accel(azl:float, azr:float, vx:float):
     az2slope(azl, azr, a_sample_dt / vx)
   else: # calculate == 2
     az2slope(azl, azr, a_sample_dt)
+  travel_sampling += vx * a_sample_dt
+  if travel_sampling > sampling_length:
+    travel_sampling -= sampling_length
+    return 1
+  return 0
+
+# integrate gyro angular rates to get Euler angles phi, theta, psi
+# slope is approx theta in z/x space domain: slope = tan(theta)
+# (p,q,r) are angular velocities around (x,y,z) in [rad/s])
+def enter_gyro(p:float, q:float, r:float, vx:float):
+  global travel_sampling
+  global phi, theta, psi
+  # common terms to shorten expression:
+  qpr = q * sin(phi) + r * cos(phi)
+  qnr = q * cos(phi) - r * sin(phi)
+  # discrete-time integral to euler angles
+  phi   += a_sample_dt * ( p + qpr * tan(theta) )
+  theta += a_sample_dt * (     qnr              )
+  psi   += a_sample_dt * (     qpr / cos(theta) )
+  # integrate travel
   travel_sampling += vx * a_sample_dt
   if travel_sampling > sampling_length:
     travel_sampling -= sampling_length
@@ -315,7 +382,6 @@ class snap:
     self.current_gps_segment_length = 0.0
     # track length at which next length-based cut will be done
     self.cut_at_length = self.prev_gps_track_length + self.segment_length
-
 
   def init_snap_segments(self):
     # empty snap lists
@@ -612,9 +678,20 @@ for wavfile in argv[1:]:
       for j in range(0,6):
         ac[j] = int.from_bytes(b[j*2:j*2+2],byteorder="little",signed=True)
       if speed_kmh > 1: # TODO unhardcode
-        if enter_accel(ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float, speed_kmh/3.6):
-          enter_slope(slope[0],slope[1])
-          slope_dc_remove()
+        if calculate == 1: # accelerometer
+          if enter_accel(ac[wav_ch_l]*aint2float,
+                         ac[wav_ch_r]*aint2float,
+                         speed_kmh/3.6):
+            enter_slope(slope[0],slope[1])
+            slope_dc_remove()
+        if calculate == 2: # gyroscope
+          if enter_gyro(ac[wav_ch_p]*aint2float + dc_p,
+                        ac[wav_ch_q]*aint2float + dc_q,
+                        ac[wav_ch_r]*aint2float + dc_r,
+                        speed_kmh/3.6):
+            enter_slope(tan(theta),tan(theta))
+            gyro_dc_remove()
+
     if a != 32:
       c = a
       # convert control chars<32 to uppercase letters >=64
@@ -681,6 +758,7 @@ for wavfile in argv[1:]:
                    "Lc=%.2f, Rc=%.2f\n"
                    "azl0=%.3e, azr0=%.3e\n"
                    "slope_l=%.3e, slope_r=%.3e\n"
+                   "phi=%.1f, theta=%.1f, psi=%.1f\n"
                    "v=%.1f km/h\n%s"
                   ) %
                   (iri_left, iri_right,
@@ -688,6 +766,7 @@ for wavfile in argv[1:]:
                    srvz[0] / (n_buf_points*1000), srvz[1] / (n_buf_points*1000),
                    azl0, azr0,
                    slope[0], slope[1],
+                   phi*180/pi, theta*180/pi, psi*180/pi,
                    speed_kmh, datetime.decode("utf-8"))),
                 styles=[lsty0])
               #p1_iri_left  = kml.Data(name="IRI_LEFT" , display_name="IRI_LEFT" , value="%.2f" % iri_left )
