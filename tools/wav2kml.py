@@ -178,20 +178,20 @@ def slope_dc_remove():
 
 def gyro_dc_remove():
   global dc_p, dc_q, dc_r, prev_phi, prev_theta, prev_psi
-  # if angle is positive and increasing, decrease offset
+  # if angle is positive and increasing, increase DC
   if phi   > 0 and phi   - prev_phi   > 0:
-    dc_p -= dc_remove_step
-  if theta > 0 and theta - prev_theta > 0:
-    dc_q -= dc_remove_step
-  if psi   > 0 and psi   - prev_psi   > 0:
-    dc_r -= dc_remove_step
-  # if angle is negative and decreasing, increase offset
-  if phi   < 0 and phi   - prev_phi   < 0:
     dc_p += dc_remove_step
-  if theta < 0 and theta - prev_theta < 0:
+  if theta > 0 and theta - prev_theta > 0:
     dc_q += dc_remove_step
-  if psi   < 0 and psi   - prev_psi   < 0:
+  if psi   > 0 and psi   - prev_psi   > 0:
     dc_r += dc_remove_step
+  # if angle is negative and decreasing, decrease DC
+  if phi   < 0 and phi   - prev_phi   < 0:
+    dc_p -= dc_remove_step
+  if theta < 0 and theta - prev_theta < 0:
+    dc_q -= dc_remove_step
+  if psi   < 0 and psi   - prev_psi   < 0:
+    dc_r -= dc_remove_step
   # store current values as previous for next control cycle
   prev_phi   = phi
   prev_theta = theta
@@ -210,10 +210,10 @@ def reset_iri():
   rvz_buf_ptr = 0
   slope *= 0
   slope_prev *= 0
-  if calculate == 1:
-    # reset DC compensation to current accelerometer reading
-    azl0 = ac[wav_ch_l]*aint2float
-    azr0 = ac[wav_ch_r]*aint2float
+  #if calculate == 1:
+  #  # reset DC compensation to current accelerometer reading
+  #  azl0 = ac[wav_ch_l]*aint2float
+  #  azr0 = ac[wav_ch_r]*aint2float
   if calculate == 2:
     # reset gyro angles
     phi = theta = psi = prev_phi = prev_theta = prev_psi = 0.0
@@ -240,8 +240,8 @@ def enter_slope(slope_l:float, slope_r:float):
 # needs regularly updated azl0, azr0 for slope DC remove
 def az2slope(azl:float, azr:float, c:float):
   global slope
-  slope[0] += (azl - azl0) * c
-  slope[1] += (azr - azr0) * c
+  slope[0] += azl * c
+  slope[1] += azr * c
 
 # integrate z-acceleration in time domain 
 # updates slope in z/x space domain
@@ -249,13 +249,9 @@ def az2slope(azl:float, azr:float, c:float):
 # (vx = vehicle speed at the time when azl,azr accel are measured)
 # for small vx model is inaccurate. at vx=0 division by zero
 # returns 1 when slope is ready (each sampling_interval), otherwise 0
-# for gyro, angular speed is az, don't divide by vx
 def enter_accel(azl:float, azr:float, vx:float):
   global travel_sampling
-  if calculate == 1:
-    az2slope(azl, azr, a_sample_dt / vx)
-  else: # calculate == 2
-    az2slope(azl, azr, a_sample_dt)
+  az2slope(azl, azr, a_sample_dt / vx)
   travel_sampling += vx * a_sample_dt
   if travel_sampling > sampling_length:
     travel_sampling -= sampling_length
@@ -679,15 +675,15 @@ for wavfile in argv[1:]:
         ac[j] = int.from_bytes(b[j*2:j*2+2],byteorder="little",signed=True)
       if speed_kmh > 1: # TODO unhardcode
         if calculate == 1: # accelerometer
-          if enter_accel(ac[wav_ch_l]*aint2float,
-                         ac[wav_ch_r]*aint2float,
+          if enter_accel(ac[wav_ch_l]*aint2float - azl0,
+                         ac[wav_ch_r]*aint2float - azr0,
                          speed_kmh/3.6):
             enter_slope(slope[0],slope[1])
             slope_dc_remove()
         if calculate == 2: # gyroscope
-          if enter_gyro(ac[wav_ch_p]*aint2float + dc_p,
-                        ac[wav_ch_q]*aint2float + dc_q,
-                        ac[wav_ch_r]*aint2float + dc_r,
+          if enter_gyro(ac[wav_ch_p]*aint2float - dc_p,
+                        ac[wav_ch_q]*aint2float - dc_q,
+                        ac[wav_ch_r]*aint2float - dc_r,
                         speed_kmh/3.6):
             enter_slope(tan(theta),tan(theta))
             gyro_dc_remove()
@@ -756,6 +752,7 @@ for wavfile in argv[1:]:
                    "R100=%.2f mm/m\n"
                    "L20=%.2f, R20=%.2f\n"
                    "Lc=%.2f, Rc=%.2f\n"
+                   "azl=%.3e, azr=%.3e\n"
                    "azl0=%.3e, azr0=%.3e\n"
                    "slope_l=%.3e, slope_r=%.3e\n"
                    "phi=%.1f, theta=%.1f, psi=%.1f\n"
@@ -764,6 +761,7 @@ for wavfile in argv[1:]:
                   (iri_left, iri_right,
                    iri20_left, iri20_right,
                    srvz[0] / (n_buf_points*1000), srvz[1] / (n_buf_points*1000),
+                   ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float,
                    azl0, azr0,
                    slope[0], slope[1],
                    phi*180/pi, theta*180/pi, psi*180/pi,
