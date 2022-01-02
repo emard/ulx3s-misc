@@ -130,6 +130,7 @@ wav2kml
     [x] snap
     [x] colorized description
         https://developers.google.com/kml/documentation/kml_tut
+    [ ] wav generator to generate track of known values
 
 math
 
