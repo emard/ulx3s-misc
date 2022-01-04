@@ -392,7 +392,7 @@ module top_ulx4m_memtest
     );
     assign sdram_cke = 1'b1;
 
-    // most important info is failcond - lower 8 bits shown on LEDs
+    // most important info is failcount - lower 8 bits shown on LEDs
     assign led = failcount[7:0];
 
     // VGA signal generator
