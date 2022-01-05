@@ -2,10 +2,10 @@
 
 esp32
 
-    [ ] arduino 1.8.15 -> 1.8.19 regression?
-    [ ] crash after new start (printed temperatures last in log)
-    [ ] right sensor temperature -199.9C
+    [x] crash after temperatures in log, sprintf 20 bytes overrun
+    [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
     [ ] tunnel mode kml generate follow the same direction
+    [ ] support ESP32DMASPI v0.2.0 or later
     [x] LCD display with freq and status
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
