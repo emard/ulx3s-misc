@@ -787,7 +787,6 @@ for wavfile in argv[1:]:
                    "R100=%.2f mm/m\n"
                    "L20=%.2f, R20=%.2f\n"
                    "Lc=%.2f, Rc=%.2f\n"
-                   "azl=%.3e, azr=%.3e\n"
                    "azl0=%.3e, azr0=%.3e\n"
                    "slope_l=%.3e, slope_r=%.3e\n"
                    "phi=%.1f, theta=%.1f, psi=%.1f\n"
@@ -796,7 +795,6 @@ for wavfile in argv[1:]:
                   (iri_left, iri_right,
                    iri20_left, iri20_right,
                    srvz[0] / (n_buf_points*1000), srvz[1] / (n_buf_points*1000),
-                   ac[wav_ch_l]*aint2float, ac[wav_ch_r]*aint2float,
                    azl0, azr0,
                    slope[0], slope[1],
                    phi*180/pi, theta*180/pi, psi*180/pi,
