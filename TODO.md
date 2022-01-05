@@ -2,11 +2,16 @@
 
 esp32
 
+    [ ] arduino 1.8.15 -> 1.8.19 regression?
+    [ ] crash after new start (printed temperatures last in log)
+    [ ] right sensor temperature -199.9C
     [ ] tunnel mode kml generate follow the same direction
     [x] LCD display with freq and status
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
     [x] LCD cursor FM frequency setting with BTN
+    [ ] FM avoid freqs closer than 0.2 MHz, jump 0.4 MHz
+    [ ] print and say REBOOT on FM/RDS at startup
     [x] BTN freq autorepeat jump 1 MHz
     [x] save FM freq setting to SD card
     [x] search for GPS/OBD if nonzero config exists
