@@ -18,9 +18,8 @@ RDS rds;
 // Manage Libraries -> ESP32DMASPI
 // Version 0.1.0 tested
 // Version 0.1.1 and 0.1.2 compile with arduino 1.8.19
-// Version 0.2.0 doesn't compile with arduino 1.8.19
+// Version 0.2.0 doesn't compile
 #include <ESP32DMASPIMaster.h> // Version 0.1.0 tested
-
 ESP32DMASPI::Master master;
 uint8_t* spi_master_tx_buf;
 uint8_t* spi_master_rx_buf;
@@ -253,7 +252,7 @@ void cold_init_sensors(void)
   serialno[0] = 0;
   serialno[1] = 0;
   if(adxl_devid_detected == 0xED) // ADXL355
-    master.setFrequency(8000000); // 8 MHz max ADXL355, no serial number
+    master.setFrequency(5000000); // 8 MHz max ADXL355, no serial number
   if(adxl_devid_detected == 0x92) // ADXRS290 gyroscope has serial number
   { // read serial number
     master.setFrequency(5000000); // 5 MHz max ADXRS290, read serial number
