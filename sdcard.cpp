@@ -16,6 +16,9 @@
 RDS rds;
 
 // Manage Libraries -> ESP32DMASPI
+// Version 0.1.0 tested
+// Version 0.1.1 and 0.1.2 compile with arduino 1.8.19
+// Version 0.2.0 doesn't compile with arduino 1.8.19
 #include <ESP32DMASPIMaster.h> // Version 0.1.0 tested
 
 ESP32DMASPI::Master master;
