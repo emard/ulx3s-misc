@@ -1,6 +1,8 @@
+// Arduino 1.8.19
 // set Board->ESP32 Arduino->ESP32 Dev Module
 // CPU Frequency: 240 MHz
 // Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
+// Manage Libraries -> ESP32DMASPI v0.1.2
 
 #include "pins.h"
 #include "web.h"
