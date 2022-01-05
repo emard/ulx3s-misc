@@ -7,6 +7,7 @@ ncard.wav \
 nfree.wav \
 wait.wav \
 record.wav \
+restart.wav \
 searchgps.wav \
 searchobd.wav \
 lstrong.wav \
