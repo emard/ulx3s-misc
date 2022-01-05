@@ -819,7 +819,13 @@ void btn_handler(void)
           if((ev_btn_repeat))
             fm_freq[fm_freq_cursor-1] = (fm_freq[fm_freq_cursor-1]/1000000 + 1) * 1000000;
           else
-            fm_freq[fm_freq_cursor-1] += 50000;
+          {
+            if(fm_freq[fm_freq_cursor-1] >= fm_freq[(fm_freq_cursor ^ 3)-1] - 200000
+            && fm_freq[fm_freq_cursor-1] <= fm_freq[(fm_freq_cursor ^ 3)-1])
+              fm_freq[fm_freq_cursor-1] += 400000; // skip near frequency
+            else
+              fm_freq[fm_freq_cursor-1] += 50000; // normal
+          }
         }
         else
           fm_freq[fm_freq_cursor-1] = 108000000;
@@ -836,7 +842,13 @@ void btn_handler(void)
           if(ev_btn_repeat)
             fm_freq[fm_freq_cursor-1] = ((fm_freq[fm_freq_cursor-1]+999999)/1000000 - 1) * 1000000;
           else
-            fm_freq[fm_freq_cursor-1] -= 50000;
+          {
+            if(fm_freq[fm_freq_cursor-1] <= fm_freq[(fm_freq_cursor ^ 3)-1] + 200000
+            && fm_freq[fm_freq_cursor-1] >= fm_freq[(fm_freq_cursor ^ 3)-1])
+              fm_freq[fm_freq_cursor-1] -= 400000; // skip near frequency
+            else
+              fm_freq[fm_freq_cursor-1] -= 50000; // normal
+          }
         }
         else
           fm_freq[fm_freq_cursor-1] = 87500000;
