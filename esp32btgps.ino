@@ -63,7 +63,7 @@ static char *sensor_status_file[] =
   "/profilog/speak/nleft.wav",
   NULL
 };
-static char *speakaction[] = {"/profilog/speak/search.wav", NULL, NULL};
+static char *speakaction[] = {"/profilog/speak/restart.wav", NULL, NULL};
 
 static char *sensor_balance_file[] =
 {
@@ -86,11 +86,11 @@ int travel_mm = 0; // travelled mm (v*dt)
 int travel_report, travel_report_prev = 0; // previous 100m travel
 int travel_report2, travel_report2_prev = 0; // previous 20m travel
 int session_log = 0; // request new timestamp filename when reconnected
-int speak_search = 1; // 0 - don't search, 1-search gps, 2-search obd
+int speak_search = 0; // 0 - don't speak search, 1-search gps
 uint32_t srvz[4];
 int stopcount = 0;
 
-// form nmea and travel in GPS mode
+// form nmea and travel in GPS mode;
 int daytime = 0;
 int daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
 
@@ -276,6 +276,10 @@ void setup() {
   SerialBT.begin("ESP32", true);
   SerialBT.setPin(GPS_PIN.c_str());
   Serial.println("Bluetooth master started");
+
+  speakaction[0] = "/profilog/speak/restart.wav";
+  speakaction[1] = NULL;
+  speakfiles = speakaction;
 
   spi_speed_write(0); // normal
 }
