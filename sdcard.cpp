@@ -229,7 +229,7 @@ void cold_init_sensors(void)
   delay(2); // wait for request direct mode to be accepted
   if(adxl_devid_detected == 0)
   {
-    master.setFrequency(5000000); // 5 MHz max ADXRS290
+    master.setFrequency(4000000); // 5 MHz max ADXRS290
     for(int8_t j = 1; j >= 0; j--)
     {
       // first try 1:ADXL355, then 0:ADXRS290
@@ -252,10 +252,10 @@ void cold_init_sensors(void)
   serialno[0] = 0;
   serialno[1] = 0;
   if(adxl_devid_detected == 0xED) // ADXL355
-    master.setFrequency(5000000); // 8 MHz max ADXL355, no serial number
+    master.setFrequency(4000000); // 8 MHz max ADXL355, no serial number
   if(adxl_devid_detected == 0x92) // ADXRS290 gyroscope has serial number
   { // read serial number
-    master.setFrequency(5000000); // 5 MHz max ADXRS290, read serial number
+    master.setFrequency(4000000); // 5 MHz max ADXRS290, read serial number
     for(uint8_t lr = 0; lr < 2; lr++)
     {
       adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
@@ -350,7 +350,7 @@ void spi_init(void)
     // adxl355  direct can use SPI_MODE3 with sclk inverted
     // adxrs290 direct can use SPI_MODE3 with sclk normal
     master.setDataMode(SPI_MODE3); // for DMA, only 1 or 3 is available
-    master.setFrequency(5000000); // Hz 5 MHz initial, after autodect ADXL355: 8 MHz, ADXRS290: 5 MHz
+    master.setFrequency(4000000); // Hz 5 MHz initial, after autodect ADXL355: 8 MHz, ADXRS290: 5 MHz
     master.setMaxTransferSize(BUFFER_SIZE); // bytes
     master.setDMAChannel(1); // 1 or 2 only
     master.setQueueSize(1); // transaction queue size
