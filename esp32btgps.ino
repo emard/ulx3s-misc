@@ -689,6 +689,7 @@ void handle_reconnect(void)
   obd_retry = ~0; // initial retry OBD to start reports
   datetime_is_set = 0; // set datetime again
   line_i = 0; // reset line buffer write pointer
+  speed_ckt = speed_mms = speed_kmh = -1; // reset speeds to reset tunnet mode when GPS connection is lost
   speak_search = 1; // request speech report on searching for GPS/OBD
 }
 
