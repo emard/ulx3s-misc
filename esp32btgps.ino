@@ -1,8 +1,11 @@
 // Arduino 1.8.19
+// preferences -> Additional Boards Manger URLs:
+// https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+// boards manager -> esp32 v1.0.6 install
 // set Board->ESP32 Arduino->ESP32 Dev Module
 // CPU Frequency: 240 MHz
 // Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
-// Manage Libraries -> ESP32DMASPI v0.1.2
+// Manage Libraries -> ESP32DMASPI v0.1.2 install
 
 #include "pins.h"
 #include "web.h"
