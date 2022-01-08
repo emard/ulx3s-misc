@@ -5,13 +5,14 @@ esp32
     [x] crash after temperatures in log, sprintf 20 bytes overrun
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
     [ ] tunnel mode kml generate follow the same direction
-    [ ] support ESP32DMASPI v0.2.0 or later
+    [x] support arduino v2.0.0 and ESP32DMASPI v0.2.0
+    [ ] all DMA transfer sizes divisible by 4
     [x] LCD display with freq and status
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
     [x] LCD cursor FM frequency setting with BTN
-    [ ] FM avoid freqs closer than 0.2 MHz, jump 0.4 MHz
-    [ ] print and say REBOOT on FM/RDS at startup
+    [x] FM avoid freqs closer than 0.3 MHz, jump
+    [x] print and say REBOOT on FM/RDS at startup
     [x] BTN freq autorepeat jump 1 MHz
     [x] save FM freq setting to SD card
     [x] search for GPS/OBD if nonzero config exists
