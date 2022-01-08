@@ -31,8 +31,8 @@
 
 // MCPWM API is different between IDF3/4
 // define one as 1, other as 0:
-#define IDF3 1 // esp32 v1.0.x
-#define IDF4 0 // esp32 v2.0.x
+#define IDF3 0 // esp32 v1.0.x
+#define IDF4 1 // esp32 v2.0.x
 
 // PPS and IRQ connected with wire
 #include "soc/mcpwm_reg.h"
@@ -65,33 +65,33 @@ void (*loop_pointer)() = &loop_run;
 
 static char *digit_file[] =
 {
-  "/profilog/speak/0.wav",
-  "/profilog/speak/1.wav",
-  "/profilog/speak/2.wav",
-  "/profilog/speak/3.wav",
-  "/profilog/speak/4.wav",
-  "/profilog/speak/5.wav",
-  "/profilog/speak/6.wav",
-  "/profilog/speak/7.wav",
-  "/profilog/speak/8.wav",
-  "/profilog/speak/9.wav",
+  (char *)"/profilog/speak/0.wav",
+  (char *)"/profilog/speak/1.wav",
+  (char *)"/profilog/speak/2.wav",
+  (char *)"/profilog/speak/3.wav",
+  (char *)"/profilog/speak/4.wav",
+  (char *)"/profilog/speak/5.wav",
+  (char *)"/profilog/speak/6.wav",
+  (char *)"/profilog/speak/7.wav",
+  (char *)"/profilog/speak/8.wav",
+  (char *)"/profilog/speak/9.wav",
   NULL
 };
 static char *speak2digits[] = {digit_file[0], digit_file[0], NULL, NULL};
 static char *sensor_status_file[] =
 {
-  "/profilog/speak/nsensor.wav",
-  "/profilog/speak/nright.wav",
-  "/profilog/speak/nleft.wav",
+  (char *)"/profilog/speak/nsensor.wav",
+  (char *)"/profilog/speak/nright.wav",
+  (char *)"/profilog/speak/nleft.wav",
   NULL
 };
-static char *speakaction[] = {"/profilog/speak/restart.wav", NULL, NULL};
+static char *speakaction[] = {(char *)"/profilog/speak/restart.wav", NULL, NULL};
 
 static char *sensor_balance_file[] =
 {
   NULL, // ok
-  "/profilog/speak/lstrong.wav",
-  "/profilog/speak/rstrong.wav",
+  (char *)"/profilog/speak/lstrong.wav",
+  (char *)"/profilog/speak/rstrong.wav",
 };
 
 static char *speakip[16] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, };
@@ -117,7 +117,7 @@ int daytime = 0;
 int daytime_prev = 0; // seconds x10 (0.1s resolution) for dt
 
 char prompt_obd = '>'; // after promot send obd_request_kmh
-char *obd_request_kmh = "010D\r";
+char *obd_request_kmh = (char *)"010D\r";
 uint8_t obd_retry = 3; // bit pattern for OBD retry in case of silence
 
 // int64_t esp_timer_get_time() returns system microseconds
@@ -243,7 +243,7 @@ void setup() {
   rds_init();
   spi_rds_write();
   clr_lcd();
-  lcd_print(14,0,0,"MHz");
+  lcd_print(14,0,0,(char *)"MHz");
 
   int web = ((~spi_btn_read()) & 1); // hold BTN0 and plug power to enable web server
   if(web)
@@ -255,9 +255,9 @@ void setup() {
     set_fm_freq();
     read_last_nmea();
     finalize_data(&tm);
-    lcd_print(22,0,0,"WiFi");
+    lcd_print(22,0,0,(char *)"WiFi");
     web_setup();
-    speakaction[0] = "/profilog/speak/webserver.wav"; // TODO say web server maybe IP too
+    speakaction[0] = (char *)"/profilog/speak/webserver.wav"; // TODO say web server maybe IP too
     speakaction[1] = NULL;
     speakfiles = speakaction;
     return;
@@ -334,7 +334,7 @@ void setup() {
   SerialBT.setPin(GPS_PIN.c_str());
   Serial.println("Bluetooth master started");
 
-  speakaction[0] = "/profilog/speak/restart.wav";
+  speakaction[0] = (char *)"/profilog/speak/restart.wav";
   speakaction[1] = NULL;
   speakfiles = speakaction;
 
@@ -392,7 +392,7 @@ char tag_test[256] = "$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTU
 
 // speech handler, call from loop()
 // plays sequence of wav files
-// speakfiles = {"/profilog/speak/file1.wav", "/profilog/speak/file2.wav", ... , NULL };
+// speakfiles = {(char *)"/profilog/speak/file1.wav", (char *)"/profilog/speak/file2.wav", ... , NULL };
 void speech()
 {
   static uint32_t tprev_wav = t_ms, tprev_wavp = t_ms;
@@ -469,9 +469,9 @@ void report_search(void)
     {
       int mode_xor = gps_obd_configured == 3 ? 1 : 0; // if both then alternate speech in advance
       if(mode_obd_gps ^ mode_xor)
-        speakaction[0] = "/profilog/speak/searchgps.wav";
+        speakaction[0] = (char *)"/profilog/speak/searchgps.wav";
       else
-        speakaction[0] = "/profilog/speak/searchobd.wav";
+        speakaction[0] = (char *)"/profilog/speak/searchobd.wav";
       speakaction[1] = sensor_status_file[sensor_check_status]; // normal
       #if 0 // debug false report all combinations no sensors
       static uint8_t x = 0;
@@ -553,14 +553,14 @@ void report_status(void)
       rds_message(&tm);
       if (speed_ckt < 0) // no signal
       {
-        speakaction[0] = "/profilog/speak/wait.wav";
+        speakaction[0] = (char *)"/profilog/speak/wait.wav";
         speakaction[1] = sensor_status_file[sensor_check_status];
       }
       else
       {
         if (fast_enough)
         {
-          //speakaction[0] = "/profilog/speak/record.wav";
+          //speakaction[0] = (char *)"/profilog/speak/record.wav";
           speakaction[0] = sensor_status_file[sensor_check_status];
           speakaction[1] = NULL;
         }
@@ -569,9 +569,9 @@ void report_status(void)
           if(sensor_check_status)
           { // at least one sensor
             if(free_MB >= 8)
-              speakaction[0] = "/profilog/speak/ready.wav";
+              speakaction[0] = (char *)"/profilog/speak/ready.wav";
             else
-              speakaction[0] = "/profilog/speak/nfree.wav";
+              speakaction[0] = (char *)"/profilog/speak/nfree.wav";
             speakaction[1] = sensor_status_file[sensor_check_status];
           }
           else
@@ -1076,7 +1076,7 @@ void handle_obd_line_complete(void)
   }
   write_logs(); // use SPI_MODE1
   handle_fast_enough(); // will close logs if not fast enough
-  getLocalTime(&tm, NULL);
+  getLocalTime(&tm, 0);
   handle_session_log(); // will open logs if fast enough (new filename when reconnected)
   report_iri();
   report_status();
@@ -1180,7 +1180,7 @@ void speak_report_ip(struct tm *tm)
       if(c >= '0' && c <= '9')
         speakip[i] = digit_file[c-'0'];
       else
-        speakip[i] = "/profilog/speak/point.wav";
+        speakip[i] = (char *)"/profilog/speak/point.wav";
     }
     speakip[i] = NULL; // terminator
     speakfiles = speakip;
@@ -1191,8 +1191,13 @@ void loop_web(void)
 {
   t_ms = ms();
   server.handleClient();
+  #if IDF3
   int is_connected = monitorWiFi();
-  getLocalTime(&tm, NULL);
+  #endif
+  #if IDF4
+  int is_connected = 1; // FIXME
+  #endif
+  getLocalTime(&tm, 0);
   rds_report_ip(&tm);
   if(is_connected)
   {

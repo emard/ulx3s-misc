@@ -96,15 +96,16 @@ void RDS::binary_ps_group(uint8_t *buffer, uint8_t group_number)
   uint8_t gn = group_number & 3; // group number
   uint16_t blocks[RDS_GROUP_LENGTH] = {
     /* blocks[0] = */ this->value_pi,
-    /* blocks[1] = */ 0x0000
+    /* blocks[1] = */ (uint16_t) ( 0x0000
                     | (this->signal_tp  &  1)<<10
                     | (this->signal_pty & 31)<<5
                     | (this->signal_ta  &  1)<<4
                     | (this->signal_ms  &  1)<<3
-                    | gn,
-    /* blocks[2] = */ 0xCDCD, // AF filler code (empty)
-    /* blocks[3] = */ this->string_ps[gn*2]<<8
-                    | this->string_ps[gn*2+1]
+                    | gn ),
+    /* blocks[2] = */ (uint16_t) 0xCDCD, // AF filler code (empty)
+    /* blocks[3] = */ (uint16_t) (
+                      this->string_ps[gn*2]<<8
+                    | this->string_ps[gn*2+1] )
   };
   // see see page 41, table 9 of the standard
   // or  gqrx source, gqrx/src/dsp/rds/parser_impl.cc decode_type0() switch(segment_address)
@@ -147,14 +148,16 @@ void RDS::binary_rt_group(uint8_t *buffer, uint8_t group_number)
   uint8_t gn = group_number & 15; // group number
   uint16_t blocks[RDS_GROUP_LENGTH] = {
     /* blocks[0] = */ this->value_pi,
-    /* blocks[1] = */ 0x2000
+    /* blocks[1] = */ (uint16_t) ( 0x2000
                     | (this->signal_tp  &  1)<<10
                     | (this->signal_pty & 31)<< 5
-                    | gn,
-    /* blocks[2] = */ this->string_rt[gn*4+0]<<8
-                    | this->string_rt[gn*4+1],
-    /* blocks[3] = */ this->string_rt[gn*4+2]<<8
-                    | this->string_rt[gn*4+3]
+                    | gn ),
+    /* blocks[2] = */ (uint16_t) (
+                      this->string_rt[gn*4+0]<<8
+                    | this->string_rt[gn*4+1] ),
+    /* blocks[3] = */ (uint16_t) (
+                      this->string_rt[gn*4+2]<<8
+                    | this->string_rt[gn*4+3] )
   };
   binary_buf_crc(buffer, blocks);
 }

@@ -31,9 +31,9 @@ uint8_t GPS_MAC[6], OBD_MAC[6];
 String  GPS_NAME, GPS_PIN, OBD_NAME, OBD_PIN, AP_PASS[AP_MAX], DNS_HOST;
 
 File file_kml, file_accel, file_pcm, file_cfg;
-char filename_data[256] = "/profilog/data/accel.wav";
-char *filename_lastnmea = "/profilog/var/lastnmea.txt";
-char *filename_fmfreq   = "/profilog/var/fmfreq.txt";
+char filename_data[256];
+char *filename_lastnmea = (char *)"/profilog/var/lastnmea.txt";
+char *filename_fmfreq   = (char *)"/profilog/var/fmfreq.txt";
 char lastnmea[256]; // here is read content from filename_lastnmea
 int card_is_mounted = 0;
 int logs_are_open = 0;
@@ -424,10 +424,10 @@ void spi_rds_write(void)
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
   rds.ta(0);
-  rds.ps("SELFTEST");
+  rds.ps((char *)"RESTART ");
   //               1         2         3         4         5         6
   //      1234567890123456789012345678901234567890123456789012345678901234
-  rds.rt("abcdefghijklmnopqrstuvwxyz 0123456789 abcdefghijklmnopqrstuvwxyz");
+  rds.rt((char *)"Restart breaks normal functioning. Firmware needs maintenance.  ");
   rds.ct(2000,0,1,0,0,0);
   master.transfer(spi_master_tx_buf, 5+(4+16+1)*13); // write RDS binary
   if(0)
@@ -463,8 +463,8 @@ int iclog2(int x)
 void rds_message(struct tm *tm)
 {
   char disp_short[9], disp_long[65];
-  char *name_obd_gps[] = {"OBD", "GPS"};
-  char *sensor_status_decode = "XLRY"; // X-no sensors, L-left only, R-right only, Y-both
+  char *name_obd_gps[] = {(char *)"OBD", (char *)"GPS"};
+  char *sensor_status_decode = (char *)"XLRY"; // X-no sensors, L-left only, R-right only, Y-both
   char free_MB_2n = ' ';
   SD_status();
   free_MB_2n = '0'+iclog2(free_MB)-1;
@@ -779,10 +779,10 @@ void store_last_sensor_reading(void)
 void generate_filename_wav(struct tm *tm)
 {
   #if 1
-  sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.wav",
+  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d-%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
   #else // one file per day
-  sprintf(filename_data, "/profilog/data/%04d%02d%02d.wav",
+  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
   #endif
 }
@@ -791,10 +791,10 @@ void open_log_wav(struct tm *tm)
 {
   generate_filename_wav(tm);
   #if 1
-  sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.wav",
+  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d-%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
   #else
-  sprintf(filename_data, "/profilog/data/%04d%02d%02d.wav",
+  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d.wav",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
   #endif
   #if 1
@@ -805,7 +805,7 @@ void open_log_wav(struct tm *tm)
     write_wav_header();
   #else
   SD_MMC.remove(filename_data);
-  SD_MMC.remove("/profilog/data/accel.wav");
+  SD_MMC.remove((char *)"/profilog/data/accel.wav");
   file_accel = SD_MMC.open(filename_data, FILE_WRITE);
   write_wav_header();
   #endif
@@ -1124,9 +1124,9 @@ void finalize_wav_header(void)
 {
   uint32_t pos = file_accel.position();
   uint32_t subchunk2size = pos - 44;
-  uint8_t subchunk2size_bytes[4] = {subchunk2size, subchunk2size>>8, subchunk2size>>16, subchunk2size>>24};
+  uint8_t subchunk2size_bytes[4] = {(uint8_t)subchunk2size, (uint8_t)(subchunk2size>>8), (uint8_t)(subchunk2size>>16), (uint8_t)(subchunk2size>>24)};
   uint32_t chunksize = pos - 8;
-  uint8_t chunksize_bytes[4] = {chunksize, chunksize>>8, chunksize>>16, chunksize>>24};
+  uint8_t chunksize_bytes[4] = {(uint8_t)chunksize, (uint8_t)(chunksize>>8), (uint8_t)(chunksize>>16), (uint8_t)(chunksize>>24)};
   // FIXME file_accel.seek() is not working
   file_accel.seek(4);
   file_accel.write(chunksize_bytes, 4);
@@ -1178,10 +1178,10 @@ void write_log_kml(uint8_t force)
 void generate_filename_kml(struct tm *tm)
 {
   #if 1
-  sprintf(filename_data, "/profilog/data/%04d%02d%02d-%02d%02d.kml",
+  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d-%02d%02d.kml",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
   #else // one file per day
-  sprintf(filename_data, "/profilog/data/%04d%02d%02d.kml",
+  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d.kml",
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
   #endif
 }
@@ -1282,7 +1282,7 @@ void check_gps_obd_config()
 
 void read_cfg(void)
 {
-  char *filename_cfg = "/profilog/config/profilog.cfg";
+  char *filename_cfg = (char *)"/profilog/config/profilog.cfg";
   file_cfg = SD_MMC.open(filename_cfg, FILE_READ);
   int linecount = 0;
   Serial.print("*** open ");
@@ -1441,7 +1441,7 @@ void finalize_data(struct tm *tm){
       return;
     if(logs_are_open)
       return;
-    const char *dirname = "/profilog/data";
+    const char *dirname = (char *)"/profilog/data";
     Serial.printf("Finalizing directory: %s\n", dirname);
 
     File root = SD_MMC.open(dirname);
