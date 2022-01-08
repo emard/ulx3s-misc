@@ -844,6 +844,13 @@ void draw_kml_line(char *line)
   }
 }
 
+#define NEAR_FM_FREQ_HZ 300000
+int is_near_frequency(void)
+{
+  return fm_freq[fm_freq_cursor-1] > fm_freq[(fm_freq_cursor ^ 3)-1] - NEAR_FM_FREQ_HZ
+      && fm_freq[fm_freq_cursor-1] < fm_freq[(fm_freq_cursor ^ 3)-1] + NEAR_FM_FREQ_HZ;
+}
+
 void btn_handler(void)
 {
   static uint32_t next_ms;
@@ -892,20 +899,13 @@ void btn_handler(void)
     {
       if(fm_freq_cursor == 1 || fm_freq_cursor == 2)
       {
-        if(fm_freq[fm_freq_cursor-1] < 108000000)
-        {
-          if((ev_btn_repeat))
-            fm_freq[fm_freq_cursor-1] = (fm_freq[fm_freq_cursor-1]/1000000 + 1) * 1000000;
-          else
-          {
-            if(fm_freq[fm_freq_cursor-1] >= fm_freq[(fm_freq_cursor ^ 3)-1] - 200000
-            && fm_freq[fm_freq_cursor-1] <= fm_freq[(fm_freq_cursor ^ 3)-1])
-              fm_freq[fm_freq_cursor-1] += 400000; // skip near frequency
-            else
-              fm_freq[fm_freq_cursor-1] += 50000; // normal
-          }
-        }
+        if((ev_btn_repeat))
+          fm_freq[fm_freq_cursor-1] = (fm_freq[fm_freq_cursor-1]/1000000 + 1) * 1000000;
         else
+          fm_freq[fm_freq_cursor-1] += 50000;
+        if(is_near_frequency()) // skip near frequency of other antenna
+          fm_freq[fm_freq_cursor-1] = fm_freq[(fm_freq_cursor ^ 3)-1] + NEAR_FM_FREQ_HZ;
+        if(fm_freq[fm_freq_cursor-1] > 108000000)
           fm_freq[fm_freq_cursor-1] = 108000000;
         write_required = 1;
         next_cursor_ms = t_ms + cursor_ms;
@@ -915,20 +915,13 @@ void btn_handler(void)
     {
       if(fm_freq_cursor == 1 || fm_freq_cursor == 2)
       {
-        if(fm_freq[fm_freq_cursor-1] > 87500000)
-        {
-          if(ev_btn_repeat)
-            fm_freq[fm_freq_cursor-1] = ((fm_freq[fm_freq_cursor-1]+999999)/1000000 - 1) * 1000000;
-          else
-          {
-            if(fm_freq[fm_freq_cursor-1] <= fm_freq[(fm_freq_cursor ^ 3)-1] + 200000
-            && fm_freq[fm_freq_cursor-1] >= fm_freq[(fm_freq_cursor ^ 3)-1])
-              fm_freq[fm_freq_cursor-1] -= 400000; // skip near frequency
-            else
-              fm_freq[fm_freq_cursor-1] -= 50000; // normal
-          }
-        }
+        if(ev_btn_repeat)
+          fm_freq[fm_freq_cursor-1] = ((fm_freq[fm_freq_cursor-1]+999999)/1000000 - 1) * 1000000;
         else
+          fm_freq[fm_freq_cursor-1] -= 50000; // normal
+        if(is_near_frequency()) // skip near frequency of other antenna
+          fm_freq[fm_freq_cursor-1] = fm_freq[(fm_freq_cursor ^ 3)-1] - NEAR_FM_FREQ_HZ;
+        if(fm_freq[fm_freq_cursor-1] < 87500000)
           fm_freq[fm_freq_cursor-1] = 87500000;
         write_required = 1;
         next_cursor_ms = t_ms + cursor_ms;
