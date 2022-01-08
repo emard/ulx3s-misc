@@ -2,6 +2,7 @@
 // preferences -> Additional Boards Manger URLs:
 // https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
+// well tested, works ok
 // boards manager -> esp32 v1.0.6 install
 // set Board->ESP32 Arduino->ESP32 Dev Module
 // CPU Frequency: 240 MHz
@@ -10,6 +11,8 @@
 // #define IDF3 1
 // #define IDF4 0
 
+// DMA constantly prints warnings for 4-byte alignment
+// web server is not working
 // boards manager -> esp32 v2.0.2 install
 // set Board->ESP32 Arduino->ESP32 Dev Module
 // CPU Frequency: 240 MHz
@@ -28,8 +31,8 @@
 
 // MCPWM API is different between IDF3/4
 // define one as 1, other as 0:
-#define IDF3 0 // esp32 v1.0.x
-#define IDF4 1 // esp32 v2.0.x
+#define IDF3 1 // esp32 v1.0.x
+#define IDF4 0 // esp32 v2.0.x
 
 // PPS and IRQ connected with wire
 #include "soc/mcpwm_reg.h"
@@ -261,6 +264,21 @@ void setup() {
   }
 
   mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS);   // Initialise channel MCPWM0A on PPS pin
+  mcpwm_config_t pwm_config;
+  pwm_config.frequency = PPSHz;
+  pwm_config.cmpr_a = 0;
+  pwm_config.cmpr_b = 0;
+  pwm_config.counter_mode = MCPWM_UP_COUNTER;
+  pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
+  mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);
+  mcpwm_set_frequency(MCPWM_UNIT_0, MCPWM_TIMER_0, PPSHz); // Hz
+  mcpwm_set_signal_low(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
+  mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 10.0); // 10% DTC
+  mcpwm_set_duty_type(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
+  // above mcpwm functions doesn't set frequency with sufficient
+  // precision for PPS 10 Hz signal (control LEDs will not light up).
+  // following direct register access is required (control LEDs will light up).
+  // freq will be fine-adjusted by phase-locking to GPS time data.
   #if IDF3
   MCPWM0.clk_cfg.prescale = 24;                      // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
   MCPWM0.timer[0].period.prescale = 100 / PPSHz - 1; // Set timer 0 prescaler to 9 (6.4MHz/(9+1))=640kHz)
@@ -272,17 +290,6 @@ void setup() {
   MCPWM0.timer[0].mode.start = 2;                    // Set timer 0 to free-run
   #endif
   #if IDF4
-  mcpwm_config_t pwm_config;
-  pwm_config.frequency = 10;
-  pwm_config.cmpr_a = 0;
-  pwm_config.cmpr_b = 0;
-  pwm_config.counter_mode = MCPWM_UP_COUNTER;
-  pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
-  mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);
-  mcpwm_set_frequency(MCPWM_UNIT_0, MCPWM_TIMER_0, 10);
-  mcpwm_set_signal_low(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
-  mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 10.0); // 10% DTC
-  mcpwm_set_duty_type(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
   MCPWM0.clk_cfg.clk_prescale = 24;                  // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
   MCPWM0.timer[0].timer_cfg0.timer_period_upmethod = 0; // immediate update
   MCPWM0.timer[0].timer_cfg0.timer_prescale = 100 / PPSHz - 1; // Set timer 0 prescaler to 9 (6.4MHz/(9+1))=640kHz)
