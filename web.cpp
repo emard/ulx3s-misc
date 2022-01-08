@@ -212,7 +212,6 @@ void printDirectory() {
     return returnFail("BAD PATH");
   }
   File dir = SD_MMC.open(path.c_str());
-  path = String();
   if (!dir.isDirectory()) {
     dir.close();
     return returnFail("NOT DIR");
@@ -242,7 +241,15 @@ void printDirectory() {
     output += "{\"type\":\"";
     output += (entry.isDirectory()) ? "dir" : "file";
     output += "\",\"name\":\"";
-    output += entry.name();
+    if(String(entry.name()).startsWith("/"))
+      output += entry.name(); // assumed dir path included
+    else // dir path should be prepended
+    {
+      output += path;
+      if(!path.endsWith("/"))
+        output += "/";
+      output += entry.name();
+    }
     output += "\",\"size\":";
     output += entry.size();
     output += "}";
