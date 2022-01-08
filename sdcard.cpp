@@ -772,7 +772,7 @@ int sensor_check(void)
 
 void store_last_sensor_reading(void)
 {
-  const int offset = SPI_READER_BUF_SIZE*4/8 - SPI_READER_BUF_SIZE*4/8%12 - 12;
+  const int offset = SPI_READER_BUF_SIZE*4/8 - SPI_READER_BUF_SIZE*4/8%12 - 12-6;
   memcpy(last_sensor_reading, spi_master_rx_buf + offset, sizeof(last_sensor_reading));
 }
 
