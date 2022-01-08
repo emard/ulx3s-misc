@@ -23,7 +23,7 @@ RDS rds;
 ESP32DMASPI::Master master;
 uint8_t* spi_master_tx_buf;
 uint8_t* spi_master_rx_buf;
-static const uint32_t BUFFER_SIZE = SPI_READER_BUF_SIZE+6;
+static const uint32_t BUFFER_SIZE = (SPI_READER_BUF_SIZE+6+4) & 0xFFFFFFFC; // multiply of 4
 uint8_t  last_sensor_reading[12];
 
 // config file parsing
