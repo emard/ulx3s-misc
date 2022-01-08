@@ -2,8 +2,8 @@
 // preferences -> Additional Boards Manger URLs:
 // https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-// well tested, works ok
 // boards manager -> esp32 v1.0.6 install
+// well tested, works ok
 // set Board->ESP32 Arduino->ESP32 Dev Module
 // CPU Frequency: 240 MHz
 // Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
@@ -11,9 +11,11 @@
 // #define IDF3 1
 // #define IDF4 0
 
-// DMA constantly prints warnings for 4-byte alignment
-// web server is not working
 // boards manager -> esp32 v2.0.2 install
+// in loop_web(): monitorWiFi() can not be used
+// disable warnings for 4-byte alignment
+// edit ~/Arduino/libraries/ESP32DMASPI/ESP32DMASPIMaster.h
+// printf("[WARN] DMA buffer size must be multiples of 4 bytes\n");
 // set Board->ESP32 Arduino->ESP32 Dev Module
 // CPU Frequency: 240 MHz
 // Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
@@ -31,8 +33,19 @@
 
 // MCPWM API is different between IDF3/4
 // define one as 1, other as 0:
-#define IDF3 0 // esp32 v1.0.x
-#define IDF4 1 // esp32 v2.0.x
+#if __has_include("esp_idf_version.h")
+  #include "esp_idf_version.h"
+  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)
+    #define IDF3 0 // esp32 v1.0.x
+    #define IDF4 1 // esp32 v2.0.x
+  #else
+    #define IDF3 1 // esp32 v1.0.x
+    #define IDF4 0 // esp32 v2.0.x
+  #endif
+#else
+  #define IDF3 1 // esp32 v1.0.x
+  #define IDF4 0 // esp32 v2.0.x
+#endif
 
 // PPS and IRQ connected with wire
 #include "soc/mcpwm_reg.h"
@@ -333,6 +346,7 @@ void setup() {
   SerialBT.begin("ESP32", true);
   SerialBT.setPin(GPS_PIN.c_str());
   Serial.println("Bluetooth master started");
+  Serial.println(esp_get_idf_version()); // v4.4-beta1-189-ga79dc75f0a
 
   speakaction[0] = (char *)"/profilog/speak/restart.wav";
   speakaction[1] = NULL;
