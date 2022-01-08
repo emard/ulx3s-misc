@@ -144,7 +144,7 @@ void read_temperature(void)
     {
       adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
       // repeatedly read raw temperature registers until 2 same readings
-      uint16_t T[2] = {-1,-2}; // any 2 different numbers that won't accidentally appear at reading
+      uint16_t T[2] = {0xFFFF,0xFFFE}; // any 2 different numbers that won't accidentally appear at reading
       for(int i = 0; i < 1000 && T[0] != T[1]; i++)
         T[i&1] = ((adxl355_read_reg(ADXL355_TEMP2) & 0xF)<<8) | adxl355_read_reg(ADXL355_TEMP1);
       temp[lr] = T_OFFSET_ADXL355_CONF[lr] + 25.0 + (T[0]-ADXL355_TEMP_AT_25C)*ADXL355_TEMP_SCALE*T_SLOPE_ADXL355_CONF[lr]; // convert to deg C
@@ -156,7 +156,7 @@ void read_temperature(void)
     {
       adxl355_ctrl(lr|2|CTRL_SELECT); // 2 core direct mode, 4 SCLK inversion
       // repeatedly read raw temperature registers until 2 same readings
-      uint16_t T[2] = {-1,-2}; // any 2 different numbers that won't accidentally appear at reading
+      uint16_t T[2] = {0xFFFF,0xFFFE}; // any 2 different numbers that won't accidentally appear at reading
       for(int i = 0; i < 1000 && T[0] != T[1]; i++)
         T[i&1] = ((adxl355_read_reg(ADXRS290_TEMP_H) & 0xF)<<8) | adxl355_read_reg(ADXRS290_TEMP_L);
       temp[lr] = T_OFFSET_ADXRS290_CONF[lr] + T[0]*ADXRS290_TEMP_SCALE*T_SLOPE_ADXRS290_CONF[lr]; // convert to deg C

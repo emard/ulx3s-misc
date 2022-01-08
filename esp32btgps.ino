@@ -1,11 +1,22 @@
 // Arduino 1.8.19
 // preferences -> Additional Boards Manger URLs:
 // https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
 // boards manager -> esp32 v1.0.6 install
 // set Board->ESP32 Arduino->ESP32 Dev Module
 // CPU Frequency: 240 MHz
 // Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
 // Manage Libraries -> ESP32DMASPI v0.1.2 install
+// #define IDF3 1
+// #define IDF4 0
+
+// boards manager -> esp32 v2.0.2 install
+// set Board->ESP32 Arduino->ESP32 Dev Module
+// CPU Frequency: 240 MHz
+// Partition Scheme: No OTA (2MB APP/2MB SPIFFS)
+// Manage Libraries -> ESP32DMASPI v0.2.0 install
+// #define IDF3 0
+// #define IDF4 1
 
 #include "pins.h"
 #include "web.h"
@@ -14,6 +25,11 @@
 #include <WiFi.h> // to speak IP
 
 #include "BluetoothSerial.h"
+
+// MCPWM API is different between IDF3/4
+// define one as 1, other as 0:
+#define IDF3 0 // esp32 v1.0.x
+#define IDF4 1 // esp32 v2.0.x
 
 // PPS and IRQ connected with wire
 #include "soc/mcpwm_reg.h"
@@ -167,7 +183,12 @@ static void IRAM_ATTR isr_handler()
   period_correction /= 4; // slow convergence and hysteresis around 0
   if (period_correction > 1530) // upper limit to prevent 16-bit wraparound
     period_correction = 1530;
+  #if IDF3
   MCPWM0.timer[0].period.period = Period1Hz + period_correction;
+  #endif
+  #if IDF4
+  MCPWM0.timer[0].timer_cfg0.timer_period = Period1Hz + period_correction;
+  #endif
 #if 0
   // debug PPS sync
   Serial.print(nmea2ms_dif, DEC); // average nmea time - ms() time
@@ -239,15 +260,41 @@ void setup() {
     return;
   }
 
-  mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS); // Initialise channel MCPWM0A on PPS pin
-  MCPWM0.clk_cfg.prescale = 24;                 // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
+  mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, PIN_PPS);   // Initialise channel MCPWM0A on PPS pin
+  #if IDF3
+  MCPWM0.clk_cfg.prescale = 24;                      // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
   MCPWM0.timer[0].period.prescale = 100 / PPSHz - 1; // Set timer 0 prescaler to 9 (6.4MHz/(9+1))=640kHz)
-  MCPWM0.timer[0].period.period = 63999;        // Set the PWM period to 10Hz (640kHz/(63999+1)=10Hz)
-  MCPWM0.channel[0].cmpr_value[0].val = 6400;   // Set the counter compare for 10% duty-cycle
-  MCPWM0.channel[0].generator[0].utez = 2;      // Set the PWM0A ouput to go high at the start of the timer period
-  MCPWM0.channel[0].generator[0].utea = 1;      // Clear on compare match
-  MCPWM0.timer[0].mode.mode = 1;                // Set timer 0 to increment
-  MCPWM0.timer[0].mode.start = 2;               // Set timer 0 to free-run
+  MCPWM0.timer[0].period.period = 63999;             // Set the PWM period to 10Hz (640kHz/(63999+1)=10Hz)
+  MCPWM0.channel[0].cmpr_value[0].val = 6400;        // Set the counter compare for 10% duty-cycle
+  MCPWM0.channel[0].generator[0].utez = 2;           // Set the PWM0A output to go high at the start of the timer period
+  MCPWM0.channel[0].generator[0].utea = 1;           // Clear on compare match
+  MCPWM0.timer[0].mode.mode = 1;                     // Set timer 0 to increment
+  MCPWM0.timer[0].mode.start = 2;                    // Set timer 0 to free-run
+  #endif
+  #if IDF4
+  mcpwm_config_t pwm_config;
+  pwm_config.frequency = 10;
+  pwm_config.cmpr_a = 0;
+  pwm_config.cmpr_b = 0;
+  pwm_config.counter_mode = MCPWM_UP_COUNTER;
+  pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
+  mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);
+  mcpwm_set_frequency(MCPWM_UNIT_0, MCPWM_TIMER_0, 10);
+  mcpwm_set_signal_low(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
+  mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 10.0); // 10% DTC
+  mcpwm_set_duty_type(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
+  MCPWM0.clk_cfg.clk_prescale = 24;                  // Set the 160MHz clock prescaler to 24 (160MHz/(24+1)=6.4MHz)
+  MCPWM0.timer[0].timer_cfg0.timer_period_upmethod = 0; // immediate update
+  MCPWM0.timer[0].timer_cfg0.timer_prescale = 100 / PPSHz - 1; // Set timer 0 prescaler to 9 (6.4MHz/(9+1))=640kHz)
+  MCPWM0.timer[0].timer_cfg0.timer_period = 63999;   // Set the PWM period to 10Hz (640kHz/(63999+1)=10Hz)
+  MCPWM0.timer[0].timer_cfg0.val = 0;
+  MCPWM0.operators[0].gen_cfg0.gen_cfg_upmethod = 0; // immediate update
+  MCPWM0.operators[0].generator[0].val = 6400;       // Set the counter compare for 10% duty-cycle
+  MCPWM0.operators[0].generator[0].gen_utez = 2;     // Set the PWM0A output to go high at the start of the timer period
+  MCPWM0.operators[0].generator[0].gen_utea = 1;     // Clear on compare match
+  MCPWM0.timer[0].timer_cfg1.timer_mod = 1;          // Set timer 0 to increment
+  MCPWM0.timer[0].timer_cfg1.timer_start = 2;        // Set timer 0 to free-run
+  #endif
 
   t_ms = ms();
   line_tprev = t_ms-5000;
