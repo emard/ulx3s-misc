@@ -755,7 +755,7 @@ for wavfile in argv[1:]:
           elif len(nmea)==68: # tunnel mode without signal, keep heading
             if lonlat_diff:
               lonlat = ( lonlat[0] + lonlat_diff[0], lonlat[1] + lonlat_diff[1] )
-            tunel = 11 # number of chars in shorter nmea sentence for tunnel mode
+            tunel = 11 # number of less chars in shorter nmea sentence for tunnel mode
           if lonlat_1st == None:
             lonlat_1st = lonlat
           datetime=b"20"+nmea[64-tunel:66-tunel]+b"-"+nmea[62-tunel:64-tunel]+b"-"+nmea[60-tunel:62-tunel]+b"T"+nmea[7:9]+b":"+nmea[9:11]+b":"+nmea[11:15]+b"Z"
