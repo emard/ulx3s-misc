@@ -29,9 +29,9 @@ sample = bytearray(12)
 for y in range(360*10):
   x = abs(y-360*5)
   a = x # % 360
-  r = 1.0 + 0.01*math.sin(y/10) # r imperfection
-  latumin = int(30000000 + 200000 * r * math.cos(a*math.pi/180))
-  lonumin = int(30000000 + 290000 * r * math.sin(a*math.pi/180))
+  r = 500.0 + 5.0*math.sin(y/10) # [m] + r imperfection
+  latumin = int(30000000 + 540 * r * math.cos(a*math.pi/180)) # Y (NS direction)
+  lonumin = int(30000000 + 768 * r * math.sin(a*math.pi/180)) # X (EW direction)
   flip = 0
   if y < 360*5:
     flip = 180
