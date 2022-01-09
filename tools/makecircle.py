@@ -40,16 +40,16 @@ for y in range(360*10):
     y//3600,y//60%60,y%60, # hms
     45,latumin//1000000,latumin%1000000,  # lat
     16,lonumin//1000000,lonumin%1000000,  # lon
-    44.12, # kt
+    43.2, # kt (43.2 kt = 80 km/h)
     heading,
     1,1,1  # dmy
   )
-  iri100_data = ("L%05.2fR%05.2f" % (1.0, 1.0));
-  iri20_data  = ("L%05.2fS%05.2f" % (1.0, 1.0));
+  iri100_data = ("L%05.2fR%05.2f" % (1.0+1.0*y/3600, 1.0+1.0*y/3600));
+  iri20_data  = ("L%05.2fS%05.2f" % (1.0+1.0*y/3600, 1.0+1.0*y/3600));
   circle_tag  = " $%s*%02X %s*%02X %s*%02X " % (
-    gps_data    , checksum(gps_data   ) ,
-    iri100_data , checksum(iri100_data) ,
-    iri20_data  , checksum(iri20_data )
+    gps_data    , checksum(gps_data    ) ,
+    iri100_data , checksum(iri100_data ) ,
+    iri20_data  , checksum(iri20_data  )
   )
   #print(circle_tag)
   for b in circle_tag:
