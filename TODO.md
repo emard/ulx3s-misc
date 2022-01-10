@@ -2,6 +2,8 @@
 
 esp32
 
+    [ ] store firstnmea, count number of returns to the same point
+    [ ] display coarse average iri in .wav file (1000 pts along track, only spd > 45 kmh)
     [x] crash after temperatures in log, sprintf 20 bytes overrun
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
     [ ] tunnel mode kml generate follow the same direction
