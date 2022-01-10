@@ -54,14 +54,13 @@ for i in range(nsamples):
       heading,
       1,1,1  # dmy
     )
-    iri100_data = ("L%05.2fR%05.2f" % (1.0+1.0*angle/3600, 1.0+1.0*angle/3600));
-    iri20_data  = ("L%05.2fS%05.2f" % (1.0+1.0*angle/3600, 1.0+1.0*angle/3600));
-    circle_tag  = " $%s*%02X %s*%02X %s*%02X " % (
-      gps_data    , checksum(gps_data    ) ,
-      iri100_data , checksum(iri100_data ) ,
-      iri20_data  , checksum(iri20_data  )
-    )
-    tag += circle_tag
+    tag += " $%s*%02X " % (gps_data, checksum(gps_data))
+    # alternate iri 100/20
+    if (i // 200) & 1:
+      iri_data = ("L%05.2fR%05.2f" % (1.0+1.0*angle/3600, 1.0+1.0*angle/3600)) # iri100
+    else:
+      iri_data = ("L%05.2fS%05.2f" % (1.0+1.0*angle/3600, 1.0+1.0*angle/3600)) # iri20 has "S" instead of "R"
+    tag += " %s*%02X " % (iri_data, checksum(iri_data))
   c = 32 # space is default if queue is empty
   if len(tag): # queue has data
     c = ord(tag[0]) # ascii value of the first char
