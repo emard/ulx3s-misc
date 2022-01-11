@@ -10,10 +10,11 @@ x,y,z = symbols("x y z", real=True)
 def fpath_sympy(x):
   # this makes profile with IRI=1 m/km
   return \
-    +2.3e-3*cos(2*pi*0.09*x+0.02/0.0111111*cos(2*pi*0.0111111*x))
+    +2.1e-3*cos(2*pi*0.09*x+0.02/0.0111111*cos(2*pi*0.0111111*x))
 
 # example: this makes profile with IRI=1 m/km
-#    +2.3e-3*cos(2*pi*0.09*x+0.02/0.0111111*cos(2*pi*0.0111111*x))
+#    +2.1e-3*cos(2*pi*0.09*x+0.02/0.0111111*cos(2*pi*0.0111111*x))
+#    +5.0e-6*cos(2*pi*4.50*x+0.10/0.0526315*cos(2*pi*0.0526315*x))  # should not affect IRI much
 
 d1fpath_sympy = diff(  fpath_sympy(x),x) # 1st derivative
 d2fpath_sympy = diff(d1fpath_sympy   ,x) # 2nd derivative
@@ -76,7 +77,7 @@ g_scale = 4 # accelerometer digital scale setting 2/4/8 g full scale 32000
 iscale = 32000/g_scale/9.81 # factor conversion from [m/s**2] to sensor binary reading
 rp = 500.0 # [m] path radius
 w = vx / rp # [rad/s] angular speed
-nturns = 10 # use 3 to shoreten calc time
+nturns = 3 # use 3 to shoreten calc time
 nsamples = int(nturns*2*rp*math.pi/vx/dt) # mum of samples for N turns
 tag = "" # tag queue string starts as empty
 for i in range(nsamples):
@@ -109,9 +110,9 @@ for i in range(nsamples):
     tag += " $%s*%02X " % (gps_data, checksum(gps_data))
     # alternate iri 100/20
     if (i // 200) & 1:
-      iri_data = ("L%05.2fR%05.2f" % (1.0+1.0*angle/3600, 1.0+1.0*angle/3600)) # iri100
+      iri_data = ("L%05.2fR%05.2f" % (1.0, 1.0)) # iri100
     else:
-      iri_data = ("L%05.2fS%05.2f" % (1.0+1.0*angle/3600, 1.0+1.0*angle/3600)) # iri20 has "S" instead of "R"
+      iri_data = ("L%05.2fS%05.2f" % (1.0, 1.0)) # iri20 has "S" instead of "R"
     tag += " %s*%02X " % (iri_data, checksum(iri_data))
   c = 32 # space is default if queue is empty
   if len(tag): # queue has data
