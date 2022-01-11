@@ -1,6 +1,50 @@
 #!/usr/bin/env python3
 
-import math, struct
+import math, numpy, struct
+from sympy import *
+
+# set some vars that take part in following symbolc function and differentiation
+x,y,z = symbols("x y z", real=True)
+
+# profile x [m] -> z [m]
+def fpath_sympy(x):
+  # this makes profile with IRI=1 m/km
+  return \
+    +2.3e-3*cos(2*pi*0.09*x+0.02/0.0111111*cos(2*pi*0.0111111*x))
+
+# example: this makes profile with IRI=1 m/km
+#    +2.3e-3*cos(2*pi*0.09*x+0.02/0.0111111*cos(2*pi*0.0111111*x))
+
+d1fpath_sympy = diff(  fpath_sympy(x),x) # 1st derivative
+d2fpath_sympy = diff(d1fpath_sympy   ,x) # 2nd derivative
+
+# lambdify: convert symbolic function to global function suitable for numerical evaluation
+fpath   = lambdify(x,   fpath_sympy(x))
+# 1st derivative, done symbolic and converted similar as above
+d1fpath = lambdify(x, d1fpath_sympy)
+# 2nd derivative, done symbolic and converted similar as above
+d2fpath = lambdify(x, d2fpath_sympy)
+# global function that calculates angle of the line perpendicular to fpath:
+def phi_fpath(x):
+  return math.atan(d1fpath(x))+numpy.pi/2
+# accelerometer reading in time domain (FIXME is this correct)
+# x = t * vx
+# x += vx * dt # integrate x with vx
+# vz =  dz/dt =  dz/dx(x)  * dx/dt      = d1fpath(x) * vx
+# az = dvz/dt = d2z/d2x(x) * (dx/dt)**2 = d2fpath(x) * vx**2
+
+class sim:
+  "response simulator"
+  def __init__(self,dt,vx):
+    self.dt = dt
+    self.vx = vx
+    self.x  = 0.0
+
+  def z(self):
+    "each invocation returns accelerometer z-axis reading after next dt time"
+    self.x += self.dt * self.vx
+    #return 9.81 + d2fpath(self.x) * self.vx * self.vx # FIXME wav2kml calculates iri=1.2-1.5 not ok
+    return d2fpath(self.x) * self.vx * self.vx # wav2kml calculates iri=1.05-1.10 maybe ok
 
 def checksum(x):
   s = 0
@@ -25,23 +69,28 @@ hdr += b"data" + bytearray([0x00, 0x00, 0x00, 0x00]) # chunk size bytes (len), f
 if len(hdr) != 44:
   print("wrong wav header length=%d, should be 44" % len(hdr))
 f.write(hdr)
+vx = 80/3.6 # [m/s] vehicle speed
+accel = sim(dt=1.0e-3, vx=vx) # accelerometer z-axis simulator
+g_scale = 4 # accelerometer digital scale setting 2/4/8 g full scale 32000
+iscale = 32000/g_scale/9.81 # factor conversion from [m/s**2] to binary reading
 tag = "" # tag queue string starts as empty
 # 1 kHz sample rate: samples count for 12 minutes driving
 nsamples = 12*60*1000
 for i in range(nsamples):
+  iaz = int(iscale*accel.z())
   sample = bytearray(struct.pack("<hhhhhh", 
-    int(1000*math.sin(i/20)), int(1000*math.sin(i/30)), int(1000*math.sin(i/40)), 
-    int(1000*math.sin(i/20)), int(1000*math.sin(i/30)), int(1000*math.sin(i/40))
+    int(1000*math.sin(i/20)), int(1000*math.sin(i/30)), iaz,
+    int(1000*math.sin(i/20)), int(1000*math.sin(i/30)), iaz
   ))
   if i % 200 == 0: # every 0,2 seconds
     angle = i//200
     angle_bidirectional = abs(angle-360*5)
     angle_imperfection = angle_bidirectional # % 360
-    r = 500.0 + 5.0*math.sin(angle/10) # [m] + imperfection (radius)
-    x = r * math.sin(angle_imperfection*math.pi/180)
-    y = r * math.cos(angle_imperfection*math.pi/180)
-    lonumin = int(30000000 + 768 * x) # EW direction
-    latumin = int(30000000 + 540 * y) # NS direction
+    r  = 500.0 + 5.0*math.sin(angle/10) # [m] + imperfection (radius)
+    lx = r * math.sin(angle_imperfection*math.pi/180)
+    ly = r * math.cos(angle_imperfection*math.pi/180)
+    lonumin = int(30000000 + 768 * lx) # EW direction
+    latumin = int(30000000 + 540 * ly) # NS direction
     flip = 0
     if angle < 360*5:
       flip = 180
@@ -50,7 +99,7 @@ for i in range(nsamples):
       angle//3600,angle//60%60,angle%60, # hms
       45,latumin//1000000,latumin%1000000,  # lat
       16,lonumin//1000000,lonumin%1000000,  # lon
-      43.2, # kt (43.2 kt = 80 km/h)
+      vx*1.944, # kt (43.2 kt = 80 km/h)
       heading,
       1,1,1  # dmy
     )
