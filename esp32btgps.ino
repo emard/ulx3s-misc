@@ -118,8 +118,8 @@ char line_terminator = '\n'; // '\n' for GPS, '\r' for OBD
 uint32_t line_tprev; // to determine time of latest incoming complete line
 uint32_t line_tdelta; // time between prev and now
 int travel_mm = 0; // travelled mm (v*dt)
-int travel_report, travel_report_prev = 0; // previous 100m travel
-int travel_report2, travel_report2_prev = 0; // previous 20m travel
+int travel_report1, travel_report1_prev = 0; // previous 100 m travel
+int travel_report2, travel_report2_prev = 0; // previous  20 m travel
 int session_log = 0; // request new timestamp filename when reconnected
 int speak_search = 0; // 0 - don't speak search, 1-search gps
 uint32_t srvz[4];
@@ -398,6 +398,17 @@ int nmea2spd(char *a)
   return (b[1] - '0') * 10000 + (b[2] - '0') * 1000 + (b[3] - '0') * 100 + (b[5] - '0') * 10 + (b[6] - '0');
 }
 
+// write centiknots speed to nmea
+// remember to fix crc after this
+void spd2nmea(char *a, int ckt)
+{
+  char *b = nthchar(a, 7, ',');
+  if(b[0] != ',' || b[1] == ',' || b[7] != ',') // ,000.00, check validity
+    return;
+  char buf[20];
+  snprintf(buf, 20, "%03d.%02d", ckt/100, ckt%100);
+  memcpy(b+1, buf, 6);
+}
 
 #if 0
 // debug tagger: constant test string
@@ -503,16 +514,16 @@ void report_search(void)
 void report_iri(void)
 {
   uint8_t flag_report = 0;
-  if (travel_report_prev != travel_report) // normal: update RDS every 100 m
+  if (travel_report1_prev != travel_report1) // normal: update RDS every 100 m
   {
-    travel_report_prev = travel_report;
-    if(speed_kmh >= 30)
+    travel_report1_prev = travel_report1;
+    if(speed_kmh >= (int)KMH_REPORT1)
       flag_report = 1;
   }
   if (travel_report2_prev != travel_report2) // normal: update RDS every 20 m
   {
     travel_report2_prev = travel_report2;
-    if(speed_kmh < 30)
+    if(speed_kmh < (int)KMH_REPORT1)
       flag_report = 2;
   }
   if (flag_report)
@@ -634,9 +645,9 @@ void travel_ct0(void)
     int travel_dt = ((int32_t) ct0) - ((int32_t) ct0_prev); // ms since last time
     if(travel_dt < 10000) // ok reports are below 10s difference
       travel_mm += speed_mms * travel_dt / 1000;
-    travel_report = travel_mm / REPORT_mm; // normal: report every 100 m
-    travel_report2 = travel_mm / REPORT2_mm; // normal: report every 20 m
-    //travel_report = travel_mm / 1000; // debug: report every 1 m
+    travel_report1 = travel_mm / MM_REPORT1; // normal: report every 100 m
+    travel_report2 = travel_mm / MM_REPORT2; // normal: report every  20 m
+    //travel_report1 = travel_mm / 1000; // debug: report every 1 m
   }
   // set ct0_prev always (also when stopped)
   // to prevent building large delta time when fast enough
@@ -680,9 +691,11 @@ void init_srvz_iri(void)
   // default ADXRS290, ignore G_RANGE, use as if G_RANGE=2
   srvz_iri100 = 0.5e-6;
   srvz2_iri20 = 2.5e-6;
-  if(adxl_devid_detected == 0xED) // ADXL350
+  if(adxl_devid_detected == 0xED) // ADXL355
   {
-    // 1e-3 common factor because iri is expressed as mm/m
+    // 1e3  for IRI  [mm/m]
+    // 1e-6 for srvz [um/m]
+    // 1e-3 = 1e3 * 1e-6
     // 0.5e-6 = (1e-3 * 0.05/100) 2g range, coefficients_pack.vhd: interval_mm :=  50; length_m := 100
     srvz_iri100 = G_RANGE == 2 ? 0.5e-6 : G_RANGE == 4 ? 1.0e-6 : /* G_RANGE == 8 ? */  2.0e-6 ; // normal IRI-100
     srvz2_iri20 = G_RANGE == 2 ? 2.5e-6 : G_RANGE == 4 ? 5.0e-6 : /* G_RANGE == 8 ? */ 10.0e-6 ; // normal IRI-20
@@ -773,8 +786,8 @@ void travel_gps(void)
     int travel_dt = (864000 + daytime - daytime_prev) % 864000; // seconds*10 since last time
     if(travel_dt < 100) // ok reports are below 10s difference
       travel_mm += speed_mms * travel_dt / 10;
-    travel_report = travel_mm / REPORT_mm; // normal: report every 100 m
-    travel_report2 = travel_mm / REPORT2_mm; // normal: report every 20 m
+    travel_report1 = travel_mm / MM_REPORT1; // normal: report every 100 m
+    travel_report2 = travel_mm / MM_REPORT2; // normal: report every  20 m
   }
   daytime_prev = daytime; // for travel_dt
 }
@@ -818,7 +831,7 @@ void draw_kml_line(char *line)
     nmea2kmltime(line, timestamp);
     x_kml_line->timestamp = timestamp;
     kml_line(x_kml_line);
-    if(travel_report_prev != travel_report) // every 100m draw arrow
+    if(travel_report1_prev != travel_report1) // every 100m draw arrow
     {
       x_kml_arrow->lat   = *lat;
       x_kml_arrow->lon   = *lon;
@@ -962,17 +975,18 @@ void handle_gps_line_complete(void)
   {
     if (check_nmea_crc(line)) // filter out NMEA sentences with bad CRC
     {
-      // there's bandwidth for only one NMEA sentence at 10Hz (not two sentences)
-      // time calculation here should receive no more than one NMEA sentence for one timestamp
-      write_tag(line);
-      //Serial.println(line); // debug
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
       if(KMH_BTN) // debug
       {
         // int btn = spi_btn_read();    // debug
         if((btn & 4)) speed_ckt = KMH_BTN*54; // debug BTN2 4320 ckt = 80 km/h = 22 m/s
+        spd2nmea(line, speed_ckt); // debug: write new ckt to nmea line
         if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
       }
+      // there's bandwidth for only one NMEA sentence at 10Hz (not two sentences)
+      // time calculation here should receive no more than one NMEA sentence for one timestamp
+      write_tag(line);
+      //Serial.println(line); // debug
       if(speed_ckt >= 0) // for tunnel mode keep speed if no signal (speed_ckt < 0)
       {
         speed_mms = (speed_ckt *  5268) >> 10;
