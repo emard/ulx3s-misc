@@ -69,26 +69,29 @@ hdr += b"data" + bytearray([0x00, 0x00, 0x00, 0x00]) # chunk size bytes (len), f
 if len(hdr) != 44:
   print("wrong wav header length=%d, should be 44" % len(hdr))
 f.write(hdr)
+dt = 1.0e-3 # [s] sampling interval
 vx = 80/3.6 # [m/s] vehicle speed
 accel = sim(dt=1.0e-3, vx=vx) # accelerometer z-axis simulator
 g_scale = 4 # accelerometer digital scale setting 2/4/8 g full scale 32000
 iscale = 32000/g_scale/9.81 # factor conversion from [m/s**2] to binary reading
+rp = 500.0 # [m] path radius
+w = vx / rp # [rad/s] angular speed
+nturns = 10
+nsamples = int(nturns*2*rp*math.pi/vx/dt) # mum of samples for N turns
 tag = "" # tag queue string starts as empty
-# 1 kHz sample rate: samples count for 12 minutes driving
-nsamples = 12*60*1000
 for i in range(nsamples):
   iaz = int(iscale*accel.z())
   sample = bytearray(struct.pack("<hhhhhh", 
     int(1000*math.sin(i/20)), int(1000*math.sin(i/30)), iaz,
     int(1000*math.sin(i/20)), int(1000*math.sin(i/30)), iaz
   ))
-  if i % 200 == 0: # every 0,2 seconds
-    angle = i//200
-    angle_bidirectional = abs(angle-360*5)
+  if i % 200 == 0: # every 200 samples = 0,2 seconds
+    angle = int(i*w*dt*180.0/math.pi) # [deg]
+    angle_bidirectional = abs(angle-360*5) # [deg]
     angle_imperfection = angle_bidirectional # % 360
-    r  = 500.0 + 5.0*math.sin(angle/10) # [m] + imperfection (radius)
-    lx = r * math.sin(angle_imperfection*math.pi/180)
-    ly = r * math.cos(angle_imperfection*math.pi/180)
+    lr = rp + rp/100*math.sin(angle/10) # [m] + 1% imperfection (radius)
+    lx = lr * math.sin(angle_imperfection*math.pi/180)
+    ly = lr * math.cos(angle_imperfection*math.pi/180)
     lonumin = int(30000000 + 768 * lx) # EW direction
     latumin = int(30000000 + 540 * ly) # NS direction
     flip = 0
