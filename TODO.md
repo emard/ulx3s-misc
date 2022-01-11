@@ -2,13 +2,16 @@
 
 esp32
 
+    [ ] ESP32 reports IRI 20% smaller than wav2kml
+    [ ] all DMA transfer sizes divisible by 4
     [ ] store firstnmea, count number of returns to the same point
-    [ ] display coarse average iri in .wav file (1000 pts along track, only spd > 45 kmh)
+    [ ] display coarse average IRI in .wav file (1000 pts along track, only spd > 45 kmh)
+    [ ] configurable speed for reporting every 100/20 m
     [x] crash after temperatures in log, sprintf 20 bytes overrun
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
     [ ] tunnel mode kml generate follow the same direction
-    [x] support arduino v2.0.0 and ESP32DMASPI v0.2.0
-    [ ] all DMA transfer sizes divisible by 4
+    [x] support arduino ESP32 v2.0.x and ESP32DMASPI v0.2.0
+    [ ] allow wifi reconnect at arduino ESP32 v2.0.x, check disabled wifiMulti.run()
     [x] LCD display with freq and status
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
@@ -100,8 +103,8 @@ esp32
 
 core
 
+    [ ] core reports IRI 20% smaller than wav2kml
     [ ] handle delay from speed measurement to accelerometer reading
-    [ ] log sensor temperature
     [ ] increase speech volume (compression?)
     [ ] time sync status
     [ ] BTN irq
