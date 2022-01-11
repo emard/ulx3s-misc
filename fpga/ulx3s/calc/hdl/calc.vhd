@@ -170,7 +170,7 @@ begin
             case cnt(4 downto 0) is
               -- TODO IRI-20 uses 16 states, it
               -- can be optimized compacting states
-              -- same c=abs(vz(n)) can be uses first for IRI-20, then for IRI-100
+              -- same c=abs(vz(n)) can be used first for IRI-20, then for IRI-100
               -- -------------------- IRI-20 LEFT
               when '0'&x"0" =>
                 ib <= irs_tail2 & '0';
