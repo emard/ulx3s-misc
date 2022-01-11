@@ -33,8 +33,8 @@ def phi_fpath(x):
 # vz =  dz/dt =  dz/dx(x)  * dx/dt      = d1fpath(x) * vx
 # az = dvz/dt = d2z/d2x(x) * (dx/dt)**2 = d2fpath(x) * vx**2
 
-class sim:
-  "response simulator"
+class accel_sim:
+  "accelerometer response simulator"
   def __init__(self,dt,vx):
     self.dt = dt
     self.vx = vx
@@ -43,8 +43,8 @@ class sim:
   def z(self):
     "each invocation returns accelerometer z-axis reading after next dt time"
     self.x += self.dt * self.vx
-    #return 9.81 + d2fpath(self.x) * self.vx * self.vx # FIXME wav2kml calculates iri=1.2-1.5 not ok
-    return d2fpath(self.x) * self.vx * self.vx # wav2kml calculates iri=1.05-1.10 maybe ok
+    return 9.81 + d2fpath(self.x) * self.vx * self.vx # FIXME wav2kml calculates iri=1.2-1.5 not ok
+    #return d2fpath(self.x) * self.vx * self.vx # wav2kml calculates iri=1.05-1.10 maybe ok
 
 def checksum(x):
   s = 0
@@ -70,13 +70,13 @@ if len(hdr) != 44:
   print("wrong wav header length=%d, should be 44" % len(hdr))
 f.write(hdr)
 dt = 1.0e-3 # [s] sampling interval
-vx = 80/3.6 # [m/s] vehicle speed
-accel = sim(dt=1.0e-3, vx=vx) # accelerometer z-axis simulator
+vx = 80/3.6 # [m/s] vehicle speed [km/h] -> [m/s]
+accel = accel_sim(dt, vx) # accelerometer z-axis simulator
 g_scale = 4 # accelerometer digital scale setting 2/4/8 g full scale 32000
-iscale = 32000/g_scale/9.81 # factor conversion from [m/s**2] to binary reading
+iscale = 32000/g_scale/9.81 # factor conversion from [m/s**2] to sensor binary reading
 rp = 500.0 # [m] path radius
 w = vx / rp # [rad/s] angular speed
-nturns = 10
+nturns = 10 # use 3 to shoreten calc time
 nsamples = int(nturns*2*rp*math.pi/vx/dt) # mum of samples for N turns
 tag = "" # tag queue string starts as empty
 for i in range(nsamples):
