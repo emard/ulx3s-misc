@@ -19,7 +19,7 @@ generic (
 );
 port (
   clk: in std_logic;
-  enter: in std_logic; -- '1' to enter slope for every sampling interval x = 250 mm
+  enter: in std_logic; -- '1' to enter slope for every sampling interval x = 50 mm
   slope_l, slope_r: in  std_logic_vector(31 downto 0); -- slope um/m
      vz_l,    vz_r: out std_logic_vector(31 downto 0); -- z-velocity um/s
    srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- um/m IRI-100 rectified sum of z/x-velocities at (n_points*length_m)
@@ -98,8 +98,9 @@ begin
   yp <= signed(ypr) when cnt_ch = "1" else signed(ypl);
   a <= ra;
   b <= signed(yp) when cnt_row = "000" else rb;
-  -- sum of scaled integer multiplication
-  ab <= a*b;
+  -- sum of scaled integer multiplication, bugfix
+  -- ab <= a*b; -- BUG with lattice diamond
+  ab <= -(a*(-b)) when b<0 else a*b; -- same as a*b but BUG fixed
   c_calc <= c+ab(int_scale_matrix_2n+31 downto int_scale_matrix_2n);
 
   -- 4*5*4*2=160 iterations
