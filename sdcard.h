@@ -36,7 +36,8 @@ extern uint8_t log_wav_kml; // 1-wav 2-kml 3-both
 extern uint8_t KMH_START, KMH_STOP;
 extern uint8_t KMH_BTN;
 extern uint8_t G_RANGE; // +-2/4/8 g sensor range for reading +-32000
-extern uint32_t REPORT_mm, REPORT2_mm; // mm report each travel distance
+extern uint8_t KMH_REPORT1;
+extern uint32_t MM_REPORT1, MM_REPORT2; // mm report each travel distance
 extern uint8_t adxl355_regio;
 extern uint8_t adxl_devid_detected;
 extern uint32_t fm_freq[2];

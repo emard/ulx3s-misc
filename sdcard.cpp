@@ -60,7 +60,8 @@ float   T_OFFSET_ADXL355_CONF[2]  = {0.0, 0.0}; // L,R
 float   T_SLOPE_ADXL355_CONF[2]   = {1.0, 1.0}; // L,R
 float   T_OFFSET_ADXRS290_CONF[2] = {0.0, 0.0}; // L,R
 float   T_SLOPE_ADXRS290_CONF[2]  = {1.0, 1.0}; // L,R
-uint32_t REPORT_mm = 100000, REPORT2_mm = 20000; // mm report every travel distance 100 m, 20 m
+uint8_t  KMH_REPORT1 = 30; // when speed_kmh >= KMH_REPORT1 use MM_REPORT1, else MM_REPORT2
+uint32_t MM_REPORT1  = 100000, MM_REPORT2 = 20000; // mm report every travel distance 100 m, 20 m
 uint8_t adxl355_regio = 1; // REG I/O protocol 1:ADXL355 0:ADXRS290
 uint8_t adxl_devid_detected = 0; // 0xED for ADXL355, 0x92 for ADXRS290
 uint32_t fm_freq[2] = {107900000, 87600000};
@@ -1324,8 +1325,9 @@ void read_cfg(void)
     else if(varname.equalsIgnoreCase("tl_slope_adxrs290")) T_SLOPE_ADXRS290_CONF[0] = strtof(varvalue.c_str(), NULL);
     else if(varname.equalsIgnoreCase("tr_offset_adxrs290")) T_OFFSET_ADXRS290_CONF[1] = strtof(varvalue.c_str(), NULL);
     else if(varname.equalsIgnoreCase("tr_slope_adxrs290")) T_SLOPE_ADXRS290_CONF[1] = strtof(varvalue.c_str(), NULL);
-    else if(varname.equalsIgnoreCase("report_m")) REPORT_mm = 1000*strtol(varvalue.c_str(), NULL,10);
-    else if(varname.equalsIgnoreCase("report2_m")) REPORT2_mm = 1000*strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("kmh_report1")) KMH_REPORT1 = strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("m_report1")) MM_REPORT1 = 1000*strtol(varvalue.c_str(), NULL,10);
+    else if(varname.equalsIgnoreCase("m_report2")) MM_REPORT2 = 1000*strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_start")) KMH_START = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_stop")) KMH_STOP = strtol(varvalue.c_str(), NULL,10);
     else if(varname.equalsIgnoreCase("kmh_btn" )) KMH_BTN = strtol(varvalue.c_str(), NULL,10);
@@ -1368,11 +1370,12 @@ void read_cfg(void)
     sprintf(macstr, "T%c_SLOPE_ADXRS290  : %.1f", lr, T_SLOPE_ADXRS290_CONF[i]);
     Serial.println(macstr);
   }
-  Serial.print("REPORT_M : "); Serial.println(REPORT_mm/1000);
-  Serial.print("REPORT2_M: "); Serial.println(REPORT2_mm/1000);
-  Serial.print("KMH_START: "); Serial.println(KMH_START);
-  Serial.print("KMH_STOP : "); Serial.println(KMH_STOP);
-  Serial.print("KMH_BTN  : "); Serial.println(KMH_BTN);
+  Serial.print("M_REPORT1   : "); Serial.println(MM_REPORT1/1000);
+  Serial.print("M_REPORT2   : "); Serial.println(MM_REPORT2/1000);
+  Serial.print("KMH_REPORT1 : "); Serial.println(KMH_REPORT1);
+  Serial.print("KMH_START   : "); Serial.println(KMH_START);
+  Serial.print("KMH_STOP    : "); Serial.println(KMH_STOP);
+  Serial.print("KMH_BTN     : "); Serial.println(KMH_BTN);
   Serial.print("*** close ");
   Serial.println(filename_cfg);
   file_cfg.close();
