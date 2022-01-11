@@ -931,10 +931,10 @@ module top_adxl355log
     genvar i;
     for(i = 0; i < 4; i++)
     begin
-      assign calc_result[3-i] = srvz[(i+4)*8+7:(i+4)*8]; // sum for IRI-100 left
-      assign calc_result[7-i] = srvz[(i+0)*8+7:(i+0)*8]; // sum for IRI-100 right
-      assign calc_result[11-i] = srvz2[(i+4)*8+7:(i+4)*8]; // sum for IRI-20 left
-      assign calc_result[15-i] = srvz2[(i+0)*8+7:(i+0)*8]; // sum for IRI-20 right
+      assign calc_result[ 3-i] = srvz [(i+4)*8+7:(i+4)*8]; // sum for IRI-100 left
+      assign calc_result[ 7-i] = srvz [(i+0)*8+7:(i+0)*8]; // sum for IRI-100 right
+      assign calc_result[11-i] = srvz2[(i+4)*8+7:(i+4)*8]; // sum for IRI-20  left
+      assign calc_result[15-i] = srvz2[(i+0)*8+7:(i+0)*8]; // sum for IRI-20  right
     end
   endgenerate
 
@@ -942,14 +942,14 @@ module top_adxl355log
   begin
     if(~spi_calc_cs) // store to reg when cs = 0
     begin
-      r_calc_result[0] <= calc_result[0];
-      r_calc_result[1] <= calc_result[1];
-      r_calc_result[2] <= calc_result[2];
-      r_calc_result[3] <= calc_result[3];
-      r_calc_result[4] <= calc_result[4];
-      r_calc_result[5] <= calc_result[5];
-      r_calc_result[6] <= calc_result[6];
-      r_calc_result[7] <= calc_result[7];
+      r_calc_result[ 0] <= calc_result[ 0];
+      r_calc_result[ 1] <= calc_result[ 1];
+      r_calc_result[ 2] <= calc_result[ 2];
+      r_calc_result[ 3] <= calc_result[ 3];
+      r_calc_result[ 4] <= calc_result[ 4];
+      r_calc_result[ 5] <= calc_result[ 5];
+      r_calc_result[ 6] <= calc_result[ 6];
+      r_calc_result[ 7] <= calc_result[ 7];
       r_calc_result[ 8] <= calc_result[ 8];
       r_calc_result[ 9] <= calc_result[ 9];
       r_calc_result[10] <= calc_result[10];
