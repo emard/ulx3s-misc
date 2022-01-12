@@ -20,10 +20,10 @@ generic (
 port (
   clk: in std_logic;
   enter: in std_logic; -- '1' to enter slope for every sampling interval x = 50 mm
-  slope_l, slope_r: in  std_logic_vector(31 downto 0); -- slope um/m
-     vz_l,    vz_r: out std_logic_vector(31 downto 0); -- z-velocity um/s
-   srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- um/m IRI-100 rectified sum of z/x-velocities at (n_points*length_m)
-  srvz2_l, srvz2_r: out std_logic_vector(31 downto 0); -- um/m IRI-20  rectified sum of z/x-velocities at (n_points2*length_m)
+  slope_l, slope_r: in  std_logic_vector(31 downto 0); -- [um/m] slope
+     vz_l,    vz_r: out std_logic_vector(31 downto 0); -- [um/s] z-velocity signed
+   srvz_l,  srvz_r: out std_logic_vector(31 downto 0); -- [um/m] IRI-100 rectified sum of z/x-velocities at (n_points*length_m)
+  srvz2_l, srvz2_r: out std_logic_vector(31 downto 0); -- [um/m] IRI-20  rectified sum of z/x-velocities at (n_points2*length_m)
    -- iri[mm/m] = srvz/(1000*n_points) = srvz / 400e3
   ready: out std_logic; -- '1' when result is ready
   d0, d1, d2, d3: out std_logic_vector(31 downto 0)
@@ -99,8 +99,8 @@ begin
   a <= ra;
   b <= signed(yp) when cnt_row = "000" else rb;
   -- sum of scaled integer multiplication, bugfix
-  -- ab <= a*b; -- BUG with lattice diamond
-  ab <= -(a*(-b)) when b<0 else a*b; -- same as a*b but BUG fixed
+  ab <= a*b; -- possible BUG with lattice diamond
+  -- ab <= -(a*(-b)) when b<0 else a*b; -- same as a*b but BUG fixed
   c_calc <= c+ab(int_scale_matrix_2n+31 downto int_scale_matrix_2n);
 
   -- 4*5*4*2=160 iterations
@@ -146,7 +146,8 @@ begin
               if cnt_row = "100" then -- normal store last value
                 z(to_integer(unsigned(cnt_col))) <= c;
                 if cnt_col = "10" then -- 2, Z(2)
-                  vz(to_integer(unsigned(cnt_ch))) <= z(0)-c; -- vz = Z(0)-Z(2)
+                  vz(to_integer(unsigned(cnt_ch))) <= z(0)-c; -- vz = Z(0)-Z(2) normal
+                  --vz(to_integer(unsigned(cnt_ch))) <= 500; -- [um/s] debug vz for IRI=1 mm/m at 4 g range and 5 cm sampling
                 end if;
                 matrix_write <= '1'; -- matrix(ib) <= c
               end if;
