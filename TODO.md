@@ -5,7 +5,8 @@ esp32
     [x] ESP32 reports IRI 20% smaller than wav2kml (disable matrix_write)
     [ ] all DMA transfer sizes divisible by 4
     [ ] store firstnmea, count number of returns to the same point
-    [ ] display coarse average IRI in .wav file (1000 pts along track, only spd > 45 kmh)
+    [ ] at each stop (with temperatures) write iri99avg
+    [ ] display last iri99avg in .wav files list
     [ ] configurable speed for reporting every 100/20 m
     [x] crash after temperatures in log, sprintf 20 bytes overrun
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
