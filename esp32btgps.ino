@@ -975,18 +975,22 @@ void handle_gps_line_complete(void)
   {
     if (check_nmea_crc(line)) // filter out NMEA sentences with bad CRC
     {
+      // there's bandwidth for only one NMEA sentence at 10Hz (not two sentences)
+      // time calculation here should receive no more than one NMEA sentence for one timestamp
+      //write_tag(line); // write as early as possible, but BTN debug can't change speed
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
       if(KMH_BTN) // debug
       {
         // int btn = spi_btn_read();    // debug
-        if((btn & 4)) speed_ckt = KMH_BTN*54; // debug BTN2 4320 ckt = 80 km/h = 22 m/s
-        spd2nmea(line, speed_ckt); // debug: write new ckt to nmea line
+        if((btn & 4))
+        {
+          speed_ckt = KMH_BTN*54; // debug BTN2 4320 ckt = 80 km/h = 22 m/s
+          spd2nmea(line, speed_ckt); // debug: write new ckt to nmea line (FIXME CRC is not recalculated)
+          write_nmea_crc(line+1); // CRC for NMEA part
+        }
         if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
       }
-      // there's bandwidth for only one NMEA sentence at 10Hz (not two sentences)
-      // time calculation here should receive no more than one NMEA sentence for one timestamp
-      write_tag(line);
-      //Serial.println(line); // debug
+      write_tag(line); // write after BTN2 has written speed_ckt
       if(speed_ckt >= 0) // for tunnel mode keep speed if no signal (speed_ckt < 0)
       {
         speed_mms = (speed_ckt *  5268) >> 10;
