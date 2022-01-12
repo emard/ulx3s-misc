@@ -282,7 +282,7 @@ void handleNotFound() {
 // call this from loop() repeatedly
 int monitorWiFi()
 {
-  if(wifiMulti.run() == WL_CONNECTED)
+  if(WiFi.status() == WL_CONNECTED)
   {
     if(connectioWasAlive == false)
     {
@@ -294,13 +294,16 @@ int monitorWiFi()
     }
     return 1;
   }
-  else // wifiMulti.run() != WL_CONNECTED
+  else // WiFi.status() != WL_CONNECTED
   {
     if(connectioWasAlive == true)
     {
       connectioWasAlive = false;
       DBG_OUTPUT_PORT.println("Disconnected, trying to reconnect");
     }
+    // on arduino esp32 v2.0.2 if wifiMulti.run()
+    // is called when already connected, web will stop working
+    wifiMulti.run();
   }
   return 0;
 }

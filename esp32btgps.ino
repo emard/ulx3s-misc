@@ -14,7 +14,7 @@
 // boards manager -> esp32 v2.0.2 install
 // in loop_web(): monitorWiFi() can not be used
 // disable warnings for 4-byte alignment
-// edit ~/Arduino/libraries/ESP32DMASPI/ESP32DMASPIMaster.h
+// edit ~/Arduino/libraries/ESP32DMASPI/ESP32DMASPIMaster.h transfer()
 // printf("[WARN] DMA buffer size must be multiples of 4 bytes\n");
 // set Board->ESP32 Arduino->ESP32 Dev Module
 // CPU Frequency: 240 MHz
@@ -977,7 +977,7 @@ void handle_gps_line_complete(void)
     {
       // there's bandwidth for only one NMEA sentence at 10Hz (not two sentences)
       // time calculation here should receive no more than one NMEA sentence for one timestamp
-      //write_tag(line); // write as early as possible, but BTN debug can't change speed
+      write_tag(line); // write as early as possible, but BTN debug can't change speed
       speed_ckt = nmea2spd(line); // parse speed to centi-knots, -1 if no signal
       if(KMH_BTN) // debug
       {
@@ -985,12 +985,12 @@ void handle_gps_line_complete(void)
         if((btn & 4))
         {
           speed_ckt = KMH_BTN*54; // debug BTN2 4320 ckt = 80 km/h = 22 m/s
-          spd2nmea(line, speed_ckt); // debug: write new ckt to nmea line (FIXME CRC is not recalculated)
-          write_nmea_crc(line+1); // CRC for NMEA part
+          //spd2nmea(line, speed_ckt); // debug: write new ckt to nmea line (FIXME CRC is not recalculated)
+          //write_nmea_crc(line+1); // debug CRC for NMEA part
         }
         if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
       }
-      write_tag(line); // write after BTN2 has written speed_ckt
+      //write_tag(line); // debug write after BTN2 has written speed_ckt
       if(speed_ckt >= 0) // for tunnel mode keep speed if no signal (speed_ckt < 0)
       {
         speed_mms = (speed_ckt *  5268) >> 10;
@@ -1217,12 +1217,7 @@ void loop_web(void)
 {
   t_ms = ms();
   server.handleClient();
-  #if IDF3
   int is_connected = monitorWiFi();
-  #endif
-  #if IDF4
-  int is_connected = 1; // FIXME
-  #endif
   getLocalTime(&tm, 0);
   rds_report_ip(&tm);
   if(is_connected)
