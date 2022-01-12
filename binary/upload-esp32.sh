@@ -1,5 +1,6 @@
 #!/bin/sh
-python3 ~/.arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool.py \
+#python3 ~/.arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool.py
+python ~/.arduino15/packages/esp32/tools/esptool_py/3.1.0/esptool.py \
   --chip esp32 --port /dev/ttyUSB0 --baud 921600 \
   --before default_reset --after hard_reset write_flash -z --flash_mode dio \
   --flash_freq 80m --flash_size detect \

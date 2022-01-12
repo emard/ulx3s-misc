@@ -2,7 +2,7 @@
 
 esp32
 
-    [ ] ESP32 reports IRI 20% smaller than wav2kml
+    [x] ESP32 reports IRI 20% smaller than wav2kml (disable matrix_write)
     [ ] all DMA transfer sizes divisible by 4
     [ ] store firstnmea, count number of returns to the same point
     [ ] display coarse average IRI in .wav file (1000 pts along track, only spd > 45 kmh)
@@ -128,6 +128,7 @@ core
 wav2kml
 
     [ ] csv dump
+    [ ] checksum
     [ ] on track and placemarks indicate tunnel mode
     [ ] motor vibration (RPM) sensing, conversion to speed
     [ ] calibrate accelerometer heading with GPS
@@ -141,7 +142,10 @@ wav2kml
     [x] snap
     [x] colorized description
         https://developers.google.com/kml/documentation/kml_tut
-    [ ] wav generator to generate track of known values
+
+makecircle
+
+    [x] wav generator to generate track of known values
 
 math
 
