@@ -20,6 +20,8 @@ extern uint8_t gps_obd_configured;
 extern float srvz_iri100, iri[2], iriavg, srvz2_iri20, iri20[2], iri20avg;
 extern float temp[2]; // sensor temperature
 extern char iri2digit[4];
+extern char iri99avg2digit[4];
+extern uint32_t iri99sum, iri99count, iri99avg; // collect session average
 extern char lastnmea[256];
 extern uint8_t last_sensor_reading[12];
 extern struct int_latlon last_latlon;

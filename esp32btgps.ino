@@ -537,6 +537,17 @@ void report_iri(void)
       iri99 = iri20avg*10;
     if(iri99 > 99)
       iri99 = 99;
+    else // iri99 < 99
+    {
+      if(flag_report == 1) // average IRI-100 readings with iri < 9.9
+      {
+        iri99sum += iri99;
+        iri99count++;
+        iri99avg = iri99sum/iri99count;
+        iri99avg2digit[0]='0'+iri99avg/10;
+        iri99avg2digit[2]='0'+iri99avg%10;
+      }
+    }
     iri2digit[0]='0'+iri99/10;
     iri2digit[2]='0'+iri99%10;
     rds_message(&tm);
@@ -734,6 +745,7 @@ void handle_reconnect(void)
   //ls();
   finalize_data(&tm); // finalize all except current session (if one file per day)
   umount();
+  iri99sum = iri99count = iri99avg = 0; // reset iri99 average
 
   if(sensor_check_status)
     warm_init_sensors();

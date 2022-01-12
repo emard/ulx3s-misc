@@ -50,6 +50,8 @@ uint8_t gps_obd_configured = 0; // existence of (1<<0):OBD config, (1<<1):GPS co
 float srvz_iri100, iri[2], iriavg, srvz2_iri20, iri20[2], iri20avg;
 float temp[2]; // sensor temperature
 char iri2digit[4] = "0.0";
+char iri99avg2digit[4] = "0.0";
+uint32_t iri99sum = 0, iri99count = 0, iri99avg = 0; // collect session average
 struct int_latlon last_latlon; // degrees and microminutes
 struct tm tm, tm_session; // tm_session gives new filename_data when reconnected
 uint8_t log_wav_kml = 3; // 1-wav 2-kml 3-both
@@ -479,7 +481,8 @@ void rds_message(struct tm *tm)
     if(speed_ckt < 0 && fast_enough == 0)
     { // no signal and not fast enough (not in tunnel mode)
       sprintf(disp_short, "WAIT  0X");
-      sprintf(disp_long, "%dMB free %02d:%02d %d km/h WAIT FOR GPS FIX",
+      sprintf(disp_long, "%s %dMB free %02d:%02d %d km/h WAIT FOR GPS FIX",
+        iri99avg2digit,
         free_MB,
         tm->tm_hour, tm->tm_min,
         speed_kmh);
@@ -491,8 +494,8 @@ void rds_message(struct tm *tm)
       else
         sprintf(disp_short, "GO    0X"); // normal
         //sprintf(disp_short, "%3s   0X", iri2digit); // debug
-      snprintf(disp_long, sizeof(disp_long), "L=%.2f,%.2f,%.1fC R=%.2f,%.2f,%.1fC %dMB %02d:%02d %d km/h %c",
-        iri[0], iri20[0], temp[0], iri[1], iri20[1], temp[1],
+      snprintf(disp_long, sizeof(disp_long), "L=%.2f,%.2f,%.1fC R=%.2f,%.2f,%.1fC %s %dMB %02d:%02d %d %c",
+        iri[0], iri20[0], temp[0], iri[1], iri20[1], temp[1], iri99avg2digit,
         free_MB,
         tm->tm_hour, tm->tm_min,
         speed_kmh,
@@ -791,13 +794,6 @@ void generate_filename_wav(struct tm *tm)
 void open_log_wav(struct tm *tm)
 {
   generate_filename_wav(tm);
-  #if 1
-  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d-%02d%02d.wav",
-    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
-  #else
-  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d.wav",
-    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
-  #endif
   #if 1
   //SD_MMC.remove(filename_data);
   file_accel = SD_MMC.open(filename_data, FILE_APPEND);
