@@ -91,7 +91,7 @@ architecture RTL of slope is
   signal saxl, saxr: signed(15 downto 0); -- type converted signed axl,axr
   constant csax2sl: signed(15 downto 0) := to_signed(1000000/16000, 16); -- constant from 1g = 16000 to um/m
   signal eslx, esrx: signed(slx'length+csax2sl'length-1 downto 0); -- full width multiply result
-  signal sl, sr, sl_next, sr_next : signed(31+scale downto 0); -- sum of const/vz, 42 bits (last 10 bits dropped at output)
+  signal sl, sr, sl_next, sr_next : signed(31+scale downto 0); -- sum of const/vz, 48 bits (last 16 bits dropped at output)
   signal sl_prev, sr_prev, dsl, dsr : signed(31+scale downto 0); -- previous slope for derivative
   signal iazl, iazr : signed(15 downto 0); -- z-acceleration, DC removed
   signal gzl, gzr : signed(15 downto 0) := to_signed(g_initial,16); -- g used to remove slope DC offset
