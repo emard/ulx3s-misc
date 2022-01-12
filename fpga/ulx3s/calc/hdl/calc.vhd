@@ -75,7 +75,7 @@ architecture RTL of calc is
   alias cnt_ch     : unsigned(7 downto 7) is cnt(7 downto 7); -- 0-1 two channels
   alias cnt_above_row : unsigned(cnt_bits-1 downto cnt_element'length+cnt_row'length) is cnt(cnt_bits-1 downto cnt_element'length+cnt_row'length);
   constant cnt_pad0: unsigned(ia'length-1 downto cnt_ch'length+cnt_col'length+cnt_row'length) := (others => '0'); -- zero-pad high bits to make ia/ib address
-  signal matrix_write: std_logic := '0';
+  signal matrix_write: std_logic := '0'; -- write matrix(ib) <= c
   signal swap_z: std_logic := '1'; -- swaps Z0 or Z1
   type z_type is array(0 to 3) of signed(31 downto 0);
   signal z: z_type;
@@ -147,7 +147,7 @@ begin
                 z(to_integer(unsigned(cnt_col))) <= c;
                 if cnt_col = "10" then -- 2, Z(2)
                   vz(to_integer(unsigned(cnt_ch))) <= z(0)-c; -- vz = Z(0)-Z(2) normal
-                  --vz(to_integer(unsigned(cnt_ch))) <= 500; -- [um/s] debug vz for IRI=1 mm/m at 4 g range and 5 cm sampling
+                  -- vz(to_integer(unsigned(cnt_ch))) <= 500; -- [um/s] debug vz for IRI=1 mm/m (srvz100=1e6, srvz20=200e3) at 4 g range and 5 cm sampling
                 end if;
                 matrix_write <= '1'; -- matrix(ib) <= c
               end if;
@@ -174,6 +174,7 @@ begin
               -- same c=abs(vz(n)) can be used first for IRI-20, then for IRI-100
               -- -------------------- IRI-20 LEFT
               when '0'&x"0" =>
+                matrix_write <= '0';
                 ib <= irs_tail2 & '0';
                 c <= abs(vz(0));
               when '0'&x"2" =>
@@ -216,7 +217,7 @@ begin
                 matrix_write <= '0';
               when '1'&x"F" =>
                 -- IRI-100 advance irs_tail which is equal the head
-                if irs_tail = irs_max then -- NOTE if head outside of min/max, it will overwrite matrix!
+                if irs_tail = irs_max then -- NOTE if irs_tail outside of min/max, it will overwrite matrix!
                   irs_tail <= irs_min; -- wraparound
                 else
                   irs_tail <= irs_tail + 1; -- advance for the next time
@@ -228,6 +229,7 @@ begin
                   irs_tail2 <= irs_tail2 + 1; -- advance for the next time
                 end if;
                 cnt(cnt_bits-2) <= '1'; -- end
+                --cnt(cnt_bits-1) <= '1'; -- end obsolete, already 1
               when others =>
             end case;
             cnt(4 downto 0) <= cnt(4 downto 0) + 1;
