@@ -11,7 +11,7 @@ esp32
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
     [ ] tunnel mode kml generate follow the same direction
     [x] support arduino ESP32 v2.0.x and ESP32DMASPI v0.2.0
-    [ ] allow wifi reconnect at arduino ESP32 v2.0.x, check disabled wifiMulti.run()
+    [x] allow wifi reconnect at arduino ESP32 v2.0.x, check disabled wifiMulti.run()
     [x] LCD display with freq and status
     [x] LCD display IP address and hostname
     [ ] LCD graphic track display
@@ -29,21 +29,22 @@ esp32
     [ ] read temperature ADXRS290 from recorded Z instead of core direct
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
-    [ ] configurable report frequency (m)
+    [x] configurable report frequency (m)
     [ ] notify g-range in wav
     [ ] notify g-range in kml
     [ ] kml->kmz zip https://github.com/lbernstone/miniz-esp32
     [ ] kml handle missing sensors
     [ ] sensor hotplug
-    [ ] script for binary exe upload to esp32 and fpga
+    [x] script for binary exe upload to esp32 and fpga
     [ ] GPS time discontinuety bug warning
     [ ] TA flag at errors
     [ ] low free: erase oldest files, stop logging
     [ ] speech report when connected GPS/OBD
-    [ ] speech report remaining minutes and disk full
+    [ ] speech report remaining minutes
+    [x] speech report disk full
     [ ] speech tunnel mode locked speed
     [ ] fix wav file to open with wave.open("file.wav","r")
-    [ ] >9.9 speak "out of scale"
+    [ ] support >9.9 speech
     [ ] btn to stop logging and close all files
     [x] 60GB free, but shown 3529MB, use uint64_t and float
     [ ] print ADX chip not detected, now unconnected ADXRS290 is "detected"
@@ -103,14 +104,14 @@ esp32
 
 core
 
-    [ ] core reports IRI 20% smaller than wav2kml
+    [x] core reports IRI 20% smaller than wav2kml (forgot to disable write_matrix)
     [ ] handle delay from speed measurement to accelerometer reading
     [ ] increase speech volume (compression?)
     [ ] time sync status
     [ ] BTN irq
     [ ] tyre ribs or motor vibration (RPM) sensing, conversion to speed
     [ ] option to reset slope at stops (configurable)
-    [ ] option for iri length, normal 100 m, sometimes 20 m
+    [x] support IRI-100 and IRI-20
     [x] spi slave setting for cmd to auto-read registers adxl355=8*2+1, adxrs290=128+8
     [x] damp oscillations at slope DC offset compensation
     [x] at stops, quick slope DC removal
@@ -119,16 +120,15 @@ core
     [x] output register for trellis clean FM signal
     [x] improve audio quality with DACPWM
     [x] latch calc_result from changing while reading
-    [x] dual FM frequency output 87.6 and 107.9
+    [x] dual FM frequency output
     [x] FM frequency set
-    [ ] readmemh initial FM frequency
     [x] SPI slave for speed and iri
     [x] random inbalance in L/R calc results (slope ready not used)
 
 wav2kml
 
     [ ] csv dump
-    [ ] checksum
+    [ ] if nmea line checksum wrong don't process it
     [ ] on track and placemarks indicate tunnel mode
     [ ] motor vibration (RPM) sensing, conversion to speed
     [ ] calibrate accelerometer heading with GPS
@@ -150,4 +150,3 @@ makecircle
 math
 
     [x] verify method - make the offline analysis
-
