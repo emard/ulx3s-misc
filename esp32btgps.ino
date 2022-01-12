@@ -1004,6 +1004,7 @@ void handle_gps_line_complete(void)
       {
         static uint8_t toggle_flag = 0; // IRI-100/20 toggle flag
         get_iri();
+        //printf("%10d %10d %10d %10d\n", srvz[0], srvz[1], srvz[2], srvz[3]); // debug
         char iri_tag[40];
         if(toggle_flag)
           sprintf(iri_tag, " L%05.2fR%05.2f*00 ",
