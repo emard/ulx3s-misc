@@ -105,6 +105,7 @@ esp32
 
 core
 
+    [ ] fix or ignore glitches: left sensor occasionaly reads one sample all 3 axis near zero
     [x] core reports IRI 20% smaller than wav2kml (forgot to disable write_matrix)
     [ ] handle delay from speed measurement to accelerometer reading
     [ ] increase speech volume (compression?)
