@@ -98,6 +98,7 @@ esp32
     [x] kml OBD mode bugs last latlon overwritten
     [x] kml generation
     [x] kml iterate old logs and finalize
+    [ ] sometimes kml not finalized (1 minute not passed?)
     [x] web finalize before starting server
     [x] config log mode wav/kml
     [x] kml date in the document description
@@ -108,7 +109,7 @@ core
 
     [ ] fix or ignore glitches: left sensor occasionaly reads one sample all 3 axis near zero
     [x] core reports IRI 20% smaller than wav2kml (forgot to disable write_matrix)
-    [ ] handle delay from speed measurement to accelerometer reading
+    [ ] handle delay from speed measurement to accelerometer reading (IRI 9.9 after start)
     [ ] increase speech volume (compression?)
     [ ] time sync status
     [ ] BTN irq
