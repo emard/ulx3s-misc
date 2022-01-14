@@ -8,6 +8,7 @@ esp32
     [ ] at each stop (with temperatures) write iri99avg
     [ ] display last iri99avg in .wav files list
     [ ] configurable speed for reporting every 100/20 m
+    [ ] LCD: if no SD card, print insert SD card
     [x] crash after temperatures in log, sprintf 20 bytes overrun
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
     [ ] tunnel mode kml generate follow the same direction
