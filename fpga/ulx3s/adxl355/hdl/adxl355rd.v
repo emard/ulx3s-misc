@@ -52,7 +52,7 @@ module adxl355rd
   reg [tag_addr_bits-1:0] r_wtag = 0, r_rtag = 0;
   always @(posedge clk)
   begin
-    if(tag_en)
+    if(tag_en && (r_wtag+1 != r_rtag)) // ignore tag if FIFO is full
     begin // push to FIFO
       tag_fifo[r_wtag] <= tag;
       r_wtag <= r_wtag+1;
