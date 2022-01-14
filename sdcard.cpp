@@ -1416,16 +1416,15 @@ void close_logs()
   logs_are_open = 0;
 }
 
-void finalize_kml(File &kml)
+void finalize_kml(File &kml, String file_name)
 {
   kml.seek(kml.size() - 7);
   String file_end = kml.readString();
   if(file_end != "</kml>\n")
   {
-    String file_name = kml.name();
     Serial.print("Finalizing ");
     Serial.println(file_name);
-    kml.close();
+    // kml.close(); // crash with arduino esp32 v2.0.2
     File wkml = SD_MMC.open(file_name, FILE_APPEND);
     wkml.write((uint8_t *)str_kml_footer_simple, strlen(str_kml_footer_simple));
     wkml.close();
@@ -1470,8 +1469,13 @@ void finalize_data(struct tm *tm){
             Serial.println(file.size());
             char *is_kml = strstr(file.name(),".kml");
             if(is_kml)
-              if(strcmp(file.name(), filename_data) != 0) // different name
-                finalize_kml(file);
+            {
+              String full_path = String(file.name());
+              if((file.name())[0] != '/')
+                full_path = String(dirname) + "/" + String(file.name());
+              if(strcmp(full_path.c_str(), filename_data) != 0) // different name
+                finalize_kml(file, full_path);
+            }
             // print on LCD
             char *is_wav = strstr(file.name(),".wav");
             char *is_today = strstr(file.name(),todaystr);
