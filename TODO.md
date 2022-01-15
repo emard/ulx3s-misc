@@ -8,7 +8,8 @@ esp32
     [ ] at each stop (with temperatures) write iri99avg
     [ ] display last iri99avg in .wav files list
     [ ] configurable speed for reporting every 100/20 m
-    [ ] LCD: if no SD card, print insert SD card
+    [x] LCD: if no SD card, print insert SD card
+    [ ] FM short beep if no SD
     [x] crash after temperatures in log, sprintf 20 bytes overrun
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
     [ ] tunnel mode kml generate follow the same direction
@@ -107,6 +108,7 @@ esp32
 
 core
 
+    [ ] trellis weak FM (check multiply)
     [ ] fix or ignore glitches: left sensor occasionaly reads one sample all 3 axis near zero
     [x] core reports IRI 20% smaller than wav2kml (forgot to disable write_matrix)
     [ ] handle delay from speed measurement to accelerometer reading (IRI 9.9 after start)
