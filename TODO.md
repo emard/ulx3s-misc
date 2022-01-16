@@ -3,13 +3,12 @@
 esp32
 
     [x] ESP32 reports IRI 20% smaller than wav2kml (disable matrix_write)
-    [ ] all DMA transfer sizes divisible by 4
     [ ] store firstnmea, count number of returns to the same point
     [ ] at each stop (with temperatures) write iri99avg
     [ ] display last iri99avg in .wav files list
-    [ ] configurable speed for reporting every 100/20 m
+    [x] configurable speed for reporting every 100/20 m
     [x] LCD: if no SD card, print insert SD card
-    [ ] FM short beep if no SD
+    [x] FM short beep if no SD
     [x] crash after temperatures in log, sprintf 20 bytes overrun
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
     [ ] tunnel mode kml generate follow the same direction
@@ -48,6 +47,7 @@ esp32
     [ ] speech tunnel mode locked speed
     [ ] fix wav file to open with wave.open("file.wav","r")
     [ ] support >9.9 speech
+    [ ] all DMA transfer sizes divisible by 4
     [ ] btn to stop logging and close all files
     [x] 60GB free, but shown 3529MB, use uint64_t and float
     [ ] print ADX chip not detected, now unconnected ADXRS290 is "detected"
