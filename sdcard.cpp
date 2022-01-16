@@ -71,7 +71,7 @@ uint8_t fm_freq_cursor = 0; // cursor highlighting fm freq bitmask 0,1,2
 uint8_t btn, btn_prev;
 
 // SD status
-uint64_t total_bytes, used_bytes, free_bytes;
+uint64_t total_bytes = 0, used_bytes, free_bytes;
 uint32_t free_MB;
 
 void adxl355_write_reg(uint8_t a, uint8_t v)
@@ -509,8 +509,17 @@ void rds_message(struct tm *tm)
   else // NULL pointer
   {
     // null pointer, dummy time
-    sprintf(disp_short, "OFF    X");
-    sprintf(disp_long,  "SEARCHING FOR %s SENSOR %s", name_obd_gps[mode_obd_gps], sensor_check_status ? (adxl355_regio ? "ACEL ADXL355" : "GYRO ADXRS290") : "NONE");
+    if(total_bytes)
+    {
+      sprintf(disp_short, "OFF    X");
+      sprintf(disp_long,  "SEARCHING FOR %s SENSOR %s", name_obd_gps[mode_obd_gps], sensor_check_status ? (adxl355_regio ? "ACEL ADXL355" : "GYRO ADXRS290") : "NONE");
+    }
+    else
+    {
+      sprintf(disp_short, "SD?    X");
+      sprintf(disp_long,  "INSERT SD CARD SENSOR %s", sensor_check_status ? (adxl355_regio ? "ACEL ADXL355" : "GYRO ADXRS290") : "NONE");
+      beep_pcm(1024);
+    }
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
   disp_short[5] = free_MB_2n;
@@ -1090,13 +1099,17 @@ int open_pcm(char *wav)
 void beep_pcm(int n)
 {
   int i;
+  int16_t v;
   spi_master_tx_buf[0] = 0; // 0: write ram
   spi_master_tx_buf[1] = 5; // addr [31:24] msb
   spi_master_tx_buf[2] = 0; // addr [23:16]
   spi_master_tx_buf[3] = 0; // addr [15: 8]
   spi_master_tx_buf[4] = 0; // addr [ 7: 0] lsb
-  for(i = 0; i < n; i++)
-    spi_master_tx_buf[i+5] = ((i+8)&15)<<4; // create wav
+  for(v = 0, i = 0; i < n; i++)
+  {
+    v += ((i+4)&8) ? -1 : 1;
+    spi_master_tx_buf[i+5] = v*16; // create wav
+  }
   master.transfer(spi_master_tx_buf, n+5); // write pcm to play
 }
 

@@ -443,10 +443,15 @@ void speech()
   {
     // start speech
     mount();
-    open_pcm(speakfile); // load buffer with start of the file
-    tprev_wavp = ms(); // reset play timer from now, after start of PCM file
-    tspeak_ready = tprev_wavp+370;
-    tprev_wav = t_ms; // prevent too often starting of the speech
+    if(card_is_mounted)
+    {
+      open_pcm(speakfile); // load buffer with start of the file
+      tprev_wavp = ms(); // reset play timer from now, after start of PCM file
+      tspeak_ready = tprev_wavp+370;
+      tprev_wav = t_ms; // prevent too often starting of the speech
+    }
+    else
+      speakfile = NULL; // consumed
   }
   else
   {
