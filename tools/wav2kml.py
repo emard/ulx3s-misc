@@ -3,9 +3,7 @@
 # apt install python3-fastkml python3-shapely python3-lxml
 # ./wav2kml.py 20210701.wav > 20210701.kml
 
-# values calculated in this code don't match well with hardware calculated for iri100
-# TODO accel calc need addtional checking
-# TODO gyro measurement with z-axis gyro
+# TODO option to colorize with calc values
 
 from fastkml import kml, styles
 from shapely.geometry import Point, LineString, Polygon
