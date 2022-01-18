@@ -27,7 +27,7 @@ if calculate == 1: # accel adxl355
   wav_ch_l = 2
   wav_ch_r = 5
   # slope DC remove by inc/dec of accel offset at each sampling length
-  dc_remove_step = 1.0e-5
+  dc_remove_step = 1.0e-4
 if calculate == 2: # gyro adxrs290
   # scale fixed: 1 bit = 1/200 deg/s
   aint2float = 2*pi/360/200 # gyro angular velocity int -> w [rad/s]
@@ -357,7 +357,7 @@ class snap:
   def __init__(self):
     # cut data into segment length [m]
     segment_length = 100.0    # [m]
-    segment_snap   =  10.0    # [m]
+    segment_snap   =  12.0    # [m]
     start_length   =   0.0    # analyze from this length [m]
     stop_length    =   1.0e9  # analyze up to this length [m]
 
