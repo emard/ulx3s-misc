@@ -21,7 +21,7 @@ import numpy as np
 calculate  = 0
 # accel/gyro, select constant and data wav channel
 if calculate == 1: # accel adxl355
-  g_scale    = 4 # 2/4/8 g is 32000 integer reading
+  g_scale    = 8 # 2/4/8 g is 32000 integer reading
   aint2float = 9.81 * g_scale / 32000 # int -> a [m/s^2]
   # Z-channel of accelerometer
   wav_ch_l = 2
