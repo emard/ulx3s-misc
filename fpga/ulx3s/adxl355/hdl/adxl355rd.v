@@ -209,7 +209,7 @@ module adxl355rd
   assign w_sclk = r_sclk;
 
   assign wrdata = r_wr1 ? r1_wrbuf[r1_rindex] : r0_wrdata; // normal
-  //assign wrdata = r_wr1 ? r1_rindex : index; // normal
+  //assign wrdata = r_wr1 ? r1_rindex : index; // debug indexing
   assign wr     = r_wr  | r_wr1;
   assign x      = r_x;
 
