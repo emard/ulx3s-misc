@@ -18,6 +18,8 @@ prev_corr_i = 0
 nmea=bytearray(0)
 while f.readinto(mvb):
   a=(b[0]&1) | ((b[2]&1)<<1) | ((b[4]&1)<<2) | ((b[6]&1)<<3) | ((b[8]&1)<<4) | ((b[10]&1)<<5)
+  #if b[5]==0 or b[5]==255 or b[11]==0 or b[11]==255:
+  #  print("glitch")
   if a != 32:
     c = a
     # convert control chars<32 to uppercase letters >=64
