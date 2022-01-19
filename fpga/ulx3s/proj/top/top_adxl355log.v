@@ -411,9 +411,9 @@ module top_adxl355log
   //assign led[3:0] = {sclk,miso,mosi,csn};
 
   assign led[7:4] = phase[7:4];
-  assign led[3] = wifi_en;
-  assign led[2] = sync_locked;
-  assign led[1] = pps_valid;
+  assign led[3] = pps_valid;
+  //assign led[2] = wifi_en;
+  //assign led[1] = sync_locked;
   assign led[0] = pps_btn;
 
   //assign led = phase;
@@ -689,13 +689,33 @@ module top_adxl355log
     end
     slope_reset <= vx == 0; // speed 0
   end
-  
+
   // NOTE reg delay, trying to fix synth problems
   reg slope_reset2;
   always @(posedge clk)
   begin
     slope_reset2 <= slope_reset;
   end
+
+  // fault detection: after each slope reset
+  // turn on fault signal if vz is zero
+  generate
+    reg [1:0] r_fault;
+    if(0)
+    begin
+      always @(posedge clk)
+      begin
+        if(slope_reset2)
+          r_fault <= 0;
+        else
+        begin
+          if(sync_pulse)
+            r_fault <= r_fault | {azl[15:2]==0 || ~azl[15:2]==0, azr[15:2]==0 || ~azr[15:2]==0}; // if z-axis reads near 0, set fault
+        end
+      end
+      assign led[2:1] = ~r_fault; // on fault LED will turn OFF
+    end
+  endgenerate
 
   reg  signed [31:0] ma = a_default;
   reg  signed [31:0] mb = a_default;
