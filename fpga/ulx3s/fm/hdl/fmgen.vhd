@@ -103,10 +103,10 @@ begin
     begin
 	if (rising_edge(clk_dds)) then
 	    -- Cross clock domains
-    	    R_dds_mul_x2  <= R_dds_mul_x1;
-	    R_dds_mul_res <= C_dds_mul_y * R_dds_mul_x2;
-	    fm_inc <= R_dds_mul_res(c_fm_acclen+c_fpp_bits-1 downto c_fpp_bits); -- TODO unhardcode 57, 58
-	    fm_acc <= fm_acc + fm_inc;
+            R_dds_mul_x2  <= R_dds_mul_x1;
+            R_dds_mul_res <= C_dds_mul_y * R_dds_mul_x2;
+            fm_inc <= R_dds_mul_res(c_fm_acclen+c_fpp_bits-1 downto c_fpp_bits);
+            fm_acc <= fm_acc + fm_inc;
 	end if;
     end process;
 
