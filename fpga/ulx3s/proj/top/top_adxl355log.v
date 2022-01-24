@@ -46,6 +46,7 @@ module top_adxl355log
   wav_addr_bits= 12,         // 2**n, default 2**12 = 4096 bytes = 4 KB audio PCM FIFO buffer
   C_prog_release_timeout = 26, // esp32 programming default n=26, 2^n / 25MHz = 2.6s
   spi_direct   = 0,          // 0: spi slave (SPI_MODE3), 1: direct to adxl (SPI_MODE1 or SPI_MODE3)
+  autospi_clkdiv = 5,        // SPI CLK = 40/2/(2**(autospi_clkdiv-1)+1) MHz, 1:10, 2:6.6, 3:4, 4:2.2, 5:1.1 MHz
   clk_out0_hz  =  40*1000000,// Hz,  40 MHz, PLL generated internal clock
   clk_out1_hz  = 240*1000000,// Hz, 240 MHz, PLL generated clock for FM transmitter
   clk_out2_hz  = 120*1000000,// Hz, 120 MHz, PLL generated clock for SPI LCD
@@ -61,7 +62,6 @@ module top_adxl355log
   input   [6:0] btn,
   output  [7:0] led,
   output  [3:0] audio_l, audio_r,
-  output        gp13, // ESP32   MISO
   output        gp14, // ADXL355 DRDY
   input         gp15, // ADXL355 INT2
   input         gp17, // ADXL355 INT1
@@ -73,8 +73,6 @@ module top_adxl355log
   input         gn22, // ADXL355 MISO
   output        gn21,gn23,gn24, // ADXL355 SCLK,MOSI,CSn
   output        gp19,gp20, // external antenna 1,2
-  input         gn11, // ESP32 wifi_gpio26 PPS to FPGA
-  output        gp11, // ESP32 wifi_gpio26 PPS feedback
   input         ftdi_nrts,
   input         ftdi_ndtr,
   output        ftdi_rxd,
@@ -88,6 +86,9 @@ module top_adxl355log
   input         wifi_gpio13, wifi_gpio4,
   input         wifi_gpio15, wifi_gpio14,
   input         wifi_gpio16, wifi_gpio17,
+  input         wifi_gpio25, // gn11 ESP32 wifi_gpio25 PPS to FPGA
+  output        wifi_gpio26, // gp11 ESP32 wifi_gpio26 IRQ PPS feedback
+  output        wifi_gpio35, // gp13 ESP32 wifi_gpio35 MISO
   //inout   [3:0] sd_d, // wifi_gpio 13,12,4,2
   //input         sd_cmd, sd_clk, // wifi_gpio 15,14
   output        sd_wp, // BGA pin exists but not connected on PCB
@@ -320,9 +321,9 @@ module top_adxl355log
   // ESP32 connections direct to ADXL355 (FPGA is slave for ESP32)
   assign csn  = wifi_gpio17;
   assign mosi = wifi_gpio16;
-  assign gp13 = miso; // wifi_gpio35 v2.1.2
-  //assign gp13 = 0; // debug, should print 00
-  //assign gp13 = 1; // debug, should print FF
+  assign wifi_gpio35 = miso; // wifi_gpio35 v2.1.2
+  //assign wifi_gpio35 = 0; // debug, should print 00
+  //assign wifi_gpio35 = 1; // debug, should print FF
   assign sclk = wifi_gpio0;
 
   // generate PPS signal (1 Hz, 100 ms duty cycle)
@@ -347,10 +348,6 @@ module top_adxl355log
     else if(pps_cnt == pps_width-1)
       pps <= 0;
   end
-  
-  wire wifi_gpio25 = gn11;
-  wire wifi_gpio26;
-  assign gp11 = wifi_gpio26;
 
   //wire pps_btn = pps & ~btn[1];
   //wire pps_btn = wifi_gpio5 & ~btn[1];
@@ -407,7 +404,7 @@ module top_adxl355log
 
   //assign led[7:4] = {drdy,int2,int1,1'b0};
   //assign led[3:0] = {gn27,gn26,gn25,gn24};
-  //assign led[3:0] = {sclk,gp13,mosi,csn};
+  //assign led[3:0] = {sclk,wifi_gpio35,mosi,csn};
   //assign led[3:0] = {sclk,miso,mosi,csn};
 
   assign led[7:4] = phase[7:4];
@@ -429,18 +426,16 @@ module top_adxl355log
   end
 
   // SPI reader
-  // counter for very slow clock
-  localparam slowdown = 5; // SPI CLK = 40/2/(2**(slowdown-1)+1) MHz, 1:10 MHz, 2:6.6 MHz, 3:4 MHz, 4:2.2 MHz, 5:1.1MHz
-  reg [slowdown:0] r_sclk_en;
+  reg [autospi_clkdiv:0] r_sclk_en;
   always @(posedge clk)
   begin
-    if(r_sclk_en[slowdown])
+    if(r_sclk_en[autospi_clkdiv])
       r_sclk_en <= 0;
     else
       r_sclk_en <= r_sclk_en+1;
   end
-  wire sclk_en = r_sclk_en[slowdown];
-  
+  wire sclk_en = r_sclk_en[autospi_clkdiv];
+
   reg [7:0] spi_read_cmd;
   reg [3:0] spi_read_len;
   reg [17:0] spi_tag_byte_select;
