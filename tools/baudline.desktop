@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Baudline
+Comment=Baudline
+#Icon=accessories-text-editor
+Icon=/usr/local/bin/baudline_1.08_linux_x86_64/icons/tone_generator.gif
+Exec=/usr/local/bin/baudline_1.08_linux_x86_64/baudline %f
+
+# cp baudline.desktop ~/.local/share/applications/
