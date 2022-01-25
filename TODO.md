@@ -98,6 +98,7 @@ esp32
     [x] kml generation
     [x] kml iterate old logs and finalize
     [x] kml sometimes name (lastnmea) filled with junk string
+    [ ] wav log off by 1 byte, peristent at stops
     [ ] sometimes kml not finalized (1 minute not passed?)
     [ ] kml wrong line color and placemarks with gnome firefox maps
     [x] web finalize before starting server
@@ -112,6 +113,7 @@ core
     [ ] fix or ignore glitches: left sensor sometimes reads one sample all 3 axis
         sometimes as 0x00 or 0xFF. depends on GP/GN 4/8/16 mA and cable length
     [x] core reports IRI 20% smaller than wav2kml (forgot to disable write_matrix)
+    [ ] parametrize FM multiply bits (currently 64 bit result not used fully)
     [ ] handle delay from speed measurement to accelerometer reading (IRI 9.9 after start)
     [ ] increase speech volume (compression?)
     [ ] time sync status
