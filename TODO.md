@@ -2,12 +2,14 @@
 
 esp32
 
+    [ ] when standing, display LAT/LON in decimal format
     [x] ESP32 reports IRI 20% smaller than wav2kml (disable matrix_write)
     [ ] store firstnmea, count number of returns to the same point
     [ ] at each stop (with temperatures) write iri99avg
     [ ] display last iri99avg in .wav files list
     [x] configurable speed for reporting every 100/20 m
     [x] LCD: if no SD card, print insert SD card
+    [ ] LCD: file list, print 1 line for kml/wav instead of 2 lines
     [x] FM short beep if no SD
     [x] crash after temperatures in log, sprintf 20 bytes overrun
     [x] right sensor temperature -199.9C, lower SPI freq 8->5 MHz
