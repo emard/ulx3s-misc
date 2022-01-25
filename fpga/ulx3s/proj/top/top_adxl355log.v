@@ -190,6 +190,7 @@ module top_adxl355log
 
   wire spi_ram_wr, spi_ram_x;
   reg [1:0] r_accel_addr3 = 0; // counts 0-2 to skip every 3rd byte for ADXL355
+  reg r_accel_addr0 = 0; // alignment with wav buf
   wire  [7:0] spi_ram_data;
   localparam ram_addr_bits = $clog2(ram_len-1);
   reg [ram_addr_bits-1:0] spi_ram_addr = 0, r_spi_ram_addr;
@@ -276,7 +277,9 @@ module top_adxl355log
     //assign ram_do = ram_addr[7:0];
     //assign ram_do = 8'h5A;
     // SPI autoreader to BRAM write cycle, optionally skipping every 3rd byte for sensor type ADXL355
-    wire spi_ram_wr_skip = spi_ram_wr && ((r_accel_addr3 != 2) || (ctrl_skip_3rd == 0)); // normal
+    wire spi_ram_wr_skip = spi_ram_wr
+                        && (r_accel_addr3 != 2 || ctrl_skip_3rd == 0)  // skip 3rd byte LSB
+                        && (r_accel_addr0 == 0 || spi_ram_addr  != 0); // skip if misalignment
     //wire spi_ram_wr_skip = spi_ram_wr; // debug, no skip
     // SPI autoreader optional address swap L/H byte
     wire [ram_addr_bits-1:0] spi_ram_addr_swap = {spi_ram_addr[ram_addr_bits-1:1],spi_ram_addr[0]^ctrl_swap_lh}; // normal
@@ -495,6 +498,7 @@ module top_adxl355log
     begin
       r_accel_addr <= 0;
       r_accel_addr3 <= 0; // TODO check what is logged in file with this line enabled
+      r_accel_addr0 <= 0; // address alighment
     end
     else
     begin
@@ -503,6 +507,7 @@ module top_adxl355log
         r_accel[r_accel_addr] <= spi_ram_data;
         r_accel_addr <= r_accel_addr + 1;
         r_accel_addr3 <= r_accel_addr3 == 2 ? 0 : r_accel_addr3 + 1;
+        r_accel_addr0 <= 1;
       end
     end
   end
