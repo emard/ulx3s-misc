@@ -1155,9 +1155,12 @@ void close_log_wav(void)
   file_accel.close();
 }
 
-void write_kml_header(void)
+void write_kml_header(struct tm *tm)
 {
-  kml_header(lastnmea);
+  char name[23];
+  snprintf(name, sizeof(name), "PROFILOG %04d%02d%02d-%02d%02d",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
+  kml_header(name);
   file_kml.write((uint8_t *)kmlbuf, strlen(kmlbuf));
 }
 
@@ -1202,7 +1205,7 @@ void open_log_kml(struct tm *tm)
   file_kml = SD_MMC.open(filename_data, FILE_APPEND);
   // check appending file position (SEEK_CUR) and if 0 then write header
   if(file_kml.position() == 0)
-    write_kml_header();
+    write_kml_header(tm);
   kml_buf_init(); // fill kml buffer with arrow and line content
   #if 1
   Serial.print(filename_data);

@@ -208,12 +208,10 @@ void kml_buf_init(void)
   kmlbuf_start = str_kml_arrow_len; // same as above is file write default starting point
 }
 
-void kml_header(char *timestamp)
+void kml_header(char *name)
 {
-  char kmltime[23];
-  nmea2kmltime(timestamp, kmltime);
   sprintf(kmlbuf, str_kml_header,
-    kmltime,
+    name,
     red_iri, 2.0/2.5*red_iri, 1.5/2.5*red_iri, 1.0/2.5*red_iri,
     0.5/2.5*red_iri, 0.3/2.5*red_iri);
 }
