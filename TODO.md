@@ -28,7 +28,6 @@ esp32
     [x] when stopped, each minute initialize sensors
     [x] config file temperature calibration
     [x] write temperature to log at each start
-    [ ] read temperature ADXRS290 from recorded Z instead of core direct
     [ ] RTC support (for OBD without GPS)
     [ ] color scale config and description
     [x] configurable report frequency (m)
@@ -36,7 +35,7 @@ esp32
     [ ] notify g-range in kml
     [ ] kml->kmz zip https://github.com/lbernstone/miniz-esp32
     [ ] kml handle missing sensors
-    [ ] sensor hotplug
+    [x] sensor hotplug (initialized every minute when stopped)
     [x] script for binary exe upload to esp32 and fpga
     [ ] GPS time discontinuety bug warning
     [ ] TA flag at errors
@@ -50,15 +49,14 @@ esp32
     [ ] all DMA transfer sizes divisible by 4
     [ ] btn to stop logging and close all files
     [x] 60GB free, but shown 3529MB, use uint64_t and float
-    [ ] print ADX chip not detected, now unconnected ADXRS290 is "detected"
+    [x] print ADX chip not detected, now unconnected ADXRS290 is "detected"
     [x] detecting left ADXRS290
     [x] sometimes false report no L/R sensor
     [ ] OBD2 stop PPS PLL
     [ ] web visited links in different color
-    [ ] wep upload success readyState == 4, status == 200
-    [ ] web server LED blink when activated and connected
+    [x] web server LED when activated and connected
     [ ] web MDNS not updating address to dnsmasq
-    [ ] web server list dump only filenames not full path
+    [x] web server list dump only filenames not full path
     [x] web free using JSON var name for bytes free in dir listing
     [x] web server show only filename, not full path
     [x] web server sort directories/files
@@ -99,6 +97,7 @@ esp32
     [x] kml OBD mode bugs last latlon overwritten
     [x] kml generation
     [x] kml iterate old logs and finalize
+    [ ] kml sometimes name (lastnmea) filled with junk string
     [ ] sometimes kml not finalized (1 minute not passed?)
     [x] web finalize before starting server
     [x] config log mode wav/kml
@@ -108,8 +107,9 @@ esp32
 
 core
 
-    [ ] trellis weak FM (check multiply)
-    [ ] fix or ignore glitches: left sensor occasionaly reads one sample all 3 axis near zero
+    [x] trellis weak FM (fixed by signed->unsigned multiply)
+    [ ] fix or ignore glitches: left sensor sometimes reads one sample all 3 axis
+        sometimes as 0x00 or 0xFF. depends on GP/GN 4/8/16 mA and cable length
     [x] core reports IRI 20% smaller than wav2kml (forgot to disable write_matrix)
     [ ] handle delay from speed measurement to accelerometer reading (IRI 9.9 after start)
     [ ] increase speech volume (compression?)
