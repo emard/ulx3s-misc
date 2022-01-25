@@ -99,6 +99,7 @@ esp32
     [x] kml iterate old logs and finalize
     [ ] kml sometimes name (lastnmea) filled with junk string
     [ ] sometimes kml not finalized (1 minute not passed?)
+    [ ] kml wrong line color and placemarks with gnome firefox maps
     [x] web finalize before starting server
     [x] config log mode wav/kml
     [x] kml date in the document description
