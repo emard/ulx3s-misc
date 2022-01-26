@@ -555,6 +555,7 @@ void report_iri(void)
     }
     iri2digit[0]='0'+iri99/10;
     iri2digit[2]='0'+iri99%10;
+    strcpy(lastnmea, line); // copy line to last nmea as tmp buffer (overwritten by latlon parser)
     rds_message(&tm);
     if (speakfile == NULL && pcm_is_open == 0 && fast_enough > 0)
     {

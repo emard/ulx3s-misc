@@ -136,3 +136,13 @@ void nmea2latlon(char *a, struct int_latlon *latlon)
     umin = -umin;
   latlon->lon_umin = umin;
 }
+
+void latlon2float(struct int_latlon *latlon, float flatlon[])
+{
+  flatlon[0] = latlon->lat_deg + abs(latlon->lat_umin)*1.66666666e-8;
+  if(latlon->lat_umin < 0)
+    flatlon[0] = -flatlon[0];
+  flatlon[1] = latlon->lon_deg + abs(latlon->lon_umin)*1.66666666e-8;
+  if(latlon->lon_umin < 0)
+    flatlon[1] = -flatlon[1];
+}

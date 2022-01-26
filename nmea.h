@@ -10,6 +10,7 @@ int nmea2s(char *nmea);
 int nmea2tm(char *a, struct tm *t);
 int nmea2kmltime(char *nmea, char *kml);
 void nmea2latlon(char *a, struct int_latlon *latlon);
+void latlon2float(struct int_latlon *latlon, float flatlon[]);
 inline uint8_t hex2int(char a);
 uint8_t write_nmea_crc(char *a);
 int check_nmea_crc(char *a);
