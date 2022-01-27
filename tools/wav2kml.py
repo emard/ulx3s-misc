@@ -10,6 +10,8 @@ from shapely.geometry import Point, LineString, Polygon
 from sys import argv
 from colorsys import hsv_to_rgb
 from math import pi,ceil,sqrt,sin,cos,tan,asin,atan2
+from functools import reduce
+from operator import xor
 import numpy as np
 
 # calculate
@@ -702,7 +704,7 @@ for wavfile in argv[1:]:
         reset_iri()
         should_reset_iri = 0 # consumed
       for j in range(0,6):
-        ac[j] = int.from_bytes(b[j*2:j*2+2],byteorder="little",signed=True)
+        ac[j] = int.from_bytes(b[j*2:j*2+2],byteorder="little",signed=True)//2*2 # //2*2 removes LSB bit (nmea tag)
       if speed_kmh > 1: # TODO unhardcode
         if calculate == 1: # accelerometer
           if enter_accel(ac[wav_ch_l]*aint2float - azl0,
@@ -746,7 +748,10 @@ for wavfile in argv[1:]:
           if calculate:
             should_reset_iri = 1
         elif nmea[0:6]==b"$GPRMC" and (len(nmea)==79 or len(nmea)==68) and nmea[-3]==42: # 68 is lost signal, tunnel mode
-          # nmea[-3]="*" checks for asterisk on the right place. Not full crc check
+         # nmea[-3]="*" checks for asterisk on the right place, simple 8-bit crc follows
+         crc = reduce(xor, map(int, nmea[1:-3]))
+         hexcrc = bytearray(b"%02X" % crc)
+         if nmea[-2:] == hexcrc:
           if len(nmea)==79: # normal mode with signal
             lonlat=nmea_latlon2kml(nmea[18:46])
             tunel = 0
@@ -812,6 +817,9 @@ for wavfile in argv[1:]:
             lonlat_diff = ( lonlat[0] - lonlat_prev[0], lonlat[1] - lonlat_prev[1] )
           lonlat_prev = lonlat
         elif nmea[0:1]==b"L" and lonlat!=None:
+         crc = reduce(xor, map(int, nmea[1:-3]))
+         hexcrc = bytearray(b"%02X" % crc)
+         if nmea[-2:] == hexcrc:
           rpos=nmea.find(b"R")
           spos=nmea.find(b"S")
           epos=nmea.find(b'*')
