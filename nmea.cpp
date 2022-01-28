@@ -120,21 +120,31 @@ void nmea2latlon(char *a, struct int_latlon *latlon)
   umin  = strtol(a+23, NULL, 10);          // fractional minutes to microminutes
   a[22] = 0; // replace '.'->0
   umin += strtol(a+20, NULL, 10)*1000000;  // add integer minutes to microminutes
+  char a20 = a[20];
   a[20] = 0;
   latlon->lat_deg  = strtol(a+18, NULL, 10);
   if(a[30]=='S')
     umin = -umin;
   latlon->lat_umin = umin;
+  // return original values
+  a[29] = ',';
+  a[22] = '.';
+  a[20] = a20;
 
   a[44] = 0; // replace ','->0
   umin  = strtol(a+38, NULL, 10);          // fractional minutes to microminutes
   a[37] = 0; // replace '.'->0
   umin += strtol(a+35, NULL, 10)*1000000;  // add integer minutes to microminutes
+  char a35 = a[35];
   a[35] = 0;
   latlon->lon_deg  = strtol(a+32, NULL, 10);
   if(a[45]=='W')
     umin = -umin;
   latlon->lon_umin = umin;
+  // return original values
+  a[44] = ',';
+  a[37] = '.';
+  a[35] = a35;
 }
 
 void latlon2float(struct int_latlon *latlon, float flatlon[])
