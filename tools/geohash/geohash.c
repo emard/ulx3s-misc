@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #define hash_grid_spacing_m 32 // [m] steps power of 2
 #define hash_grid_size 32 // N*N grid 32*32=1024
@@ -154,6 +156,38 @@ int find_lon_lat(float lon, float lat)
   return index;
 }
 
+void wavreader(char *filename)
+{
+  int f = open(filename, O_RDONLY);
+  lseek(f, 44, SEEK_SET);
+  int16_t b[6];
+  char a,c;
+  char nmea[256];
+  int nmea_ptr=0;
+
+  for(;;)
+  {
+    if(read(f, b, sizeof(b)) != sizeof(b))
+      break; // eof
+    a = b[0]&1 | ((b[1]&1)<<1) | ((b[2]&1)<<2) | ((b[3]&1)<<3) | ((b[4]&1)<<4) | ((b[5]&1)<<5);
+    if(a != 32 && a != 33)
+    {
+      c = a;
+      if((a & 0x20) == 0)
+        c ^= 0x40;
+      if(nmea_ptr < sizeof(nmea)-2)
+        nmea[nmea_ptr++] = c;
+    }
+    if(a == 32 && nmea_ptr > 0)
+    {
+      nmea[nmea_ptr] = 0;
+      printf("%s\n", nmea);
+      nmea_ptr = 0;
+    }
+  }
+  close(f);
+}
+
 int main(int argc, char *argv[])
 {
   float lat1, lon1, lat2, lon2, dlat, dlon;
@@ -206,4 +240,5 @@ int main(int argc, char *argv[])
     else
       printf("find lon=%.6f° lat=%.6f° -> %d\n", lon[i], lat[i], index);
   }
+  wavreader("/tmp/20220126-2025.wav");
 }
