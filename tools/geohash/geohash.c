@@ -156,6 +156,16 @@ int find_lon_lat(float lon, float lat)
   return index;
 }
 
+// 0: crc bad
+// 1: crc ok
+int check_crc(char *nmea, int len)
+{
+  uint8_t crc = strtoul(nmea+len-2, NULL, 16);
+  for(int i = 1; i < len-3; i++)
+    crc ^= *(++nmea);
+  return crc == 0 ? 1 : 0;
+}
+
 void wavreader(char *filename)
 {
   int f = open(filename, O_RDONLY);
@@ -163,7 +173,7 @@ void wavreader(char *filename)
   int16_t b[6];
   char a,c;
   char nmea[256];
-  int nmea_ptr=0;
+  int nmea_len=0;
 
   for(;;)
   {
@@ -175,14 +185,15 @@ void wavreader(char *filename)
       c = a;
       if((a & 0x20) == 0)
         c ^= 0x40;
-      if(nmea_ptr < sizeof(nmea)-2)
-        nmea[nmea_ptr++] = c;
+      if(nmea_len < sizeof(nmea)-2)
+        nmea[nmea_len++] = c;
     }
-    if(a == 32 && nmea_ptr > 0)
+    if(a == 32 && nmea_len > 3)
     {
-      nmea[nmea_ptr] = 0;
-      printf("%s\n", nmea);
-      nmea_ptr = 0;
+      nmea[nmea_len] = 0;
+      if(check_crc(nmea, nmea_len))
+        printf("%s\n", nmea);
+      nmea_len = 0;
     }
   }
   close(f);
