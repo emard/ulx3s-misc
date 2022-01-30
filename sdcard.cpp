@@ -35,6 +35,7 @@ char filename_data[256];
 char *filename_lastnmea = (char *)"/profilog/var/lastnmea.txt";
 char *filename_fmfreq   = (char *)"/profilog/var/fmfreq.txt";
 char lastnmea[256]; // here is read content from filename_lastnmea
+char *linenmea; // pointer to current nmea line
 int card_is_mounted = 0;
 int logs_are_open = 0;
 int pcm_is_open = 0;
@@ -492,22 +493,21 @@ void rds_message(struct tm *tm)
       if(fast_enough)
       {
         sprintf(disp_short, "%3s   0X", iri2digit);
-        snprintf(disp_long, sizeof(disp_long), "%.2f,%.2f,%.1fC %.2f,%.2f,%.1fC %s %dMB %02d:%02d %d %c",
+        snprintf(disp_long, sizeof(disp_long), "%.2f,%.2f,%.1fC %.2f,%.2f,%.1fC %s %dMB %02d:%02d %d",
           iri[0], iri20[0], temp[0], iri[1], iri20[1], temp[1], iri99avg2digit,
           free_MB,
           tm->tm_hour, tm->tm_min,
-          speed_kmh,
-          fast_enough ? 'R' : 'S');
+          speed_kmh);
       }
       else // not fast_enough
       {
         sprintf(disp_short, "GO    0X"); // normal
         struct int_latlon ilatlon;
         float flatlon[2];
-        nmea2latlon(lastnmea, &ilatlon);
+        nmea2latlon(linenmea, &ilatlon);
         latlon2float(&ilatlon, flatlon);
-        snprintf(disp_long, sizeof(disp_long), "%+.6f %+.6f %.1fC %.1fC %dMB %02d:%02d",
-          flatlon[0], flatlon[1], // lat, lon
+        snprintf(disp_long, sizeof(disp_long), "%+.6f%c %+.6f%c %.1fC %.1fC %dMB %02d:%02d",
+          flatlon[0], flatlon[0] >= 0 ? 'N':'S', flatlon[1], flatlon[1] >= 0 ? 'E':'W', // lat, lon
           temp[0], temp[1],
           free_MB,
           tm->tm_hour, tm->tm_min
@@ -980,7 +980,7 @@ void read_last_nmea(void)
   {
     if (nmea2tm(lastnmea, &tm))
       set_date_from_tm(&tm);
-    nmea2latlon(lastnmea, &last_latlon); // parsing also invalidates lastnmea content
+    nmea2latlon(lastnmea, &last_latlon); // parsing should not spoil lastnmea content
   }
   else
     Serial.println("read last nmea bad crc");

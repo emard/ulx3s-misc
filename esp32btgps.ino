@@ -322,7 +322,7 @@ void setup() {
   // speech starts at 7s silence. Before speech, 2s must be allowed
   // for sensors to start reading data, otherwise it will false report
   // "no sensors".
-
+  linenmea = line; // they are same and never change
   kml_init(); // sets globals using strlen/strstr
 
   pinMode(PIN_IRQ, INPUT);
@@ -555,7 +555,7 @@ void report_iri(void)
     }
     iri2digit[0]='0'+iri99/10;
     iri2digit[2]='0'+iri99%10;
-    strcpy(lastnmea, line); // copy line to last nmea as tmp buffer (overwritten by latlon parser)
+    // strcpy(lastnmea, line); // copy line to last nmea as tmp buffer
     rds_message(&tm);
     if (speakfile == NULL && pcm_is_open == 0 && fast_enough > 0)
     {
@@ -831,9 +831,9 @@ void draw_kml_line(char *line)
   static char timestamp[23] = "2000-01-01T00:00:00.0Z";
   if(log_wav_kml&2)
   { // only if kml mode is enabled, save CPU if when not enabled
-    strcpy(lastnmea, line); // copy line to last nmea as tmp buffer (overwritten by parser)
-    // parse lastnmea -> ilatlon (parsing spoils nmea string)
-    nmea2latlon(lastnmea, &ilatlon);
+    // strcpy(lastnmea, line); // copy line to last nmea as tmp buffer (overwritten by parser)
+    // parse lastnmea -> ilatlon (parsing should not spoil nmea string)
+    nmea2latlon(line, &ilatlon);
     float *lat = &(x_kml_line->lat[ipt]);
     float *lon = &(x_kml_line->lon[ipt]);
     *lat = ilatlon.lat_deg + abs(ilatlon.lat_umin)*1.66666666e-8;

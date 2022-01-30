@@ -23,6 +23,7 @@ extern char iri2digit[4];
 extern char iri99avg2digit[4];
 extern uint32_t iri99sum, iri99count, iri99avg; // collect session average
 extern char lastnmea[256];
+extern char *linenmea;
 extern uint8_t last_sensor_reading[12];
 extern struct int_latlon last_latlon;
 extern RDS rds;
