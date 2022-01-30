@@ -240,5 +240,6 @@ int main(int argc, char *argv[])
     else
       printf("find lon=%.6f° lat=%.6f° -> %d\n", lon[i], lat[i], index);
   }
-  wavreader("/tmp/20220126-2025.wav");
+  if(argc > 1)
+    wavreader(argv[1]);
 }
