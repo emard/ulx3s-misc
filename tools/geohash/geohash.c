@@ -156,6 +156,30 @@ int find_lon_lat(float lon, float lat)
   return index;
 }
 
+// find pointer to nth occurence of char (used as CSV parser)
+char *nthchar(char *a, int n, char c)
+{
+  int i;
+  for(i=0; *a; a++)
+  {
+    if(*a == c)
+      i++;
+    if(i == n)
+      return a;
+  }
+  return NULL;
+}
+
+void nmea_proc(char *nmea, int nmea_len)
+{
+  // printf("%s\n", nmea);
+  char *nf;
+  nf = nthchar(nmea, 2, ',');
+  if(nf)
+    if(nf[1]=='A') // A means valid signal (not in tunnel)
+      printf("%s\n", nmea);
+}
+
 // 0: crc bad
 // 1: crc ok
 int check_crc(char *nmea, int len)
@@ -191,8 +215,9 @@ void wavreader(char *filename)
     if(a == 32 && nmea_len > 3)
     {
       nmea[nmea_len] = 0;
-      if(check_crc(nmea, nmea_len))
-        printf("%s\n", nmea);
+      if(nmea[0] == '$')
+        if(check_crc(nmea, nmea_len))
+          nmea_proc(nmea, nmea_len);
       nmea_len = 0;
     }
   }
