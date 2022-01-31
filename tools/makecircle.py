@@ -87,8 +87,8 @@ for i in range(nsamples):
     int(1000*math.sin(i/20)), int(1000*math.sin(i/30)), iaz
   ))
   if i % 200 == 0: # every 200 samples = 0,2 seconds
-    angle10 = int(i*w*dt*1800.0/math.pi) # [deg*10]
-    angle = angle10//10 # [deg]
+    isec = i//1000 # [s] integer seconds
+    angle = int(i*w*dt*180.0/math.pi) # [deg]
     angle_bidirectional = abs(angle-360*5) # [deg]
     angle_imperfection = angle_bidirectional # % 360
     lr = rp + rp/100*math.sin(angle/10) # [m] + 1% imperfection (radius)
@@ -101,7 +101,7 @@ for i in range(nsamples):
       flip = 180
     heading = (angle_bidirectional+90+flip) % 360
     gps_data = "GPRMC,%02d%02d%02d.%1d,A,%02d%02d.%06d,N,%03d%02d.%06d,E,%06.2f,%05.1f,%02d%02d%02d,000.0,E,N" % (
-      angle//3600,angle//60%60,angle%60,angle10%10, # hms.1/10
+      isec//3600,isec//60%60,isec%60,i//100%10, # hms.1/10
       45,latumin//1000000,latumin%1000000,  # lat
       16,lonumin//1000000,lonumin%1000000,  # lon
       vx*1.944, # kt (43.2 kt = 80 km/h)
