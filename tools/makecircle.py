@@ -99,7 +99,7 @@ for i in range(nsamples):
     if angle < 360*5:
       flip = 180
     heading = (angle_bidirectional+90+flip) % 360
-    gps_data = "GPRMC,%02d%02d%02d.0,V,%02d%02d.%06d,N,%03d%02d.%06d,E,%06.2f,%05.1f,%02d%02d%02d,000.0,E,N" % (
+    gps_data = "GPRMC,%02d%02d%02d.0,A,%02d%02d.%06d,N,%03d%02d.%06d,E,%06.2f,%05.1f,%02d%02d%02d,000.0,E,N" % (
       angle//3600,angle//60%60,angle%60, # hms
       45,latumin//1000000,latumin%1000000,  # lat
       16,lonumin//1000000,lonumin%1000000,  # lon
