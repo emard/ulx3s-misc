@@ -15,7 +15,7 @@ const int Rearth_m = 6378137; // [m] earth radius
 int lat2grid,  lon2grid;
 int lat2gridm, lon2gridm;
 
-float last_latlon[2]; // stored previous value for travel calculation
+float last_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
 uint32_t travel_mm = 0;
 
 struct s_snap_point
@@ -60,10 +60,10 @@ int dlon2m(int lat)
 }
 
 // conversion dlat to millimeters is constant for every lon
-const float dlat2mm = Rearth_m * 1000.0 * M_PI / 180.0;
+const uint32_t dlat2mm = Rearth_m * 1000.0 * M_PI / 180.0;
 
 // conversion dlon to millimeters depends on lat
-float dlon2mm(float lat)
+uint32_t dlon2mm(float lat)
 {
   return dlat2mm * cos(lat * M_PI / 180.0);
 }
@@ -196,12 +196,12 @@ void nmea_proc(char *nmea, int nmea_len)
       nmea2latlon(nmea, &ilatlon);
       float flatlon[2];
       latlon2float(&ilatlon, flatlon);
-      float lon2mm = dlon2mm(flatlon[0]);
-      float dxmm = (flatlon[1]-last_latlon[1])* lon2mm;
-      float dymm = (flatlon[0]-last_latlon[0])*dlat2mm;
-      uint32_t dmm = sqrt(dxmm*dxmm + dymm*dymm);
-      if(dmm < 50000) // ignore too large jumps > 50m
-        travel_mm += dmm;
+      uint32_t lon2mm = dlon2mm(flatlon[0]);
+      uint32_t   dxmm = fabs(flatlon[1]-last_latlon[1]) *  lon2mm;
+      uint32_t   dymm = fabs(flatlon[0]-last_latlon[0]) * dlat2mm;
+      uint32_t   d_mm = sqrt(dxmm*dxmm + dymm*dymm);
+      if(d_mm < 40000) // ignore too large jumps > 40m
+        travel_mm += d_mm;
       printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], travel_mm/1000);
       last_latlon[0] = flatlon[0];
       last_latlon[1] = flatlon[1];
