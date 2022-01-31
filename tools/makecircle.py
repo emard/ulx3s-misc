@@ -50,7 +50,7 @@ class accel_sim:
 def checksum(x):
   s = 0
   for b in x:
-    s += ord(b)
+    s ^= ord(b)
   return s & 0xFF
 
 f = open("/tmp/circle.wav", "wb")
@@ -113,7 +113,7 @@ for i in range(nsamples):
       iri_data = ("L%05.2fR%05.2f" % (1.0, 1.0)) # iri100
     else:
       iri_data = ("L%05.2fS%05.2f" % (1.0, 1.0)) # iri20 has "S" instead of "R"
-    tag += " %s*%02X " % (iri_data, checksum(iri_data))
+    tag += " %s*%02X " % (iri_data, checksum(iri_data[1:]))
   c = 32 # space is default if queue is empty
   if len(tag): # queue has data
     c = ord(tag[0]) # ascii value of the first char
