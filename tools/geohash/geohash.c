@@ -193,6 +193,7 @@ void nmea_proc(char *nmea, int nmea_len)
   static int32_t prev_found_dist = 999999; // distance to previous found existing point
   static int32_t closest_found_travel_mm = 0;
   static float  new_lat, new_lon;
+  static int have_new = 0;
   // printf("%s\n", nmea);
   char *nf;
   struct int_latlon ilatlon;
@@ -215,11 +216,12 @@ void nmea_proc(char *nmea, int nmea_len)
         {
           // memorize last lat/lon when travel <= 100m
           // as the candidate for new snap point.
-          // we assume it has got some new point here
+          // we assume we have got some new point here
           if(prev_travel_mm <= 100000)
           {
             new_lat = flatlon[0];
             new_lon = flatlon[1];
+            have_new = 1;
           }
           prev_travel_mm = travel_mm;
           // continue search until travel 120 m for existing point if found.
@@ -245,14 +247,18 @@ void nmea_proc(char *nmea, int nmea_len)
             }
             else // create new point
             {
-              store_lon_lat(new_lon, new_lat);
-              printf("new\n");
+              if(have_new) // don't store if we don't have new point
+              {
+                store_lon_lat(new_lon, new_lat);
+                printf("new\n");
+              }
               travel_mm -= 100000;
             }
             // reset values for new search
             closest_found_travel_mm = 0;
             closest_index = -1;
             prev_found_dist = 999999;
+            have_new = 0;
           }
         }
         
