@@ -4,6 +4,7 @@
 #include <math.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "nmea.h"
 
 #define hash_grid_spacing_m 32 // [m] steps power of 2
 #define hash_grid_size 32 // N*N grid 32*32=1024
@@ -13,6 +14,9 @@ const int Rearth_m = 6378137; // [m] earth radius
 // constants to convert lat,lon to grid index
 int lat2grid,  lon2grid;
 int lat2gridm, lon2gridm;
+
+float last_latlon[2]; // stored previous value for travel calculation
+uint32_t travel_mm = 0;
 
 struct s_snap_point
 {
@@ -47,12 +51,21 @@ float distance(float lat1, float lon1, float lat2, float lon2)
 }
 
 // conversion dlat to meters is constant for every lon
-const int dlat2m = Rearth_m * M_PI / 180.0;
+const int dlat2m  = Rearth_m * M_PI / 180.0;
 
 // conversion dlon to meters depends on lat
 int dlon2m(int lat)
 {
   return (int) (dlat2m * cos(lat * M_PI / 180.0));
+}
+
+// conversion dlat to millimeters is constant for every lon
+const float dlat2mm = Rearth_m * 1000.0 * M_PI / 180.0;
+
+// conversion dlon to millimeters depends on lat
+float dlon2mm(float lat)
+{
+  return dlat2mm * cos(lat * M_PI / 180.0);
 }
 
 // for lat calculate constants
@@ -174,10 +187,25 @@ void nmea_proc(char *nmea, int nmea_len)
 {
   // printf("%s\n", nmea);
   char *nf;
+  struct int_latlon ilatlon;
   nf = nthchar(nmea, 2, ',');
   if(nf)
     if(nf[1]=='A') // A means valid signal (not in tunnel)
+    {
       printf("%s\n", nmea);
+      nmea2latlon(nmea, &ilatlon);
+      float flatlon[2];
+      latlon2float(&ilatlon, flatlon);
+      float lon2mm = dlon2mm(flatlon[0]);
+      float dxmm = (flatlon[1]-last_latlon[1])* lon2mm;
+      float dymm = (flatlon[0]-last_latlon[0])*dlat2mm;
+      uint32_t dmm = sqrt(dxmm*dxmm + dymm*dymm);
+      if(dmm < 50000) // ignore too large jumps > 50m
+        travel_mm += dmm;
+      printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], travel_mm/1000);
+      last_latlon[0] = flatlon[0];
+      last_latlon[1] = flatlon[1];
+    }
 }
 
 // 0: crc bad
@@ -276,6 +304,6 @@ int main(int argc, char *argv[])
     else
       printf("find lon=%.6f° lat=%.6f° -> %d\n", lon[i], lat[i], index);
   }
-  if(argc > 1)
-    wavreader(argv[1]);
+  for(int i = 1; i < argc; i++)
+    wavreader(argv[i]);
 }
