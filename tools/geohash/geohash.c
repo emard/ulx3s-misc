@@ -16,7 +16,7 @@ int lat2grid,  lon2grid;
 int lat2gridm, lon2gridm;
 
 float last_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
-uint32_t travel_mm = 0;
+int32_t travel_mm = 0;
 
 struct s_snap_point
 {
@@ -185,6 +185,8 @@ char *nthchar(char *a, int n, char c)
 
 void nmea_proc(char *nmea, int nmea_len)
 {
+  static int16_t closest_index = -1;
+  static int32_t prev_travel_mm = 0;
   // printf("%s\n", nmea);
   char *nf;
   struct int_latlon ilatlon;
@@ -201,7 +203,21 @@ void nmea_proc(char *nmea, int nmea_len)
       uint32_t   dymm = fabs(flatlon[0]-last_latlon[0]) * dlat2mm;
       uint32_t   d_mm = sqrt(dxmm*dxmm + dymm*dymm);
       if(d_mm < 40000) // ignore too large jumps > 40m
+      {
         travel_mm += d_mm;
+        if(travel_mm > 80000 && travel_mm < 120000) // at 80-120 m travel search for nearest snap points
+        {
+          // memorize lat/lon when travel <100m changes to >100m,
+          // as the best candidate for new snap point.
+          // continue search to travel 120 m for existing point if found.
+          // if not found, create memorized lat/lon as new snap point.
+          int16_t index = find_lon_lat(flatlon[1], flatlon[0]);
+          if(index >= 0) // found something
+          {
+          }
+        }
+        
+      }
       printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], travel_mm/1000);
       last_latlon[0] = flatlon[0];
       last_latlon[1] = flatlon[1];
