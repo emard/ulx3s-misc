@@ -4,7 +4,9 @@
 #include <math.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include "nmea.h"
+#include "kml.h"
 
 #define hash_grid_spacing_m 32 // [m] steps power of 2
 #define hash_grid_size 32 // N*N grid 32*32=1024
@@ -12,8 +14,8 @@
 int wr_snap_ptr = 0; // pointer to free snap point index
 const int Rearth_m = 6378137; // [m] earth radius
 // constants to convert lat,lon to grid index
-int lat2grid,  lon2grid;
-int lat2gridm, lon2gridm;
+int lat2grid,  lon2grid;  // to grid index
+int lat2gridm, lon2gridm; // to [m] approx meters (for grid metric)
 uint32_t found_dist; // hackish way
 
 float last_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
@@ -129,10 +131,37 @@ void print_storage(void)
     for(j = 0; j < hash_grid_size; j++)
       if(hash_grid[i][j] >= 0)
         printf("hash_grid[%d][%d]=%d\n", i, j, hash_grid[i][j]);
-  for(i = 0; i < snap_point_max; i++)
+  for(i = 0; i < wr_snap_ptr; i++)
     if(snap_point[i].next >= 0)
       printf("snap_point[%d].next=%d\n", i, snap_point[i].next);
 }
+
+// write stored placemarks as kml arrows
+void write_storage2kml(char *filename)
+{
+  int kmlf = open(filename, O_CREAT | O_WRONLY, 0644);
+  kml_init();
+  kml_header("name");
+  write(kmlf, kmlbuf, strlen(kmlbuf));
+  kml_buf_init();
+  for(int i = 0; i < wr_snap_ptr; i++)
+  {
+    x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;
+    x_kml_arrow->lat       = (float)(snap_point[i].ym) / (float)lat2gridm;
+    x_kml_arrow->value     =  1.0;
+    x_kml_arrow->left      =  1.0;
+    x_kml_arrow->right     =  1.0;
+    x_kml_arrow->heading   =  0.0;
+    x_kml_arrow->speed_kmh = 80.0;
+    x_kml_arrow->timestamp = "2000-01-01T00:00:00.0Z";
+    kml_arrow(x_kml_arrow);
+    write(kmlf, kmlbuf, str_kml_arrow_len);
+  }
+  kml_footer("2000-01-01T00:00:00.0Z", "2000-01-02T00:00:00.0Z"); // timestamp begin-end
+  write(kmlf, kmlbuf, strlen(kmlbuf));
+  close(kmlf);
+}
+
 
 int find_lon_lat(float lon, float lat)
 {
@@ -367,4 +396,5 @@ int main(int argc, char *argv[])
   }
   for(int i = 1; i < argc; i++)
     wavreader(argv[i]);
+  write_storage2kml("/tmp/circle.kml");
 }
