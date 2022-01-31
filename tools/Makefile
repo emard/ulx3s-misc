@@ -7,7 +7,7 @@ kml: kml.c
 	gcc $< -o $@
 
 clean:
-	rm -f wav
+	rm -f wav kml
 
 hex: wav
 	./wav
