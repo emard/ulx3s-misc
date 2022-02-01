@@ -139,7 +139,7 @@ void print_storage(void)
 // write stored placemarks as kml arrows
 void write_storage2kml(char *filename)
 {
-  int kmlf = open(filename, O_CREAT | O_WRONLY, 0644);
+  int kmlf = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0644);
   kml_init();
   kml_header("name");
   write(kmlf, kmlbuf, strlen(kmlbuf));
@@ -372,6 +372,8 @@ int main(int argc, char *argv[])
   printf("lon1=%.6f° lat1=%.6f° -> grid x,y = %d,%d -> hash x,y = %d,%d -> edge x,y = %d,%d\n",
     lon1, lat1, xgrid, ygrid, xgrid&31, ygrid&31, exgrid, eygrid);
   reset_storage();
+  #if 0
+  // debug code to test storage
   store_lon_lat(16.0000, 46.0000);
   store_lon_lat(16.0001, 46.0000);
   store_lon_lat(16.0000, 46.0001);
@@ -394,7 +396,9 @@ int main(int argc, char *argv[])
     else
       printf("find lon=%.6f° lat=%.6f° -> %d\n", lon[i], lat[i], index);
   }
+  #endif
   for(int i = 1; i < argc; i++)
     wavreader(argv[i]);
+  print_storage();
   write_storage2kml("/tmp/circle.kml");
 }
