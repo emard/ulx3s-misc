@@ -157,8 +157,7 @@ void write_storage2kml(char *filename)
     kml_arrow(x_kml_arrow);
     write(kmlf, kmlbuf, str_kml_arrow_len);
   }
-  kml_footer("2000-01-01T00:00:00.0Z", "2000-01-02T00:00:00.0Z"); // timestamp begin-end
-  write(kmlf, kmlbuf, strlen(kmlbuf));
+  write(kmlf, str_kml_footer_simple, strlen(str_kml_footer_simple));
   close(kmlf);
 }
 
@@ -267,6 +266,7 @@ void nmea_proc(char *nmea, int nmea_len)
           }
           if(travel_mm > 120000) // at 120 m we have to decide, new or existing
           {
+            #if 1
             if(closest_index >= 0)
             {
               // float existing_lon = (float)snap_point[closest_index].xm / (float)lon2gridm;
@@ -275,6 +275,7 @@ void nmea_proc(char *nmea, int nmea_len)
               travel_mm -= closest_found_travel_mm; // adjust travel to snapped point
             }
             else // create new point
+            #endif
             {
               if(have_new) // don't store if we don't have new point
               {
