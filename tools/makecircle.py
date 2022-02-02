@@ -73,12 +73,12 @@ f.write(hdr)
 dt = 1.0e-3 # [s] sampling interval
 vx = 80/3.6 # [m/s] vehicle speed [km/h] -> [m/s]
 accel = accel_sim(dt, vx) # accelerometer z-axis simulator
-g_scale = 4 # accelerometer digital scale setting 2/4/8 g full scale 32000
+g_scale = 8 # accelerometer digital scale setting 2/4/8 g full scale 32000
 iscale = 32000/g_scale/9.81 # factor conversion from [m/s**2] to sensor binary reading
 rp = 500.0 # [m] path radius
 w = vx / rp # [rad/s] angular speed
-nturns = 3 # use 3 to shoreten calc time
-nsamples = int(nturns*2*rp*math.pi/vx/dt) # mum of samples for N turns
+nturns = 10 # use 3 to shoreten calc time
+nsamples = int(nturns*2*rp*math.pi/vx/dt) # num of samples for N turns
 tag = "" # tag queue string starts as empty
 for i in range(nsamples):
   iaz = int(iscale*accel.z())
