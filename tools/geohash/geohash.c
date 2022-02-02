@@ -8,7 +8,8 @@
 #include "nmea.h"
 #include "kml.h"
 
-#define hash_grid_spacing_m 32 // [m] steps power of 2
+#define snap_range_m 40 // [m] x+y < snap_range_m
+#define hash_grid_spacing_m 64 // [m] steps power of 2 should be > snap_range_m
 #define hash_grid_size 32 // N*N grid 32*32=1024
 #define snap_point_max 8192 // total max snap points
 int wr_snap_ptr = 0; // pointer to free snap point index
@@ -24,6 +25,7 @@ int32_t travel_mm = 0;
 struct s_snap_point
 {
   int32_t xm, ym;  // lat,lon converted to int meters (approx), int-search is faster than float
+  uint8_t n;       // number of measurements
   int16_t next; // next snap point index
 };
 
@@ -92,7 +94,10 @@ void reset_storage(void)
     for(j = 0; j < hash_grid_size; j++)
       hash_grid[i][j] = -1; // -1 is empty, similar to null pointer
   for(i = 0; i < snap_point_max; i++)
+  {
     snap_point[i].next = -1; // -1 is empty, similar to null pointer
+    snap_point[i].n = 0; // stat counter
+  }
   wr_snap_ptr = 0;
 }
 
@@ -148,7 +153,7 @@ void write_storage2kml(char *filename)
   {
     x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;
     x_kml_arrow->lat       = (float)(snap_point[i].ym) / (float)lat2gridm;
-    x_kml_arrow->value     =  1.0;
+    x_kml_arrow->value     = (float)(snap_point[i].n);
     x_kml_arrow->left      =  1.0;
     x_kml_arrow->right     =  1.0;
     x_kml_arrow->heading   =  0.0;
@@ -218,8 +223,8 @@ void nmea_proc(char *nmea, int nmea_len)
 {
   static int16_t closest_index = -1;
   static int32_t prev_travel_mm = 0; // for new point
-  static int32_t prev_found_dist = 999999; // distance to previous found existing point
-  static int32_t closest_found_travel_mm = 0;
+  static int32_t closest_found_dist = 999999; // [m] distance to previous found existing point
+  static int32_t closest_found_travel_mm = 999999;
   static float  new_lat, new_lon;
   static int have_new = 0;
   // printf("%s\n", nmea);
@@ -249,7 +254,7 @@ void nmea_proc(char *nmea, int nmea_len)
           {
             new_lat = flatlon[0];
             new_lon = flatlon[1];
-            have_new = 1;
+            have_new = 1; // updated until 100 m
           }
           prev_travel_mm = travel_mm;
           // continue search until travel 120 m for existing point if found.
@@ -257,25 +262,22 @@ void nmea_proc(char *nmea, int nmea_len)
           int16_t index = find_lon_lat(flatlon[1], flatlon[0]);
           if(index >= 0) // found something
           {
-            if(found_dist < prev_found_dist)
+            if(found_dist < closest_found_dist)
             {
               closest_index = index;
               closest_found_travel_mm = travel_mm;
-              prev_found_dist = found_dist;
+              closest_found_dist = found_dist; // metric that covers diamond shaped area x+y = const
             }
           }
           if(travel_mm > 120000) // at 120 m we have to decide, new or existing
           {
-            #if 1
-            if(closest_index >= 0)
+            if(closest_index >= 0 && closest_found_dist < snap_range_m) // x+y < snap_range_m [m]
             {
-              // float existing_lon = (float)snap_point[closest_index].xm / (float)lon2gridm;
-              // float existing_lat = (float)snap_point[closest_index].ym / (float)lat2gridm;
               // TODO update statistics at existing lon/lat
               travel_mm -= closest_found_travel_mm; // adjust travel to snapped point
+              snap_point[closest_index].n++;
             }
             else // create new point
-            #endif
             {
               if(have_new) // don't store if we don't have new point
               {
@@ -287,7 +289,7 @@ void nmea_proc(char *nmea, int nmea_len)
             // reset values for new search
             closest_found_travel_mm = 0;
             closest_index = -1;
-            prev_found_dist = 999999;
+            closest_found_dist = 999999;
             have_new = 0;
           }
         }
