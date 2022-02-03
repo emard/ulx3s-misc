@@ -26,7 +26,8 @@ struct s_snap_point
 {
   int32_t xm, ym;  // lat,lon converted to int meters (approx), int-search is faster than float
   uint8_t n;       // number of measurements
-  int16_t next; // next snap point index
+  uint16_t heading; // [deg*65536/360] heading 0-65535 means 0-359.999 deg
+  int16_t next;    // next snap point index
 };
 
 struct s_snap_point snap_point[snap_point_max];
@@ -101,7 +102,7 @@ void reset_storage(void)
   wr_snap_ptr = 0;
 }
 
-int store_lon_lat(float lon, float lat)
+int store_lon_lat(float lon, float lat, float heading)
 {
   if(wr_snap_ptr >= snap_point_max)
     return 0;
@@ -109,6 +110,7 @@ int store_lon_lat(float lon, float lat)
   // convert lon,lat to int meters
   int xm = floor(lon * lon2gridm);
   int ym = floor(lat * lat2gridm);
+  uint16_t headin = floor(heading * (65536.0/360)); // heading angle
 
   // snap int meters to grid 0
   uint8_t xgrid = (xm / hash_grid_spacing_m) & (hash_grid_size-1);
@@ -116,6 +118,7 @@ int store_lon_lat(float lon, float lat)
 
   snap_point[wr_snap_ptr].xm = xm;
   snap_point[wr_snap_ptr].ym = ym;
+  snap_point[wr_snap_ptr].heading = headin;
 
   int16_t saved_ptr;
 
@@ -156,7 +159,7 @@ void write_storage2kml(char *filename)
     x_kml_arrow->value     = (float)(snap_point[i].n);
     x_kml_arrow->left      =  1.0;
     x_kml_arrow->right     =  1.0;
-    x_kml_arrow->heading   =  0.0;
+    x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
     x_kml_arrow->speed_kmh = 80.0;
     x_kml_arrow->timestamp = "2000-01-01T00:00:00.0Z";
     kml_arrow(x_kml_arrow);
@@ -205,19 +208,6 @@ int find_lon_lat(float lon, float lat)
   return index;
 }
 
-// find pointer to nth occurence of char (used as CSV parser)
-char *nthchar(char *a, int n, char c)
-{
-  int i;
-  for(i=0; *a; a++)
-  {
-    if(*a == c)
-      i++;
-    if(i == n)
-      return a;
-  }
-  return NULL;
-}
 
 void nmea_proc(char *nmea, int nmea_len)
 {
@@ -238,6 +228,7 @@ void nmea_proc(char *nmea, int nmea_len)
       nmea2latlon(nmea, &ilatlon);
       float flatlon[2];
       latlon2float(&ilatlon, flatlon);
+      uint16_t heading = (65536.0/3600)*nmea2iheading(nmea); // 0-3600 -> 0-65536
       uint32_t lon2mm = dlon2mm(flatlon[0]);
       uint32_t   dxmm = fabs(flatlon[1]-last_latlon[1]) *  lon2mm;
       uint32_t   dymm = fabs(flatlon[0]-last_latlon[0]) * dlat2mm;
@@ -281,7 +272,7 @@ void nmea_proc(char *nmea, int nmea_len)
             {
               if(have_new) // don't store if we don't have new point
               {
-                store_lon_lat(new_lon, new_lat);
+                store_lon_lat(new_lon, new_lat, (float)heading * (360.0/65536));
                 printf("new\n");
               }
               travel_mm -= 100000;
