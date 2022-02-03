@@ -1,3 +1,5 @@
+[ ] forward and backward direction
+
 from lat/lon find nearest point
 
 meters -> degrees formula (haversin derivative)
