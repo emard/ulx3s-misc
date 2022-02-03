@@ -169,13 +169,17 @@ void write_storage2kml(char *filename)
   close(kmlf);
 }
 
-
-int find_lon_lat(float lon, float lat)
+// 2D grid hash search
+// x,y integer grid coordinates, can represent anything but
+//     here is used as approx meters
+// convert lon,lat to int meters. lon2gridm, lat2gridm are constants
+// int xm = floor(lon * lon2gridm);
+// int ym = floor(lat * lat2gridm);
+// a   angle 8-bit angular heading 0-255 -> 0-358 deg
+// x+y metric is applied to find closest point
+// TODO x+y+a metric is applied to find closest point
+int find_xya(int xm, int ym, uint8_t a)
 {
-  // convert lon,lat to int meters
-  int xm = floor(lon * lon2gridm);
-  int ym = floor(lat * lat2gridm);
-
   // snap int meters to grid 0
   uint8_t xgrid = (xm / hash_grid_spacing_m) & (hash_grid_size-1);
   uint8_t ygrid = (ym / hash_grid_spacing_m) & (hash_grid_size-1);
@@ -197,7 +201,8 @@ int find_lon_lat(float lon, float lat)
       // iterate to find closest element - least distance
       for(int16_t iter = hash_grid[x][y]; iter != -1; iter = snap_point[iter].next)
       {
-        uint32_t new_dist = abs(snap_point[iter].xm - xm) + abs(snap_point[iter].ym - ym);
+        int8_t ad = (snap_point[iter].heading >> 8) - a; // angular distance
+        uint32_t new_dist = abs(snap_point[iter].xm - xm) + abs(snap_point[iter].ym - ym) + abs(ad);
         if(new_dist < dist)
         {
           dist = new_dist;
@@ -250,7 +255,7 @@ void nmea_proc(char *nmea, int nmea_len)
           prev_travel_mm = travel_mm;
           // continue search until travel 120 m for existing point if found.
           // if not found after 120 m, create new lat/lon snap point.
-          int16_t index = find_lon_lat(flatlon[1], flatlon[0]);
+          int16_t index = find_xya((int)floor(flatlon[1] * lon2gridm), (int)floor(flatlon[0] * lat2gridm), heading >> 8);
           if(index >= 0) // found something
           {
             if(found_dist < closest_found_dist)
@@ -378,7 +383,7 @@ int main(int argc, char *argv[])
   float lat[] = { 46.0000, 46.0000, 46.0001, 46.0001, 46.0002, 45.9999, 45.9999, 45.9999, 45.9996 };
   for(int i = 0; i < sizeof(lon)/sizeof(lon[0]); i++)
   {
-    int index = find_lon_lat(lon[i], lat[i]);
+    int index = find_xya(floor(lon[i] * lon2gridm), floor(lat[i] * lat2gridm));
     if(index != -1)
     {
       lon2 = (float)snap_point[index].xm / (float)lon2gridm;
