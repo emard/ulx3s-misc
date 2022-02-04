@@ -242,7 +242,7 @@ void nmea_proc(char *nmea, int nmea_len)
       if(d_mm < 40000) // ignore too large jumps > 40m
       {
         travel_mm += d_mm;
-        if(travel_mm > 80000) // at >80 m travel start searching for nearest snap points
+        if(travel_mm > 40000) // at >40 m travel start searching for nearest snap points
         {
           // memorize last lat/lon when travel <= 100m
           // as the candidate for new snap point.
@@ -256,6 +256,7 @@ void nmea_proc(char *nmea, int nmea_len)
           prev_travel_mm = travel_mm;
           // continue search until travel 120 m for existing point if found.
           // if not found after 120 m, create new lat/lon snap point.
+          // direction insensitivty 8, means 256 is 360 deg, and to add 128 m for 180 deg reverse direction snap point
           int16_t index = find_xya((int)floor(flatlon[1] * lon2gridm), (int)floor(flatlon[0] * lat2gridm), heading, 8);
           if(index >= 0) // found something
           {
@@ -281,7 +282,10 @@ void nmea_proc(char *nmea, int nmea_len)
                 store_lon_lat(new_lon, new_lat, (float)heading * (360.0/65536));
                 printf("new\n");
               }
-              travel_mm -= 100000;
+              if(closest_index >= 0 && closest_found_travel_mm > 95000 && closest_found_travel_mm < 105000) // 90-110 m aligns reverse direction
+                travel_mm -= closest_found_travel_mm; // tries to align with reverse direction snap point
+              else
+                travel_mm -= 100000;
             }
             // reset values for new search
             closest_found_travel_mm = 0;
