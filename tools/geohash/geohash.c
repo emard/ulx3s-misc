@@ -170,15 +170,16 @@ void write_storage2kml(char *filename)
 }
 
 // 2D grid hash search
-// x,y integer grid coordinates, can represent anything but
+// x,y: integer grid coordinates, can represent anything but
 //     here is used as approx meters
 // convert lon,lat to int meters. lon2gridm, lat2gridm are constants
 // int xm = floor(lon * lon2gridm);
 // int ym = floor(lat * lat2gridm);
-// a   angle 8-bit angular heading 0-255 -> 0-358 deg
+// a   angle 16-bit unsigned angular heading 0-255 -> 0-358 deg
+// ais angle insensitivity 2^n 0:max sensitive, 16:insensitive
 // x+y metric is applied to find closest point
 // TODO x+y+a metric is applied to find closest point
-int find_xya(int xm, int ym, uint8_t a)
+int find_xya(int xm, int ym, uint16_t a, uint8_t ais)
 {
   // snap int meters to grid 0
   uint8_t xgrid = (xm / hash_grid_spacing_m) & (hash_grid_size-1);
@@ -201,8 +202,8 @@ int find_xya(int xm, int ym, uint8_t a)
       // iterate to find closest element - least distance
       for(int16_t iter = hash_grid[x][y]; iter != -1; iter = snap_point[iter].next)
       {
-        int8_t ad = (snap_point[iter].heading >> 8) - a; // angular distance
-        uint32_t new_dist = abs(snap_point[iter].xm - xm) + abs(snap_point[iter].ym - ym) + abs(ad);
+        int16_t ad = snap_point[iter].heading - a; // angular distance
+        uint32_t new_dist = abs(snap_point[iter].xm - xm) + abs(snap_point[iter].ym - ym) + (abs(ad)>>ais);
         if(new_dist < dist)
         {
           dist = new_dist;
@@ -255,7 +256,7 @@ void nmea_proc(char *nmea, int nmea_len)
           prev_travel_mm = travel_mm;
           // continue search until travel 120 m for existing point if found.
           // if not found after 120 m, create new lat/lon snap point.
-          int16_t index = find_xya((int)floor(flatlon[1] * lon2gridm), (int)floor(flatlon[0] * lat2gridm), heading >> 8);
+          int16_t index = find_xya((int)floor(flatlon[1] * lon2gridm), (int)floor(flatlon[0] * lat2gridm), heading, 8);
           if(index >= 0) // found something
           {
             if(found_dist < closest_found_dist)
@@ -383,7 +384,7 @@ int main(int argc, char *argv[])
   float lat[] = { 46.0000, 46.0000, 46.0001, 46.0001, 46.0002, 45.9999, 45.9999, 45.9999, 45.9996 };
   for(int i = 0; i < sizeof(lon)/sizeof(lon[0]); i++)
   {
-    int index = find_xya(floor(lon[i] * lon2gridm), floor(lat[i] * lat2gridm));
+    int index = find_xya(floor(lon[i] * lon2gridm), floor(lat[i] * lat2gridm), 0, 0);
     if(index != -1)
     {
       lon2 = (float)snap_point[index].xm / (float)lon2gridm;
