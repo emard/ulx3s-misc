@@ -202,8 +202,8 @@ int find_xya(int xm, int ym, uint16_t a, uint8_t ais)
       // iterate to find closest element - least distance
       for(int16_t iter = hash_grid[x][y]; iter != -1; iter = snap_point[iter].next)
       {
-        // last term with variable "a" is angular distance
-        uint32_t new_dist = abs(snap_point[iter].xm - xm) + abs(snap_point[iter].ym - ym) + (abs(snap_point[iter].heading - a)>>ais);
+        int16_t angular_distance = snap_point[iter].heading - a;
+        uint32_t new_dist = abs(snap_point[iter].xm - xm) + abs(snap_point[iter].ym - ym) + (abs(angular_distance)>>ais);
         if(new_dist < dist)
         {
           dist = new_dist;
