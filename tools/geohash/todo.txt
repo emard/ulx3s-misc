@@ -1,3 +1,5 @@
+[ ] rename reset to clear
+[ ] cumulative statistics sum x, sum x**2, avg and stdev
 [x] find lon, lat, heading
 [x] forward and backward direction
 
