@@ -1,4 +1,5 @@
-[ ] forward and backward direction
+[x] find lon, lat, heading
+[x] forward and backward direction
 
 from lat/lon find nearest point
 
