@@ -58,8 +58,11 @@ struct s_snap_point
   int32_t xm, ym;  // lat,lon converted to int meters (approx), int-search is faster than float
   uint8_t n;       // number of measurements
   uint16_t heading; // [deg*65536/360] heading 0-65535 means 0-359.999 deg
+  float sum_iri[2][2]; // [0:normal, 1:squares][0:left, 1:right]
   int16_t next;    // next snap point index
 };
+
+float parsed_iri[2][2]; // iri parsed from wav tags
 
 struct s_snap_point snap_point[snap_point_max];
 int16_t hash_grid[hash_grid_size][hash_grid_size]; // 2 overlapping grids
@@ -133,10 +136,13 @@ void reset_storage(void)
   wr_snap_ptr = 0;
 }
 
+// retval
+// index of stored element
+// -1 out of memory
 int store_lon_lat(float lon, float lat, float heading)
 {
   if(wr_snap_ptr >= snap_point_max)
-    return 0;
+    return -1; // out of memory
 
   // convert lon,lat to int meters
   int xm = floor(lon * lon2gridm);
@@ -157,9 +163,7 @@ int store_lon_lat(float lon, float lat, float heading)
   saved_ptr = hash_grid[xgrid][ygrid];
   hash_grid[xgrid][ygrid] = wr_snap_ptr;
   snap_point[wr_snap_ptr].next = saved_ptr;
-  wr_snap_ptr++;
-
-  return 1; // ok
+  return wr_snap_ptr++;
 }
 
 void print_storage(void)
@@ -187,9 +191,9 @@ void write_storage2kml(char *filename)
   {
     x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;
     x_kml_arrow->lat       = (float)(snap_point[i].ym) / (float)lat2gridm;
-    x_kml_arrow->value     = (float)(snap_point[i].n);
-    x_kml_arrow->left      =  1.0;
-    x_kml_arrow->right     =  1.0;
+    x_kml_arrow->value     = (snap_point[i].sum_iri[0][0]+snap_point[i].sum_iri[0][1]) / (2*snap_point[i].n);
+    x_kml_arrow->left      =         snap_point[i].sum_iri[0][0] / snap_point[i].n;
+    x_kml_arrow->right     =         snap_point[i].sum_iri[0][1] / snap_point[i].n;
     x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
     x_kml_arrow->speed_kmh = 80.0;
     x_kml_arrow->timestamp = "2000-01-01T00:00:00.0Z";
@@ -245,6 +249,18 @@ int find_xya(int xm, int ym, uint16_t a, uint8_t ais)
   return index;
 }
 
+// 01234567890123
+// L01.00R01.20*AB
+void iri_proc(char *nmea, int nmea_len)
+{
+  if(nmea[0]=='L' && nmea[6]=='R') // detects IRI-100
+  {
+    parsed_iri[0][0] = atof(nmea+1);
+    parsed_iri[1][0] = parsed_iri[0][0] * parsed_iri[0][0]; // square
+    parsed_iri[0][1] = atof(nmea+7);
+    parsed_iri[1][1] = parsed_iri[0][1] * parsed_iri[0][1]; // square
+  }
+}
 
 void nmea_proc(char *nmea, int nmea_len)
 {
@@ -305,12 +321,24 @@ void nmea_proc(char *nmea, int nmea_len)
               // TODO update statistics at existing lon/lat
               travel_mm -= closest_found_travel_mm; // adjust travel to snapped point
               snap_point[closest_index].n++;
+              snap_point[closest_index].sum_iri[0][0] += parsed_iri[0][0]; // normal
+              snap_point[closest_index].sum_iri[0][1] += parsed_iri[0][1]; // normal
+              snap_point[closest_index].sum_iri[1][0] += parsed_iri[1][0]; // squared
+              snap_point[closest_index].sum_iri[1][1] += parsed_iri[1][1]; // squared
             }
             else // create new point
             {
               if(have_new) // don't store if we don't have new point
               {
-                store_lon_lat(new_lon, new_lat, (float)heading * (360.0/65536));
+                int new_index = store_lon_lat(new_lon, new_lat, (float)heading * (360.0/65536));
+                if(new_index >= 0)
+                {
+                  snap_point[new_index].n = 1;
+                  snap_point[new_index].sum_iri[0][0] = parsed_iri[0][0]; // normal
+                  snap_point[new_index].sum_iri[0][1] = parsed_iri[0][1]; // normal
+                  snap_point[new_index].sum_iri[1][0] = parsed_iri[1][0]; // squared
+                  snap_point[new_index].sum_iri[1][1] = parsed_iri[1][1]; // squared
+                }
                 printf("new\n");
               }
               if(closest_index >= 0 
@@ -373,6 +401,9 @@ void wavreader(char *filename)
       if(nmea[0] == '$')
         if(check_crc(nmea, nmea_len))
           nmea_proc(nmea, nmea_len);
+      if(nmea[0] == 'L')
+        if(check_crc(nmea, nmea_len))
+          iri_proc(nmea, nmea_len);
       nmea_len = 0;
     }
   }
