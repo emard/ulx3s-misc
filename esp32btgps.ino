@@ -842,20 +842,28 @@ void draw_kml_line(char *line)
     *lon = ilatlon.lon_deg + abs(ilatlon.lon_umin)*1.66666666e-8;
     if(ilatlon.lon_umin < 0)
       *lon = -*lon;
-    x_kml_line->value = iri20avg;
-    x_kml_line->left  = iri20[0];
-    x_kml_line->right = iri20[1];
+    x_kml_line->value     = iri20avg;
+    x_kml_line->left20    = iri20[0];
+    x_kml_line->right20   = iri20[1];
+    x_kml_line->left100   = iri[0];
+    x_kml_line->right100  = iri[1];
     x_kml_line->speed_kmh = speed_mms*3.6e-3;
     nmea2kmltime(line, timestamp);
     x_kml_line->timestamp = timestamp;
     kml_line(x_kml_line);
+    // TODO: don't write arrows now, but
+    // collect statistics and write it
+    // after GPS is turned off.
     if(travel_report1_prev != travel_report1) // every 100m draw arrow
     {
       x_kml_arrow->lat   = *lat;
       x_kml_arrow->lon   = *lon;
       x_kml_arrow->value = iriavg;
       x_kml_arrow->left  = iri[0];
+      x_kml_arrow->left_stdev = 0.0;
       x_kml_arrow->right = iri[1];
+      x_kml_arrow->right_stdev = 0.0;
+      x_kml_arrow->n = 1;
       x_kml_arrow->speed_kmh = x_kml_line->speed_kmh;
       char *b = nthchar(line, 8, ','); // position to heading
       char str_heading[5] = "0000"; // storage for parsing

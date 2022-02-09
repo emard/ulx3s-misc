@@ -34,7 +34,7 @@ const char *str_kml_header = "\
     <name>%22s</name>\n\
     <description>\
 <![CDATA[\n\
-Speed-time 100 m segment cuts without statistics.<br/>\n\
+Speed-time 100 m segment cuts with statistics.<br/>\n\
 Click any point on the track to display mm/m value of a 100 m\n\
 segment measured before the point. Value represents average\n\
 rectified speed in the shock absorber over 100 m segment\n\
@@ -45,6 +45,10 @@ removing dependency on actual speed at which measurement has been done.<br/>\n\
 Color codes: \
 <font color=\"red\">%.1f</font>, <font color=\"orange\">%.1f</font>, <font color=\"green\">%.1f</font>, <font color=\"cyan\">%.1f</font>, \
 <font color=\"blue\">%.1f</font>, <font color=\"violet\">%.1f</font>, <font color=\"magenta\">0.0</font><br/>\n\
+<br/>\n\
+Click arrow to display statistics as<br/>\n\
+average ± uncertainty<br/>\n\
+where \"uncertainty\" represents 2σ = 96%% coverage.\n\
 ]]>\n\
     </description>\n\
     <visibility>1</visibility>\n\
@@ -58,8 +62,10 @@ const char *str_kml_line = "\
       <Placemark id=\"id\">\n\
         <name>NAME5</name>\n\
         <description>\
-L=LEFT5 mm/m\n\
-R=RIGHT mm/m\n\
+L20=L_20_ mm/m\n\
+R20=R_20_ mm/m\n\
+L100=L_100 mm/m\n\
+R100=R_100 mm/m\n\
 v=SPEED km/h\n\
 TIMEDESCR0123456789012\n\
         </description>\n\
@@ -83,8 +89,10 @@ int str_kml_line_pos_time;
 int str_kml_line_pos_timed;
 int str_kml_line_pos_speed;
 int str_kml_line_pos_name;
-int str_kml_line_pos_left;
-int str_kml_line_pos_right;
+int str_kml_line_pos_left20;
+int str_kml_line_pos_right20;
+int str_kml_line_pos_left100;
+int str_kml_line_pos_right100;
 int str_kml_line_pos_color;
 int str_kml_line_len;
 
@@ -92,8 +100,9 @@ const char *str_kml_arrow = "\
       <Placemark id=\"id\">\n\
         <name>NAME5</name>\n\
         <description>\
-L=LEFT5 mm/m\n\
-R=RIGHT mm/m\n\
+L100=LEFT5 ± LSTDV mm/m\n\
+R100=RIGHT ± RSTDV mm/m\n\
+n=NM \n\
 v=SPEED km/h\n\
 TIMEDESCR0123456789012\n\
         </description>\n\
@@ -123,7 +132,10 @@ int str_kml_arrow_pos_timed;
 int str_kml_arrow_pos_speed;
 int str_kml_arrow_pos_name;
 int str_kml_arrow_pos_left;
+int str_kml_arrow_pos_left_stdev;
 int str_kml_arrow_pos_right;
+int str_kml_arrow_pos_right_stdev;
+int str_kml_arrow_pos_n;
 int str_kml_arrow_pos_color;
 int str_kml_arrow_len;
 
@@ -163,8 +175,10 @@ void kml_init(void)
 {
   str_kml_line_pos_lonlat      = strstr(str_kml_line, "LONLAT"    ) - str_kml_line;
   str_kml_line_pos_name        = strstr(str_kml_line, "NAME"      ) - str_kml_line;
-  str_kml_line_pos_left        = strstr(str_kml_line, "LEFT"      ) - str_kml_line;
-  str_kml_line_pos_right       = strstr(str_kml_line, "RIGHT"     ) - str_kml_line;
+  str_kml_line_pos_left20      = strstr(str_kml_line, "L_20"      ) - str_kml_line;
+  str_kml_line_pos_right20     = strstr(str_kml_line, "R_20"      ) - str_kml_line;
+  str_kml_line_pos_left100     = strstr(str_kml_line, "L_100"     ) - str_kml_line;
+  str_kml_line_pos_right100    = strstr(str_kml_line, "R_100"     ) - str_kml_line;
   str_kml_line_pos_speed       = strstr(str_kml_line, "SPEED"     ) - str_kml_line;
   str_kml_line_pos_time        = strstr(str_kml_line, "TIMESTAMP" ) - str_kml_line;
   str_kml_line_pos_timed       = strstr(str_kml_line, "TIMEDESCR" ) - str_kml_line;
@@ -175,8 +189,11 @@ void kml_init(void)
   str_kml_arrow_pos_heading    = strstr(str_kml_arrow, "HEAD"      ) - str_kml_arrow;
   str_kml_arrow_pos_name       = strstr(str_kml_arrow, "NAME"      ) - str_kml_arrow;
   str_kml_arrow_pos_left       = strstr(str_kml_arrow, "LEFT"      ) - str_kml_arrow;
+  str_kml_arrow_pos_left_stdev = strstr(str_kml_arrow, "LSTDV"     ) - str_kml_arrow;
   str_kml_arrow_pos_right      = strstr(str_kml_arrow, "RIGHT"     ) - str_kml_arrow;
-  str_kml_arrow_pos_speed      = strstr(str_kml_arrow, "SPEED" ) - str_kml_arrow;
+  str_kml_arrow_pos_right_stdev= strstr(str_kml_arrow, "RSTDV"     ) - str_kml_arrow;
+  str_kml_arrow_pos_n          = strstr(str_kml_arrow, "NM"        ) - str_kml_arrow;
+  str_kml_arrow_pos_speed      = strstr(str_kml_arrow, "SPEED"     ) - str_kml_arrow;
   str_kml_arrow_pos_time       = strstr(str_kml_arrow, "TIMESTAMP" ) - str_kml_arrow;
   str_kml_arrow_pos_timed      = strstr(str_kml_arrow, "TIMEDESCR" ) - str_kml_arrow;
   str_kml_arrow_pos_color      = strstr(str_kml_arrow, "COLOR"     ) - str_kml_arrow;
@@ -273,11 +290,17 @@ void kml_line(struct s_kml_line *kl)
   sprintf(a+str_kml_line_pos_name, "%5.2f", kl->value < 99.99 ? kl->value : 99.99);
   kmlbuf[kmlbuf_pos+str_kml_line_pos_name+5] = '<'; // replace null
 
-  sprintf(a+str_kml_line_pos_left, "%5.2f", kl->left < 99.99 ? kl->left : 99.99);
-  kmlbuf[kmlbuf_pos+str_kml_line_pos_left+5] = ' '; // replace null
+  sprintf(a+str_kml_line_pos_left20, "%5.2f", kl->left20 < 99.99 ? kl->left20 : 99.99);
+  kmlbuf[kmlbuf_pos+str_kml_line_pos_left20+5] = ' '; // replace null
 
-  sprintf(a+str_kml_line_pos_right, "%5.2f", kl->right < 99.99 ? kl->right : 99.99);
-  kmlbuf[kmlbuf_pos+str_kml_line_pos_right+5] = ' '; // replace null
+  sprintf(a+str_kml_line_pos_right20, "%5.2f", kl->right20 < 99.99 ? kl->right20 : 99.99);
+  kmlbuf[kmlbuf_pos+str_kml_line_pos_right20+5] = ' '; // replace null
+
+  sprintf(a+str_kml_line_pos_left100, "%5.2f", kl->left100 < 99.99 ? kl->left100 : 99.99);
+  kmlbuf[kmlbuf_pos+str_kml_line_pos_left100+5] = ' '; // replace null
+
+  sprintf(a+str_kml_line_pos_right100, "%5.2f", kl->right100 < 99.99 ? kl->right100 : 99.99);
+  kmlbuf[kmlbuf_pos+str_kml_line_pos_right100+5] = ' '; // replace null
 
   sprintf(a+str_kml_line_pos_speed, "%5.1f", kl->speed_kmh);
   kmlbuf[kmlbuf_pos+str_kml_line_pos_speed+5] = ' '; // replace null
@@ -309,8 +332,17 @@ void kml_arrow(struct s_kml_arrow *ka)
   sprintf(kmlbuf+str_kml_arrow_pos_left, "%5.2f", ka->left < 99.99 ? ka->left : 99.99);
   kmlbuf[str_kml_arrow_pos_left+5] = ' '; // replace null
 
+  sprintf(kmlbuf+str_kml_arrow_pos_left_stdev, "%5.2f", ka->left_stdev < 99.99 ? ka->left_stdev : 99.99);
+  kmlbuf[str_kml_arrow_pos_left_stdev+5] = ' '; // replace null
+
   sprintf(kmlbuf+str_kml_arrow_pos_right, "%5.2f", ka->right < 99.99 ? ka->right : 99.99);
   kmlbuf[str_kml_arrow_pos_right+5] = ' '; // replace null
+
+  sprintf(kmlbuf+str_kml_arrow_pos_right_stdev, "%5.2f", ka->right_stdev < 99.99 ? ka->right_stdev : 99.99);
+  kmlbuf[str_kml_arrow_pos_right_stdev+5] = ' '; // replace null
+
+  sprintf(kmlbuf+str_kml_arrow_pos_n, "%2d", ka->n < 99 ? ka->n : 99);
+  kmlbuf[str_kml_arrow_pos_n+2] = ' '; // replace null
 
   sprintf(kmlbuf+str_kml_arrow_pos_speed, "%5.1f", ka->speed_kmh);
   kmlbuf[str_kml_arrow_pos_speed+5] = ' '; // replace null
