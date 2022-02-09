@@ -40,6 +40,8 @@ extern int lat2gridm, lon2gridm;
 //extern uint32_t found_dist;
 //extern float last_latlon[];
 //extern int32_t travel_mm;
+extern const int dlat2m;
+extern const uint32_t dlat2mm;
 
 struct s_snap_point
 {
@@ -50,20 +52,9 @@ struct s_snap_point
   int16_t next;    // next snap point index
 };
 
-//extern float parsed_iri[2][2];
-
 float haversin(float theta);
-
 float distance(float lat1, float lon1, float lat2, float lon2);
-
-//extern const int Rearth_m;
-extern const int dlat2m;
-
 int dlon2m(int lat);
-
-extern const uint32_t dlat2mm;
-extern const uint32_t dlat2mm;
-
 uint32_t dlon2mm(float lat);
 void calculate_grid(int lat);
 void clear_storage(void);
