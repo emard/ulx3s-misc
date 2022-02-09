@@ -27,10 +27,14 @@ void write_storage2kml(char *filename)
     x_kml_arrow->left_stdev  =  0.0;
     x_kml_arrow->right_stdev =  0.0;
     uint8_t n = snap_point[i].n;
-    if(snap_point[i].n > 0)
+    if(n > 0)
     {
-      x_kml_arrow->left_stdev  =  sqrt(fabs( n*snap_point[i].sum_iri[1][0] - snap_point[i].sum_iri[0][0] * snap_point[i].sum_iri[0][0] ))/n;
-      x_kml_arrow->right_stdev =  sqrt(fabs( n*snap_point[i].sum_iri[1][1] - snap_point[i].sum_iri[0][1] * snap_point[i].sum_iri[0][1] ))/n;
+      float sum1_left  = snap_point[i].sum_iri[0][0];
+      float sum2_left  = snap_point[i].sum_iri[1][0];
+      float sum1_right = snap_point[i].sum_iri[0][1];
+      float sum2_right = snap_point[i].sum_iri[1][1];
+      x_kml_arrow->left_stdev  =  sqrt(fabs( n*sum2_left  - sum1_left  * sum1_left  ))/n;
+      x_kml_arrow->right_stdev =  sqrt(fabs( n*sum2_right - sum1_right * sum1_right ))/n;
     }
     x_kml_arrow->n         = n;
     x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
