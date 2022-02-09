@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
 {
   float lat1, lon1, lat2, lon2, dlat, dlon;
 
+  #if 0
   lat1=46.000; lon1=16.000;
   lat2=46.001; lon2=16.000;
   dlat = lat2-lat1;
@@ -92,17 +93,24 @@ int main(int argc, char *argv[])
     lat1, lon1, lat2, lon2, distance(lat1, lon1, lat2, lon2));
   printf("dlon=%.6f° dist=%.1fm\n",
     dlon, dlon*dlon2m(lat1));
+  #endif
 
   lon1=16.001; lat1=46.001;
   calculate_grid(lat1);
+
+  #if 0
   printf("lon2grid=%d lat2grid=%d\n", lon2grid, lat2grid);
+
   int xgrid = lon1*lon2grid;
   int ygrid = lat1*lat2grid;
   int exgrid = ((int)(lon1*lon2gridm)) & (hash_grid_spacing_m-1);
   int eygrid = ((int)(lat1*lat2gridm)) & (hash_grid_spacing_m-1);
   printf("lon1=%.6f° lat1=%.6f° -> grid x,y = %d,%d -> hash x,y = %d,%d -> edge x,y = %d,%d\n",
     lon1, lat1, xgrid, ygrid, xgrid&31, ygrid&31, exgrid, eygrid);
+  #endif
+
   clear_storage();
+
   #if 0
   // debug code to test storage
   store_lon_lat(16.0000, 46.0000);
@@ -130,6 +138,6 @@ int main(int argc, char *argv[])
   #endif
   for(int i = 1; i < argc; i++)
     wavreader(argv[i]);
-  print_storage();
+  //print_storage();
   write_storage2kml("/tmp/circle.kml");
 }
