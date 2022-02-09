@@ -236,7 +236,7 @@ void nmea_proc(char *nmea, int nmea_len)
   if(nf)
     if(nf[1]=='A') // A means valid signal (not in tunnel)
     {
-      printf("%s\n", nmea);
+      //printf("%s\n", nmea);
       nmea2latlon(nmea, &ilatlon);
       float flatlon[2];
       latlon2float(&ilatlon, flatlon);
@@ -298,7 +298,7 @@ void nmea_proc(char *nmea, int nmea_len)
                   snap_point[new_index].sum_iri[1][0] = parsed_iri[1][0]; // squared
                   snap_point[new_index].sum_iri[1][1] = parsed_iri[1][1]; // squared
                 }
-                printf("new\n");
+                //printf("new\n");
               }
               if(closest_index >= 0 
               && closest_found_travel_mm > ALIGN_TO_REVERSE_MIN_MM  // aligns to points in reverse direction
@@ -316,7 +316,7 @@ void nmea_proc(char *nmea, int nmea_len)
         }
         
       }
-      printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], travel_mm/1000);
+      // printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], travel_mm/1000);
       last_latlon[0] = flatlon[0];
       last_latlon[1] = flatlon[1];
     }
