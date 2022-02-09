@@ -34,12 +34,12 @@
 #define hash_grid_size 32 // N*N grid 32*32=1024
 #define snap_point_max 8192 // total max snap points
 
-extern int wr_snap_ptr;
+//extern int wr_snap_ptr;
 extern int lat2grid,  lon2grid;
 extern int lat2gridm, lon2gridm;
-extern uint32_t found_dist;
-extern float last_latlon[];
-extern int32_t travel_mm;
+//extern uint32_t found_dist;
+//extern float last_latlon[];
+//extern int32_t travel_mm;
 
 struct s_snap_point
 {
@@ -50,14 +50,13 @@ struct s_snap_point
   int16_t next;    // next snap point index
 };
 
-extern float parsed_iri[2][2];
+//extern float parsed_iri[2][2];
 
 float haversin(float theta);
 
 float distance(float lat1, float lon1, float lat2, float lon2);
 
-extern const int Rearth_m;
-extern const int dlat2m;
+//extern const int Rearth_m;
 extern const int dlat2m;
 
 int dlon2m(int lat);
