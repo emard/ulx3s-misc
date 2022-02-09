@@ -9,6 +9,33 @@
 #include "kml.h"
 #include "geostat.h"
 
+// write stored placemarks as kml arrows
+void write_storage2kml(char *filename)
+{
+  int kmlf = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+  kml_init();
+  kml_header("PROFILOG");
+  write(kmlf, kmlbuf, strlen(kmlbuf));
+  kml_buf_init();
+  for(int i = 0; i < wr_snap_ptr; i++)
+  {
+    x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;
+    x_kml_arrow->lat       = (float)(snap_point[i].ym) / (float)lat2gridm;
+    x_kml_arrow->value     = (snap_point[i].sum_iri[0][0]+snap_point[i].sum_iri[0][1]) / (2*snap_point[i].n);
+    x_kml_arrow->left      =  snap_point[i].sum_iri[0][0] / snap_point[i].n;
+    x_kml_arrow->right     =  snap_point[i].sum_iri[0][1] / snap_point[i].n;
+    x_kml_arrow->n         =  snap_point[i].n;
+    x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
+    x_kml_arrow->speed_kmh = 80.0;
+    x_kml_arrow->timestamp = "2000-01-01T00:00:00.0Z";
+    kml_arrow(x_kml_arrow);
+    write(kmlf, kmlbuf, str_kml_arrow_len);
+  }
+  write(kmlf, str_kml_footer_simple, strlen(str_kml_footer_simple));
+  close(kmlf);
+}
+
+
 void wavreader(char *filename)
 {
   int f = open(filename, O_RDONLY);
@@ -36,10 +63,10 @@ void wavreader(char *filename)
       nmea[nmea_len] = 0;
       if(nmea[0] == '$')
         if(check_crc(nmea, nmea_len))
-          nmea_proc(nmea, nmea_len);
+          stat_nmea_proc(nmea, nmea_len);
       if(nmea[0] == 'L')
         if(check_crc(nmea, nmea_len))
-          iri_proc(nmea, nmea_len);
+          stat_iri_proc(nmea, nmea_len);
       nmea_len = 0;
     }
   }

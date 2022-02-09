@@ -13,11 +13,10 @@ int wr_snap_ptr = 0; // pointer to free snap point index
 // constants to convert lat,lon to grid index
 int lat2grid,  lon2grid;  // to grid index
 int lat2gridm, lon2gridm; // to [m] approx meters (for grid metric)
-uint32_t found_dist; // hackish way
+uint32_t found_dist; // HACKish use
 
 float last_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
 int32_t travel_mm = 0;
-
 
 float parsed_iri[2][2]; // iri parsed from wav tags
 
@@ -93,6 +92,7 @@ void clear_storage(void)
     snap_point[i].n = 0; // stat counter
   }
   wr_snap_ptr = 0;
+  travel_mm = 0;
 }
 
 // retval
@@ -136,31 +136,6 @@ void print_storage(void)
   for(i = 0; i < wr_snap_ptr; i++)
     if(snap_point[i].next >= 0)
       printf("snap_point[%d].next=%d\n", i, snap_point[i].next);
-}
-
-// write stored placemarks as kml arrows
-void write_storage2kml(char *filename)
-{
-  int kmlf = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0644);
-  kml_init();
-  kml_header("name");
-  write(kmlf, kmlbuf, strlen(kmlbuf));
-  kml_buf_init();
-  for(int i = 0; i < wr_snap_ptr; i++)
-  {
-    x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;
-    x_kml_arrow->lat       = (float)(snap_point[i].ym) / (float)lat2gridm;
-    x_kml_arrow->value     = (snap_point[i].sum_iri[0][0]+snap_point[i].sum_iri[0][1]) / (2*snap_point[i].n);
-    x_kml_arrow->left      =         snap_point[i].sum_iri[0][0] / snap_point[i].n;
-    x_kml_arrow->right     =         snap_point[i].sum_iri[0][1] / snap_point[i].n;
-    x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
-    x_kml_arrow->speed_kmh = 80.0;
-    x_kml_arrow->timestamp = "2000-01-01T00:00:00.0Z";
-    kml_arrow(x_kml_arrow);
-    write(kmlf, kmlbuf, str_kml_arrow_len);
-  }
-  write(kmlf, str_kml_footer_simple, strlen(str_kml_footer_simple));
-  close(kmlf);
 }
 
 // 2D grid hash search
@@ -210,7 +185,7 @@ int find_xya(int xm, int ym, uint16_t a, uint8_t ais)
 
 // 01234567890123
 // L01.00R01.20*AB
-void iri_proc(char *nmea, int nmea_len)
+void stat_iri_proc(char *nmea, int nmea_len)
 {
   if(nmea[0]=='L' && nmea[6]=='R') // detects IRI-100
   {
@@ -221,7 +196,7 @@ void iri_proc(char *nmea, int nmea_len)
   }
 }
 
-void nmea_proc(char *nmea, int nmea_len)
+void stat_nmea_proc(char *nmea, int nmea_len)
 {
   static int16_t closest_index = -1;
   static int32_t prev_travel_mm = 0; // for new point

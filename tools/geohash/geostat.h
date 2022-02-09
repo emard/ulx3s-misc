@@ -52,6 +52,10 @@ struct s_snap_point
   int16_t next;    // next snap point index
 };
 
+extern int wr_snap_ptr; // pointer to free snap point index
+extern int16_t hash_grid[hash_grid_size][hash_grid_size];
+extern struct s_snap_point snap_point[snap_point_max];
+
 float haversin(float theta);
 float distance(float lat1, float lon1, float lat2, float lon2);
 int dlon2m(int lat);
@@ -60,10 +64,9 @@ void calculate_grid(int lat);
 void clear_storage(void);
 int store_lon_lat(float lon, float lat, float heading);
 void print_storage(void);
-void write_storage2kml(char *filename);
 int find_xya(int xm, int ym, uint16_t a, uint8_t ais);
-void iri_proc(char *nmea, int nmea_len);
-void nmea_proc(char *nmea, int nmea_len);
+void stat_iri_proc(char *nmea, int nmea_len);
+void stat_nmea_proc(char *nmea, int nmea_len);
 int check_crc(char *nmea, int len);
 
 #endif
