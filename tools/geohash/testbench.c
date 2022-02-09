@@ -24,7 +24,15 @@ void write_storage2kml(char *filename)
     x_kml_arrow->value     = (snap_point[i].sum_iri[0][0]+snap_point[i].sum_iri[0][1]) / (2*snap_point[i].n);
     x_kml_arrow->left      =  snap_point[i].sum_iri[0][0] / snap_point[i].n;
     x_kml_arrow->right     =  snap_point[i].sum_iri[0][1] / snap_point[i].n;
-    x_kml_arrow->n         =  snap_point[i].n;
+    x_kml_arrow->left_stdev  =  0.0;
+    x_kml_arrow->right_stdev =  0.0;
+    uint8_t n = snap_point[i].n;
+    if(snap_point[i].n > 0)
+    {
+      x_kml_arrow->left_stdev  =  sqrt(fabs( n*snap_point[i].sum_iri[1][0] - snap_point[i].sum_iri[0][0] * snap_point[i].sum_iri[0][0] ))/n;
+      x_kml_arrow->right_stdev =  sqrt(fabs( n*snap_point[i].sum_iri[1][1] - snap_point[i].sum_iri[0][1] * snap_point[i].sum_iri[0][1] ))/n;
+    }
+    x_kml_arrow->n         = n;
     x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
     x_kml_arrow->speed_kmh = 80.0;
     x_kml_arrow->timestamp = "2000-01-01T00:00:00.0Z";
