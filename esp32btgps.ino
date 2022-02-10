@@ -745,6 +745,9 @@ void get_iri(void)
 
 void handle_reconnect(void)
 {
+  #if 0
+  write_stat_arrows(); // write arrows with final statistics
+  #endif
   close_logs();
   write_last_nmea();
   session_log = 0; // request new timestamp file name when reconnected

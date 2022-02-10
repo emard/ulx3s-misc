@@ -1177,6 +1177,32 @@ void write_kml_header(struct tm *tm)
   file_kml.write((uint8_t *)kmlbuf, strlen(kmlbuf));
 }
 
+void write_stat_arrows(void)
+{
+  if(logs_are_open == 0)
+    return;
+  if((log_wav_kml&2) == 0)
+    return;
+
+  kml_buf_init();
+  for(int i = 0; i < 10; i++)
+  {
+    x_kml_arrow->lon       = 16.0+0.001*i;
+    x_kml_arrow->lat       = 46.0;
+    x_kml_arrow->value     = 1.0;
+    x_kml_arrow->left      = 1.1;
+    x_kml_arrow->right     = 1.2;
+    x_kml_arrow->left_stdev  =  0.1;
+    x_kml_arrow->right_stdev =  0.1;
+    x_kml_arrow->n         = i;
+    x_kml_arrow->heading   = 0.0;
+    x_kml_arrow->speed_kmh = 80.0;
+    x_kml_arrow->timestamp = (char *)"2000-01-01T00:00:00.0Z";
+    kml_arrow(x_kml_arrow);
+    file_kml.write((uint8_t *)kmlbuf, str_kml_arrow_len);
+  }
+}
+
 // finalize kml file, no more writes after this
 void write_kml_footer(void)
 {
