@@ -16,7 +16,7 @@ int lat2gridm, lon2gridm; // to [m] approx meters (for grid metric)
 uint32_t found_dist; // HACKish use
 
 float last_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
-int32_t travel_mm = 0;
+int32_t stat_travel_mm = 0;
 
 float parsed_iri[2][2]; // iri parsed from wav tags
 
@@ -92,7 +92,7 @@ void clear_storage(void)
     snap_point[i].n = 0; // stat counter
   }
   wr_snap_ptr = 0;
-  travel_mm = 0;
+  stat_travel_mm = 0;
 }
 
 // retval
@@ -199,9 +199,9 @@ void stat_iri_proc(char *nmea, int nmea_len)
 void stat_nmea_proc(char *nmea, int nmea_len)
 {
   static int16_t closest_index = -1;
-  static int32_t prev_travel_mm = 0; // for new point
+  static int32_t prev_stat_travel_mm = 0; // for new point
   static int32_t closest_found_dist = 999999; // [m] distance to previous found existing point
-  static int32_t closest_found_travel_mm = 999999;
+  static int32_t closest_found_stat_travel_mm = 999999;
   static float  new_lat, new_lon;
   static int have_new = 0;
   // printf("%s\n", nmea);
@@ -222,19 +222,19 @@ void stat_nmea_proc(char *nmea, int nmea_len)
       uint32_t   d_mm = sqrt(dxmm*dxmm + dymm*dymm);
       if(d_mm < IGNORE_TOO_LARGE_JUMP_MM) // ignore too large jumps > 40m
       {
-        travel_mm += d_mm;
-        if(travel_mm > START_SEARCH_FOR_SNAP_POINT_AFTER_TRAVEL_MM) // at >40 m travel start searching for nearest snap points
+        stat_travel_mm += d_mm;
+        if(stat_travel_mm > START_SEARCH_FOR_SNAP_POINT_AFTER_TRAVEL_MM) // at >40 m travel start searching for nearest snap points
         {
           // memorize last lat/lon when travel <= 100m
           // as the candidate for new snap point.
           // we assume we have got some new point here
-          if(prev_travel_mm <= SEGMENT_LENGTH_MM)
+          if(prev_stat_travel_mm <= SEGMENT_LENGTH_MM)
           {
             new_lat = flatlon[0];
             new_lon = flatlon[1];
             have_new = 1; // updated until 100 m
           }
-          prev_travel_mm = travel_mm;
+          prev_stat_travel_mm = stat_travel_mm;
           // continue search until travel 120 m for existing point if found.
           // if not found after 120 m, create new lat/lon snap point.
           // direction insensitivty 8, means 256 is 360 deg, and to add 128 m for 180 deg reverse direction snap point
@@ -244,16 +244,16 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             if(found_dist < closest_found_dist)
             {
               closest_index = index;
-              closest_found_travel_mm = travel_mm;
+              closest_found_stat_travel_mm = stat_travel_mm;
               closest_found_dist = found_dist; // [m] metric that covers diamond shaped area x+y = const
             }
           }
-          if(travel_mm > SNAP_DECISION_MM) // at 120 m we have to decide, new or existing
+          if(stat_travel_mm > SNAP_DECISION_MM) // at 120 m we have to decide, new or existing
           {
             if(closest_index >= 0 && closest_found_dist < SNAP_RANGE_M) // x+y < SNAP_RANGE_M [m]
             {
               // TODO update statistics at existing lon/lat
-              travel_mm -= closest_found_travel_mm; // adjust travel to snapped point
+              stat_travel_mm -= closest_found_stat_travel_mm; // adjust travel to snapped point
               snap_point[closest_index].n++;
               snap_point[closest_index].sum_iri[0][0] += parsed_iri[0][0]; // normal
               snap_point[closest_index].sum_iri[0][1] += parsed_iri[0][1]; // normal
@@ -276,14 +276,14 @@ void stat_nmea_proc(char *nmea, int nmea_len)
                 //printf("new\n");
               }
               if(closest_index >= 0 
-              && closest_found_travel_mm > ALIGN_TO_REVERSE_MIN_MM  // aligns to points in reverse direction
-              && closest_found_travel_mm < ALIGN_TO_REVERSE_MAX_MM) // in range 95-105 m 
-                travel_mm -= closest_found_travel_mm; // tries to align with reverse direction snap point
+              && closest_found_stat_travel_mm > ALIGN_TO_REVERSE_MIN_MM  // aligns to points in reverse direction
+              && closest_found_stat_travel_mm < ALIGN_TO_REVERSE_MAX_MM) // in range 95-105 m 
+                stat_travel_mm -= closest_found_stat_travel_mm; // tries to align with reverse direction snap point
               else
-                travel_mm -= SEGMENT_LENGTH_MM;
+                stat_travel_mm -= SEGMENT_LENGTH_MM;
             }
             // reset values for new search
-            closest_found_travel_mm = 0;
+            closest_found_stat_travel_mm = 0;
             closest_index = -1;
             closest_found_dist = 999999;
             have_new = 0;
@@ -291,7 +291,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
         }
         
       }
-      // printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], travel_mm/1000);
+      // printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], stat_travel_mm/1000);
       last_latlon[0] = flatlon[0];
       last_latlon[1] = flatlon[1];
     }
