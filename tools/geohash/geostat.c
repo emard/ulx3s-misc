@@ -15,7 +15,7 @@ int lat2grid,  lon2grid;  // to grid index
 int lat2gridm, lon2gridm; // to [m] approx meters (for grid metric)
 uint32_t found_dist; // HACKish use
 
-float last_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
+float stat_travel_prev_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
 int32_t stat_travel_mm = 0;
 
 float parsed_iri[2][2]; // iri parsed from wav tags
@@ -217,8 +217,8 @@ void stat_nmea_proc(char *nmea, int nmea_len)
       latlon2float(&ilatlon, flatlon);
       uint16_t heading = (65536.0/3600)*nmea2iheading(nmea); // 0-3600 -> 0-65536
       uint32_t lon2mm = dlon2mm(flatlon[0]);
-      uint32_t   dxmm = fabs(flatlon[1]-last_latlon[1]) *  lon2mm;
-      uint32_t   dymm = fabs(flatlon[0]-last_latlon[0]) * dlat2mm;
+      uint32_t   dxmm = fabs(flatlon[1]-stat_travel_prev_latlon[1]) *  lon2mm;
+      uint32_t   dymm = fabs(flatlon[0]-stat_travel_prev_latlon[0]) * dlat2mm;
       uint32_t   d_mm = sqrt(dxmm*dxmm + dymm*dymm);
       if(d_mm < IGNORE_TOO_LARGE_JUMP_MM) // ignore too large jumps > 40m
       {
@@ -292,8 +292,8 @@ void stat_nmea_proc(char *nmea, int nmea_len)
         
       }
       // printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], stat_travel_mm/1000);
-      last_latlon[0] = flatlon[0];
-      last_latlon[1] = flatlon[1];
+      stat_travel_prev_latlon[0] = flatlon[0];
+      stat_travel_prev_latlon[1] = flatlon[1];
     }
 }
 
