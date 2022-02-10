@@ -161,3 +161,16 @@ void latlon2float(struct int_latlon *latlon, float flatlon[])
   if(latlon->lon_umin < 0)
     flatlon[1] = -flatlon[1];
 }
+
+uint16_t nmea2iheading(char *nmea)
+{
+  char *b = nthchar(nmea, 8, ','); // position to heading
+  char str_heading[5] = "0000"; // storage for parsing
+  str_heading[0] = b[1];
+  str_heading[1] = b[2];
+  str_heading[2] = b[3];
+  str_heading[3] = b[5]; // skip b[4]=='.'
+  //str_heading[4] = 0;
+  uint16_t iheading = strtol(str_heading, NULL, 10); // parse as integer 0-360 -> 0-65536
+  return iheading;
+}
