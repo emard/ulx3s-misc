@@ -537,8 +537,9 @@ void rds_message(struct tm *tm)
     rds.ct(2000, 0, 1, 0, 0, 0);
   }
   disp_short[5] = free_MB_2n;
-  disp_short[6] = name_obd_gps[mode_obd_gps][0];
-  disp_short[7] = sensor_status_decode[sensor_check_status];
+  //disp_short[6] = name_obd_gps[mode_obd_gps][0];
+  disp_short[6] = sensor_status_decode[sensor_check_status];
+  disp_short[7] = round_count <= 9 ? '0' + round_count : '9';
   rds.ps(disp_short);
   rds.rt(disp_long);
   Serial.println(disp_short);

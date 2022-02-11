@@ -2,6 +2,7 @@
 
 esp32
 
+    [x] report pass count on RDS and LCD
     [ ] when standing, display LAT/LON in decimal format
     [x] ESP32 reports IRI 20% smaller than wav2kml (disable matrix_write)
     [ ] store firstnmea, count number of returns to the same point

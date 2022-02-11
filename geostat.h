@@ -57,6 +57,7 @@ struct s_snap_point
 extern int wr_snap_ptr; // pointer to free snap point index
 extern int16_t hash_grid[hash_grid_size][hash_grid_size];
 extern struct s_snap_point snap_point[snap_point_max];
+extern uint8_t round_count;
 
 float haversin(float theta);
 float distance(float lat1, float lon1, float lat2, float lon2);

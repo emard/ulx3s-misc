@@ -18,6 +18,7 @@ uint32_t found_dist; // HACKish use
 
 float stat_travel_prev_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
 int32_t stat_travel_mm = 0;
+uint8_t round_count;
 
 // #define PARSED_IRI
 #if PARSED_IRI
@@ -97,6 +98,7 @@ void clear_storage(void)
   }
   wr_snap_ptr = 0;
   stat_travel_mm = 0;
+  round_count = 0;
 }
 
 // retval
@@ -261,6 +263,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
               // TODO update statistics at existing lon/lat
               stat_travel_mm -= closest_found_stat_travel_mm; // adjust travel to snapped point
               snap_point[closest_index].n++;
+              round_count = snap_point[closest_index].n;
               snap_point[closest_index].sum_iri[0][0] += iri[0];
               snap_point[closest_index].sum_iri[0][1] += iri[1];
               snap_point[closest_index].sum_iri[1][0] += iri[0]*iri[0];
