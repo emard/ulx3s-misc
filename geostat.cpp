@@ -19,7 +19,10 @@ uint32_t found_dist; // HACKish use
 float stat_travel_prev_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
 int32_t stat_travel_mm = 0;
 
+// #define PARSED_IRI
+#if PARSED_IRI
 float parsed_iri[2][2]; // iri parsed from wav tags
+#endif
 
 struct s_snap_point snap_point[snap_point_max];
 int16_t hash_grid[hash_grid_size][hash_grid_size]; // 2 overlapping grids
@@ -184,6 +187,7 @@ int find_xya(int xm, int ym, uint16_t a, uint8_t ais)
   return index;
 }
 
+#if PARSED_IRI
 // 01234567890123
 // L01.00R01.20*AB
 void stat_iri_proc(char *nmea, int nmea_len)
@@ -196,6 +200,7 @@ void stat_iri_proc(char *nmea, int nmea_len)
     parsed_iri[1][1] = parsed_iri[0][1] * parsed_iri[0][1]; // square
   }
 }
+#endif
 
 void stat_nmea_proc(char *nmea, int nmea_len)
 {
@@ -256,10 +261,10 @@ void stat_nmea_proc(char *nmea, int nmea_len)
               // TODO update statistics at existing lon/lat
               stat_travel_mm -= closest_found_stat_travel_mm; // adjust travel to snapped point
               snap_point[closest_index].n++;
-              snap_point[closest_index].sum_iri[0][0] += parsed_iri[0][0]; // normal
-              snap_point[closest_index].sum_iri[0][1] += parsed_iri[0][1]; // normal
-              snap_point[closest_index].sum_iri[1][0] += parsed_iri[1][0]; // squared
-              snap_point[closest_index].sum_iri[1][1] += parsed_iri[1][1]; // squared
+              snap_point[closest_index].sum_iri[0][0] += iri[0];
+              snap_point[closest_index].sum_iri[0][1] += iri[1];
+              snap_point[closest_index].sum_iri[1][0] += iri[0]*iri[0];
+              snap_point[closest_index].sum_iri[1][1] += iri[1]*iri[1];
             }
             else // create new point
             {
@@ -269,10 +274,10 @@ void stat_nmea_proc(char *nmea, int nmea_len)
                 if(new_index >= 0)
                 {
                   snap_point[new_index].n = 1;
-                  snap_point[new_index].sum_iri[0][0] = parsed_iri[0][0]; // normal
-                  snap_point[new_index].sum_iri[0][1] = parsed_iri[0][1]; // normal
-                  snap_point[new_index].sum_iri[1][0] = parsed_iri[1][0]; // squared
-                  snap_point[new_index].sum_iri[1][1] = parsed_iri[1][1]; // squared
+                  snap_point[new_index].sum_iri[0][0] = iri[0];
+                  snap_point[new_index].sum_iri[0][1] = iri[1];
+                  snap_point[new_index].sum_iri[1][0] = iri[0]*iri[0];
+                  snap_point[new_index].sum_iri[1][1] = iri[1]*iri[1];
                 }
                 //printf("new\n");
               }

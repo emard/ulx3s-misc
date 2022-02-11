@@ -1205,7 +1205,7 @@ void write_stat_arrows(void)
     file_kml.write((uint8_t *)kmlbuf, str_kml_arrow_len);
   }
   #endif
-
+  printf("writing %d stat arrows to kml\n", wr_snap_ptr);
   for(int i = 0; i < wr_snap_ptr; i++)
   {
     x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;

@@ -330,13 +330,13 @@ void setup() {
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
 
   init_nmea2ms(0);
-  clear_storage();
   mount();
   read_cfg();
   read_fmfreq();
   set_fm_freq();
   read_last_nmea();
   umount();
+  clear_storage();
 
   // accelerometer range +-2/4/8g can be changed from cfg file
   // ADXL should be initialized after reading cfg file
@@ -856,6 +856,7 @@ void draw_kml_line(char *line)
     nmea2kmltime(line, timestamp);
     x_kml_line->timestamp = timestamp;
     kml_line(x_kml_line);
+    #if 0
     // TODO: don't write arrows now, but
     // collect statistics and write it
     // after GPS is turned off.
@@ -882,6 +883,7 @@ void draw_kml_line(char *line)
       x_kml_arrow->timestamp = timestamp;
       kml_arrow(x_kml_arrow);
     }
+    #endif
     write_log_kml(0); // normal
     //write_log_kml(1); // debug (for OBD)
     ipt ^= 1; // toggle 0/1
