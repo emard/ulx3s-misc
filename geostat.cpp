@@ -8,6 +8,7 @@
 #include "nmea.h"
 #include "kml.h"
 #include "geostat.h"
+#include "sdcard.h" // for iri[] only
 
 int wr_snap_ptr = 0; // pointer to free snap point index
 // constants to convert lat,lon to grid index
