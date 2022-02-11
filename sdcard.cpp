@@ -1186,6 +1186,8 @@ void write_stat_arrows(void)
     return;
 
   kml_buf_init();
+  #if 0
+  // debug write some dummy arrows
   for(int i = 0; i < 10; i++)
   {
     x_kml_arrow->lon       = 16.0+0.001*i;
@@ -1197,6 +1199,34 @@ void write_stat_arrows(void)
     x_kml_arrow->right_stdev =  0.1;
     x_kml_arrow->n         = i;
     x_kml_arrow->heading   = 0.0;
+    x_kml_arrow->speed_kmh = 80.0;
+    x_kml_arrow->timestamp = (char *)"2000-01-01T00:00:00.0Z";
+    kml_arrow(x_kml_arrow);
+    file_kml.write((uint8_t *)kmlbuf, str_kml_arrow_len);
+  }
+  #endif
+
+  for(int i = 0; i < wr_snap_ptr; i++)
+  {
+    x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;
+    x_kml_arrow->lat       = (float)(snap_point[i].ym) / (float)lat2gridm;
+    x_kml_arrow->value     = (snap_point[i].sum_iri[0][0]+snap_point[i].sum_iri[0][1]) / (2*snap_point[i].n);
+    x_kml_arrow->left      =  snap_point[i].sum_iri[0][0] / snap_point[i].n;
+    x_kml_arrow->right     =  snap_point[i].sum_iri[0][1] / snap_point[i].n;
+    x_kml_arrow->left_stdev  =  0.0;
+    x_kml_arrow->right_stdev =  0.0;
+    uint8_t n = snap_point[i].n;
+    if(n > 0)
+    {
+      float sum1_left  = snap_point[i].sum_iri[0][0];
+      float sum2_left  = snap_point[i].sum_iri[1][0];
+      float sum1_right = snap_point[i].sum_iri[0][1];
+      float sum2_right = snap_point[i].sum_iri[1][1];
+      x_kml_arrow->left_stdev  =  sqrt(fabs( n*sum2_left  - sum1_left  * sum1_left  ))/n;
+      x_kml_arrow->right_stdev =  sqrt(fabs( n*sum2_right - sum1_right * sum1_right ))/n;
+    }
+    x_kml_arrow->n         = n;
+    x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
     x_kml_arrow->speed_kmh = 80.0;
     x_kml_arrow->timestamp = (char *)"2000-01-01T00:00:00.0Z";
     kml_arrow(x_kml_arrow);
