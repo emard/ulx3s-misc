@@ -4,6 +4,7 @@
 #include "adxrs290.h"
 #include "nmea.h"
 #include "kml.h"
+#include "geostat.h"
 #include <sys/time.h>
 #include <WiFi.h> // for rds_report_ip()
 

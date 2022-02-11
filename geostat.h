@@ -1,6 +1,8 @@
 #ifndef GEOSTAT_H
 #define GEOSTAT_H
 
+#include <stdint.h>
+
 // try to snap at segment length 100 m
 #define SEGMENT_LENGTH_MM 100000
 
@@ -32,7 +34,7 @@
 // hash grid parameters
 #define hash_grid_spacing_m 64 // [m] steps power of 2 should be > snap_range_m
 #define hash_grid_size 32 // N*N grid 32*32=1024
-#define snap_point_max 8192 // total max snap points
+#define snap_point_max 1900 // total max snap points
 
 //extern int wr_snap_ptr;
 extern int lat2grid,  lon2grid;

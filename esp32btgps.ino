@@ -26,6 +26,7 @@
 #include "pins.h"
 #include "web.h"
 #include "kml.h"
+#include "geostat.h"
 #include <sys/time.h>
 #include <WiFi.h> // to speak IP
 
@@ -329,7 +330,7 @@ void setup() {
   attachInterrupt(PIN_IRQ, isr_handler, RISING);
 
   init_nmea2ms(0);
-
+  clear_storage();
   mount();
   read_cfg();
   read_fmfreq();
@@ -745,8 +746,9 @@ void get_iri(void)
 
 void handle_reconnect(void)
 {
-  #if 0
+  #if 1
   write_stat_arrows(); // write arrows with final statistics
+  clear_storage();
   #endif
   close_logs();
   write_last_nmea();
@@ -1049,6 +1051,7 @@ void handle_gps_line_complete(void)
         handle_session_log(); // will open logs if fast enough (new filename when reconnected)
         travel_gps(); // calculate travel length
         draw_kml_line(line);
+        //stat_nmea_proc(line, line_i-1);
         strcpy(lastnmea, line); // copy line to last nmea for storage
         report_iri();
         report_status();
