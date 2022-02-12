@@ -104,7 +104,6 @@ L100=LEFT5 ± LSTDV mm/m\n\
 R100=RIGHT ± RSTDV mm/m\n\
 n=NM \n\
 v=SPL-SPH km/h\n\
-TIMEDESCR0123456789012\n\
         </description>\n\
         <visibility>1</visibility>\n\
         <Style>\n\
@@ -128,7 +127,6 @@ TIMEDESCR0123456789012\n\
 int str_kml_arrow_pos_lonlat;
 int str_kml_arrow_pos_heading;
 int str_kml_arrow_pos_time;
-int str_kml_arrow_pos_timed;
 int str_kml_arrow_pos_speed_min;
 int str_kml_arrow_pos_speed_max;
 int str_kml_arrow_pos_name;
@@ -197,7 +195,6 @@ void kml_init(void)
   str_kml_arrow_pos_speed_min  = strstr(str_kml_arrow, "SPL"       ) - str_kml_arrow;
   str_kml_arrow_pos_speed_max  = strstr(str_kml_arrow, "SPH"       ) - str_kml_arrow;
   str_kml_arrow_pos_time       = strstr(str_kml_arrow, "TIMESTAMP" ) - str_kml_arrow;
-  str_kml_arrow_pos_timed      = strstr(str_kml_arrow, "TIMEDESCR" ) - str_kml_arrow;
   str_kml_arrow_pos_color      = strstr(str_kml_arrow, "COLOR"     ) - str_kml_arrow;
   str_kml_arrow_len            = strlen(str_kml_arrow);
 
@@ -308,7 +305,6 @@ void kml_line(struct s_kml_line *kl)
   kmlbuf[kmlbuf_pos+str_kml_line_pos_speed+5] = ' '; // replace null
 
   memcpy(a+str_kml_line_pos_time, kl->timestamp, 22);
-  memcpy(a+str_kml_line_pos_timed, kl->timestamp, 22);
 
   kmlbuf_pos += str_kml_line_len;
 }
@@ -352,7 +348,6 @@ void kml_arrow(struct s_kml_arrow *ka)
   kmlbuf[str_kml_arrow_pos_speed_max+3] = ' '; // replace null
 
   memcpy(kmlbuf+str_kml_arrow_pos_time, ka->timestamp, 22);
-  memcpy(kmlbuf+str_kml_arrow_pos_timed, ka->timestamp, 22);
 
   kmlbuf_start = 0; // include arrow in the output
 }
