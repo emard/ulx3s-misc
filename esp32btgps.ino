@@ -336,6 +336,7 @@ void setup() {
   set_fm_freq();
   read_last_nmea();
   umount();
+  calculate_grid(46);
   clear_storage();
 
   // accelerometer range +-2/4/8g can be changed from cfg file
