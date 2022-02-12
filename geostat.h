@@ -34,7 +34,9 @@
 // hash grid parameters
 #define hash_grid_spacing_m 64 // [m] steps power of 2 should be > snap_range_m
 #define hash_grid_size 32 // N*N grid 32*32=1024
-#define snap_point_max 1200 // total max snap points
+// snap_point_max is largest memory hog. If set too large,
+// SD card will not mount or esp32 will reboot at open SD log files
+#define snap_point_max 1200 // total max snap points up to 120 km
 
 //extern int wr_snap_ptr;
 extern int lat2grid,  lon2grid;
