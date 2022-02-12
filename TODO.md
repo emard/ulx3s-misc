@@ -2,6 +2,7 @@
 
 esp32
 
+    [ ] demo circular run
     [ ] calculate_grid(latitude) at first point of new storage
     [x] report pass count on RDS and LCD
     [ ] when standing, display LAT/LON in decimal format
