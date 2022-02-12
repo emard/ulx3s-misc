@@ -748,8 +748,16 @@ void get_iri(void)
 void handle_reconnect(void)
 {
   #if 1
-  write_stat_arrows(); // write arrows with final statistics
-  clear_storage();
+  if(wr_snap_ptr) // if any stat arrows are in storage
+  {
+    mount();
+    if(card_is_mounted)
+    {
+      open_logs(&tm_session);
+      write_stat_arrows(); // write arrows with final statistics
+      clear_storage();
+    }
+  }
   #endif
   close_logs();
   write_last_nmea();
@@ -1054,8 +1062,8 @@ void handle_gps_line_complete(void)
         handle_session_log(); // will open logs if fast enough (new filename when reconnected)
         travel_gps(); // calculate travel length
         draw_kml_line(line);
-        //stat_nmea_proc(line, line_i-1);
         strcpy(lastnmea, line); // copy line to last nmea for storage
+        stat_nmea_proc(line, line_i-1);
         report_iri();
         report_status();
         toggle_flag ^= 1; // 0/1 alternating IRI-100 and IRI-20, no bandwidth for both
