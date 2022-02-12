@@ -103,7 +103,7 @@ const char *str_kml_arrow = "\
 L100=LEFT5 ± LSTDV mm/m\n\
 R100=RIGHT ± RSTDV mm/m\n\
 n=NM \n\
-v=SPEED km/h\n\
+v=SPL-SPH km/h\n\
 TIMEDESCR0123456789012\n\
         </description>\n\
         <visibility>1</visibility>\n\
@@ -129,7 +129,8 @@ int str_kml_arrow_pos_lonlat;
 int str_kml_arrow_pos_heading;
 int str_kml_arrow_pos_time;
 int str_kml_arrow_pos_timed;
-int str_kml_arrow_pos_speed;
+int str_kml_arrow_pos_speed_min;
+int str_kml_arrow_pos_speed_max;
 int str_kml_arrow_pos_name;
 int str_kml_arrow_pos_left;
 int str_kml_arrow_pos_left_stdev;
@@ -193,7 +194,8 @@ void kml_init(void)
   str_kml_arrow_pos_right      = strstr(str_kml_arrow, "RIGHT"     ) - str_kml_arrow;
   str_kml_arrow_pos_right_stdev= strstr(str_kml_arrow, "RSTDV"     ) - str_kml_arrow;
   str_kml_arrow_pos_n          = strstr(str_kml_arrow, "NM"        ) - str_kml_arrow;
-  str_kml_arrow_pos_speed      = strstr(str_kml_arrow, "SPEED"     ) - str_kml_arrow;
+  str_kml_arrow_pos_speed_min  = strstr(str_kml_arrow, "SPL"       ) - str_kml_arrow;
+  str_kml_arrow_pos_speed_max  = strstr(str_kml_arrow, "SPH"       ) - str_kml_arrow;
   str_kml_arrow_pos_time       = strstr(str_kml_arrow, "TIMESTAMP" ) - str_kml_arrow;
   str_kml_arrow_pos_timed      = strstr(str_kml_arrow, "TIMEDESCR" ) - str_kml_arrow;
   str_kml_arrow_pos_color      = strstr(str_kml_arrow, "COLOR"     ) - str_kml_arrow;
@@ -344,8 +346,10 @@ void kml_arrow(struct s_kml_arrow *ka)
   sprintf(kmlbuf+str_kml_arrow_pos_n, "%2d", ka->n < 99 ? ka->n : 99);
   kmlbuf[str_kml_arrow_pos_n+2] = ' '; // replace null
 
-  sprintf(kmlbuf+str_kml_arrow_pos_speed, "%5.1f", ka->speed_kmh);
-  kmlbuf[str_kml_arrow_pos_speed+5] = ' '; // replace null
+  sprintf(kmlbuf+str_kml_arrow_pos_speed_min, "%3d", ka->speed_min_kmh);
+  kmlbuf[str_kml_arrow_pos_speed_min+3] = '-'; // replace null
+  sprintf(kmlbuf+str_kml_arrow_pos_speed_max, "%3d", ka->speed_max_kmh);
+  kmlbuf[str_kml_arrow_pos_speed_max+3] = ' '; // replace null
 
   memcpy(kmlbuf+str_kml_arrow_pos_time, ka->timestamp, 22);
   memcpy(kmlbuf+str_kml_arrow_pos_timed, ka->timestamp, 22);

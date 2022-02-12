@@ -1200,7 +1200,8 @@ void write_stat_arrows(void)
     x_kml_arrow->right_stdev =  0.1;
     x_kml_arrow->n         = i;
     x_kml_arrow->heading   = 0.0;
-    x_kml_arrow->speed_kmh = 80.0;
+    x_kml_arrow->speed_min_kmh = 80.0;
+    x_kml_arrow->speed_max_kmh = 80.0;
     x_kml_arrow->timestamp = (char *)"2000-01-01T00:00:00.0Z";
     kml_arrow(x_kml_arrow);
     file_kml.write((uint8_t *)kmlbuf, str_kml_arrow_len);
@@ -1228,7 +1229,8 @@ void write_stat_arrows(void)
     }
     x_kml_arrow->n         = n;
     x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
-    x_kml_arrow->speed_kmh = 80.0;
+    x_kml_arrow->speed_min_kmh = snap_point[i].vmin;
+    x_kml_arrow->speed_max_kmh = snap_point[i].vmax;
     x_kml_arrow->timestamp = (char *)"2000-01-01T00:00:00.0Z";
     kml_arrow(x_kml_arrow);
     file_kml.write((uint8_t *)kmlbuf, str_kml_arrow_len);

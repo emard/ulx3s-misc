@@ -1063,6 +1063,7 @@ void handle_gps_line_complete(void)
         travel_gps(); // calculate travel length
         draw_kml_line(line);
         strcpy(lastnmea, line); // copy line to last nmea for storage
+        stat_speed_kmh = speed_mms*3.6e-3;
         stat_nmea_proc(line, line_i-1);
         report_iri();
         report_status();

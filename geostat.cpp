@@ -19,6 +19,7 @@ uint32_t found_dist; // HACKish use
 float stat_travel_prev_latlon[2] = {46.0,16.0}; // stored previous value for travel calculation
 int32_t stat_travel_mm = 0;
 uint8_t round_count = 1;
+uint8_t stat_speed_kmh = 80;
 
 // #define PARSED_IRI
 #if PARSED_IRI
@@ -268,6 +269,10 @@ void stat_nmea_proc(char *nmea, int nmea_len)
               snap_point[closest_index].sum_iri[0][1] += iri[1];
               snap_point[closest_index].sum_iri[1][0] += iri[0]*iri[0];
               snap_point[closest_index].sum_iri[1][1] += iri[1]*iri[1];
+              if(stat_speed_kmh < snap_point[closest_index].vmin)
+                snap_point[closest_index].vmin = stat_speed_kmh;
+              if(stat_speed_kmh > snap_point[closest_index].vmax)
+                snap_point[closest_index].vmax = stat_speed_kmh;
             }
             else // create new point
             {
@@ -282,6 +287,8 @@ void stat_nmea_proc(char *nmea, int nmea_len)
                   snap_point[new_index].sum_iri[0][1] = iri[1];
                   snap_point[new_index].sum_iri[1][0] = iri[0]*iri[0];
                   snap_point[new_index].sum_iri[1][1] = iri[1]*iri[1];
+                  // set initial speed, informative only
+                  snap_point[new_index].vmin = snap_point[new_index].vmax = stat_speed_kmh;
                 }
                 //printf("new\n");
               }

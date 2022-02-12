@@ -3,7 +3,8 @@
 
 struct s_kml_arrow
 {
-  float lon, lat, value, left, left_stdev, right, right_stdev, heading, speed_kmh;
+  float lon, lat, value, left, left_stdev, right, right_stdev, heading;
+  uint8_t speed_min_kmh, speed_max_kmh;
   uint8_t n;
   char *timestamp;
 };
