@@ -2,6 +2,9 @@
 
 esp32
 
+    [ ] timestamp to stat arrows
+    [ ] avoid double nmea parsing for kml and stat
+    [x] stat speed min-max range
     [ ] demo circular run
     [ ] calculate_grid(latitude) at first point of new storage
     [x] report pass count on RDS and LCD
