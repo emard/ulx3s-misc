@@ -83,6 +83,8 @@ void calculate_grid(int8_t lat)
 
   lat2gridm = dlat2m     ;
   lon2gridm = dlon2m(lat);
+
+  s_stat.lat = lat;
 }
 
 void clear_storage(void)
