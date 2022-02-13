@@ -10,7 +10,9 @@
 #include "geostat.h"
 #include "sdcard.h" // for iri[] only
 
-int wr_snap_ptr = 0; // pointer to free snap point index
+struct s_stat s_stat; // about 40KB statistics for kml "arrows"
+
+//int wr_snap_ptr = 0; // pointer to free snap point index
 // constants to convert lat,lon to grid index
 int lat2grid,  lon2grid;  // to grid index
 int lat2gridm, lon2gridm; // to [m] approx meters (for grid metric)
@@ -25,9 +27,6 @@ uint8_t stat_speed_kmh = 80;
 #if PARSED_IRI
 float parsed_iri[2][2]; // iri parsed from wav tags
 #endif
-
-struct s_snap_point snap_point[snap_point_max];
-int16_t hash_grid[hash_grid_size][hash_grid_size]; // 2 overlapping grids
 
 float haversin(float theta)
 {
@@ -91,13 +90,13 @@ void clear_storage(void)
   int i, j;
   for(i = 0; i < hash_grid_size; i++)
     for(j = 0; j < hash_grid_size; j++)
-      hash_grid[i][j] = -1; // -1 is empty, similar to null pointer
+      s_stat.hash_grid[i][j] = -1; // -1 is empty, similar to null pointer
   for(i = 0; i < snap_point_max; i++)
   {
-    snap_point[i].next = -1; // -1 is empty, similar to null pointer
-    snap_point[i].n = 0; // stat counter
+    s_stat.snap_point[i].next = -1; // -1 is empty, similar to null pointer
+    s_stat.snap_point[i].n = 0; // stat counter
   }
-  wr_snap_ptr = 0;
+  s_stat.wr_snap_ptr = 0;
   stat_travel_mm = 0;
   round_count = 1;
 }
@@ -107,7 +106,7 @@ void clear_storage(void)
 // -1 out of memory
 int store_lon_lat(float lon, float lat, float heading)
 {
-  if(wr_snap_ptr >= snap_point_max)
+  if(s_stat.wr_snap_ptr >= snap_point_max)
     return -1; // out of memory
 
   // convert lon,lat to int meters
@@ -119,17 +118,17 @@ int store_lon_lat(float lon, float lat, float heading)
   uint8_t xgrid = (xm / hash_grid_spacing_m) & (hash_grid_size-1);
   uint8_t ygrid = (ym / hash_grid_spacing_m) & (hash_grid_size-1);
 
-  snap_point[wr_snap_ptr].xm = xm;
-  snap_point[wr_snap_ptr].ym = ym;
-  snap_point[wr_snap_ptr].heading = headin;
+  s_stat.snap_point[s_stat.wr_snap_ptr].xm = xm;
+  s_stat.snap_point[s_stat.wr_snap_ptr].ym = ym;
+  s_stat.snap_point[s_stat.wr_snap_ptr].heading = headin;
 
   int16_t saved_ptr;
 
   // grid insert element
-  saved_ptr = hash_grid[xgrid][ygrid];
-  hash_grid[xgrid][ygrid] = wr_snap_ptr;
-  snap_point[wr_snap_ptr].next = saved_ptr;
-  return wr_snap_ptr++;
+  saved_ptr = s_stat.hash_grid[xgrid][ygrid];
+  s_stat.hash_grid[xgrid][ygrid] = s_stat.wr_snap_ptr;
+  s_stat.snap_point[s_stat.wr_snap_ptr].next = saved_ptr;
+  return s_stat.wr_snap_ptr++;
 }
 
 void print_storage(void)
@@ -138,11 +137,11 @@ void print_storage(void)
 
   for(i = 0; i < hash_grid_size; i++)
     for(j = 0; j < hash_grid_size; j++)
-      if(hash_grid[i][j] >= 0)
-        printf("hash_grid[%d][%d]=%d\n", i, j, hash_grid[i][j]);
-  for(i = 0; i < wr_snap_ptr; i++)
-    if(snap_point[i].next >= 0)
-      printf("snap_point[%d].next=%d\n", i, snap_point[i].next);
+      if(s_stat.hash_grid[i][j] >= 0)
+        printf("hash_grid[%d][%d]=%d\n", i, j, s_stat.hash_grid[i][j]);
+  for(i = 0; i < s_stat.wr_snap_ptr; i++)
+    if(s_stat.snap_point[i].next >= 0)
+      printf("snap_point[%d].next=%d\n", i, s_stat.snap_point[i].next);
 }
 
 // 2D grid hash search
@@ -176,10 +175,10 @@ int find_xya(int xm, int ym, uint16_t a, uint8_t ais)
   for(i = 0, x = xgrid; i < 2; i++, x = (x+xs) & (hash_grid_size-1))
     for(j = 0, y = ygrid; j < 2; j++, y = (y+ys) & (hash_grid_size-1))
       // iterate to find closest element - least distance
-      for(int16_t iter = hash_grid[x][y]; iter != -1; iter = snap_point[iter].next)
+      for(int16_t iter = s_stat.hash_grid[x][y]; iter != -1; iter = s_stat.snap_point[iter].next)
       {
-        int16_t angular_distance = snap_point[iter].heading - a;
-        uint32_t new_dist = abs(snap_point[iter].xm - xm) + abs(snap_point[iter].ym - ym) + (abs(angular_distance)>>ais);
+        int16_t angular_distance = s_stat.snap_point[iter].heading - a;
+        uint32_t new_dist = abs(s_stat.snap_point[iter].xm - xm) + abs(s_stat.snap_point[iter].ym - ym) + (abs(angular_distance)>>ais);
         if(new_dist < dist)
         {
           dist = new_dist;
@@ -263,16 +262,16 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             {
               // TODO update statistics at existing lon/lat
               stat_travel_mm -= closest_found_stat_travel_mm; // adjust travel to snapped point
-              snap_point[closest_index].n++;
-              round_count = snap_point[closest_index].n;
-              snap_point[closest_index].sum_iri[0][0] += iri[0];
-              snap_point[closest_index].sum_iri[0][1] += iri[1];
-              snap_point[closest_index].sum_iri[1][0] += iri[0]*iri[0];
-              snap_point[closest_index].sum_iri[1][1] += iri[1]*iri[1];
-              if(stat_speed_kmh < snap_point[closest_index].vmin)
-                snap_point[closest_index].vmin = stat_speed_kmh;
-              if(stat_speed_kmh > snap_point[closest_index].vmax)
-                snap_point[closest_index].vmax = stat_speed_kmh;
+              s_stat.snap_point[closest_index].n++;
+              round_count = s_stat.snap_point[closest_index].n;
+              s_stat.snap_point[closest_index].sum_iri[0][0] += iri[0];
+              s_stat.snap_point[closest_index].sum_iri[0][1] += iri[1];
+              s_stat.snap_point[closest_index].sum_iri[1][0] += iri[0]*iri[0];
+              s_stat.snap_point[closest_index].sum_iri[1][1] += iri[1]*iri[1];
+              if(stat_speed_kmh < s_stat.snap_point[closest_index].vmin)
+                s_stat.snap_point[closest_index].vmin = stat_speed_kmh;
+              if(stat_speed_kmh > s_stat.snap_point[closest_index].vmax)
+                s_stat.snap_point[closest_index].vmax = stat_speed_kmh;
             }
             else // create new point
             {
@@ -281,14 +280,14 @@ void stat_nmea_proc(char *nmea, int nmea_len)
                 int new_index = store_lon_lat(new_lon, new_lat, (float)heading * (360.0/65536));
                 if(new_index >= 0)
                 {
-                  snap_point[new_index].n = 1;
+                  s_stat.snap_point[new_index].n = 1;
                   round_count = 1;
-                  snap_point[new_index].sum_iri[0][0] = iri[0];
-                  snap_point[new_index].sum_iri[0][1] = iri[1];
-                  snap_point[new_index].sum_iri[1][0] = iri[0]*iri[0];
-                  snap_point[new_index].sum_iri[1][1] = iri[1]*iri[1];
+                  s_stat.snap_point[new_index].sum_iri[0][0] = iri[0];
+                  s_stat.snap_point[new_index].sum_iri[0][1] = iri[1];
+                  s_stat.snap_point[new_index].sum_iri[1][0] = iri[0]*iri[0];
+                  s_stat.snap_point[new_index].sum_iri[1][1] = iri[1]*iri[1];
                   // set initial speed, informative only
-                  snap_point[new_index].vmin = snap_point[new_index].vmax = stat_speed_kmh;
+                  s_stat.snap_point[new_index].vmin = s_stat.snap_point[new_index].vmax = stat_speed_kmh;
                 }
                 //printf("new\n");
               }

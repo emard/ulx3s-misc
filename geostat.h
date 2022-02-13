@@ -57,9 +57,22 @@ struct s_snap_point
   uint8_t n;       // number of measurements
 };
 
-extern int wr_snap_ptr; // pointer to free snap point index
-extern int16_t hash_grid[hash_grid_size][hash_grid_size];
-extern struct s_snap_point snap_point[snap_point_max];
+// structure that holds running data for statistics. (arrows)
+// should be saved to SD at each stop.
+// in case of unexpected reboot it should be reloaded
+// to continue session.
+// should be deleted from SD card in after arrows have been
+// added to kml file.
+struct s_stat
+{
+  int8_t lat; // latitude from which grid should be calculated
+  int wr_snap_ptr; // pointer to free snap point index
+  int16_t hash_grid[hash_grid_size][hash_grid_size];
+  struct s_snap_point snap_point[snap_point_max];
+};
+
+extern struct s_stat s_stat;
+
 extern uint8_t round_count;
 extern uint8_t stat_speed_kmh;
 

@@ -1209,30 +1209,30 @@ void write_stat_arrows(void)
     file_kml.write((uint8_t *)kmlbuf, str_kml_arrow_len);
   }
   #endif
-  printf("writing %d stat arrows to kml\n", wr_snap_ptr);
-  for(int i = 0; i < wr_snap_ptr; i++)
+  printf("writing %d stat arrows to kml\n", s_stat.wr_snap_ptr);
+  for(int i = 0; i < s_stat.wr_snap_ptr; i++)
   {
-    x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;
-    x_kml_arrow->lat       = (float)(snap_point[i].ym) / (float)lat2gridm;
-    x_kml_arrow->value     = (snap_point[i].sum_iri[0][0]+snap_point[i].sum_iri[0][1]) / (2*snap_point[i].n);
-    x_kml_arrow->left      =  snap_point[i].sum_iri[0][0] / snap_point[i].n;
-    x_kml_arrow->right     =  snap_point[i].sum_iri[0][1] / snap_point[i].n;
+    x_kml_arrow->lon       = (float)(s_stat.snap_point[i].xm) / (float)lon2gridm;
+    x_kml_arrow->lat       = (float)(s_stat.snap_point[i].ym) / (float)lat2gridm;
+    x_kml_arrow->value     = (s_stat.snap_point[i].sum_iri[0][0]+s_stat.snap_point[i].sum_iri[0][1]) / (2*s_stat.snap_point[i].n);
+    x_kml_arrow->left      =  s_stat.snap_point[i].sum_iri[0][0] / s_stat.snap_point[i].n;
+    x_kml_arrow->right     =  s_stat.snap_point[i].sum_iri[0][1] / s_stat.snap_point[i].n;
     x_kml_arrow->left_stdev  =  0.0;
     x_kml_arrow->right_stdev =  0.0;
-    uint8_t n = snap_point[i].n;
+    uint8_t n = s_stat.snap_point[i].n;
     if(n > 0)
     {
-      float sum1_left  = snap_point[i].sum_iri[0][0];
-      float sum2_left  = snap_point[i].sum_iri[1][0];
-      float sum1_right = snap_point[i].sum_iri[0][1];
-      float sum2_right = snap_point[i].sum_iri[1][1];
+      float sum1_left  = s_stat.snap_point[i].sum_iri[0][0];
+      float sum2_left  = s_stat.snap_point[i].sum_iri[1][0];
+      float sum1_right = s_stat.snap_point[i].sum_iri[0][1];
+      float sum2_right = s_stat.snap_point[i].sum_iri[1][1];
       x_kml_arrow->left_stdev  =  sqrt(fabs( n*sum2_left  - sum1_left  * sum1_left  ))/n;
       x_kml_arrow->right_stdev =  sqrt(fabs( n*sum2_right - sum1_right * sum1_right ))/n;
     }
     x_kml_arrow->n         = n;
-    x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
-    x_kml_arrow->speed_min_kmh = snap_point[i].vmin;
-    x_kml_arrow->speed_max_kmh = snap_point[i].vmax;
+    x_kml_arrow->heading   = (float)(s_stat.snap_point[i].heading * (360.0/65536));
+    x_kml_arrow->speed_min_kmh = s_stat.snap_point[i].vmin;
+    x_kml_arrow->speed_max_kmh = s_stat.snap_point[i].vmax;
     x_kml_arrow->timestamp = timestamp;
     kml_arrow(x_kml_arrow);
     file_kml.write((uint8_t *)kmlbuf, str_kml_arrow_len);
