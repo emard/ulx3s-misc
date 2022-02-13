@@ -305,6 +305,7 @@ void kml_line(struct s_kml_line *kl)
   kmlbuf[kmlbuf_pos+str_kml_line_pos_speed+5] = ' '; // replace null
 
   memcpy(a+str_kml_line_pos_time, kl->timestamp, 22);
+  memcpy(a+str_kml_line_pos_timed, kl->timestamp, 22);
 
   kmlbuf_pos += str_kml_line_len;
 }
