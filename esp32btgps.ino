@@ -336,7 +336,7 @@ void setup() {
   set_fm_freq();
   read_last_nmea();
   umount();
-  calculate_grid(46);
+  calculate_grid(46); // TODO recalculate later from first nmea in session
   clear_storage();
 
   // accelerometer range +-2/4/8g can be changed from cfg file
@@ -694,6 +694,7 @@ void handle_fast_enough(void)
       write_string_to_wav(stop_delimiter);
       close_logs(); // save data in case of power lost
       write_last_nmea();
+      write_stat();
       stopcount++;
       Serial.print(speed_kmh);
       Serial.println(" km/h not fast enough - stop logging");
@@ -747,7 +748,6 @@ void get_iri(void)
 
 void handle_reconnect(void)
 {
-  #if 1
   if(s_stat.wr_snap_ptr) // if any stat arrows are in storage
   {
     mount();
@@ -758,7 +758,6 @@ void handle_reconnect(void)
       clear_storage();
     }
   }
-  #endif
   close_logs();
   write_last_nmea();
   session_log = 0; // request new timestamp file name when reconnected

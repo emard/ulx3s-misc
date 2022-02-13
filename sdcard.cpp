@@ -35,6 +35,7 @@ File file_kml, file_accel, file_pcm, file_cfg;
 char filename_data[256];
 char *filename_lastnmea = (char *)"/profilog/var/lastnmea.txt";
 char *filename_fmfreq   = (char *)"/profilog/var/fmfreq.txt";
+char *filename_stat     = (char *)"/profilog/var/stat.sta";
 char lastnmea[256]; // here is read content from filename_lastnmea
 char *linenmea; // pointer to current nmea line
 int card_is_mounted = 0;
@@ -1177,6 +1178,27 @@ void write_kml_header(struct tm *tm)
     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
   kml_header(name);
   file_kml.write((uint8_t *)kmlbuf, strlen(kmlbuf));
+}
+
+// save stat database to prevent data loss from
+// unexpected reboot or power off
+void write_stat(void)
+{
+  File file_stat = SD_MMC.open(filename_stat, FILE_WRITE);
+  file_stat.write((uint8_t *)&s_stat, sizeof(s_stat));
+  file_stat.close();
+  Serial.print("write stat: ");
+  Serial.println(filename_stat);
+}
+
+void read_stat(void)
+{
+  File file_stat = SD_MMC.open(filename_stat, FILE_READ);
+  file_stat.read((uint8_t *)&s_stat, sizeof(s_stat));
+  file_stat.close();
+  calculate_grid(s_stat.lat);
+  Serial.print("read stat: ");
+  Serial.println(filename_stat);
 }
 
 void write_stat_arrows(void)

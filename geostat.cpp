@@ -76,7 +76,7 @@ uint32_t dlon2mm(float lat)
 // call this once per session
 // changing lat will slightly distort grid but
 // for hashing it doesn't matter much
-void calculate_grid(int lat)
+void calculate_grid(int8_t lat)
 {
   lat2grid  = dlat2m      / hash_grid_spacing_m;
   lon2grid  = dlon2m(lat) / hash_grid_spacing_m;
