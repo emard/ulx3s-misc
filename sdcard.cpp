@@ -1551,6 +1551,7 @@ void close_logs()
   logs_are_open = 0;
 }
 
+// file_name should have full file path
 void finalize_kml(File &kml, String file_name)
 {
   kml.seek(kml.size() - 7);
@@ -1561,6 +1562,21 @@ void finalize_kml(File &kml, String file_name)
     Serial.println(file_name);
     // kml.close(); // crash with arduino esp32 v2.0.2
     File wkml = SD_MMC.open(file_name, FILE_APPEND);
+    // try to open file name with .sta extension instead of .kml
+    String file_name_sta = file_name.substring(0,file_name.length()-4) + ".sta";
+    File rsta = SD_MMC.open(file_name_sta, FILE_READ);
+    if(rsta) // if .sta file exists, open .sta, add arrows to .kml, close and delete .sta file.
+    {
+      Serial.print(".sta file open for reading: ");
+      Serial.println(file_name_sta);
+      rsta.close();
+      Serial.println(".sta file closed");
+    }
+    else
+    {
+      Serial.print(".sta file not found: ");
+      Serial.println(file_name_sta);
+    }
     wkml.write((uint8_t *)str_kml_footer_simple, strlen(str_kml_footer_simple));
     wkml.close();
   }
