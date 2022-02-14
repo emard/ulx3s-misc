@@ -694,7 +694,7 @@ void handle_fast_enough(void)
       write_string_to_wav(stop_delimiter);
       close_logs(); // save data in case of power lost
       write_last_nmea();
-      write_stat();
+      write_stat(&tm_session);
       stopcount++;
       Serial.print(speed_kmh);
       Serial.println(" km/h not fast enough - stop logging");
@@ -748,7 +748,8 @@ void get_iri(void)
 
 void handle_reconnect(void)
 {
-  if(s_stat.wr_snap_ptr) // if any stat arrows are in storage
+  //if(session_log != 0) // if session enabled
+  if(s_stat.wr_snap_ptr != 0 && session_log != 0) // if session enabled and any stat arrows are in storage
   {
     mount();
     if(card_is_mounted)
@@ -1030,6 +1031,7 @@ void handle_gps_line_complete(void)
           //write_nmea_crc(line+1); // debug CRC for NMEA part
         }
         if((btn & 8)) speed_ckt = -1;   // debug BTN3 tunnel, no signal
+        if((btn & 16)) speed_ckt = 0;   // debug BTN3 stop
       }
       //write_tag(line); // debug write after BTN2 has written speed_ckt
       if(speed_ckt >= 0) // for tunnel mode keep speed if no signal (speed_ckt < 0)

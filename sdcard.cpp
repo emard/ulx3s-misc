@@ -816,6 +816,17 @@ void generate_filename_wav(struct tm *tm)
   #endif
 }
 
+void generate_filename_sta(struct tm *tm)
+{
+  #if 1
+  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d-%02d%02d.sta",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
+  #else // one file per day
+  sprintf(filename_data, (char *)"/profilog/data/%04d%02d%02d.sta",
+    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
+  #endif
+}
+
 void open_log_wav(struct tm *tm)
 {
   generate_filename_wav(tm);
@@ -1182,23 +1193,34 @@ void write_kml_header(struct tm *tm)
 
 // save stat database to prevent data loss from
 // unexpected reboot or power off
-void write_stat(void)
+void write_stat(struct tm *tm)
 {
-  File file_stat = SD_MMC.open(filename_stat, FILE_WRITE);
-  file_stat.write((uint8_t *)&s_stat, sizeof(s_stat));
-  file_stat.close();
-  Serial.print("write stat: ");
-  Serial.println(filename_stat);
+  generate_filename_sta(tm);
+  File file_stat = SD_MMC.open(filename_data, FILE_WRITE);
+  if(file_stat)
+  {
+    file_stat.write((uint8_t *)&s_stat, sizeof(s_stat));
+    file_stat.close();
+    Serial.print("write stat: ");
+    Serial.println(filename_data);
+  }
+  else
+    Serial.println("write stat failed.");
 }
 
 void read_stat(void)
 {
   File file_stat = SD_MMC.open(filename_stat, FILE_READ);
-  file_stat.read((uint8_t *)&s_stat, sizeof(s_stat));
-  file_stat.close();
-  calculate_grid(s_stat.lat);
-  Serial.print("read stat: ");
-  Serial.println(filename_stat);
+  if(file_stat)
+  {
+    file_stat.read((uint8_t *)&s_stat, sizeof(s_stat));
+    file_stat.close();
+    calculate_grid(s_stat.lat);
+    Serial.print("read stat: ");
+    Serial.println(filename_stat);
+  }
+  else
+    Serial.println("read stat failed.");
 }
 
 void write_stat_arrows(void)
