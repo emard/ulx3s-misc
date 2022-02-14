@@ -48,7 +48,7 @@ Color codes: \
 <br/>\n\
 Click arrow to display statistics as<br/>\n\
 average ± uncertainty<br/>\n\
-where \"uncertainty\" represents 2σ = 96%% coverage.\n\
+where \"uncertainty\" represents 2σ = 95%% coverage.\n\
 ]]>\n\
     </description>\n\
     <visibility>1</visibility>\n\
