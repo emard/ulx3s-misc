@@ -1614,7 +1614,7 @@ void finalize_data(struct tm *tm){
             // print on LCD
             char *is_wav = strstr(file.name(),".wav");
             char *is_today = strstr(file.name(),todaystr);
-            if(is_today)
+            if(is_today && is_wav)
             {
               int wrap_lcd_n = lcd_n % max_lcd_n; // wraparound last N lines
               char *txbufptr = (char *)spi_master_tx_buf+5+(wrap_lcd_n<<5);
