@@ -213,6 +213,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
   static int32_t closest_found_dist = 999999; // [m] distance to previous found existing point
   static int32_t closest_found_stat_travel_mm = 999999;
   static float  new_lat, new_lon;
+  uint16_t new_heading;
   static int have_new = 0;
   // printf("%s\n", nmea);
   char *nf;
@@ -242,6 +243,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
           {
             new_lat = flatlon[0];
             new_lon = flatlon[1];
+            new_heading = heading;
             have_new = 1; // updated until 100 m
           }
           prev_stat_travel_mm = stat_travel_mm;
@@ -279,7 +281,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             {
               if(have_new) // don't store if we don't have new point
               {
-                int new_index = store_lon_lat(new_lon, new_lat, (float)heading * (360.0/65536));
+                int new_index = store_lon_lat(new_lon, new_lat, (float)new_heading * (360.0/65536));
                 if(new_index >= 0)
                 {
                   s_stat.snap_point[new_index].n = 1;
