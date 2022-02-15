@@ -2,9 +2,10 @@
 
 esp32
 
-    [ ] arrow heading before turn is maybe taken as heading from point after the turn
-    [ ] timestamp to stat arrows
-    [ ] avoid double nmea parsing for kml and stat
+    [ ] optional stat for whole day, allows continuation between reboots
+    [x] arrow heading before turn is a bit off, fixed by static new_heading
+    [ ] creation timestamp to stat arrows or ascending time
+    [ ] avoid double nmea parsing for kml and stat (CPU saving)
     [x] stat speed min-max range
     [ ] demo circular run
     [ ] calculate_grid(latitude) at first point of new storage
