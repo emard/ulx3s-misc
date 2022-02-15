@@ -213,7 +213,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
   static int32_t closest_found_dist = 999999; // [m] distance to previous found existing point
   static int32_t closest_found_stat_travel_mm = 999999;
   static float  new_lat, new_lon;
-  uint16_t new_heading;
+  static uint16_t new_heading;
   static int have_new = 0;
   // printf("%s\n", nmea);
   char *nf;
