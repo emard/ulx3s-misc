@@ -349,7 +349,7 @@ void setup() {
   SerialBT.setPin(GPS_PIN.c_str());
   Serial.println("Bluetooth master started");
   Serial.println(esp_get_idf_version()); // v4.4-beta1-189-ga79dc75f0a
-  printf("sizeof(s_stat) = %d\n", sizeof(s_stat));
+  //printf("sizeof(s_stat) = %d\n", sizeof(s_stat));
   speakaction[0] = (char *)"/profilog/speak/restart.wav";
   speakaction[1] = NULL;
   speakfiles = speakaction;
