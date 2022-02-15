@@ -2,6 +2,7 @@
 
 esp32
 
+    [ ] arrow heading before turn is maybe taken as heading from point after the turn
     [ ] timestamp to stat arrows
     [ ] avoid double nmea parsing for kml and stat
     [x] stat speed min-max range
