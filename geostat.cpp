@@ -214,6 +214,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
   static int32_t closest_found_stat_travel_mm = 999999;
   static float  new_lat, new_lon;
   static uint16_t new_heading;
+  static uint16_t new_daytime;
   static int have_new = 0;
   // printf("%s\n", nmea);
   char *nf;
@@ -244,6 +245,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             new_lat = flatlon[0];
             new_lon = flatlon[1];
             new_heading = heading;
+            new_daytime = nmea2s(nmea)/20; // daytime in 2-second ticks 0-43199
             have_new = 1; // updated until 100 m
           }
           prev_stat_travel_mm = stat_travel_mm;
@@ -290,6 +292,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
                   s_stat.snap_point[new_index].sum_iri[0][1] = iri[1];
                   s_stat.snap_point[new_index].sum_iri[1][0] = iri[0]*iri[0];
                   s_stat.snap_point[new_index].sum_iri[1][1] = iri[1]*iri[1];
+                  s_stat.snap_point[new_index].daytime = new_daytime;
                   // set initial speed, informative only
                   s_stat.snap_point[new_index].vmin = s_stat.snap_point[new_index].vmax = stat_speed_kmh;
                 }

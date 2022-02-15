@@ -1278,6 +1278,8 @@ void write_stat_arrows(void)
     x_kml_arrow->heading   = (float)(s_stat.snap_point[i].heading * (360.0/65536));
     x_kml_arrow->speed_min_kmh = s_stat.snap_point[i].vmin;
     x_kml_arrow->speed_max_kmh = s_stat.snap_point[i].vmax;
+    uint16_t dt = s_stat.snap_point[i].daytime; // 2-second ticks since midnight
+    snprintf(timestamp+11, 12, "%02d:%02d:%02d.0Z", dt/1800,dt/30%60,(dt%30)*2);
     x_kml_arrow->timestamp = timestamp;
     kml_arrow(x_kml_arrow);
     file_kml.write((uint8_t *)kmlbuf, str_kml_arrow_len);
