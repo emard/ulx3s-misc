@@ -918,7 +918,7 @@ if True:
               description=(("L=%.2f ± %.2f mm/m\n"
                             "R=%.2f ± %.2f mm/m\n"
                             "N=%d\n"
-                            "Value ± is 2σ = 96%% coverage\n"
+                            "Value ± is 2σ = 95%% coverage\n"
                             "dir_ind=%d\n"
                             "snapstate=%d\n"
                             "%s"
