@@ -35,7 +35,6 @@ File file_kml, file_accel, file_pcm, file_cfg;
 char filename_data[256];
 char *filename_lastnmea = (char *)"/profilog/var/lastnmea.txt";
 char *filename_fmfreq   = (char *)"/profilog/var/fmfreq.txt";
-char *filename_stat     = (char *)"/profilog/var/stat.sta";
 char lastnmea[256]; // here is read content from filename_lastnmea
 char *linenmea; // pointer to current nmea line
 int card_is_mounted = 0;
@@ -1208,7 +1207,7 @@ void write_stat(struct tm *tm)
     Serial.println("write stat failed.");
 }
 
-void read_stat(void)
+int read_stat(String filename_stat)
 {
   File file_stat = SD_MMC.open(filename_stat, FILE_READ);
   if(file_stat)
@@ -1218,9 +1217,11 @@ void read_stat(void)
     calculate_grid(s_stat.lat);
     Serial.print("read stat: ");
     Serial.println(filename_stat);
+    return 1; // success
   }
   else
     Serial.println("read stat failed.");
+  return 0; // fail
 }
 
 void write_stat_arrows(void)
@@ -1561,24 +1562,19 @@ void finalize_kml(File &kml, String file_name)
     Serial.print("Finalizing ");
     Serial.println(file_name);
     // kml.close(); // crash with arduino esp32 v2.0.2
-    File wkml = SD_MMC.open(file_name, FILE_APPEND);
+    file_kml = SD_MMC.open(file_name, FILE_APPEND);
     // try to open file name with .sta extension instead of .kml
     String file_name_sta = file_name.substring(0,file_name.length()-4) + ".sta";
-    File rsta = SD_MMC.open(file_name_sta, FILE_READ);
-    if(rsta) // if .sta file exists, open .sta, add arrows to .kml, close and delete .sta file.
+    if(read_stat(file_name_sta)) // if .sta file read succeeds, add arrows to .kml, delete .sta file.
     {
-      Serial.print(".sta file open for reading: ");
-      Serial.println(file_name_sta);
-      rsta.close();
-      Serial.println(".sta file closed");
+      logs_are_open = 1;
+      kml_init();
+      write_stat_arrows();
+      logs_are_open = 0;
+      SD_MMC.remove(file_name_sta);
     }
-    else
-    {
-      Serial.print(".sta file not found: ");
-      Serial.println(file_name_sta);
-    }
-    wkml.write((uint8_t *)str_kml_footer_simple, strlen(str_kml_footer_simple));
-    wkml.close();
+    file_kml.write((uint8_t *)str_kml_footer_simple, strlen(str_kml_footer_simple));
+    file_kml.close();
   }
 }
 
