@@ -23,6 +23,8 @@ int32_t stat_travel_mm = 0;
 uint8_t round_count = 1;
 uint8_t stat_speed_kmh = 80;
 
+extern int daytime; // from main module
+
 // #define PARSED_IRI
 #if PARSED_IRI
 float parsed_iri[2][2]; // iri parsed from wav tags
@@ -247,7 +249,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             new_lat = flatlon[0];
             new_lon = flatlon[1];
             new_heading = heading;
-            new_daytime = nmea2s(nmea)/20; // daytime in 2-second ticks 0-43199
+            new_daytime = daytime/20; // new_daytime is in 2-second ticks 0-43199
             new_iri[0] = iri[0];
             new_iri[1] = iri[1];
             new_kmh = stat_speed_kmh;
