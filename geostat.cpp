@@ -215,6 +215,8 @@ void stat_nmea_proc(char *nmea, int nmea_len)
   static float  new_lat, new_lon;
   static uint16_t new_heading;
   static uint16_t new_daytime;
+  static float new_iri[2], closest_iri[2];
+  static uint8_t new_kmh, closest_kmh;
   static int have_new = 0;
   // printf("%s\n", nmea);
   char *nf;
@@ -246,6 +248,9 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             new_lon = flatlon[1];
             new_heading = heading;
             new_daytime = nmea2s(nmea)/20; // daytime in 2-second ticks 0-43199
+            new_iri[0] = iri[0];
+            new_iri[1] = iri[1];
+            new_kmh = stat_speed_kmh;
             have_new = 1; // updated until 100 m
           }
           prev_stat_travel_mm = stat_travel_mm;
@@ -260,6 +265,9 @@ void stat_nmea_proc(char *nmea, int nmea_len)
               closest_index = index;
               closest_found_stat_travel_mm = stat_travel_mm;
               closest_found_dist = found_dist; // [m] metric that covers diamond shaped area x+y = const
+              closest_iri[0] = iri[0];
+              closest_iri[1] = iri[1];
+              closest_kmh = stat_speed_kmh;
             }
           }
           if(stat_travel_mm > SNAP_DECISION_MM) // at 120 m we have to decide, new or existing
@@ -270,14 +278,14 @@ void stat_nmea_proc(char *nmea, int nmea_len)
               stat_travel_mm -= closest_found_stat_travel_mm; // adjust travel to snapped point
               s_stat.snap_point[closest_index].n++;
               round_count = s_stat.snap_point[closest_index].n;
-              s_stat.snap_point[closest_index].sum_iri[0][0] += iri[0];
-              s_stat.snap_point[closest_index].sum_iri[0][1] += iri[1];
-              s_stat.snap_point[closest_index].sum_iri[1][0] += iri[0]*iri[0];
-              s_stat.snap_point[closest_index].sum_iri[1][1] += iri[1]*iri[1];
-              if(stat_speed_kmh < s_stat.snap_point[closest_index].vmin)
-                s_stat.snap_point[closest_index].vmin = stat_speed_kmh;
-              if(stat_speed_kmh > s_stat.snap_point[closest_index].vmax)
-                s_stat.snap_point[closest_index].vmax = stat_speed_kmh;
+              s_stat.snap_point[closest_index].sum_iri[0][0] += closest_iri[0];
+              s_stat.snap_point[closest_index].sum_iri[0][1] += closest_iri[1];
+              s_stat.snap_point[closest_index].sum_iri[1][0] += closest_iri[0]*closest_iri[0];
+              s_stat.snap_point[closest_index].sum_iri[1][1] += closest_iri[1]*closest_iri[1];
+              if(closest_kmh < s_stat.snap_point[closest_index].vmin)
+                s_stat.snap_point[closest_index].vmin = closest_kmh;
+              if(closest_kmh > s_stat.snap_point[closest_index].vmax)
+                s_stat.snap_point[closest_index].vmax = closest_kmh;
             }
             else // create new point
             {
@@ -288,13 +296,13 @@ void stat_nmea_proc(char *nmea, int nmea_len)
                 {
                   s_stat.snap_point[new_index].n = 1;
                   round_count = 1;
-                  s_stat.snap_point[new_index].sum_iri[0][0] = iri[0];
-                  s_stat.snap_point[new_index].sum_iri[0][1] = iri[1];
-                  s_stat.snap_point[new_index].sum_iri[1][0] = iri[0]*iri[0];
-                  s_stat.snap_point[new_index].sum_iri[1][1] = iri[1]*iri[1];
+                  s_stat.snap_point[new_index].sum_iri[0][0] = new_iri[0];
+                  s_stat.snap_point[new_index].sum_iri[0][1] = new_iri[1];
+                  s_stat.snap_point[new_index].sum_iri[1][0] = new_iri[0]*new_iri[0];
+                  s_stat.snap_point[new_index].sum_iri[1][1] = new_iri[1]*new_iri[1];
                   s_stat.snap_point[new_index].daytime = new_daytime;
                   // set initial speed, informative only
-                  s_stat.snap_point[new_index].vmin = s_stat.snap_point[new_index].vmax = stat_speed_kmh;
+                  s_stat.snap_point[new_index].vmin = s_stat.snap_point[new_index].vmax = new_kmh;
                 }
                 //printf("new\n");
               }
