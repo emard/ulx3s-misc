@@ -7,12 +7,12 @@
 #define SEGMENT_LENGTH_MM 100000
 
 // angular insensitivity, scale factor to compare
-// angle with maters
-// angle 0-359.999 is converted to 16-bit 0-65535,
+// angle with maters. 0-max sensitive, 8-insensitive
+// angle 0-358 is converted to 8-bit 0-255,
 // right-shifted by this specified value and added
 // added as matric expression
 // abs(x1-x0)+abs(y1-y0)+abs(a1-a0)
-#define ANGULAR_INSENSITIVITY_RSHIFT 8
+#define ANGULAR_INSENSITIVITY_RSHIFT 0
 
 #define SNAP_RANGE_M 40 // [m] x+y < snap_range_m search for existing point
 
@@ -51,9 +51,9 @@ struct s_snap_point
 {
   int32_t xm, ym;  // lat,lon converted to int meters (approx), int-search is faster than float
   float sum_iri[2][2]; // [0:normal, 1:squares][0:left, 1:right]
-  uint16_t heading; // [deg*65536/360] heading 0-65535 means 0-359.999 deg
   uint16_t daytime; // 2-second ticks since midnight, 0-43199
   int16_t next;    // next snap point index
+  uint8_t heading; // [deg*256/360] heading 0-255 means 0-358 deg
   uint8_t vmin, vmax; // [kmh] speed range for statstics informative display
   uint8_t n;       // number of measurements
 };

@@ -1275,7 +1275,7 @@ void write_stat_arrows(void)
       x_kml_arrow->right_stdev =  sqrt(fabs( n*sum2_right - sum1_right * sum1_right ))/n;
     }
     x_kml_arrow->n         = n;
-    x_kml_arrow->heading   = (float)(s_stat.snap_point[i].heading * (360.0/65536));
+    x_kml_arrow->heading   = (float)(s_stat.snap_point[i].heading * (360.0/256));
     x_kml_arrow->speed_min_kmh = s_stat.snap_point[i].vmin;
     x_kml_arrow->speed_max_kmh = s_stat.snap_point[i].vmax;
     uint16_t dt = s_stat.snap_point[i].daytime; // 2-second ticks since midnight

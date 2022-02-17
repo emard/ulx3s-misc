@@ -116,7 +116,7 @@ int store_lon_lat(float lon, float lat, float heading)
   // convert lon,lat to int meters
   int xm = floor(lon * lon2gridm);
   int ym = floor(lat * lat2gridm);
-  uint16_t headin = floor(heading * (65536.0/360)); // heading angle
+  uint8_t headin = floor(heading * (256.0/360)); // heading angle
 
   // snap int meters to grid 0
   uint8_t xgrid = (xm / hash_grid_spacing_m) & (hash_grid_size-1);
@@ -154,11 +154,11 @@ void print_storage(void)
 // convert lon,lat to int meters. lon2gridm, lat2gridm are constants
 // int xm = floor(lon * lon2gridm);
 // int ym = floor(lat * lat2gridm);
-// a   angle 16-bit unsigned angular heading 0-255 -> 0-358 deg
-// ais angle insensitivity 2^n 0:max sensitive, 16:insensitive
+// a   angle 8-bit unsigned angular heading 0-255 -> 0-358 deg
+// ais angle insensitivity 2^n 0:max sensitive, 8:insensitive
 // x+y metric is applied to find closest point
 // TODO x+y+a metric is applied to find closest point
-int find_xya(int xm, int ym, uint16_t a, uint8_t ais)
+int find_xya(int xm, int ym, uint8_t a, uint8_t ais)
 {
   // snap int meters to grid 0
   uint8_t xgrid = (xm / hash_grid_spacing_m) & (hash_grid_size-1);
@@ -181,7 +181,7 @@ int find_xya(int xm, int ym, uint16_t a, uint8_t ais)
       // iterate to find closest element - least distance
       for(int16_t iter = s_stat.hash_grid[x][y]; iter != -1; iter = s_stat.snap_point[iter].next)
       {
-        int16_t angular_distance = s_stat.snap_point[iter].heading - a;
+        int8_t angular_distance = s_stat.snap_point[iter].heading - a;
         uint32_t new_dist = abs(s_stat.snap_point[iter].xm - xm) + abs(s_stat.snap_point[iter].ym - ym) + (abs(angular_distance)>>ais);
         if(new_dist < dist)
         {
@@ -215,7 +215,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
   static int32_t closest_found_dist = 999999; // [m] distance to previous found existing point
   static int32_t closest_found_stat_travel_mm = 999999;
   static float  new_lat, new_lon;
-  static uint16_t new_heading;
+  static uint8_t new_heading;
   static uint16_t new_daytime;
   static float new_iri[2], closest_iri[2];
   static uint8_t new_kmh, closest_kmh;
@@ -231,7 +231,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
       nmea2latlon(nmea, &ilatlon);
       float flatlon[2];
       latlon2float(&ilatlon, flatlon);
-      uint16_t heading = (65536.0/3600)*nmea2iheading(nmea); // 0-3600 -> 0-65536
+      uint8_t heading = (256.0/3600)*nmea2iheading(nmea); // 0-3600 -> 0-256
       uint32_t lon2mm = dlon2mm(flatlon[0]);
       uint32_t   dxmm = fabs(flatlon[1]-stat_travel_prev_latlon[1]) *  lon2mm;
       uint32_t   dymm = fabs(flatlon[0]-stat_travel_prev_latlon[0]) * dlat2mm;
@@ -293,7 +293,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             {
               if(have_new) // don't store if we don't have new point
               {
-                int new_index = store_lon_lat(new_lon, new_lat, (float)new_heading * (360.0/65536));
+                int new_index = store_lon_lat(new_lon, new_lat, (float)new_heading * (360.0/256));
                 if(new_index >= 0)
                 {
                   s_stat.snap_point[new_index].n = 1;
