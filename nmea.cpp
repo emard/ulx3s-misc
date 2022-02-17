@@ -171,6 +171,6 @@ uint16_t nmea2iheading(char *nmea)
   str_heading[2] = b[3];
   str_heading[3] = b[5]; // skip b[4]=='.'
   //str_heading[4] = 0;
-  uint16_t iheading = strtol(str_heading, NULL, 10); // parse as integer 0-360 -> 0-65536
+  uint16_t iheading = strtol(str_heading, NULL, 10); // parse as integer 0-360 -> 0-3600
   return iheading;
 }
