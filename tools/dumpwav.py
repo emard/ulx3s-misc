@@ -36,7 +36,7 @@ while f.readinto(mvb):
   else: # a == 32
     if len(nmea):
       print(i,nmea.decode("utf-8"))
-      if len(nmea)>3:
+      if len(nmea)>4:
         crc = reduce(xor, map(int, nmea[1:-3]))
         hexcrc = bytearray(b"%02X" % crc)
         if nmea[-2:] != hexcrc:
