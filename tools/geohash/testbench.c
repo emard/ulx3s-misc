@@ -17,28 +17,28 @@ void write_storage2kml(char *filename)
   kml_header("PROFILOG");
   write(kmlf, kmlbuf, strlen(kmlbuf));
   kml_buf_init();
-  for(int i = 0; i < wr_snap_ptr; i++)
+  for(int i = 0; i < s_stat.wr_snap_ptr; i++)
   {
-    x_kml_arrow->lon       = (float)(snap_point[i].xm) / (float)lon2gridm;
-    x_kml_arrow->lat       = (float)(snap_point[i].ym) / (float)lat2gridm;
-    x_kml_arrow->value     = (snap_point[i].sum_iri[0][0]+snap_point[i].sum_iri[0][1]) / (2*snap_point[i].n);
-    x_kml_arrow->left      =  snap_point[i].sum_iri[0][0] / snap_point[i].n;
-    x_kml_arrow->right     =  snap_point[i].sum_iri[0][1] / snap_point[i].n;
+    x_kml_arrow->lon       = (float)(s_stat.snap_point[i].xm) / (float)lon2gridm;
+    x_kml_arrow->lat       = (float)(s_stat.snap_point[i].ym) / (float)lat2gridm;
+    x_kml_arrow->value     = (s_stat.snap_point[i].sum_iri[0][0]+s_stat.snap_point[i].sum_iri[0][1]) / (2*s_stat.snap_point[i].n);
+    x_kml_arrow->left      =  s_stat.snap_point[i].sum_iri[0][0] / s_stat.snap_point[i].n;
+    x_kml_arrow->right     =  s_stat.snap_point[i].sum_iri[0][1] / s_stat.snap_point[i].n;
     x_kml_arrow->left_stdev  =  0.0;
     x_kml_arrow->right_stdev =  0.0;
-    uint8_t n = snap_point[i].n;
+    uint8_t n = s_stat.snap_point[i].n;
     if(n > 0)
     {
-      float sum1_left  = snap_point[i].sum_iri[0][0];
-      float sum2_left  = snap_point[i].sum_iri[1][0];
-      float sum1_right = snap_point[i].sum_iri[0][1];
-      float sum2_right = snap_point[i].sum_iri[1][1];
+      float sum1_left  = s_stat.snap_point[i].sum_iri[0][0];
+      float sum2_left  = s_stat.snap_point[i].sum_iri[1][0];
+      float sum1_right = s_stat.snap_point[i].sum_iri[0][1];
+      float sum2_right = s_stat.snap_point[i].sum_iri[1][1];
       x_kml_arrow->left_stdev  =  sqrt(fabs( n*sum2_left  - sum1_left  * sum1_left  ))/n;
       x_kml_arrow->right_stdev =  sqrt(fabs( n*sum2_right - sum1_right * sum1_right ))/n;
     }
     x_kml_arrow->n         = n;
-    x_kml_arrow->heading   = (float)(snap_point[i].heading * (360.0/65536));
-    x_kml_arrow->speed_kmh = 80.0;
+    x_kml_arrow->heading   = (float)(s_stat.snap_point[i].heading * (360.0/65536));
+    x_kml_arrow->speed_min_kmh = x_kml_arrow->speed_max_kmh = 80.0;
     x_kml_arrow->timestamp = "2000-01-01T00:00:00.0Z";
     kml_arrow(x_kml_arrow);
     write(kmlf, kmlbuf, str_kml_arrow_len);
@@ -76,9 +76,11 @@ void wavreader(char *filename)
       if(nmea[0] == '$')
         if(check_crc(nmea, nmea_len))
           stat_nmea_proc(nmea, nmea_len);
+      #if 0
       if(nmea[0] == 'L')
         if(check_crc(nmea, nmea_len))
           stat_iri_proc(nmea, nmea_len);
+      #endif
       nmea_len = 0;
     }
   }
@@ -138,8 +140,8 @@ int main(int argc, char *argv[])
     int index = find_xya(floor(lon[i] * lon2gridm), floor(lat[i] * lat2gridm), 0, 0);
     if(index != -1)
     {
-      lon2 = (float)snap_point[index].xm / (float)lon2gridm;
-      lat2 = (float)snap_point[index].ym / (float)lat2gridm;
+      lon2 = (float)s_stat.snap_point[index].xm / (float)lon2gridm;
+      lat2 = (float)s_stat.snap_point[index].ym / (float)lat2gridm;
       float dist = distance(lat[i], lon[i], lat2, lon2);
       printf("find lon=%.6f° lat=%.6f° lon2=%.6f° lat2=%.6f° -> %d -> dist=%.1f\n",
         lon[i], lat[i], lon2, lat2, index, dist);
