@@ -258,7 +258,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
           prev_stat_travel_mm = stat_travel_mm;
           // continue search until travel 120 m for existing point if found.
           // if not found after 120 m, create new lat/lon snap point.
-          // direction insensitivty 8, means 256 is 360 deg, and to add 128 m for 180 deg reverse direction snap point
+          // angular insensitivty 0, means 256 is 360 deg, and to add 128 m for 180 deg reverse direction snap point
           int16_t index = find_xya((int)floor(flatlon[1] * lon2gridm), (int)floor(flatlon[0] * lat2gridm), heading, ANGULAR_INSENSITIVITY_RSHIFT);
           if(index >= 0) // found something
           {
