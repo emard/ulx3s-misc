@@ -85,7 +85,7 @@ void calculate_grid(int8_t lat);
 void clear_storage(void);
 int store_lon_lat(float lon, float lat, float heading);
 void print_storage(void);
-int find_xya(int xm, int ym, uint16_t a, uint8_t ais);
+int find_xya(int xm, int ym, uint8_t a, uint8_t ais);
 void stat_iri_proc(char *nmea, int nmea_len);
 void stat_nmea_proc(char *nmea, int nmea_len);
 int check_crc(char *nmea, int len);
