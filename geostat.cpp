@@ -334,6 +334,8 @@ void stat_nmea_proc(char *nmea, int nmea_len)
 // 1: crc ok
 int check_crc(char *nmea, int len)
 {
+  if(nmea[len-3]!='*')
+    return 0;
   uint8_t crc = strtoul(nmea+len-2, NULL, 16);
   for(int i = 1; i < len-3; i++)
     crc ^= *(++nmea);
