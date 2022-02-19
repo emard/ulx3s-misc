@@ -28,6 +28,12 @@
 // is more than this length apart 
 #define IGNORE_TOO_LARGE_JUMP_MM 40000
 
+// prevent double count (deny to snap on previous index) 0:OFF 1:ON
+#define DENY_SNAP_TO_PREVIOUS_INDEX 1
+
+// prevent double count (reset distance) 0:OFF 1:ON
+#define RESET_DISTANCE_AT_TOO_LARGE_JUMP 0
+
 // after this travel length start searching for snap point
 #define START_SEARCH_FOR_SNAP_POINT_AFTER_TRAVEL_MM 40000
 

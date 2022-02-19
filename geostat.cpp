@@ -262,7 +262,11 @@ void stat_nmea_proc(char *nmea, int nmea_len)
           // Angular sensitivity 0 would add 128 m for 180 deg reverse direction snap point
           // prevents snap by making reverse points 128 m "distant"
           int16_t index = find_xya((int)floor(flatlon[1] * lon2gridm), (int)floor(flatlon[0] * lat2gridm), heading, ANGULAR_INSENSITIVITY_RSHIFT);
-          if(index >= 0) // found something
+          if(index >= 0 // found something
+          #if DENY_SNAP_TO_PREVIOUS_INDEX
+          && index+1 != s_stat.wr_snap_ptr
+          #endif
+          )
           {
             if(found_dist < closest_found_dist)
             {
@@ -325,6 +329,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
           }
         }
       }
+      #if RESET_DISTANCE_AT_TOO_LARGE_JUMP
       else
       { // too large jump - prevent double counting
         // reset values for new search
@@ -333,6 +338,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
         closest_found_dist = 999999;
         have_new = 0;
       }
+      #endif
       // printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], stat_travel_mm/1000);
       stat_travel_prev_latlon[0] = flatlon[0];
       stat_travel_prev_latlon[1] = flatlon[1];
