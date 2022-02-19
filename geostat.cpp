@@ -324,7 +324,14 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             have_new = 0;
           }
         }
-        
+      }
+      else
+      { // too large jump - prevent double counting
+        // reset values for new search
+        closest_found_stat_travel_mm = 0;
+        closest_index = -1;
+        closest_found_dist = 999999;
+        have_new = 0;
       }
       // printf("%.6f° %.6f° travel=%d m\n", flatlon[0], flatlon[1], stat_travel_mm/1000);
       stat_travel_prev_latlon[0] = flatlon[0];
