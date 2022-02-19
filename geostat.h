@@ -28,11 +28,12 @@
 // is more than this length apart 
 #define IGNORE_TOO_LARGE_JUMP_MM 40000
 
-// prevent double count (deny to snap on previous index) 0:OFF 1:ON
-#define DENY_SNAP_TO_PREVIOUS_INDEX 1
+// prevent double count on new created arrow 0:OFF 1:ON
+// don't use this option, the last arrow can be valid to use
+#define DENY_SNAP_TO_PREVIOUS_INDEX 0
 
-// prevent double count (reset distance) 0:OFF 1:ON
-#define RESET_DISTANCE_AT_TOO_LARGE_JUMP 0
+// prevent double count on GPS glitch (reset distance) 0:OFF 1:ON
+#define RESET_DISTANCE_AT_TOO_LARGE_JUMP 1
 
 // after this travel length start searching for snap point
 #define START_SEARCH_FOR_SNAP_POINT_AFTER_TRAVEL_MM 40000
@@ -89,7 +90,7 @@ int dlon2m(int lat);
 uint32_t dlon2mm(float lat);
 void calculate_grid(int8_t lat);
 void clear_storage(void);
-int store_lon_lat(float lon, float lat, float heading);
+int store_lon_lat(float lon, float lat, uint8_t headin);
 void print_storage(void);
 int find_xya(int xm, int ym, uint8_t a, uint8_t ais);
 void stat_iri_proc(char *nmea, int nmea_len);

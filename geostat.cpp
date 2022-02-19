@@ -108,7 +108,7 @@ void clear_storage(void)
 // retval
 // index of stored element
 // -1 out of memory
-int store_lon_lat(float lon, float lat, float heading)
+int store_lon_lat(float lon, float lat, uint8_t headin)
 {
   if(s_stat.wr_snap_ptr >= snap_point_max)
     return -1; // out of memory
@@ -116,7 +116,6 @@ int store_lon_lat(float lon, float lat, float heading)
   // convert lon,lat to int meters
   int xm = floor(lon * lon2gridm);
   int ym = floor(lat * lat2gridm);
-  uint8_t headin = floor(heading * (256.0/360)); // heading angle
 
   // snap int meters to grid 0
   uint8_t xgrid = (xm / hash_grid_spacing_m) & (hash_grid_size-1);
@@ -231,7 +230,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
       nmea2latlon(nmea, &ilatlon);
       float flatlon[2];
       latlon2float(&ilatlon, flatlon);
-      uint8_t heading = (256.0/3600)*nmea2iheading(nmea); // 0-3600 -> 0-256
+      uint8_t heading = nmea2iheading(nmea)*256/3600; // 0-3600 -> 0-256
       uint32_t lon2mm = dlon2mm(flatlon[0]);
       uint32_t   dxmm = fabs(flatlon[1]-stat_travel_prev_latlon[1]) *  lon2mm;
       uint32_t   dymm = fabs(flatlon[0]-stat_travel_prev_latlon[0]) * dlat2mm;
@@ -299,7 +298,7 @@ void stat_nmea_proc(char *nmea, int nmea_len)
             {
               if(have_new) // don't store if we don't have new point
               {
-                int new_index = store_lon_lat(new_lon, new_lat, (float)new_heading * (360.0/256));
+                int new_index = store_lon_lat(new_lon, new_lat, new_heading);
                 if(new_index >= 0)
                 {
                   s_stat.snap_point[new_index].n = 1;
