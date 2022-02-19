@@ -37,7 +37,7 @@ void write_storage2kml(char *filename)
       x_kml_arrow->right_stdev =  sqrt(fabs( n*sum2_right - sum1_right * sum1_right ))/n;
     }
     x_kml_arrow->n         = n;
-    x_kml_arrow->heading   = (float)(s_stat.snap_point[i].heading * (360.0/65536));
+    x_kml_arrow->heading   = (float)(s_stat.snap_point[i].heading * (360.0/256));
     x_kml_arrow->speed_min_kmh = x_kml_arrow->speed_max_kmh = 80.0;
     x_kml_arrow->timestamp = "2000-01-01T00:00:00.0Z";
     kml_arrow(x_kml_arrow);
