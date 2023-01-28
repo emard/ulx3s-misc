@@ -1,0 +1,84 @@
+COMMODORE DB9 adapter
+
+40-pin female -> flat cable -> 2xDB9 male (pins)
+
+supports
+joystick with 1-3 buttons
+mouse with 3 buttons
+
+instead of 5V this adapter provides 3.3V
+input level of FPGA is 3.3V
+
+Logic is inverted, switch is active when at level 0.
+FPGA pins should have internal pullup enabled.
+
+Most joysticks have mechanical switches to GND.
+Autofire circuits in joysticks may work with 3.3V.
+Mouse is not yet tested.
+
+This pinout is designed for direct crimping.
+At DB9 side, wires from flat cable should be
+split to insert GND and 3.3V and connector pressed
+
+ULX3S right side, pins soldered on the back
+40-pin female connector
+------
++5V
++5V
+GND
+GND
+GP27
+GN27
+GP26
+GN26
+GP25
+GN25
+GP24
+GN24
+GP23
+GN23
+GP22
+GN22
+GP21
+GN21
+GND    insert to JOY2
+GND    insert to JOY1
++3.3V  insert to JOY2
++3.3V  insert to JOY1
+GP20   5   JOY2
+GN20     9    2
+GP19   4      2
+                <--- insert GND
+GN19   3      2
+                <--- insert +3.3V
+GP18   2      2
+GN18     6    2
+GP17   1      2
+GN17   5   JOY1
+GP16     9    1
+GN16   4      1
+                <--- insert GND
+GP15   3      1
+                <--- insert +3.3V
+GN15   2      1
+GP14     6    1
+GN14   1      1
+GND            
+GND            
++3.3V
++3.3V
+
+looking at pins
+
+DB9  JOYSTICK    MOUSE
+---  ----------  ----------
+5    BTN MIDDLE  BTN MIDDLE
+  9  BTN RIGHT   BTN RIGHT
+4    RIGHT       X2
+  8  GND         GND         <--- insert GND
+3    LEFT        Y1
+  7  +3.3V       +3.3V       <--- insert +3.3V
+2    DOWN        X1
+  6  BTN LEFT    BTN LEFT    <--- FIRE BTN
+1    UP          Y2
+     ----------  ----------
