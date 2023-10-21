@@ -1,8 +1,8 @@
 # MULTIBOOT
 
 Flash can contain multiple bitstreams.
-Press BTN0 to exit current bitstream and jump to next one
-after the last, it wraparounds to the first.
+Press BTN0 to exit current bitstream and jump to next one.
+After the last, it loads the first.
 
 In this example, each bitstream supports exit because
 it reads BTN0 and when pressed long enough (debouncing fuze),
