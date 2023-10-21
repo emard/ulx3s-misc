@@ -1,13 +1,7 @@
 # Project config
 all: multi
 
-# Target config
-
-# 12k 25k 45k 85k um-85k um5g-85k
-# for ulx4m um-85k apply ecpmulti fix with --input-idcode --output-idcode, see below)
-DEVICE = 12k
-PACKAGE = CABGA381
-SPEEDGRADE = 6
+FLASH_SIZE_MBIT := 128
 
 # files and addresses in FLASH where to write bitstreams
 BITSTREAM0_FILE := bitstream0/ulx3s_12f_bitstream0.bit
@@ -21,11 +15,20 @@ BITSTREAM2_ADDR := 0x400000
 
 BUILD_TMP := /tmp/
 
+$(BITSTREAM0_FILE):
+	cd bitstream0; make
+
+$(BITSTREAM1_FILE):
+	cd bitstream1; make
+
+$(BITSTREAM2_FILE):
+	cd bitstream2; make
+
 $(BUILD_TMP)/multiboot.img: $(BITSTREAM0_FILE) $(BITSTREAM1_FILE) $(BITSTREAM2_FILE) 
 	ecpmulti                       --input $(BITSTREAM0_FILE) \
 	  --address $(BITSTREAM1_ADDR) --input $(BITSTREAM1_FILE) \
 	  --address $(BITSTREAM2_ADDR) --input $(BITSTREAM2_FILE) \
-	  --flashsize 128 \
+	  --flashsize $(FLASH_SIZE_MBIT) \
 	  --output $@
 
 # model=ulx4m DEVICE=um-85k:
@@ -51,3 +54,7 @@ flash_ofl: $(BUILD_TMP)/multiboot.img
 
 clean:
 	rm -f *~ $(BUILD_TMP)/multiboot.img.gz $(BUILD_TMP)/multiboot.img
+	cd bitstream0; make clean
+	cd bitstream1; make clean
+	cd bitstream2; make clean
+
