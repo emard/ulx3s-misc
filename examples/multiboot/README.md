@@ -4,6 +4,8 @@ Flash can contain multiple bitstreams.
 Press BTN0 to exit current bitstream and jump to next one.
 After the last, it loads the first.
 
+    make flash_ofl
+
 In this example, each bitstream supports exit because
 it reads BTN0 and when pressed long enough (debouncing fuze),
 it pulls down USER_PROGRAMN signal which exits currently

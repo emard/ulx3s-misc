@@ -17,7 +17,9 @@ inout wire wifi_en,
 inout wire wifi_gpio0,
 inout wire wifi_gpio2,
 inout wire wifi_gpio15,
-inout wire wifi_gpio16,
+output wire wifi_gpio16,
+output wire wifi_gpio17,
+output wire wifi_gpio35,
 output wire [7:0] led,
 input wire [6:0] btn,
 input wire [0:3] sw,
@@ -25,9 +27,9 @@ output wire oled_csn,
 output wire oled_clk,
 output wire oled_mosi,
 output wire oled_dc,
-output wire oled_resn,
-inout wire [27:0] gp,
-inout wire [27:0] gn
+output wire oled_resn
+//inout wire [27:0] gp,
+//inout wire [27:0] gn
 );
 
   wire S_enable;
@@ -59,5 +61,8 @@ inout wire [27:0] gn
     .enable(S_enable),
     .gray_count(led)
   );
+  
+  assign wifi_gpio17 = btn[1];
+  assign wifi_gpio35 = btn[2];
 
 endmodule
