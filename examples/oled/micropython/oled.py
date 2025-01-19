@@ -32,7 +32,7 @@ class oled:
     self.C_OLED_SET_REMAP_COLOR = const(0xA0)
     self.C_OLED_ULX3S_REMAP = const(0x60) # 0b01100000 # A[6]=0:RGB332, A[6]=1:RGB565; A[0]=0:left-to-right, A[1]=1:right-to-left
     self.C_OLED_SET_DISPLAY_START_LINE = const(0xA1)
-    self.C_OLED_SET_DISPLAY_OFFSET = const(0xA1)
+    self.C_OLED_SET_DISPLAY_OFFSET = const(0xA2)
     self.C_OLED_SET_DISPLAY_MODE_NORMAL = const(0xA4)
     self.C_OLED_SET_MULTIPLEX_RATIO = const(0xA8)
     self.C_OLED_SET_MASTER_CONFIGURATION = const(0xAD)
