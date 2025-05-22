@@ -120,4 +120,6 @@ module top_audio
     assign gn[12] = 1'b1;        // DMP
     assign gn[13] = 1'b1;        // FLT
 
+    assign gp[15] = spdif | btn[1];
+
 endmodule
