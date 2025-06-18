@@ -8,7 +8,7 @@ parameter C_report_bytes = 20, // 8:usual gamepad, 20:xbox360
 parameter C_display="ST7789", // "SSD1331", "ST7789"
 parameter C_disp_bits=256,
 // enable ports: 1:enabled, 0:disabled
-parameter C_us2=1, 
+parameter C_us2=1,
 parameter C_us3=1,
 parameter C_us4=1
 )
@@ -124,7 +124,7 @@ assign shutdown = 0;
       us2_hid_host_inst
       (
         .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-        .bus_reset(~btn[0]),
+        .bus_reset(btn[2]),
         .led(led), // debug output
         //.usb_dif(usb_fpga_bd_dp), // for trellis < 2020-03-08
         .usb_dif(usb_fpga_dp),
@@ -153,7 +153,7 @@ assign shutdown = 0;
       us3_hid_host_inst
       (
         .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-        .bus_reset(~btn[0]),
+        .bus_reset(btn[2]),
         .led(), // debug output
         .usb_dif(gp[21]),
         .usb_dp(gp[25]),
@@ -181,7 +181,7 @@ assign shutdown = 0;
       us4_hid_host_inst
       (
         .clk(clk_usb), // 6 MHz for low-speed USB1.0 device or 48 MHz for full-speed USB1.1 device
-        .bus_reset(~btn[0]),
+        .bus_reset(btn[2]),
         .led(), // debug output
         .usb_dif(gp[20]),
         .usb_dp(gp[24]),
@@ -234,7 +234,7 @@ assign shutdown = 0;
   lcd_video_inst
   (
     .clk(clk_25MHz),
-    .reset(~btn[0]),
+    .reset(btn[2]),
     .x(disp_x),
     .y(disp_y),
     .color(disp_color),
@@ -277,7 +277,7 @@ assign shutdown = 0;
   )
   lcd_video_inst
   (
-    .reset(~btn[0]),
+    .reset(btn[2]),
     .clk_pixel(clk_125MHz),
     .clk_spi(clk_125MHz),
     .x(disp_x),
@@ -289,7 +289,8 @@ assign shutdown = 0;
     .spi_dc(oled_dc),
     .spi_resn(oled_resn)
   );
-  assign oled_csn = spi_csn | ~btn[1];
+  // assign oled_csn = spi_csn | btn[1]; // 1.5" st7789
+  assign oled_csn = spi_csn | ~btn[1]; // 1.3" st7789
   end
   endgenerate
 
