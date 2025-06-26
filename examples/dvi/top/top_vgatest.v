@@ -16,8 +16,8 @@ module top_vgatest
   // 1920x1080 @30Hz
   // 1920x1080 @50Hz overclock 540MHz
   // 1920x1200 @50Hz overclock 600MHz
-  parameter x =  640,      // pixels
-  parameter y =  480,      // pixels
+  parameter x =  800,      // pixels
+  parameter y =  600,      // pixels
   parameter f =   60,      // Hz 60,50,30
   parameter xadjustf =  0, // adjust -3..3 if no picture
   parameter yadjustf =  0, // or to fine-tune f
