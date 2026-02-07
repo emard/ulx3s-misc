@@ -9,6 +9,7 @@ module top_vgatest
   //  720x576  @60Hz
   //  800x480  @60Hz
   //  800x600  @60Hz
+  // 1024x768  @50Hz
   // 1024x768  @60Hz
   // 1280x768  @60Hz
   // 1366x768  @60Hz
@@ -16,9 +17,9 @@ module top_vgatest
   // 1920x1080 @30Hz
   // 1920x1080 @50Hz overclock 540MHz
   // 1920x1200 @50Hz overclock 600MHz
-  parameter x =  800,      // pixels
-  parameter y =  600,      // pixels
-  parameter f =   60,      // Hz 60,50,30
+  parameter x = 1024,      // pixels
+  parameter y =  768,      // pixels
+  parameter f =   50,      // Hz 60,50,30
   parameter xadjustf =  0, // adjust -3..3 if no picture
   parameter yadjustf =  0, // or to fine-tune f
   parameter c_ddr    =  1  // 0:SDR 1:DDR
