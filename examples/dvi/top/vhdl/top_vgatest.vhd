@@ -16,6 +16,7 @@ entity top_vgatest is
     f        : natural :=   60; -- Hz 60,50,30
     xadjustf : integer :=    0; -- adjust -3..3 if no picture
     yadjustf : integer :=    0; -- or to fine-tune f
+    yadjustframe : integer := 0; -- sometimes -1 to fix v-jitter
     ext_gpdi : natural :=    1; -- 0:disable 1:enable external gpdi
     c_ddr    : natural :=    1  -- 0:SDR 1:DDR
   );
@@ -85,7 +86,7 @@ architecture Behavioral of top_vgatest is
       variable yminblank   : natural := y/64; -- for minimal blank space
       variable min_pixel_f : natural := f*(x+xminblank)*(y+yminblank);
       variable pixel_f     : natural := F_find_next_f(min_pixel_f);
-      variable yframe      : natural := y+yminblank;
+      variable yframe      : natural := y+yminblank+yadjustframe;
       variable xframe      : natural := pixel_f/(f*yframe);
       variable xblank      : natural := xframe-x;
       variable yblank      : natural := yframe-y;

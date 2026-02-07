@@ -5,12 +5,12 @@
   //  640x400  @50Hz
   //  640x400  @60Hz
   //  640x480  @50Hz
-  //  640x480  @60Hz
+  //  640x480  @60Hz yadjustframe = -1
   //  720x576  @50Hz
   //  720x576  @60Hz
   //  800x480  @60Hz
   //  800x600  @60Hz
-  // 1024x768  @50Hz
+  // 1024x768  @50Hz yadjustframe = -1
   // 1024x768  @60Hz
   // 1280x768  @60Hz
   // 1366x768  @60Hz
@@ -25,6 +25,7 @@ y =  768;      # pixels
 f =   50;      # Hz 60,50,30
 xadjustf =  0; # adjust -3..3 if no picture
 yadjustf =  0; # or to fine-tune f
+yadjustframe = 0; # sometimes -1 for 640x480x60Hz 1024x768x50Hz
 c_ddr    =  1; # 0:SDR 1:DDR
 
 def F_find_next_f(f:int)->int:
@@ -57,7 +58,7 @@ xminblank         = x//64; # initial estimate
 yminblank         = y//64; # for minimal blank space
 min_pixel_f       = f*(x+xminblank)*(y+yminblank);
 pixel_f           = F_find_next_f(min_pixel_f);
-yframe            = y+yminblank-1;
+yframe            = y+yminblank+yadjustframe;
 xframe            = pixel_f//(f*yframe);
 xblank            = xframe-x;
 yblank            = yframe-y;

@@ -4,12 +4,12 @@ module top_vgatest
   //  640x400  @50Hz
   //  640x400  @60Hz
   //  640x480  @50Hz
-  //  640x480  @60Hz
+  //  640x480  @60Hz yadjustframe = -1
   //  720x576  @50Hz
   //  720x576  @60Hz
   //  800x480  @60Hz
   //  800x600  @60Hz
-  // 1024x768  @50Hz yadjusts = 2
+  // 1024x768  @50Hz yadjustframe = -1
   // 1024x768  @60Hz
   // 1280x768  @60Hz
   // 1366x768  @60Hz
@@ -17,11 +17,12 @@ module top_vgatest
   // 1920x1080 @30Hz
   // 1920x1080 @50Hz overclock 540MHz
   // 1920x1200 @50Hz overclock 600MHz
-  parameter x = 1024,      // pixels
-  parameter y =  768,      // pixels
-  parameter f =   50,      // Hz 60,50,30
+  parameter x =  640,      // pixels
+  parameter y =  480,      // pixels
+  parameter f =   60,      // Hz 60,50,30
   parameter xadjustf =  0, // adjust -3..3 if no picture
   parameter yadjustf =  0, // or to fine-tune f
+  parameter yadjustframe = 0, // sometimes -1 for 640x480x60Hz 1024x768x50Hz
   parameter c_ddr    =  1  // 0:SDR 1:DDR
 )
 (
@@ -64,7 +65,7 @@ module top_vgatest
   localparam yminblank         = y/64; // for minimal blank space
   localparam min_pixel_f       = f*(x+xminblank)*(y+yminblank);
   localparam pixel_f           = F_find_next_f(min_pixel_f);
-  localparam yframe            = y+yminblank-1;
+  localparam yframe            = y+yminblank+yadjustframe;
   localparam xframe            = pixel_f/(f*yframe);
   localparam xblank            = xframe-x;
   localparam yblank            = yframe-y;
