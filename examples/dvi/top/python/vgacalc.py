@@ -10,7 +10,7 @@
   //  720x576  @60Hz
   //  800x480  @60Hz
   //  800x600  @60Hz
-  // 1024x768  @50Hz yadjustf = 4
+  // 1024x768  @50Hz
   // 1024x768  @60Hz
   // 1280x768  @60Hz
   // 1366x768  @60Hz
@@ -57,7 +57,7 @@ xminblank         = x//64; # initial estimate
 yminblank         = y//64; # for minimal blank space
 min_pixel_f       = f*(x+xminblank)*(y+yminblank);
 pixel_f           = F_find_next_f(min_pixel_f);
-yframe            = y+yminblank;
+yframe            = y+yminblank-1;
 xframe            = pixel_f//(f*yframe);
 xblank            = xframe-x;
 yblank            = yframe-y;
